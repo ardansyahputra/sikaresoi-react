@@ -1,12 +1,14 @@
 import React from 'react';
 import { SafeAreaView, StatusBar, StyleSheet } from 'react-native';
-import HomeScreen from './screen/HomeScreen'; // Pastikan jalur benar
+import Home from './screen/admin/home/home';
+
 
 export default function App() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      <HomeScreen />
+      <Home />
+
     </SafeAreaView>
   );
 }
@@ -17,3 +19,4 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
 });
+
