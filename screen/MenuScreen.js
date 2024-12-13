@@ -4,6 +4,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import Ardan from 'react-native-vector-icons/MaterialIcons';
 import Gusti from 'react-native-vector-icons/FontAwesome';
 import Gus from 'react-native-vector-icons/FontAwesome6';
+import SettingJabatan from './BottomNavBar/SettingJabatan';
 
 const colors = ['#1c7aff', '#ff1c1c', '#ff7e1c', '#f719ff', '#999699', '#0da186'];
 
@@ -25,7 +26,7 @@ const Menu = ({ navigation }) => {
       <View style={styles.row}>
         <TouchableOpacity
           style={[styles.category, { backgroundColor: colors[0] }]}
-          onPress={() => navigation.navigate('SettingJabatan')} // Navigasi ke Setting Jabatan
+          onPress={() => navigation.navigate('SettingJabatan')}
         >
           <View style={styles.iconContainer}>
             <Ardan name="settings" size={35} color="white" />
@@ -33,7 +34,7 @@ const Menu = ({ navigation }) => {
           <Text style={styles.categoryText}>Setting Jabatan</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.category, { backgroundColor: colors[1] }]} onPress={() => {}}>
+        <TouchableOpacity style={[styles.category, { backgroundColor: colors[1] }]}>
           <View style={styles.iconContainer}>
             <Ionicons name="add-circle-outline" size={35} color="white" />
           </View>
@@ -42,14 +43,14 @@ const Menu = ({ navigation }) => {
       </View>
 
       <View style={styles.row}>
-        <TouchableOpacity style={[styles.category, { backgroundColor: colors[2] }]} onPress={() => {}}>
+        <TouchableOpacity style={[styles.category, { backgroundColor: colors[2] }]}>
           <View style={styles.iconContainer}>
             <Ionicons name="shield-checkmark" size={35} color="white" />
           </View>
           <Text style={styles.categoryText}>Persetujuan Kontrak Kinerja</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.category, { backgroundColor: colors[3] }]} onPress={() => {}}>
+        <TouchableOpacity style={[styles.category, { backgroundColor: colors[3] }]}>
           <View style={styles.iconContainer}>
             <Ionicons name="documents-outline" size={35} color="white" />
           </View>
@@ -58,14 +59,14 @@ const Menu = ({ navigation }) => {
       </View>
 
       <View style={styles.row}>
-        <TouchableOpacity style={[styles.category, { backgroundColor: colors[4] }]} onPress={() => {}}>
+        <TouchableOpacity style={[styles.category, { backgroundColor: colors[4] }]}>
           <View style={styles.iconContainer}>
             <Gusti name="book" size={35} color="white" />
           </View>
           <Text style={styles.categoryText}>Laporan</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.category, { backgroundColor: colors[5] }]} onPress={() => {}}>
+        <TouchableOpacity style={[styles.category, { backgroundColor: colors[5] }]}>
           <View style={styles.iconContainer}>
             <Gus name="border-all" size={35} color="white" />
           </View>
@@ -151,5 +152,6 @@ const styles = StyleSheet.create({
     borderColor: '#FFFFFF',
   },
 });
+
 
 export default Menu;

@@ -17,6 +17,7 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.userInfo}>
+          
           {/* Profile Button with Image and Shadow */}
           <TouchableOpacity onPress={toggleProfileMenu} style={styles.profileButton}>
             <Text style={styles.userName}>BUDIAWAN, S.Si.T, MT</Text>
@@ -61,34 +62,34 @@ export default function HomeScreen() {
       <View style={styles.chartSection}>
         <Text style={styles.chartTitle}>Remunerasi 2024</Text>
         <BarChart
-          data={{
-            labels: ['Gaji Pokok', 'Tunjangan', 'Bonus', 'Potongan'],
-            datasets: [
-              {
-                data: [45000000, 20000000, 15000000, 5000000],
-                color: (opacity = 1) => `rgba(226, 1, 0.2, ${opacity})`,
-              },
-            ],
-          }}
-          width={300} // Width of the chart
-          height={220} // Height of the chart
-          chartConfig={{
-            backgroundColor: 'transparent',
-            backgroundGradientFrom: '#f5f5f5',
-            backgroundGradientTo: '#ffffff',
-            decimalPlaces: 0, // No decimal places for financial data
-            color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-            labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-            propsForLabels: {
-              fontSize: 12,
-              fontWeight: 'bold',
+        data={{
+          labels: ['Gaji Pokok', 'Tunjangan', 'Bonus', 'Potongan'],
+          datasets: [
+            {
+              data: [45000000, 20000000, 15000000, 5000000],
+              // Warna batang pada grafik menjadi ungu penuh
+              color: () => `rgba(160, 32, 240, ${opacity})`, // Ungu penuh
             },
-          }}
-          accessor="population"
-          backgroundColor="transparent"
-          paddingLeft="15"
-          absolute // Display absolute values
-        />
+          ],
+        }}
+        width={300} // Width of the chart
+        height={300} // Height of the chart
+        chartConfig={{
+          backgroundColor: '#ffffff', // Background chart warna putih
+          backgroundGradientFrom: '#ffffff',
+          backgroundGradientTo: '#ffffff',
+          decimalPlaces: 0, // No decimal places for financial data
+          color: (opacity = 1) => `rgba(160, 32, 240, ${opacity})`, // Warna untuk teks dan label (ungu)
+          labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`, // Warna label hitam
+          propsForLabels: {
+            fontSize: 10,
+            fontWeight: 'bold',
+          },
+        }}
+        accessor="population"
+        paddingLeft="15"
+        absolute // Display absolute values
+      />
       </View>
 
       {/* Profile Menu Modal */}
