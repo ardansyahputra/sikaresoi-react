@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
-
 // Axios instance
 const apiClient = axios.create({
   baseURL: 'http://192.168.2.100:8000/api/v1',
   headers: {
-    'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIuMTAwOjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzM5NjU3NjEsImV4cCI6MTczMzk4MTEwNSwibmJmIjoxNzMzOTc3NTA1LCJqdGkiOiJaZTFMQjNsTlNUYVB1c0NGIiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0._25yNddEeg2TFxB_kxY6LUx4Vo_3jzZzRimF3ocl_FE'
+    'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIuMTAwOjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzQwNTIwOTEsImV4cCI6MTczNDA2MTA2NCwibmJmIjoxNzM0MDU3NDY0LCJqdGkiOiJoa2ZxeFJGN1YzUFpXOHhZIiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.n-gPIOw27V-FXZ4htAHAf2rCNyVcXxWOCtkaL8UHCxM'
   }
 });
 
@@ -47,50 +46,60 @@ const Home = () => {
     {
       title: 'User',
       subtitle: 'User Management',
-      icon: 'people-outline',
-      color: '#2196F3',
+      icon: 'people-outline',  // Tetap menggunakan Ionicons untuk icon
+      image: require('../assets/images/bulat.png'),  // Menambahkan gambar PNG
+      color: '#1E88E5', // Biru cerah
     },
+    
     {
-      title: 'Data Teguran',
-      subtitle: 'Lihat Data Teguran',
-      icon: 'clipboard-outline',
-      color: '#F44336',
+      title: 'Teguran',
+      subtitle: 'Data Teguran',
+      icon: 'alert-circle-outline',
+      color: '#E53935', // Merah tegas
+      imageMerah: require('../assets/images/merah.png'),  // Menambahkan gambar PNG
     },
     {
       title: `${attendanceChanges || 0} Perubahan Presensi`,
       subtitle: 'Belum Dikonfirmasi',
       icon: 'calendar-outline',
-      color: '#FF9800',
+      imageKuning: require('../assets/images/kuning.png'), // Gambar kuning
+      color: '#FB8C00', // Jingga gelap
     },
     {
-      title: '147 User Belum Absen',
+      title: '147 User',
       subtitle: 'Presensi Harian',
       icon: 'people-outline',
-      color: '#9C27B0',
+      color: '#8E24AA', // Ungu sedang
+      imageUngu: require('../assets/images/ungu.png'), // Gambar kuning
     },
     {
-      title: `${usersNotSubmittedRealization ? usersNotSubmittedRealization.total : 147} Realisasi`,
-      subtitle: `Belum Dikirim (${usersNotSubmittedRealization ? usersNotSubmittedRealization.bulan : 'Desember'} ${usersNotSubmittedRealization ? usersNotSubmittedRealization.tahun : ''})`,
-      icon: 'clipboard-outline',
-      color: '#4CAF50',
+      title: `${usersNotSubmittedRealization ? usersNotSubmittedRealization.total : 0} User`,
+      subtitle: `Belum Kirim Realisasi ${usersNotSubmittedRealization ? usersNotSubmittedRealization.bulan : 'bulan'} `,
+      icon: 'people-outline',
+      color: '#8E24AA', // Hijau terang
+      imageUngu: require('../assets/images/ungu.png'), // Gambar kuning
+      
     },
     {
-      title: `${usersNotSubmittedContracts ? usersNotSubmittedContracts.total : 20} Kontrak`,
-      subtitle: `Belum Dikirim (${usersNotSubmittedContracts ? usersNotSubmittedContracts.tahun : ''})`,
-      icon: 'document-outline',
-      color: '#FF9800',
+      title: `${usersNotSubmittedContracts ? usersNotSubmittedContracts.total : 20} User`,
+      subtitle: `Belum kirim Kontrak (${usersNotSubmittedContracts ? usersNotSubmittedContracts.tahun : ''})`,
+      icon: 'people-outline',
+      imageKuning: require('../assets/images/kuning.png'), // Gambar kuning
+      color: '#FB8C00', // Jingga gelap
     },
     {
       title: `${totalContracts || 0} Kontrak`,
       subtitle: `Belum Disetujui (${year || ''})`,
-      icon: 'checkmark-done-outline',
-      color: '#FF5722',
+      icon: 'document-outline',
+      color: '#E53935', // Merah tegas
+      imageMerah: require('../assets/images/merah.png'),  // Menambahkan gambar PNG
     },
     {
       title: '0 Realisasi Desember',
       subtitle: 'Belum Disetujui',
-      icon: 'file-tray-full-outline',
-      color: '#4CAF50',
+      icon: 'document-outline',
+      image: require('../assets/images/bulat.png'),  // Menambahkan gambar PNG
+      color: '#1E88E5', // Biru cerah
     },
   ];
 
@@ -98,6 +107,12 @@ const Home = () => {
     <TouchableOpacity style={[styles.card, { backgroundColor: item.color }]}>
       <View style={styles.cardContent}>
         <Ionicons name={item.icon} size={30} color="white" style={styles.cardIcon} />
+        {/* Gambar bulat */}
+        {item.image && <Image source={item.image} style={styles.cardImage} />}
+        {/* Gambar kuning */}
+        {item.imageKuning && <Image source={item.imageKuning} style={styles.cardImageKuning} />}
+        {item.imageUngu && <Image source={item.imageUngu} style={styles.cardImageungu} />}
+        {item.imageMerah && <Image source={item.imageMerah} style={styles.cardImageMerah} />}
         <View>
           <Text style={styles.cardTitle}>{item.title}</Text>
           <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
@@ -158,21 +173,21 @@ const Home = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create({  
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#ddd',
   },
   header: {
     backgroundColor: '#ffffff',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     elevation: 4,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
   },
   headerLeft: {
     flex: 1,
@@ -207,6 +222,44 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     elevation: 5,
   },
+  
+
+  cardImage: {
+    width: 145,  // Ukuran gambar
+    height: 140,  // Ukuran gambar
+    position: 'absolute',  // Menambahkan posisi absolut
+    top: -27,  // Menempatkan gambar di bagian atas
+    right: -16,  // Menempatkan gambar di bagian kanan
+    borderTopRightRadius: 7,
+  },
+  cardImageKuning: {
+    width: 140, // Ukuran gambar
+    height: 155, // Ukuran gambar
+    position: 'absolute',
+    top: -27, // Atur posisi sesuai kebutuhan
+    right: -17, // Atur posisi sesuai kebutuhan
+    borderTopRightRadius: 8, // Radius untuk sudut kanan atas
+    marginBottom: 5, // Pastikan gambar tidak terpotong
+  },
+  cardImageungu: {
+    width: 120, // Ukuran gambar
+    height: 100, // Ukuran gambar
+    position: 'absolute',
+      top: -27, // Atur posisi sesuai kebutuhan
+      left: 241, // Atur posisi sesuai kebutuhan
+    borderTopRightRadius: 10, // Radius untuk sudut kanan atas
+  },
+  cardImageMerah: {
+    width: 128, // Ukuran gambar
+    height: 135, // Ukuran gambar
+    position: 'absolute',
+      top: -27, // Atur posisi sesuai kebutuhan
+      left: 233, // Atur posisi sesuai kebutuhan
+    borderTopRightRadius: 7, // Radius untuk sudut kanan atas
+  },
+
+
+
   cardContent: {
     flexDirection: 'column',
     alignItems: 'flex-start',
@@ -248,7 +301,7 @@ const styles = StyleSheet.create({
   },
   breadcrumbsContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 8, 
     backgroundColor: '#f5f5f5',
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
