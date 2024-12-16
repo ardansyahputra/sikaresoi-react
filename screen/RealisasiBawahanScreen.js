@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-export default function RealisasiKerjaScreen() {
+export default function RealisasiBawahanScreen() {
   return (
     <View style={styles.container}>
       <Text>Halaman Teguran</Text>
