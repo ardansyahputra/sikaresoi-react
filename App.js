@@ -10,6 +10,7 @@ import MenuScreen from './screen/MenuScreen';
 import KontrakKinerjaScreen from './screen/KontrakKinerjaScreen';
 import ProfileScreen from './screen/ProfileScreen';
 import SettingJabatan from './screen/BottomNavBar/SettingJabatan';
+import RealisasiKinerja from './screen/BottomNavBar/RealisasiKinerja';
 
 // Bottom Tab Navigator
 const Tab = createBottomTabNavigator();
@@ -23,6 +24,7 @@ function MenuNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MenuScreen" component={MenuScreen} />
       <Stack.Screen name="SettingJabatan" component={SettingJabatan} />
+      <Stack.Screen name="RealisasiKinerja" component={RealisasiKinerja} />
     </Stack.Navigator>
   );
 }
