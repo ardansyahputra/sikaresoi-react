@@ -34,7 +34,10 @@ const Menu = ({ navigation }) => {
           <Text style={styles.categoryText}>Setting Jabatan</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.category, { backgroundColor: colors[1] }]}>
+        <TouchableOpacity
+          style={[styles.category, { backgroundColor: colors[1] }]}
+          onPress={() => navigation.navigate('RealisasiKinerja')} // Add navigation here
+        >
           <View style={styles.iconContainer}>
             <Ionicons name="add-circle-outline" size={35} color="white" />
           </View>
