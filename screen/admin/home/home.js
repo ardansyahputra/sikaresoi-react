@@ -198,19 +198,36 @@ const Home = () => {
           ))}
         </View>
       </View>
-  
-      {/* Menu buttons */}
-      <View style={styles.menuButtonsContainer}>
-        <Text style={styles.menuTitle}>Section Title</Text>
-        <View style={styles.menuRow}>
-          {[1, 2].map((item, index) => (
-            <TouchableOpacity key={index} style={styles.menuButton}>
-              <Text style={styles.menuText}>{item}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+
+
+{/* Menu Buttons */}
+<View style={styles.menuButtonsContainer}>
+      <Text style={styles.menuTitle}>Menu Utama</Text>
+      <View style={styles.menuRow}>
+        {[
+          { title: 'Surat Tugas', icon: 'document-text-outline', colors: ['#003366', '#336699', '#E0E0E0'] }, // Biru
+          { title: 'Potongan Lain', icon: 'pricetag-outline', colors: ['#8B0000', '#B22222', '#E0E0E0'] }, // Merah
+          { title: 'Lock', icon: 'lock-closed-outline', colors: ['#003366', '#8B0000', '#E0E0E0'] }, // Biru & Merah
+          { title: 'Lainnya', icon: 'ellipsis-horizontal-circle-outline', colors: ['#336699', '#B22222', '#E0E0E0'] }, // Biru muda & Merah
+        ].map((item, index) => (
+          <View key={index} style={styles.menuButtonWrapper}>
+            <LinearGradient
+              colors={item.colors}
+              style={styles.menuButton}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <TouchableOpacity>
+                <Ionicons name={item.icon} size={24} color="#F5F5F5" />
+              </TouchableOpacity>
+            </LinearGradient>
+            <Text style={styles.menuText}>{item.title}</Text>
+          </View>
+        ))}
       </View>
-  
+    </View>
+
+
       {/* Konten yang dapat discroll (hanya FlatList untuk card) */}
         {/* FlatList untuk item yang lain */}
         <FlatList
@@ -279,8 +296,6 @@ logo: {
   iconWrapper: {
     padding: 10,
   },
-
-
   breadcrumbsContainer: {
     backgroundColor: '#fff',
     padding: 10,
@@ -289,7 +304,7 @@ logo: {
     fontSize: 14,
   },
   grid: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 25,
     marginTop: 20,
   },
   
@@ -334,8 +349,8 @@ logo: {
     padding: 16,
     backgroundColor: '#E7E9F1',
     borderRadius: 8,
-    marginBottom: 12,
-    marginTop: 16,
+    marginBottom: -10,
+    marginTop: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -349,23 +364,29 @@ logo: {
   menuRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+  },
+  menuButtonWrapper: {
+    alignItems: 'center',
+    marginHorizontal: 8,
+    marginBottom: 12,
   },
   menuButton: {
-    flex: 1,
-    paddingVertical: 12,
-    marginHorizontal: 8,
-    backgroundColor: '#4CAF',
-    borderRadius: 6,
-    alignItems: 'center',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
   },
   menuText: {
-    color: '#fff',
-    fontSize: 16,
+    color: '#333',
+    fontSize: 12,
     fontWeight: '500',
+    textAlign: 'center',
+    marginTop: 8,
   },
 
-  
   
   circularButtonsContainer: {
   justifyContent: 'center',
