@@ -3,21 +3,22 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
+  FlatList,
   Image,
+  ScrollView, // Tambahkan ScrollView di sini
 } from 'react-native';
+
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import LinearGradient from 'react-native-linear-gradient';
-import {useNavigation} from '@react-navigation/native'; // Import useNavigation
 
 // Axios instance
 const apiClient = axios.create({
-  baseURL: 'http://192.168.2.100:8000/api/v1',
+  baseURL: 'http://192.168.2.101:8000/api/v1',
   headers: {
     Authorization:
-      'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIuMTAwOjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzQwNTIwOTEsImV4cCI6MTczNDA2MTA2NCwibmJmIjoxNzM0MDU3NDY0LCJqdGkiOiJoa2ZxeFJGN1YzUFpXOHhZIiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.n-gPIOw27V-FXZ4htAHAf2rCNyVcXxWOCtkaL8UHCxM',
+      'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIuMTAxOjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzQ0MDQ3MTQsImV4cCI6MTczNDQxMjM3NCwibmJmIjoxNzM0NDA4Nzc0LCJqdGkiOiJNVHBFSGZvQ0Z5b09MdVE5Iiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.dpvRGGPFbPDCHeJl4IpAp6COGXzyxFwYV5UyADRaJ1I',
   },
 });
 
@@ -81,39 +82,30 @@ const Home = () => {
   }, []);
 
   const items = [
+    
     {
-      title: `${attendanceChanges || 0} Perubahan Presensi`,
+      title: `User`,
       subtitle: 'Belum Dikonfirmasi',
       icon: 'calendar-outline',
       color: ['#0288D1', '#03A9F4'], // Gradasi biru tua ke biru terang
     },
     {
-      title: '147 User',
-      subtitle: 'Presensi Harian',
-      icon: 'people-outline',
-      color: ['#9C27B0', '#D500F9'], // Gradasi ungu cerah ke ungu muda
+      title: 'Teguran',
+      subtitle: 'Belum Disetujui',
+      icon: 'document-outline',
+      color: ['#FF6F61', '#E53935', '#B71C1C'], // Gradasi merah terang ke merah tua
+    },    
+    {
+      title: `${attendanceChanges || 0} Perubahan Presensi`,
+      subtitle: 'Belum Dikonfirmasi',
+      icon: 'calendar-outline',
+      color: ['#F9A825', '#FBC02D'], // Kuning tua yang lebih hangat ke kuning lembut
     },
     {
-      title: `${
-        usersNotSubmittedRealization ? usersNotSubmittedRealization.total : 0
-      } User`,
-      subtitle: `Belum Kirim Realisasi ${
-        usersNotSubmittedRealization
-          ? usersNotSubmittedRealization.bulan
-          : 'bulan'
-      } `,
-      icon: 'people-outline',
-      color: ['#8E24AA', '#6A1B9A'], // Gradasi ungu tua ke ungu gelap
-    },
-    {
-      title: `${
-        usersNotSubmittedContracts ? usersNotSubmittedContracts.total : 20
-      } User`,
-      subtitle: `Belum kirim Kontrak (${
-        usersNotSubmittedContracts ? usersNotSubmittedContracts.tahun : ''
-      })`,
-      icon: 'people-outline',
-      color: ['#FB8C00', '#FF7043'], // Gradasi jingga gelap ke oranye terang
+      title: '0 Realisasi Desember',
+      subtitle: 'Belum Disetujui',
+      icon: 'document-outline',
+      color: ['#0288D1', '#03A9F4'], // Gradasi biru tua ke biru terang
     },
     {
       title: `${totalContracts || 0} Kontrak`,
@@ -121,18 +113,11 @@ const Home = () => {
       icon: 'document-outline',
       color: ['#D32F2F', '#F44336'], // Gradasi merah terang ke merah muda
     },
-    {
-      title: '0 Realisasi Desember',
-      subtitle: 'Belum Disetujui',
-      icon: 'document-outline',
-      color: ['#1976D2', '#1565C0'], // Gradasi biru sedang ke biru lebih gelap
-    },
   ];
 
   const renderItem = ({item}) => {
     return (
       <TouchableOpacity style={styles.verticalCard}>
-        {' '}
         {/* Selalu gunakan verticalCard */}
         <LinearGradient colors={item.color} style={styles.cardBackground}>
           <View style={styles.cardContent}>
@@ -151,7 +136,7 @@ const Home = () => {
       </TouchableOpacity>
     );
   };
-
+  
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -168,46 +153,76 @@ const Home = () => {
           </TouchableOpacity>
         </View>
       </View>
-
+  
       {/* Breadcrumbs */}
       <View style={styles.breadcrumbsContainer}>
         <Text style={styles.breadcrumbsText}>
           Dashboard {'-'} Admin {'-'} Dashboard
         </Text>
       </View>
-
-//<View style={styles.circularButtonsContainer}>
-  <Text style={styles.buttonsTitle}>Menu</Text>
-  <View style={styles.buttonsContainer}>
-    {/* Menggunakan ikon Ionicons untuk menggantikan tombol angka */}
-    {['person', 'document', 'build'].map((item, index) => (
-      <View key={index} style={styles.buttonWrapper}>
-        <TouchableOpacity style={styles.circleButton}>
-          {/* Ganti dengan ikon yang sesuai */}
-          <Ionicons name={item + "-outline"} size={30} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.buttonLabel}>
-          {/* Label tombol */}
-          {item === 'person' ? 'User' : 
-           item === 'document' ? 'Laporan' :
-           item === 'build' ? 'Master' :
-           item === 'clipboard' ? 'Surat Tugas' :
-           'Lainnya'}
-        </Text>
+  
+      {/* Circular Buttons Container */}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <View style={styles.circularButtonsContainer}>
+        <Text style={styles.buttonsTitle}></Text>
+        <View style={styles.buttonsContainer}>
+          {/* Circular Buttons */}
+          {[
+            { title: '1 User', subtitle: 'Presensi Harian', icon: 'people-outline' },
+            {
+              title: `${
+                usersNotSubmittedRealization ? usersNotSubmittedRealization.total : 0
+              } User`,
+              subtitle: `Belum Kirim Realisasi ${
+                usersNotSubmittedRealization ? usersNotSubmittedRealization.bulan : 'bulan'
+              }`,
+              icon: 'people-outline',
+            },
+            {
+              title: `${
+                usersNotSubmittedContracts ? usersNotSubmittedContracts.total : 20
+              } User`,
+              subtitle: `Belum Kirim Kontrak (${
+                usersNotSubmittedContracts ? usersNotSubmittedContracts.tahun : ''
+              })`,
+              icon: 'people-outline',
+            },
+          ].map((item, index) => (
+            <View key={index} style={styles.buttonWrapper}>
+              <TouchableOpacity style={styles.circleButton}>
+                <Ionicons name={item.icon} size={22} color="#333" />
+              </TouchableOpacity>
+              <Text style={styles.buttonLabel}>{item.title}</Text>
+              <Text style={styles.buttonSubtitle}>{item.subtitle}</Text>
+            </View>
+          ))}
+        </View>
       </View>
-    ))}
-  </View>
-</View>
-
-      <FlatList
-        data={items.slice(0, 8)} // Menampilkan 8 kartu pertama
-        renderItem={renderItem}
-        keyExtractor={(item, index) => index.toString()}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
-        contentContainerStyle={styles.grid}
-      />
-
+  
+      {/* Menu buttons */}
+      <View style={styles.menuButtonsContainer}>
+        <Text style={styles.menuTitle}>Section Title</Text>
+        <View style={styles.menuRow}>
+          {[1, 2].map((item, index) => (
+            <TouchableOpacity key={index} style={styles.menuButton}>
+              <Text style={styles.menuText}>{item}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+  
+      {/* Konten yang dapat discroll (hanya FlatList untuk card) */}
+        {/* FlatList untuk item yang lain */}
+        <FlatList
+          data={items.slice(0, 5)} // Hilangkan 3 item yang sudah dipindahkan
+          renderItem={renderItem}
+          keyExtractor={(item, index) => index.toString()}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+          contentContainerStyle={styles.grid}
+        />
+      </ScrollView>
+  
       {/* Bottom Navigation Bar */}
       <View style={styles.bottomNavbar}>
         <TouchableOpacity style={styles.navItem}>
@@ -314,43 +329,79 @@ logo: {
   },
   
   
+
+  menuButtonsContainer: {
+    padding: 16,
+    backgroundColor: '#E7E9F1',
+    borderRadius: 8,
+    marginBottom: 12,
+    marginTop: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+  },
+  menuTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 12,
+  },
+  menuRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  menuButton: {
+    flex: 1,
+    paddingVertical: 12,
+    marginHorizontal: 8,
+    backgroundColor: '#4CAF',
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+
   
   
   circularButtonsContainer: {
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,  // Sesuaikan padding agar lebih ramping
-    marginTop:20,
-    borderRadius: 25,
-    width: 365,  // Ukuran lebar yang lebih ramping
-    height: 155,  // Ukuran tinggi yang lebih sesuai
-    alignSelf: 'center',  // Menjaga container di tengah layar
-  },
+  justifyContent: 'center',
+  backgroundColor: '#fff',
+  paddingHorizontal: 20,
+  marginTop: 20,
+  borderRadius: 25,
+  width: 365,
+  height: 155,
+  alignSelf: 'center',
+},
 
 buttonsTitle: {
   fontSize: 16,
   fontWeight: 'bold',
   color: '#333',
   marginBottom: 10,
-  textAlign: 'center',  // Menjaga teks berada di tengah
+  textAlign: 'center',
 },
 
 buttonsContainer: {
   flexDirection: 'row',
   flexWrap: 'wrap',
-  justifyContent: 'space-evenly', // Membuat tombol tersebar merata
+  justifyContent: 'space-evenly',
 },
 
 buttonWrapper: {
   alignItems: 'center',
-  marginBottom: 10,  // Mengurangi margin bawah untuk tombol lebih rapat
-  width: '30%',  // Menyusun tombol dengan ukuran lebar yang lebih kecil
+  marginBottom: 10,
+  width: '30%',
 },
 
 circleButton: {
-  width: 40,  // Ukuran tombol tetap kecil
+  width: 40,
   height: 40,
-  borderRadius: 20,  // Tombol tetap bulat sempurna
+  borderRadius: 20,
   backgroundColor: '#fff',
   justifyContent: 'center',
   alignItems: 'center',
@@ -361,32 +412,37 @@ circleButton: {
 },
 
 buttonLabel: {
-  fontSize: 12,  // Ukuran font label tombol
+  fontSize: 12,
   color: '#333',
   marginTop: 5,
-  textAlign: 'center',  // Menjaga label tetap di tengah
+  textAlign: 'center',
+},
+
+buttonSubtitle: {
+  fontSize: 12,
+  color: '#666',
+  textAlign: 'center',
+  marginTop: 4,
 },
 
 
 
-  bottomNavbar: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    padding: 15,
-    justifyContent: 'space-around',
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
-    position: 'absolute',
-    bottom: 0,
-    width: '100%',
-  },
-  navItem: {
-    alignItems: 'center',
-  },
-  navLabel: {
-    fontSize: 12,
-    color: '#333',
-  },
+
+bottomNavbar: {
+  flexDirection: 'row',
+  backgroundColor: '#fff',
+  padding: 15,
+  justifyContent: 'space-around',
+  borderTopWidth: 1,
+  borderTopColor: '#ddd',
+},
+navItem: {
+  alignItems: 'center',
+},
+navLabel: {
+  fontSize: 12,
+  color: '#333',
+},
 });
 
 export default Home;
