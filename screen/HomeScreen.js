@@ -4,8 +4,9 @@ import { BarChart } from 'react-native-chart-kit';
 import Gusti from 'react-native-vector-icons/MaterialCommunityIcons';
 import Oliv from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ardhan from 'react-native-vector-icons/MaterialIcons';
+import PresensiScreen from './PresensiScreen';
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) { // <-- Tambahkan navigation di sini
   const [isProfileVisible, setProfileVisible] = useState(false);
 
   const toggleProfileMenu = () => {
@@ -36,11 +37,15 @@ export default function HomeScreen() {
 
       {/* Dashboard Navigation */}
       <View style={styles.dashboardNav}>
-        <TouchableOpacity style={[styles.card, { backgroundColor: '#007BFF' }]}>
-          <Ardhan name="perm-contact-calendar" size={30} color="#FFFFFF" />
-          <Text style={styles.cardTitle}>Presensi</Text>
-          <Text style={styles.cardSubtitle}>Data Presensi</Text>
-        </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.card, { backgroundColor: '#007BFF' }]}
+        onPress={() => navigation.navigate('Presensi')}
+      >
+        <Ardhan name="perm-contact-calendar" size={30} color="#FFFFFF" />
+        <Text style={styles.cardTitle}>Presensi</Text>
+        <Text style={styles.cardSubtitle}>Data Presensi</Text>
+      </TouchableOpacity>
+
         <TouchableOpacity style={[styles.card, { backgroundColor: '#FF4757' }]}>
           <Gusti name="email-newsletter" size={30} color="#FFFFFF" />
           <Text style={styles.cardTitle}>Teguran</Text>

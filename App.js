@@ -11,6 +11,7 @@ import KontrakKinerjaScreen from './screen/KontrakKinerjaScreen';
 import ProfileScreen from './screen/ProfileScreen';
 import SettingJabatan from './screen/BottomNavBar/SettingJabatan';
 import RealisasiKinerja from './screen/BottomNavBar/RealisasiKinerja';
+import PresensiScreen from './screen/PresensiScreen';
 
 // Bottom Tab Navigator
 const Tab = createBottomTabNavigator();
@@ -25,9 +26,19 @@ function MenuNavigator() {
       <Stack.Screen name="MenuScreen" component={MenuScreen} />
       <Stack.Screen name="SettingJabatan" component={SettingJabatan} />
       <Stack.Screen name="RealisasiKinerja" component={RealisasiKinerja} />
-    </Stack.Navigator>
+      </Stack.Navigator>
   );
 }
+
+function HomeNavigator() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Presensi" component={PresensiScreen} />
+      </Stack.Navigator>
+  );
+}
+
 
 // Aplikasi Utama
 export default function App() {
@@ -62,7 +73,7 @@ export default function App() {
           },
         })}
       >
-        <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen name="Home" component={HomeNavigator} />
         {/* Menu menggunakan MenuNavigator */}
         <Tab.Screen name="Menu" component={MenuNavigator} />
         <Tab.Screen name="Kontrak Kinerja" component={KontrakKinerjaScreen} />
