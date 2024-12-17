@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFEFEF',
     padding: 16,
   },
-  header: { flexDirection: "row", alignItems: "center", backgroundColor: "#ff0000", paddingHorizontal: 16, paddingVertical: 18, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, shadowColor: "#000", shadowOpacity: 0.1, elevation: 5, marginBottom: 20, width: '100%',  },
+  header: { flexDirection: "row", alignItems: "center", backgroundColor: "#2563EB", paddingHorizontal: 16, paddingVertical: 18, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, shadowColor: "#000", shadowOpacity: 0.1, elevation: 5, marginBottom: 20, width: '100%',  },
   backButton: {
     marginRight: 16,
   },

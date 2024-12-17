@@ -190,7 +190,7 @@ const RealisasiKinerja = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F9FAFB", paddingBottom: 20 },
-  header: { flexDirection: "row", alignItems: "center", backgroundColor: "#2563EB", paddingHorizontal: 16, paddingVertical: 18, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, shadowColor: "#000", shadowOpacity: 0.1, elevation: 5 },
+  header: { flexDirection: "row", alignItems: "center", backgroundColor: "#ff0000", paddingHorizontal: 16, paddingVertical: 18, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, shadowColor: "#000", shadowOpacity: 0.1, elevation: 5 },
   backButton: { marginRight: 12 },
   headerContent: { flex: 1 },
   headerTitle: { fontSize: 24, fontWeight: "bold", color: "#FFF" },
