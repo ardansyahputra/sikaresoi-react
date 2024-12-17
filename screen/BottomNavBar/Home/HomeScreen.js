@@ -22,7 +22,7 @@ export default function HomeScreen() {
           <TouchableOpacity onPress={toggleProfileMenu} style={styles.profileButton}>
             <Text style={styles.userName}>BUDIAWAN, S.Si.T, MT</Text>
             <Image
-              source={require('./assets/300-14.jpg')} // Ganti dengan path gambar Anda
+              source={require('../../assets/300-14.jpg')} // Ganti dengan path gambar Anda
               style={styles.profileImage}
             />
           </TouchableOpacity>
