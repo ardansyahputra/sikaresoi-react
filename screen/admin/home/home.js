@@ -1,44 +1,80 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Image,
+} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
+
 // Axios instance
 const apiClient = axios.create({
   baseURL: 'http://192.168.2.100:8000/api/v1',
   headers: {
-    'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIuMTAwOjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzQwNTIwOTEsImV4cCI6MTczNDA2MTA2NCwibmJmIjoxNzM0MDU3NDY0LCJqdGkiOiJoa2ZxeFJGN1YzUFpXOHhZIiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.n-gPIOw27V-FXZ4htAHAf2rCNyVcXxWOCtkaL8UHCxM'
-  }
+    Authorization:
+      'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIuMTAwOjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzQwNTIwOTEsImV4cCI6MTczNDA2MTA2NCwibmJmIjoxNzM0MDU3NDY0LCJqdGkiOiJoa2ZxeFJGN1YzUFpXOHhZIiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.n-gPIOw27V-FXZ4htAHAf2rCNyVcXxWOCtkaL8UHCxM',
+  },
 });
 
 const Home = () => {
   const [totalContracts, setTotalContracts] = useState(null);
   const [year, setYear] = useState('null');
   const [attendanceChanges, setAttendanceChanges] = useState(null);
-  const [usersNotSubmittedRealization, setUsersNotSubmittedRealization] = useState(null);
-  const [usersNotSubmittedContracts, setUsersNotSubmittedContracts] = useState(null);
+  const [usersNotSubmittedRealization, setUsersNotSubmittedRealization] =
+    useState(null);
+  const [usersNotSubmittedContracts, setUsersNotSubmittedContracts] =
+    useState(null);
 
   useEffect(() => {
     const fetchContracts = apiClient.get('/home/all_kontrak_belum_setujui');
-    const fetchAttendanceChanges = apiClient.get('/home/perubahan_presensi_belum_konfirmasi');
-    const fetchUsersNotSubmittedRealization = apiClient.get('/home/user_belum_kirim_realisasi');
-    const fetchUsersNotSubmittedContracts = apiClient.get('/home/user_belum_kirim_kontrak');
+    const fetchAttendanceChanges = apiClient.get(
+      '/home/perubahan_presensi_belum_konfirmasi',
+    );
+    const fetchUsersNotSubmittedRealization = apiClient.get(
+      '/home/user_belum_kirim_realisasi',
+    );
+    const fetchUsersNotSubmittedContracts = apiClient.get(
+      '/home/user_belum_kirim_kontrak',
+    );
 
-    axios.all([fetchContracts, fetchAttendanceChanges, fetchUsersNotSubmittedRealization, fetchUsersNotSubmittedContracts])
-      .then(axios.spread((contractsResponse, attendanceResponse, usersNotAttendedResponse, usersNotSubmittedContractsResponse) => {
-        if (contractsResponse.data.status) {
-          setTotalContracts(contractsResponse.data.data.total);
-          setYear(contractsResponse.data.data.tahun);
-        }
-        if (attendanceResponse.data.status) {
-          setAttendanceChanges(attendanceResponse.data.data.total);
-        }
-        if (usersNotAttendedResponse.data.status) {
-          setUsersNotSubmittedRealization(usersNotAttendedResponse.data.data);
-        }
-        if (usersNotSubmittedContractsResponse.data.status) {
-          setUsersNotSubmittedContracts(usersNotSubmittedContractsResponse.data.data);
-        }
-      }))
+    axios
+      .all([
+        fetchContracts,
+        fetchAttendanceChanges,
+        fetchUsersNotSubmittedRealization,
+        fetchUsersNotSubmittedContracts,
+      ])
+      .then(
+        axios.spread(
+          (
+            contractsResponse,
+            attendanceResponse,
+            usersNotAttendedResponse,
+            usersNotSubmittedContractsResponse,
+          ) => {
+            if (contractsResponse.data.status) {
+              setTotalContracts(contractsResponse.data.data.total);
+              setYear(contractsResponse.data.data.tahun);
+            }
+            if (attendanceResponse.data.status) {
+              setAttendanceChanges(attendanceResponse.data.data.total);
+            }
+            if (usersNotAttendedResponse.data.status) {
+              setUsersNotSubmittedRealization(
+                usersNotAttendedResponse.data.data,
+              );
+            }
+            if (usersNotSubmittedContractsResponse.data.status) {
+              setUsersNotSubmittedContracts(
+                usersNotSubmittedContractsResponse.data.data,
+              );
+            }
+          },
+        ),
+      )
       .catch(error => console.error('Error fetching data:', error));
   }, []);
 
@@ -46,17 +82,17 @@ const Home = () => {
     {
       title: 'User',
       subtitle: 'User Management',
-      icon: 'people-outline',  // Tetap menggunakan Ionicons untuk icon
-      image: require('../assets/images/bulat.png'),  // Menambahkan gambar PNG
+      icon: 'people-outline', // Tetap menggunakan Ionicons untuk icon
+      image: require('../assets/images/bulat.png'), // Menambahkan gambar PNG
       color: '#1E88E5', // Biru cerah
     },
-    
+
     {
       title: 'Teguran',
       subtitle: 'Data Teguran',
       icon: 'alert-circle-outline',
       color: '#E53935', // Merah tegas
-      imageMerah: require('../assets/images/merah.png'),  // Menambahkan gambar PNG
+      imageMerah: require('../assets/images/merah.png'), // Menambahkan gambar PNG
     },
     {
       title: `${attendanceChanges || 0} Perubahan Presensi`,
@@ -73,16 +109,25 @@ const Home = () => {
       imageUngu: require('../assets/images/ungu.png'), // Gambar kuning
     },
     {
-      title: `${usersNotSubmittedRealization ? usersNotSubmittedRealization.total : 0} User`,
-      subtitle: `Belum Kirim Realisasi ${usersNotSubmittedRealization ? usersNotSubmittedRealization.bulan : 'bulan'} `,
+      title: `${
+        usersNotSubmittedRealization ? usersNotSubmittedRealization.total : 0
+      } User`,
+      subtitle: `Belum Kirim Realisasi ${
+        usersNotSubmittedRealization
+          ? usersNotSubmittedRealization.bulan
+          : 'bulan'
+      } `,
       icon: 'people-outline',
       color: '#8E24AA', // Hijau terang
       imageUngu: require('../assets/images/ungu.png'), // Gambar kuning
-      
     },
     {
-      title: `${usersNotSubmittedContracts ? usersNotSubmittedContracts.total : 20} User`,
-      subtitle: `Belum kirim Kontrak (${usersNotSubmittedContracts ? usersNotSubmittedContracts.tahun : ''})`,
+      title: `${
+        usersNotSubmittedContracts ? usersNotSubmittedContracts.total : 20
+      } User`,
+      subtitle: `Belum kirim Kontrak (${
+        usersNotSubmittedContracts ? usersNotSubmittedContracts.tahun : ''
+      })`,
       icon: 'people-outline',
       imageKuning: require('../assets/images/kuning.png'), // Gambar kuning
       color: '#FB8C00', // Jingga gelap
@@ -92,27 +137,38 @@ const Home = () => {
       subtitle: `Belum Disetujui (${year || ''})`,
       icon: 'document-outline',
       color: '#E53935', // Merah tegas
-      imageMerah: require('../assets/images/merah.png'),  // Menambahkan gambar PNG
+      imageMerah: require('../assets/images/merah.png'), // Menambahkan gambar PNG
     },
     {
       title: '0 Realisasi Desember',
       subtitle: 'Belum Disetujui',
       icon: 'document-outline',
-      image: require('../assets/images/bulat.png'),  // Menambahkan gambar PNG
+      image: require('../assets/images/bulat.png'), // Menambahkan gambar PNG
       color: '#1E88E5', // Biru cerah
     },
   ];
 
-  const renderItem = ({ item }) => (
-    <TouchableOpacity style={[styles.card, { backgroundColor: item.color }]}>
+  const renderItem = ({item}) => (
+    <TouchableOpacity style={[styles.card, {backgroundColor: item.color}]}>
       <View style={styles.cardContent}>
-        <Ionicons name={item.icon} size={30} color="white" style={styles.cardIcon} />
+        <Ionicons
+          name={item.icon}
+          size={30}
+          color="white"
+          style={styles.cardIcon}
+        />
         {/* Gambar bulat */}
         {item.image && <Image source={item.image} style={styles.cardImage} />}
         {/* Gambar kuning */}
-        {item.imageKuning && <Image source={item.imageKuning} style={styles.cardImageKuning} />}
-        {item.imageUngu && <Image source={item.imageUngu} style={styles.cardImageungu} />}
-        {item.imageMerah && <Image source={item.imageMerah} style={styles.cardImageMerah} />}
+        {item.imageKuning && (
+          <Image source={item.imageKuning} style={styles.cardImageKuning} />
+        )}
+        {item.imageUngu && (
+          <Image source={item.imageUngu} style={styles.cardImageungu} />
+        )}
+        {item.imageMerah && (
+          <Image source={item.imageMerah} style={styles.cardImageMerah} />
+        )}
         <View>
           <Text style={styles.cardTitle}>{item.title}</Text>
           <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
@@ -126,7 +182,10 @@ const Home = () => {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Image source={require('../assets/images/logo.png')} style={styles.logo} />
+          <Image
+            source={require('../assets/images/logo.png')}
+            style={styles.logo}
+          />
         </View>
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.iconWrapper}>
@@ -135,9 +194,11 @@ const Home = () => {
         </View>
       </View>
 
-           {/* Breadcrumbs */}
-           <View style={styles.breadcrumbsContainer}>
-        <Text style={styles.breadcrumbText}>Dashboard {'-'} Admin {'-'} Dashboard</Text>
+      {/* Breadcrumbs */}
+      <View style={styles.breadcrumbsContainer}>
+        <Text style={styles.breadcrumbText}>
+          Dashboard {'-'} Admin {'-'} Dashboard
+        </Text>
       </View>
 
       {/* Grid Items */}
@@ -149,31 +210,11 @@ const Home = () => {
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.grid}
       />
-
-      {/* Bottom Navigation Bar */}
-      <View style={styles.bottomNavbar}>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="home-outline" size={24} color="#333" />
-          <Text style={styles.navLabel}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="document-text-outline" size={24} color="#333" />
-          <Text style={styles.navLabel}>Laporan</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="calendar-outline" size={24} color="#333" />
-          <Text style={styles.navLabel}>Presensi</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="person-outline" size={24} color="#333" />
-          <Text style={styles.navLabel}>User</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 };
 
-const styles = StyleSheet.create({  
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#ddd',
@@ -222,14 +263,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     elevation: 5,
   },
-  
 
   cardImage: {
-    width: 145,  // Ukuran gambar
-    height: 140,  // Ukuran gambar
-    position: 'absolute',  // Menambahkan posisi absolut
-    top: -27,  // Menempatkan gambar di bagian atas
-    right: -16,  // Menempatkan gambar di bagian kanan
+    width: 145, // Ukuran gambar
+    height: 140, // Ukuran gambar
+    position: 'absolute', // Menambahkan posisi absolut
+    top: -27, // Menempatkan gambar di bagian atas
+    right: -16, // Menempatkan gambar di bagian kanan
     borderTopRightRadius: 7,
   },
   cardImageKuning: {
@@ -245,20 +285,18 @@ const styles = StyleSheet.create({
     width: 120, // Ukuran gambar
     height: 100, // Ukuran gambar
     position: 'absolute',
-      top: -27, // Atur posisi sesuai kebutuhan
-      left: 241, // Atur posisi sesuai kebutuhan
+    top: -27, // Atur posisi sesuai kebutuhan
+    left: 241, // Atur posisi sesuai kebutuhan
     borderTopRightRadius: 10, // Radius untuk sudut kanan atas
   },
   cardImageMerah: {
     width: 128, // Ukuran gambar
     height: 135, // Ukuran gambar
     position: 'absolute',
-      top: -27, // Atur posisi sesuai kebutuhan
-      left: 233, // Atur posisi sesuai kebutuhan
+    top: -27, // Atur posisi sesuai kebutuhan
+    left: 233, // Atur posisi sesuai kebutuhan
     borderTopRightRadius: 7, // Radius untuk sudut kanan atas
   },
-
-
 
   cardContent: {
     flexDirection: 'column',
@@ -267,7 +305,7 @@ const styles = StyleSheet.create({
   },
   cardIcon: {
     fontSize: 40,
-    marginBottom: 18  ,
+    marginBottom: 18,
     marginLeft: 10, // Adjust the margin to shift it slightly to the right
   },
   cardTitle: {
@@ -275,7 +313,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 10, // Add left margin to shift the title slightly to the right
-    marginBottom: 8 ,
+    marginBottom: 8,
   },
   cardSubtitle: {
     color: 'white',
@@ -301,7 +339,7 @@ const styles = StyleSheet.create({
   },
   breadcrumbsContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 8, 
+    paddingVertical: 8,
     backgroundColor: '#f5f5f5',
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
