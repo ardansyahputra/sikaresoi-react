@@ -15,7 +15,7 @@ import LinearGradient from 'react-native-linear-gradient';
 
 // Axios instance
 const apiClient = axios.create({
-  baseURL: 'http://192.168.2.101:8000/api/v1',
+  baseURL: 'http://192.168.101.179:8000/api/v1',
   headers: {
     Authorization:
       'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIuMTAxOjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzQ0MDQ3MTQsImV4cCI6MTczNDQxMjM3NCwibmJmIjoxNzM0NDA4Nzc0LCJqdGkiOiJNVHBFSGZvQ0Z5b09MdVE5Iiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.dpvRGGPFbPDCHeJl4IpAp6COGXzyxFwYV5UyADRaJ1I',
@@ -82,7 +82,6 @@ const Home = () => {
   }, []);
 
   const items = [
-    
     {
       title: `User`,
       subtitle: 'Belum Dikonfirmasi',
@@ -94,7 +93,7 @@ const Home = () => {
       subtitle: 'Belum Disetujui',
       icon: 'document-outline',
       color: ['#FF6F61', '#E53935', '#B71C1C'], // Gradasi merah terang ke merah tua
-    },    
+    },
     {
       title: `${attendanceChanges || 0} Perubahan Presensi`,
       subtitle: 'Belum Dikonfirmasi',
@@ -136,7 +135,7 @@ const Home = () => {
       </TouchableOpacity>
     );
   };
-  
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -153,82 +152,87 @@ const Home = () => {
           </TouchableOpacity>
         </View>
       </View>
-  
+
       {/* Breadcrumbs */}
       <View style={styles.breadcrumbsContainer}>
         <Text style={styles.breadcrumbsText}>
           Dashboard {'-'} Admin {'-'} Dashboard
         </Text>
       </View>
-  
+
       {/* Circular Buttons Container */}
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <View style={styles.circularButtonsContainer}>
-        <Text style={styles.buttonsTitle}></Text>
-        <View style={styles.buttonsContainer}>
-          {/* Circular Buttons */}
-          {[
-            { title: '1 User', subtitle: 'Presensi Harian', icon: 'people-outline' },
-            {
-              title: `${
-                usersNotSubmittedRealization ? usersNotSubmittedRealization.total : 0
-              } User`,
-              subtitle: `Belum Kirim Realisasi ${
-                usersNotSubmittedRealization ? usersNotSubmittedRealization.bulan : 'bulan'
-              }`,
-              icon: 'people-outline',
-            },
-            {
-              title: `${
-                usersNotSubmittedContracts ? usersNotSubmittedContracts.total : 20
-              } User`,
-              subtitle: `Belum Kirim Kontrak (${
-                usersNotSubmittedContracts ? usersNotSubmittedContracts.tahun : ''
-              })`,
-              icon: 'people-outline',
-            },
-          ].map((item, index) => (
-            <View key={index} style={styles.buttonWrapper}>
-              <TouchableOpacity style={styles.circleButton}>
-                <Ionicons name={item.icon} size={22} color="#333" />
-              </TouchableOpacity>
-              <Text style={styles.buttonLabel}>{item.title}</Text>
-              <Text style={styles.buttonSubtitle}>{item.subtitle}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-
-
-{/* Menu Buttons */}
-<View style={styles.menuButtonsContainer}>
-      <Text style={styles.menuTitle}>Menu Utama</Text>
-      <View style={styles.menuRow}>
-        {[
-          { title: 'Surat Tugas', icon: 'document-text-outline', colors: ['#003366', '#336699', '#E0E0E0'] }, // Biru
-          { title: 'Potongan Lain', icon: 'pricetag-outline', colors: ['#8B0000', '#B22222', '#E0E0E0'] }, // Merah
-          { title: 'Lock', icon: 'lock-closed-outline', colors: ['#003366', '#8B0000', '#E0E0E0'] }, // Biru & Merah
-          { title: 'Lainnya', icon: 'ellipsis-horizontal-circle-outline', colors: ['#336699', '#B22222', '#E0E0E0'] }, // Biru muda & Merah
-        ].map((item, index) => (
-          <View key={index} style={styles.menuButtonWrapper}>
-            <LinearGradient
-              colors={item.colors}
-              style={styles.menuButton}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <TouchableOpacity>
-                <Ionicons name={item.icon} size={24} color="#F5F5F5" />
-              </TouchableOpacity>
-            </LinearGradient>
-            <Text style={styles.menuText}>{item.title}</Text>
+        <View style={styles.circularButtonsContainer}>
+          <Text style={styles.buttonsTitle}></Text>
+          <View style={styles.buttonsContainer}>
+            {/* Circular Buttons */}
+            {[
+              {
+                title: '1 User',
+                subtitle: 'Presensi Harian',
+                icon: 'people-outline',
+              },
+              {
+                title: `${
+                  usersNotSubmittedRealization
+                    ? usersNotSubmittedRealization.total
+                    : 0
+                } User`,
+                subtitle: `Belum Kirim Realisasi ${
+                  usersNotSubmittedRealization
+                    ? usersNotSubmittedRealization.bulan
+                    : 'bulan'
+                }`,
+                icon: 'people-outline',
+              },
+              {
+                title: `${
+                  usersNotSubmittedContracts
+                    ? usersNotSubmittedContracts.total
+                    : 20
+                } User`,
+                subtitle: `Belum Kirim Kontrak (${
+                  usersNotSubmittedContracts
+                    ? usersNotSubmittedContracts.tahun
+                    : ''
+                })`,
+                icon: 'people-outline',
+              },
+            ].map((item, index) => (
+              <View key={index} style={styles.buttonWrapper}>
+                <TouchableOpacity style={styles.circleButton}>
+                  <Ionicons name={item.icon} size={22} color="#333" />
+                </TouchableOpacity>
+                <Text style={styles.buttonLabel}>{item.title}</Text>
+                <Text style={styles.buttonSubtitle}>{item.subtitle}</Text>
+              </View>
+            ))}
           </View>
-        ))}
-      </View>
-    </View>
+        </View>
 
+        {/* Menu Buttons */}
+        <View style={styles.menuButtonsContainer}>
+          <Text style={styles.menuTitle}>Menu Utama</Text>
+          <View style={styles.menuRow}>
+            {[
+              {title: 'Surat Tugas', icon: 'document-text-outline'},
+              {title: 'Potongan Lain', icon: 'pricetag-outline'},
+              {title: 'Lock', icon: 'lock-closed-outline'},
+              {title: 'Lainnya', icon: 'ellipsis-horizontal-circle-outline'},
+            ].map((item, index) => (
+              <View key={index} style={styles.menuButtonWrapper}>
+                <View style={styles.menuButton}>
+                  <TouchableOpacity style={styles.touchableMenuButton}>
+                    <Ionicons name={item.icon} size={28} color="#000000" />
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.menuText}>{item.title}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
 
-      {/* Konten yang dapat discroll (hanya FlatList untuk card) */}
+        {/* Konten yang dapat discroll (hanya FlatList untuk card) */}
         {/* FlatList untuk item yang lain */}
         <FlatList
           data={items.slice(0, 5)} // Hilangkan 3 item yang sudah dipindahkan
@@ -239,32 +243,12 @@ const Home = () => {
           contentContainerStyle={styles.grid}
         />
       </ScrollView>
-  
-      {/* Bottom Navigation Bar */}
-      <View style={styles.bottomNavbar}>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="home-outline" size={24} color="#333" />
-          <Text style={styles.navLabel}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="document-text-outline" size={24} color="#333" />
-          <Text style={styles.navLabel}>Laporan</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="calendar-outline" size={24} color="#333" />
-          <Text style={styles.navLabel}>Presensi</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="person-outline" size={24} color="#333" />
-          <Text style={styles.navLabel}>User</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-container: {
+  container: {
     flex: 1,
     backgroundColor: '#E7E9F1',
   },
@@ -282,7 +266,7 @@ container: {
   headerLeft: {
     flex: 1,
   },
-logo: {
+  logo: {
     width: 140,
     height: 40,
     resizeMode: 'contain',
@@ -307,9 +291,7 @@ logo: {
     paddingHorizontal: 25,
     marginTop: 20,
   },
-  
-  
-  
+
   cardBackground: {
     flex: 1,
     borderRadius: 15,
@@ -342,17 +324,15 @@ logo: {
     justifyContent: 'space-between',
     marginBottom: 15,
   },
-  
-  
 
   menuButtonsContainer: {
-    padding: 16,
+    padding: 25,
     backgroundColor: '#E7E9F1',
     borderRadius: 8,
     marginBottom: -10,
     marginTop: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
   },
   menuTitle: {
@@ -374,10 +354,21 @@ logo: {
   menuButton: {
     width: 60,
     height: 60,
-    borderRadius: 30,
+    borderRadius: 16, // Rounded box style
+    backgroundColor: '#FFFFFF', // Set button background to white
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 2,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.2,
+  },
+  touchableMenuButton: {
+    width: '120%',
+    height: '120%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 16, // Ensure same as menuButton
   },
   menuText: {
     color: '#333',
@@ -387,83 +378,79 @@ logo: {
     marginTop: 8,
   },
 
-  
   circularButtonsContainer: {
-  justifyContent: 'center',
-  backgroundColor: '#fff',
-  paddingHorizontal: 20,
-  marginTop: 20,
-  borderRadius: 25,
-  width: 365,
-  height: 155,
-  alignSelf: 'center',
-},
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 25,
+    width: 365,
+    height: 155,
+    alignSelf: 'center',
+  },
 
-buttonsTitle: {
-  fontSize: 16,
-  fontWeight: 'bold',
-  color: '#333',
-  marginBottom: 10,
-  textAlign: 'center',
-},
+  buttonsTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
 
-buttonsContainer: {
-  flexDirection: 'row',
-  flexWrap: 'wrap',
-  justifyContent: 'space-evenly',
-},
+  buttonsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-evenly',
+  },
 
-buttonWrapper: {
-  alignItems: 'center',
-  marginBottom: 10,
-  width: '30%',
-},
+  buttonWrapper: {
+    alignItems: 'center',
+    marginBottom: 10,
+    width: '30%',
+  },
 
-circleButton: {
-  width: 40,
-  height: 40,
-  borderRadius: 20,
-  backgroundColor: '#fff',
-  justifyContent: 'center',
-  alignItems: 'center',
-  shadowColor: '#000',
-  shadowOpacity: 0.1,
-  shadowOffset: { width: 0, height: 2 },
-  elevation: 2,
-},
+  circleButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: {width: 0, height: 2},
+    elevation: 2,
+  },
 
-buttonLabel: {
-  fontSize: 12,
-  color: '#333',
-  marginTop: 5,
-  textAlign: 'center',
-},
+  buttonLabel: {
+    fontSize: 12,
+    color: '#333',
+    marginTop: 5,
+    textAlign: 'center',
+  },
 
-buttonSubtitle: {
-  fontSize: 12,
-  color: '#666',
-  textAlign: 'center',
-  marginTop: 4,
-},
+  buttonSubtitle: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 4,
+  },
 
-
-
-
-bottomNavbar: {
-  flexDirection: 'row',
-  backgroundColor: '#fff',
-  padding: 15,
-  justifyContent: 'space-around',
-  borderTopWidth: 1,
-  borderTopColor: '#ddd',
-},
-navItem: {
-  alignItems: 'center',
-},
-navLabel: {
-  fontSize: 12,
-  color: '#333',
-},
+  bottomNavbar: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    padding: 15,
+    justifyContent: 'space-around',
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
+  },
+  navItem: {
+    alignItems: 'center',
+  },
+  navLabel: {
+    fontSize: 12,
+    color: '#333',
+  },
 });
 
 export default Home;
