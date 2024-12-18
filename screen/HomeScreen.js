@@ -1,12 +1,13 @@
-  import React, { useState } from 'react';
-  import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, Image } from 'react-native';
-  import { BarChart } from 'react-native-chart-kit';
-  import Gusti from 'react-native-vector-icons/MaterialCommunityIcons';
-  import Oliv from 'react-native-vector-icons/MaterialCommunityIcons';
-  import Ardhan from 'react-native-vector-icons/MaterialIcons';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, Image } from 'react-native';
+import { BarChart } from 'react-native-chart-kit';
+import Gusti from 'react-native-vector-icons/MaterialCommunityIcons';
+import Oliv from 'react-native-vector-icons/MaterialCommunityIcons';
+import Ardhan from 'react-native-vector-icons/MaterialIcons';
+import PresensiScreen from './PresensiScreen';
 
-  export default function HomeScreen() {
-    const [isProfileVisible, setProfileVisible] = useState(false);
+export default function HomeScreen({ navigation }) { // <-- Tambahkan navigation di sini
+  const [isProfileVisible, setProfileVisible] = useState(false);
 
     const toggleProfileMenu = () => {
       setProfileVisible(!isProfileVisible);
@@ -34,29 +35,35 @@
           <Text style={styles.appBarTitle}>Dashboard / User / Dashboard</Text>
         </View>
 
-        {/* Dashboard Navigation */}
-        <View style={styles.dashboardNav}>
-          <TouchableOpacity style={[styles.card, { backgroundColor: '#007BFF' }]}>
-            <Ardhan name="perm-contact-calendar" size={30} color="#FFFFFF" />
-            <Text style={styles.cardTitle}>Presensi</Text>
-            <Text style={styles.cardSubtitle}>Data Presensi</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.card, { backgroundColor: '#FF4757' }]}>
-            <Gusti name="email-newsletter" size={30} color="#FFFFFF" />
-            <Text style={styles.cardTitle}>Teguran</Text>
-            <Text style={styles.cardSubtitle}>Data Teguran</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.card, { backgroundColor: '#FFA502' }]}>
-            <Oliv name="file-document" size={30} color="#FFFFFF" />
-            <Text style={styles.cardTitle}>1 Kontrak Bawahan</Text>
-            <Text style={styles.cardSubtitle}>Belum Disetujui</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.card, { backgroundColor: '#7D5FFF' }]}>
-            <Oliv name="file-document" size={30} color="#FFFFFF" />
-            <Text style={styles.cardTitle}>0 Realisasi Bawahan</Text>
-            <Text style={styles.cardSubtitle}>Belum Disetujui</Text>
-          </TouchableOpacity>
-        </View>
+      {/* Dashboard Navigation */}
+      <View style={styles.dashboardNav}>
+      <TouchableOpacity
+        style={[styles.card, { backgroundColor: '#007BFF' }]}
+        onPress={() => navigation.navigate('Presensi')}
+      >
+        <Ardhan name="perm-contact-calendar" size={30} color="#FFFFFF" />
+        <Text style={styles.cardTitle}>Presensi</Text>
+        <Text style={styles.cardSubtitle}>Data Presensi</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.card, { backgroundColor: '#FF4757' }]}
+        onPress={() => navigation.navigate('Teguran')}
+      > <Gusti name="email-newsletter" size={30} color="#FFFFFF" />
+          <Text style={styles.cardTitle}>Teguran</Text>
+          <Text style={styles.cardSubtitle}>Data Teguran</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.card, { backgroundColor: '#FFA502' }]}>
+          <Oliv name="file-document" size={30} color="#FFFFFF" />
+          <Text style={styles.cardTitle}>1 Kontrak Bawahan</Text>
+          <Text style={styles.cardSubtitle}>Belum Disetujui</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.card, { backgroundColor: '#7D5FFF' }]}>
+          <Oliv name="file-document" size={30} color="#FFFFFF" />
+          <Text style={styles.cardTitle}>0 Realisasi Bawahan</Text>
+          <Text style={styles.cardSubtitle}>Belum Disetujui</Text>
+        </TouchableOpacity>
+      </View>
 
         {/* Chart Section */}
         <View style={styles.chartSection}>
