@@ -6,7 +6,9 @@ import {
   TouchableOpacity,
   FlatList,
   Switch,
+  Image,
   TextInput,
+  ImageBackground,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
@@ -133,11 +135,21 @@ const SettingJabatan = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {/* Header dengan Tombol Back */}
+      
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color="#FAFAFA" />
         </TouchableOpacity>
-        <Text style={styles.headerText}>Jabatan</Text>
+
+         {/* Image and Title */}
+      <View style={styles.headerContent}>
+        <Image
+          source={require('../../images/sikaresoi.png')} // Path gambar sesuai
+          style={styles.headerImage}
+        />
+        <Text style={styles.headerTitle}>Jabatan</Text>
+        <Text style={styles.headerSubtitle}>User • Jabatan </Text>
+      </View>
       </View>
 
       {/* Search dan Tombol Tambah */}
@@ -172,22 +184,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFEFEF',
     padding: 16,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    backgroundColor: '#eb8909',
-    padding: 12,
-    borderRadius: 10,
-  },
+  header: { flexDirection: "row", alignItems: "center", backgroundColor: "#2563EB", paddingHorizontal: 16, paddingVertical: 18, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, shadowColor: "#000", shadowOpacity: 0.1, elevation: 5, marginBottom: 20, width: '100%',  },
   backButton: {
     marginRight: 16,
   },
-  headerText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#FAFAFA',
-  },
+
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -280,6 +281,29 @@ const styles = StyleSheet.create({
   listContainer: {
     paddingBottom: 16,
   },
+
+  headerImage: {
+    size: 10,
+    width: 200,
+    marginTop: 10,
+    marginBottom: 10,
+    height: 40,
+  },
+  
+  headerContent: {
+    flex:1,
+  },
+
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FAFAFA', // Warna teks
+    marginTop: 10,
+    marginBottom: 5,
+  },
+
+  headerSubtitle: { color: "#D1D5DB", marginTop: 4 },
+
 });
 
 export default SettingJabatan;

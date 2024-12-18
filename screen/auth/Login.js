@@ -4,12 +4,12 @@ import {
   View,
   Text,
   TextInput,
+  AsyncStorage,
   TouchableOpacity,
   Alert,
   Image,
   ActivityIndicator,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
 const LoginScreen = ({ navigation }) => {
@@ -26,7 +26,7 @@ const LoginScreen = ({ navigation }) => {
     setLoading(true);
 
     try {
-      const response = await axios.post('https://192.168.3.113/api/v1/auth/login', {
+      const response = await axios.post('https://192.168.110.135/api/v1/auth/login', {
         nip,
         password,
       });
@@ -53,7 +53,7 @@ const LoginScreen = ({ navigation }) => {
       <View style={styles.logoContainer}>
         {/* Logo */}
         <Image
-          source={require('../assets/sikaresoi.png')}
+          source={require('../BottomNavBar/images/sikaresoi.png')}
           style={styles.logo}
         />
       </View>
