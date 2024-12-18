@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import {
+  StyleSheet,
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   Alert,
+  Image,
   ActivityIndicator,
-  ImageBackground,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -17,53 +17,56 @@ const LoginScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
+  const login = async () => {
     if (!nip || !password) {
-      Alert.alert('Error', 'NIP dan Password wajib diisi');
+      Alert.alert('Error', 'NIP dan Password harus diisi.');
       return;
     }
 
     setLoading(true);
+
     try {
-      const response = await axios.post('https://192.168.2.102:8000/api/v1/auth/login', {
+      const response = await axios.post('https://192.168.3.113/api/v1/auth/login', {
         nip,
         password,
       });
 
       const { token, user } = response.data;
 
-      // Simpan token ke AsyncStorage
+      // Simpan token dan data pengguna ke AsyncStorage
       await AsyncStorage.setItem('authToken', token);
-      await AsyncStorage.setItem('user', JSON.stringify(user));
+      await AsyncStorage.setItem('userData', JSON.stringify(user));
 
-      Alert.alert('Success', 'Login berhasil');
-      setLoading(false);
-
-      // Arahkan ke halaman berikutnya setelah login
-      navigation.replace('HomeScreen');
+      Alert.alert('Berhasil', 'Selamat datang!');
+      navigation.replace('Home'); // Arahkan ke halaman beranda setelah login
     } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || 'Terjadi kesalahan. Silakan coba lagi.';
+      Alert.alert('Login Gagal', errorMessage);
+    } finally {
       setLoading(false);
-      Alert.alert(
-        'Login Gagal',
-        error.response?.data?.message || 'Terjadi kesalahan, coba lagi.'
-      );
     }
   };
 
   return (
-    <ImageBackground
-      source={require('../assets/background.jpg')} // Path gambar background
-      style={styles.background}
-    >
-      <View style={styles.container}>
+    <View style={styles.container}>
+      <View style={styles.logoContainer}>
+        {/* Logo */}
+        <Image
+          source={require('../assets/sikaresoi.png')}
+          style={styles.logo}
+        />
+      </View>
+      <View style={styles.formContainer}>
         <Text style={styles.title}>MASUK</Text>
         <TextInput
           style={styles.input}
           placeholder="NIP"
           value={nip}
           onChangeText={setNip}
-          autoCapitalize="none"
           keyboardType="default"
+          autoCapitalize="none"
+          autoCorrect={false}
         />
         <TextInput
           style={styles.input}
@@ -72,59 +75,78 @@ const LoginScreen = ({ navigation }) => {
           onChangeText={setPassword}
           secureTextEntry
           autoCapitalize="none"
+          autoCorrect={false}
         />
-        <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={login}
+          disabled={loading}>
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator size="small" color="#FFF" />
           ) : (
             <Text style={styles.buttonText}>Masuk</Text>
           )}
         </TouchableOpacity>
       </View>
-    </ImageBackground>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    resizeMode: 'cover', // Pastikan gambar menutupi layar
-  },
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)', // Efek transparan putih
-    margin: 16,
-    borderRadius: 10, // Untuk border kontainer
+    backgroundColor: '#F0F8FF',
+  },
+  logoContainer: {
+    marginBottom: 20,
+  },
+  logo: {
+    width: 120,
+    height: 80,
+    resizeMode: 'contain',
+  },
+  formContainer: {
+    width: '85%',
+    backgroundColor: 'rgba(240, 248, 255, 0.7)',
+    borderRadius: 8,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 24,
+    marginBottom: 20,
+    color: '#333',
   },
   input: {
     width: '100%',
     height: 50,
-    borderWidth: 1,
-    borderColor: '#ccc',
+    backgroundColor: '#FFF',
     borderRadius: 8,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    backgroundColor: '#fff',
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    fontSize: 16,
+    borderColor: '#CCC',
+    borderWidth: 1,
   },
   button: {
     width: '100%',
     height: 50,
-    backgroundColor: '#007bff',
+    backgroundColor: '#007BFF',
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 16,
+    color: '#FFF',
+    fontSize: 18,
     fontWeight: 'bold',
   },
 });
