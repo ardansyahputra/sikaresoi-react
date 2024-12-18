@@ -84,33 +84,33 @@ const Home = () => {
   const items = [
     {
       title: `User`,
-      subtitle: 'Belum Dikonfirmasi',
       icon: 'calendar-outline',
-      color: ['#0288D1', '#03A9F4'], // Gradasi biru tua ke biru terang
+      color: ['#1D56C0', '#013A91'], // Gradasi biru tua ke biru terang
+      subtitle: '__________',
     },
     {
       title: 'Teguran',
-      subtitle: 'Belum Disetujui',
       icon: 'document-outline',
       color: ['#FF6F61', '#E53935', '#B71C1C'], // Gradasi merah terang ke merah tua
-    },
-    {
-      title: `${attendanceChanges || 0} Perubahan Presensi`,
-      subtitle: 'Belum Dikonfirmasi',
-      icon: 'calendar-outline',
-      color: ['#F9A825', '#FBC02D'], // Kuning tua yang lebih hangat ke kuning lembut
-    },
-    {
-      title: '0 Realisasi Desember',
-      subtitle: 'Belum Disetujui',
-      icon: 'document-outline',
-      color: ['#0288D1', '#03A9F4'], // Gradasi biru tua ke biru terang
+      subtitle: '__________',
     },
     {
       title: `${totalContracts || 0} Kontrak`,
       subtitle: `Belum Disetujui (${year || ''})`,
       icon: 'document-outline',
       color: ['#D32F2F', '#F44336'], // Gradasi merah terang ke merah muda
+    },
+    {
+      title: '0 Realisasi Desember',
+      subtitle: 'Belum Disetujui',
+      icon: 'document-outline',
+      color: ['#1D56C0', '#013A91'], // Gradasi biru tua ke biru terang
+    },
+    {
+      title: `${attendanceChanges || 0} Perubahan Presensi`,
+      subtitle: 'Belum Dikonfirmasi',
+      icon: 'calendar-outline',
+      color: ['#F9A825', '#FBC02D'], // Kuning tua yang lebih hangat ke kuning lembut
     },
   ];
 
@@ -146,84 +146,76 @@ const Home = () => {
             style={styles.logo}
           />
         </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconWrapper}>
-            <Ionicons name="person-circle-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
+        <View style={styles.headerRight}></View>
       </View>
 
-      {/* Breadcrumbs */}
-      <View style={styles.breadcrumbsContainer}>
-        <Text style={styles.breadcrumbsText}>
-          Dashboard {'-'} Admin {'-'} Dashboard
-        </Text>
-      </View>
-
-      {/* Circular Buttons Container */}
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.circularButtonsContainer}>
-          <Text style={styles.buttonsTitle}></Text>
-          <View style={styles.buttonsContainer}>
-            {/* Circular Buttons */}
-            {[
-              {
-                title: '1 User',
-                subtitle: 'Presensi Harian',
-                icon: 'people-outline',
-              },
-              {
-                title: `${
-                  usersNotSubmittedRealization
-                    ? usersNotSubmittedRealization.total
-                    : 0
-                } User`,
-                subtitle: `Belum Kirim Realisasi ${
-                  usersNotSubmittedRealization
-                    ? usersNotSubmittedRealization.bulan
-                    : 'bulan'
-                }`,
-                icon: 'people-outline',
-              },
-              {
-                title: `${
-                  usersNotSubmittedContracts
-                    ? usersNotSubmittedContracts.total
-                    : 20
-                } User`,
-                subtitle: `Belum Kirim Kontrak (${
-                  usersNotSubmittedContracts
-                    ? usersNotSubmittedContracts.tahun
-                    : ''
-                })`,
-                icon: 'people-outline',
-              },
-            ].map((item, index) => (
-              <View key={index} style={styles.buttonWrapper}>
-                <TouchableOpacity style={styles.circleButton}>
-                  <Ionicons name={item.icon} size={22} color="#333" />
-                </TouchableOpacity>
-                <Text style={styles.buttonLabel}>{item.title}</Text>
-                <Text style={styles.buttonSubtitle}>{item.subtitle}</Text>
-              </View>
-            ))}
-          </View>
+        {/* Circular Buttons Container with Gradient */}
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <LinearGradient
+        colors={['#1D56C0', '#013A91']} // Gradasi biru tua ke biru terang
+        style={styles.circularButtonsContainer}
+      >
+        <Text style={styles.buttonsTitle}></Text>
+        <View style={styles.buttonsContainer}>
+          {/* Circular Buttons */}
+          {[
+            {
+              title: '1 User',
+              subtitle: 'Presensi Harian',
+              icon: 'person',
+            },
+            {
+              title: `${
+                usersNotSubmittedRealization
+                  ? usersNotSubmittedRealization.total
+                  : 0
+              } User`,
+              subtitle: `Belum Kirim Realisasi ${
+                usersNotSubmittedRealization
+                  ? usersNotSubmittedRealization.bulan
+                  : 'bulan'
+              }`,
+              icon: 'people',
+            },
+            {
+              title: `${
+                usersNotSubmittedContracts
+                  ? usersNotSubmittedContracts.total
+                  : 20
+              } User`,
+              subtitle: `Belum Kirim Kontrak ${
+                usersNotSubmittedContracts
+                  ? usersNotSubmittedContracts.tahun
+                  : ''
+              }`,
+              icon: 'people-circle',
+            },
+          ].map((item, index) => (
+            <View key={index} style={styles.buttonWrapper}>
+              <TouchableOpacity style={styles.circleButton}>
+                <Ionicons name={item.icon} size={35} color="#fff" />
+              </TouchableOpacity>
+              <Text style={styles.buttonLabel}>{item.title}</Text>
+              <Text style={styles.buttonSubtitle}>{item.subtitle}</Text>
+            </View>
+          ))}
         </View>
+      </LinearGradient>
 
         {/* Menu Buttons */}
         <View style={styles.menuButtonsContainer}>
-          <Text style={styles.menuTitle}>Menu Utama</Text>
+          X
           <View style={styles.menuRow}>
             {[
-              {title: 'Surat Tugas', icon: 'document-text-outline'},
-              {title: 'Potongan Lain', icon: 'pricetag-outline'},
-              {title: 'Lock', icon: 'lock-closed-outline'},
-              {title: 'Lainnya', icon: 'ellipsis-horizontal-circle-outline'},
+              {title: 'Surat Tugas', icon: 'document-text'},
+              {title: 'Potongan Lain', icon: 'pricetag'},
+              {title: 'Lock', icon: 'lock-closed'},
+              {title: 'Lainnya', icon: 'ellipsis-horizontal-circle-sharp'},
             ].map((item, index) => (
               <View key={index} style={styles.menuButtonWrapper}>
                 <View style={styles.menuButton}>
                   <TouchableOpacity style={styles.touchableMenuButton}>
-                    <Ionicons name={item.icon} size={28} color="#000000" />
+                    <Ionicons name={item.icon} size={30} color="#213376" />
                   </TouchableOpacity>
                 </View>
                 <Text style={styles.menuText}>{item.title}</Text>
@@ -232,7 +224,6 @@ const Home = () => {
           </View>
         </View>
 
-        {/* Konten yang dapat discroll (hanya FlatList untuk card) */}
         {/* FlatList untuk item yang lain */}
         <FlatList
           data={items.slice(0, 5)} // Hilangkan 3 item yang sudah dipindahkan
@@ -248,20 +239,18 @@ const Home = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#E7E9F1',
-  },
+  container: {flex: 1, backgroundColor: '#E7E9F1'},
+
   header: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fff',
     paddingHorizontal: 16,
     paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     elevation: 4,
-    borderBottomLeftRadius: 5,
-    borderBottomRightRadius: 5,
+    borderBottomLeftRadius: 15,
+    borderBottomRightRadius: 15,
   },
   headerLeft: {
     flex: 1,
@@ -279,13 +268,6 @@ const styles = StyleSheet.create({
   },
   iconWrapper: {
     padding: 10,
-  },
-  breadcrumbsContainer: {
-    backgroundColor: '#fff',
-    padding: 10,
-  },
-  breadcrumbsText: {
-    fontSize: 14,
   },
   grid: {
     paddingHorizontal: 25,
@@ -305,6 +287,7 @@ const styles = StyleSheet.create({
   },
   cardIcon: {
     marginRight: 10,
+    marginBottom: 25,
   },
   cardTitle: {
     fontSize: 18,
@@ -329,7 +312,7 @@ const styles = StyleSheet.create({
     padding: 25,
     backgroundColor: '#E7E9F1',
     borderRadius: 8,
-    marginBottom: -10,
+    marginBottom: -30,
     marginTop: 10,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
@@ -351,18 +334,15 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     marginBottom: 12,
   },
-  menuButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 16, // Rounded box style
-    backgroundColor: '#FFFFFF', // Set button background to white
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.2,
-  },
+menuButton: {
+  height: 60,
+  width: 60,
+  borderRadius: 30,
+  backgroundColor: '#fff',
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
   touchableMenuButton: {
     width: '120%',
     height: '120%',
@@ -377,22 +357,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
   },
+  
 
   circularButtonsContainer: {
     justifyContent: 'center',
-    backgroundColor: '#fff',
     paddingHorizontal: 20,
     marginTop: 20,
-    borderRadius: 25,
-    width: 365,
-    height: 155,
+    borderRadius: 15,
+    width: 370,
+    height: 145,
     alignSelf: 'center',
   },
 
   buttonsTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff', // Agar sesuai dengan latar belakang biru
     marginBottom: 10,
     textAlign: 'center',
   },
@@ -405,35 +385,37 @@ const styles = StyleSheet.create({
 
   buttonWrapper: {
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 27,
     width: '30%',
   },
 
-  circleButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: {width: 0, height: 2},
-    elevation: 2,
-  },
+circleButton: {
+  width: 50,
+  height: 50,
+  borderRadius: 30,
+  backgroundColor: 'transparent',
+  borderWidth: 1, // Menambahkan border
+  borderColor: '#fff', // Warna border putih agar kontras
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
 
   buttonLabel: {
-    fontSize: 12,
-    color: '#333',
-    marginTop: 5,
-    textAlign: 'center',
+    fontSize: 16, // Menambah ukuran teks untuk keterbacaan yang lebih baik
+    fontWeight: 'bold', // Membuat teks lebih tebal
+    color: '#fff', // Warna teks tetap putih agar kontras dengan tombol
+    marginTop: 8, // Memberikan jarak yang lebih besar antara tombol dan teks
+    textAlign: 'center', // Memastikan teks tetap rata tengah
+    textTransform: 'uppercase', // Membuat teks kapital semua untuk memberi kesan lebih tegas
   },
 
   buttonSubtitle: {
-    fontSize: 12,
-    color: '#666',
-    textAlign: 'center',
-    marginTop: 4,
+    fontSize: 12, // Ukuran yang lebih kecil untuk subjudul
+    color: '#fff', // Menjaga warna teks tetap putih
+    textAlign: 'center', // Memastikan teks tetap rata tengah
+    marginTop: 6, // Memberikan jarak antara label dan subtitle
+    fontStyle: 'italic', // Memberikan efek miring untuk subtitle
   },
 
   bottomNavbar: {
@@ -443,11 +425,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     borderTopWidth: 1,
     borderTopColor: '#ddd',
-  },
-  navItem: {
+  },navItem: {
     alignItems: 'center',
-  },
-  navLabel: {
+  },navLabel: {
     fontSize: 12,
     color: '#333',
   },
