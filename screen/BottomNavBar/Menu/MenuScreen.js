@@ -4,7 +4,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import Ardan from 'react-native-vector-icons/MaterialIcons';
 import Gusti from 'react-native-vector-icons/FontAwesome';
 import Gus from 'react-native-vector-icons/FontAwesome6';
-import SettingJabatan from './BottomNavBar/SettingJabatan';
+import Persetujuan from '../Home/Persetujuan/Persetujuan';
 
 const colors = ['#1c7aff', '#ff1c1c', '#ff7e1c', '#f719ff', '#999699', '#0da186'];
 
@@ -12,7 +12,7 @@ const Menu = ({ navigation }) => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <Image
-        source={require('./assets/sikaresoi.png')} // Path gambar sesuai
+        source={require('../../assets/sikaresoi.png')} // Path gambar sesuai
         style={styles.headerImage}
       />
 
@@ -46,7 +46,10 @@ const Menu = ({ navigation }) => {
       </View>
 
       <View style={styles.row}>
-        <TouchableOpacity style={[styles.category, { backgroundColor: colors[2] }]}>
+        <TouchableOpacity 
+        style={[styles.category, { backgroundColor: colors[2] }]}
+        onPress={() => navigation.navigate('Persetujuan')}
+        >
           <View style={styles.iconContainer}>
             <Ionicons name="shield-checkmark" size={35} color="white" />
           </View>

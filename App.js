@@ -5,12 +5,12 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Import layar utama
-import HomeScreen from './screen/HomeScreen';
-import MenuScreen from './screen/MenuScreen';
-import KontrakKinerjaScreen from './screen/KontrakKinerjaScreen';
-import ProfileScreen from './screen/ProfileScreen';
-import SettingJabatan from './screen/BottomNavBar/SettingJabatan';
-import RealisasiKinerja from './screen/BottomNavBar/RealisasiKinerja';
+import HomeScreen from './screen/BottomNavBar/Home/HomeScreen';
+import MenuScreen from './screen/BottomNavBar/Menu/MenuScreen';
+import KontrakKinerjaScreen from './screen/BottomNavBar/KontrakKinerja/KontrakKinerjaScreen';
+import ProfileScreen from './screen/BottomNavBar/Profile/ProfileScreen';
+import SettingJabatan from './screen/BottomNavBar/Menu/SettingJabatan/SettingJabatan';
+import RealisasiKinerja from './screen/BottomNavBar/Menu/RealisasiKinerja/RealisasiKinerja';
 import PresensiScreen from './screen/PresensiScreen';
 import TeguranScreen from './screen/TeguranScreen';
 
