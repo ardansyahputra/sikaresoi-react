@@ -13,7 +13,7 @@ const ProfileScreen = () => {
   const [pangkats, setPangkats] = useState([]);
   const [imageUri, setImageUri] = useState(null);
 
-  const Token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjExMC4yMDA6ODAwMFwvYXBpXC92MVwvYXV0aFwvcmVmcmVzaCIsImlhdCI6MTczNDQ4OTA0MiwiZXhwIjoxNzM0NTAwNzkyLCJuYmYiOjE3MzQ0OTcxOTIsImp0aSI6IlpaZTdYWWZlMFJRQXZETHAiLCJzdWIiOjksInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.h8RUqQBXJ1rlXdSrniDPHMM8Q1BvJBoXqxgJeIhTVtU'; // Replace with your token
+  const Token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjExMC4xMzU6ODAwMFwvYXBpXC92MVwvYXV0aFwvcmVmcmVzaCIsImlhdCI6MTczNDQ5NTg5NCwiZXhwIjoxNzM0NDk5Njc3LCJuYmYiOjE3MzQ0OTYwNzcsImp0aSI6ImdnTEM3cE9jTVJmYXJYUVIiLCJzdWIiOjcsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.O0Po5g4--lBhNSDFGWhccE0D49numi8bOSvqvqPjBZ0'; // Replace with your token
 
   useEffect(() => {
     getPangkat();
@@ -23,7 +23,7 @@ const ProfileScreen = () => {
   const getUser = () => {
     // Simulate fetching user data from Laravel API
     axios
-      .get('http://192.168.110.200:8000/api/v1/auth/user', {
+      .get('http://192.168.110.135:8000/api/v1/auth/user', {
         headers: {
           Authorization: `Bearer ${Token}`,
         },
@@ -38,7 +38,7 @@ const ProfileScreen = () => {
 
   const getPangkat = () => {
     axios
-      .get('http://192.168.110.200:8000/api/v1/pangkat/show', {
+      .get('http://192.168.110.135:8000/api/v1/pangkat/show', {
         headers: {
           Authorization: `Bearer ${Token}`,
         },
@@ -79,7 +79,7 @@ const ProfileScreen = () => {
     }
 
     axios
-      .post('http://192.168.110.200:8000/api/v1/user/update_profile', formData, {
+      .post('http://192.168.110.135:8000/api/v1/user/update_profile', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${Token}`,

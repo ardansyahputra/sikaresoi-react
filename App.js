@@ -12,7 +12,7 @@ import ProfileScreen from './screen/BottomNavBar/Profile/ProfileScreen';
 import SettingJabatan from './screen/BottomNavBar/Menu/SettingJabatan/SettingJabatan';
 import RealisasiKinerja from './screen/BottomNavBar/Menu/RealisasiKinerja/RealisasiKinerja';
 import PresensiScreen from './screen/PresensiScreen';
-import TeguranScreen from './screen/TeguranScreen';
+import TeguranScreen from './screen/TeguranScreen'
 
 // Bottom Tab Navigator
 const Tab = createBottomTabNavigator();
