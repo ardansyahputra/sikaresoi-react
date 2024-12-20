@@ -10,11 +10,13 @@ import {
   Linking,
   Modal,
   TextInput,
+  Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Dropdown } from 'react-native-element-dropdown'
 import axios from 'axios';
 
-const AttendanceChangeTable = () => {
+export default function Presensi() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
@@ -23,21 +25,23 @@ const AttendanceChangeTable = () => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
   const [selectedUuid, setSelectedUuid] = useState(null);
-
+  const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
+  const [selectedDisplay, setSelectedDisplay] = useState(null);
+  
   useEffect(() => {
-    fetchData(currentPage);
-  }, [currentPage]);
+    fetchData(currentPage, selectedDisplay);
+  }, [currentPage, selectedDisplay]);
 
   const fetchData = async page => {
     try {
       setLoading(true);
       const response = await axios.post(
-        'http://192.168.2.153:8000/api/v1/perubahan_absensi/indexandro',
+        'http://192.168.61.123:8000/api/v1/perubahan_absensi/indexandro',
         {page},
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIuMTUzOjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzQzOTk0NDQsImV4cCI6MTczNDQxNDc0MiwibmJmIjoxNzM0NDExMTQyLCJqdGkiOiJhS0xXR2w5Y3pkN0pVM1NMIiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.BXVqz9M9HJ18YZOo7-3uqMpTXHTS5MXTWNH9uu63NcQ',
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYxLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM0NTg0MjY2LCJleHAiOjE3MzQ1OTc5OTQsIm5iZiI6MTczNDU5NDM5NCwianRpIjoiMXZQT3lNMFVhdzdiak1CdCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.Jj3yyLl1vCqszKDQxSuqVXAdp8O8sjdgS6Y_u2g5g1o',
           },
         },
       );
@@ -99,6 +103,14 @@ const AttendanceChangeTable = () => {
     }
   };
 
+  const display = [
+    { label: '5', value: 1 },
+    { label: '10', value: 2 },
+    { label: '25', value: 3 },
+    { label: '50', value: 4 },
+    { label: '100', value: 5 },
+  ];
+
   const toggleExpand = id => {
     setExpandedId(expandedId === id ? null : id);
   };
@@ -117,11 +129,43 @@ const AttendanceChangeTable = () => {
   };
 
   const TableHeader = () => (
+    <View>
+    <View style={styles.filterContainer}>
+    <View style={styles.displayContainer}>
+    <Text style={styles.displayText}>
+      Display
+    </Text>
+    <Dropdown
+          style={styles.dropdown}
+          data={display}
+          labelField="label"
+          valueField="value"
+          placeholder="10"
+          value={selectedDisplay}
+          onChange={item => setSelectedDisplay(item.value)}
+          renderItem={(item) => (
+          <Text style={[styles.dropdownItem, styles.customFont]}>
+            {item.label}
+          </Text>
+        )}
+        />
+      </View>  
+    {/* Search Bar */}
+    <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchBar}
+          placeholder="Search"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+      </View>
+    </View>
     <View style={styles.tableHeader}>
       <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
       <Text style={[styles.headerCell, styles.nameCell]}>Name</Text>
       <Text style={[styles.headerCell, styles.tableStatusCell]}>Status</Text>
       <View style={styles.expandIconCell} />
+    </View>
     </View>
   );
 
@@ -178,7 +222,9 @@ const AttendanceChangeTable = () => {
               </Text>
             </View>
             <View style={styles.actionContainer}>
-              <TouchableOpacity style={styles.approveButton}>
+              <TouchableOpacity 
+                style={styles.approveButton}
+                onPress={() => handleApprove(item.uuid)}>
                 <Ionicons name="checkmark" size={20} color="white" />
               </TouchableOpacity>
               <TouchableOpacity
@@ -210,7 +256,6 @@ const AttendanceChangeTable = () => {
           </TouchableOpacity>
         </View>
       </View>
-  
       {/* Loading Indicator */}
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
@@ -289,7 +334,7 @@ const AttendanceChangeTable = () => {
       </Modal>
     </View>
   );  
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -316,8 +361,8 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 10,
   },
   headerCell: {
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 13,
     color: '#333',
   },
   tableRow: {
@@ -332,6 +377,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tableCell: {
+    fontFamily: 'Poppins-Regular',
     flexWrap: 'wrap',
     fontSize: 14,
   },
@@ -340,7 +386,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingLeft: 0,
   },
-  numberCell: {width: 50},
+  numberCell: {
+    width: 50
+  },
   nameCell: {
     flex: 1,
     overflow: 'hidden',
@@ -432,8 +480,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   pageButtonText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 13,
     color: '#fff',
-    fontWeight: 'bold',
   },
   disabledButton: {
     backgroundColor: '#CCCCCC',
@@ -443,6 +492,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   pageInfo: {
+    fontFamily: 'Poppins-Regular',
     fontSize: 13,
   },
   paginationContainer: {
@@ -528,6 +578,51 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
+  searchContainer: {
+    width: 150,
+    backgroundColor: '#FFFFFF',
+  },
+  searchBar: {
+    height: 40,
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 12,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  displayContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems:'center',
+    marginRight: 20,
+  },
+  displayText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 13,
+    marginRight: 8,
+    textAlign: 'center',
+    color: '#3f4254',
+  },
+  dropdown: {
+    height: 40,
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    width: 75,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dropdownItem: {
+    padding: 10,
+    fontSize: 16,
+    color: '#333',
+  },
+  customFont: {
+    fontFamily: 'Poppins-Regular',
+  }
 });
-
-export default AttendanceChangeTable;
