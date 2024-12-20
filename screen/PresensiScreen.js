@@ -1,170 +1,284 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, ScrollView } from 'react-native';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import Ardan from 'react-native-vector-icons/MaterialCommunityIcons';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useNavigation } from '@react-navigation/native';  // <-- Import useNavigation
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
+import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 
-const PresensiScreen = () => {
-  const [clock, setClock] = useState('00:00:00');
-  const [attendanceData, setAttendanceData] = useState([
-    { id: '1', date: '22 November 2024', masuk: '07:30:28', keluar: '19:48:25', type: 'WFO', pemotongan: '0,00 %' },
-    { id: '2', date: '21 November 2024', masuk: '07:54:47', keluar: '19:18:38', type: 'WFO', pemotongan: '0,00 %' },
-    { id: '3', date: '20 November 2024', masuk: '07:24:16', keluar: '21:25:20', type: 'WFO', pemotongan: '0,00 %' },
-    { id: '4', date: '19 November 2024', masuk: '07:18:20', keluar: '20:43:12', type: 'WFO', pemotongan: '0,00 %' },
-    { id: '5', date: '18 November 2024', masuk: '07:30:14', keluar: '19:05:32', type: 'WFO', pemotongan: '0,00 %' },
-  ]);
+// Komponen Speedometer
+const Speedometer = ({ value = 50, max = 100, time }) => {
+  const size = 200; // Diameter speedometer
+  const strokeWidth = 10;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
 
-  // Digital clock effect
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date();
-      const timeString = now.toLocaleTimeString();
-      setClock(timeString);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const navigation = useNavigation();  // <-- Use the hook to access navigation
-
-  // Render item for the table
-  const renderItem = ({ item }) => (
-    <View style={styles.tableRow}>
-      <Text style={[styles.tableCell, { width: 150 }]}>{item.date}</Text>
-      <Text style={[styles.tableCell, { width: 150 }]}>{item.masuk}</Text>
-      <Text style={[styles.tableCell, { width: 150 }]}>{item.keluar}</Text>
-      <Text style={[styles.tableCell, { width: 150 }]}>{item.type}</Text>
-      <Text style={[styles.tableCell, { width: 150 }]}>{item.pemotongan}</Text>
-    </View>
-  );
+  // Hitung progres
+  const progress = Math.min(Math.max(value / max, 0), 1); // 0 hingga 1
+  const strokeDashoffset = circumference * (1 - progress);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}> {/* Keep ScrollView here */}
-      {/* Clock Section */}
-      <View style={styles.clockContainer}>
-        {/* Back Button */}
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color="#FAFAFA" />
-        </TouchableOpacity>
-
-        <Ardan
-          name="book-edit"
-          size={24}
-          color="#FFFFFF"
-          style={{ marginHorizontal: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}
+    <View style={styles.speedometerContainer}>
+      <Svg width={size} height={size}>
+        {/* Background Circle */}
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="#333"
+          strokeWidth={strokeWidth}
+          fill="none"
         />
-        <Text style={styles.clockTitle}>Presensi</Text>
-        <View style={styles.clockCircle}>
-          <Text style={styles.clockText}>{clock}</Text>
-        </View>
+        {/* Progress Circle */}
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="#28a745"
+          strokeWidth={strokeWidth}
+          fill="none"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+        />
+        {/* Center Value */}
+        <SvgText
+          x="50%"
+          y="40%"
+          textAnchor="middle"
+          fontSize="24"
+          fontWeight="bold"
+          fill="#fff"
+        >
+          {Math.round(value)}
+        </SvgText>
+        {/* Display Time */}
+        <SvgText
+          x="50%"
+          y="60%"
+          textAnchor="middle"
+          fontSize="14"
+          fill="#fff"
+        >
+          {time}
+        </SvgText>
+      </Svg>
+    </View>
+  );
+};
+
+// Komponen PresensiScreen
+const PresensiScreen = ({ navigation }) => {
+  const [currentDate, setCurrentDate] = useState('');
+  const [currentTime, setCurrentTime] = useState('');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const date = new Date();
+      const options = { timeZone: 'Asia/Jakarta', hour12: false };
+      const formattedDate = new Intl.DateTimeFormat('id-ID', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      }).format(date);
+
+      const formattedTime = date.toLocaleTimeString('id-ID', options);
+
+      setCurrentDate(formattedDate);
+      setCurrentTime(formattedTime);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleCheckIn = () => {
+    alert('Check-in berhasil!');
+  };
+
+  const handleCheckOut = () => {
+    alert('Check-out berhasil!');
+  };
+
+  const handleHistoryPresensi = () => {
+    navigation.navigate('HistoryPresensi'); // Pastikan rute sudah diatur di navigator
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        
+          <Icon name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.title}>Presensi</Text>
       </View>
 
-      {/* Attendance History */}
-      <View style={styles.tableContainer}>
-        <View style={styles.tableHeader}>
-          <Text style={styles.tableTitle}>History Presensi</Text>
-          <View style={styles.actionsContainer}>
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: '#7B47FF', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }]}>
-              <FontAwesome name="repeat" size={24} color="#FFFFFF" style={{ marginRight: 12 }} />
-              <Text style={styles.actionText}>Fetch</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: '#FF3B3B', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }]}>
-              <FontAwesome name="repeat" size={24} color="#FFFFFF" style={{ marginRight: 12 }} />
-              <Text style={styles.actionText}>Perubahan</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+      {/* Date Section */}
+      <View style={styles.dateContainer}>
+        <Icon name="calendar" size={20} color="#fff" style={{ marginRight: 8 }} />
+        <Text style={styles.dateText}>{currentDate}</Text>
+      </View>
 
-        {/* Table */}
-        <View style={styles.table}>
-          <View>
-            <View style={styles.tableRowHeader}>
-              <Text style={[styles.tableHeaderCell, { width: 150 }]}>Tanggal</Text>
-              <Text style={[styles.tableHeaderCell, { width: 150 }]}>Jam Masuk</Text>
-              <Text style={[styles.tableHeaderCell, { width: 150 }]}>Jam Keluar</Text>
-              <Text style={[styles.tableHeaderCell, { width: 150 }]}>Type</Text>
-              <Text style={[styles.tableHeaderCell, { width: 150 }]}>Pemotongan</Text>
+      {/* Time Section */}
+      <View style={styles.timeContainer}>
+        <Text style={styles.timeLabel}>Waktu Saat Ini</Text>
+        <Text style={styles.time}>{currentTime}</Text>
+      </View>
+
+      {/* Speedometer */}
+      <Speedometer value={50} max={100} time={currentTime} />
+
+      {/* Action Section */}
+      <View style={styles.actionContainer}>
+        <TouchableOpacity style={styles.actionButton} onPress={handleCheckIn}>
+          <Text style={styles.actionText}>Hadir</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Summary Section */}
+      <View style={styles.summaryContainer}>
+        <Text style={styles.summaryTitle}>Ringkasan Presensi</Text>
+        <FlatList
+          data={[
+            { key: '1', label: 'Total Kehadiran', value: '20 Hari' },
+            { key: '2', label: 'Hadir', value: '08:00 WIB' },
+          ]}
+          renderItem={({ item }) => (
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>{item.label}</Text>
+              <Text style={styles.summaryValue}>{item.value}</Text>
             </View>
-            {/* Enable vertical scroll for table rows */}
-            <FlatList
-              data={attendanceData}
-              style={{ height: 500, width: "100%", flex: 1, }}
-              renderItem={renderItem}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={true} // Enable vertical scroll for FlatList
-            />
-          </View>
-        </View>
+          )}
+          keyExtractor={(item) => item.key}
+        />
+        {/* History Button */}
+      <TouchableOpacity
+        style={styles.historyButton}
+        onPress={handleHistoryPresensi}
+      >
+        <Text style={styles.historyButtonText}>Lihat History Presensi</Text>
+      </TouchableOpacity>
       </View>
-    </ScrollView>
+
+      
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, backgroundColor: '#F4F6F9', padding: 20 },
-  clockContainer: {
-    alignItems: 'center',
+  container: {
+    flex: 1,
+    backgroundColor: '#121212',
+    padding: 16,
+  },
+  header: {
+    flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 20,
-    backgroundColor: '#3DA9FC',
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  title: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  dateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1c1c1c',
+    padding: 10,
     borderRadius: 10,
-    padding: 20,
+    marginBottom: 40,
   },
-  backButton: {
-    marginRight: 320,
+  dateText: {
+    color: '#fff',
+    fontSize: 16,
   },
-  clockTitle: { fontSize: 18, color: '#FFF', marginBottom: 10, fontWeight: 'bold' },
-  clockCircle: {
-    borderWidth: 10,
-    borderColor: 'red',
-    borderRadius: 150,
-    width: 200,
-    height: 200,
+  timeContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  timeLabel: {
+    color: '#aaa',
+    fontSize: 14,
+  },
+  time: {
+    color: '#fff',
+    fontSize: 40,
+    fontWeight: 'bold',
+  },
+  speedometerContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFF',
+    marginBottom: 20,
   },
-  clockText: { fontSize: 36, fontWeight: 'bold', color: '#333' },
-  tableContainer: { backgroundColor: '#FFF', borderRadius: 10, padding: 10, elevation: 3 },
-  tableHeader: {
+  actionContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  actionButton: {
+    flex: 1,
+    backgroundColor: '#28a745',
+    padding: 15,
+    borderRadius: 10,
     alignItems: 'center',
+    marginHorizontal: 5,
+  },
+  checkOutButton: {
+    backgroundColor: '#dc3545',
+  },
+  actionText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  summaryContainer: {
+    backgroundColor: '#1c1c1c',
+    padding: 16,
+    borderRadius: 10,
+  },
+  summaryTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
     marginBottom: 10,
   },
-  tableTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 80 },
-  actionsContainer: { flexDirection: 'row' },
-  actionButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    marginHorizontal: 4,
-    marginTop: 30,
-  },
-  actionText: { color: '#FFF', fontWeight: 'bold' },
-  table: { borderWidth: 1, borderColor: '#DDD', borderRadius: 8 },
-  tableRowHeader: {
+  summaryItem: {
     flexDirection: 'row',
-    backgroundColor: '#3DA9FC',
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
-    maxHeight: 400,
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
-  tableHeaderCell: {
-    flex: 1,
-    padding: 8,
-    textAlign: 'center',
+  summaryLabel: {
+    color: '#aaa',
+    fontSize: 14,
+  },
+  summaryValue: {
+    color: '#fff',
+    fontSize: 14,
+  },
+  
+   historyButton: {
+    backgroundColor: '#007bff',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  historyButtonText: {
+    color: '#fff',
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#FFF',
   },
-  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderColor: '#DDD' },
-  tableCell: {
-    flex: 1,
+  backButton: {
+    position: 'absolute', // Posisikan di pojok kiri
+    left: 0,
     padding: 8,
-    textAlign: 'center',
-    color: '#333',
   },
 });
 

@@ -1,275 +1,185 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, Image } from 'react-native';
-import { BarChart } from 'react-native-chart-kit';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
+import LinearGradient from 'react-native-linear-gradient';
+import Ardhan from 'react-native-vector-icons/MaterialIcons';
 import Gusti from 'react-native-vector-icons/MaterialCommunityIcons';
 import Oliv from 'react-native-vector-icons/MaterialCommunityIcons';
-import Ardhan from 'react-native-vector-icons/MaterialIcons';
-import PresensiScreen from '../../PresensiScreen';
 
-export default function HomeScreen({ navigation }) { // <-- Tambahkan navigation di sini
-  const [isProfileVisible, setProfileVisible] = useState(false);
-
-  const toggleProfileMenu = () => {
-    setProfileVisible(!isProfileVisible);
-  };
-
+export default function HomeScreen({ navigation }) {
   return (
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.userInfo}>
-          
-          {/* Profile Button with Image and Shadow */}
-          <TouchableOpacity onPress={toggleProfileMenu} style={styles.profileButton}>
-            <Text style={styles.userName}>BUDIAWAN, S.Si.T, MT</Text>
-            <Image
-              source={require('../../assets/300-14.jpg')} // Ganti dengan path gambar Anda
-              style={styles.profileImage}
-            />
-          </TouchableOpacity>
+    <ScrollView contentContainerStyle={{ flexGrow: 1 }}> {/* Membuat halaman scrollable */}
+      <View style={styles.container}>
+        {/* Header */}
+        <LinearGradient colors={['#FFFFFF', '#FFFFFF']} style={styles.header}>
+          <Image
+            source={require('../../assets/images/sikaresoi.png')}
+            style={styles.logo}
+            resizeMode="cover"
+          />
+        </LinearGradient>
+
+        {/* Banner */}
+        <View style={styles.banner}>
+          <Image
+            source={{ uri: 'https://via.placeholder.com/350x150' }}
+            style={styles.bannerImage}
+            resizeMode="cover"
+          />
         </View>
-      </View>
 
-      {/* App Bar Section Below Profile */}
-      <View style={styles.appBar}>
-        <Text style={styles.appBarTitle}>Dashboard / User / Dashboard</Text>
-      </View>
+        {/* Menu Favorite */}
+        <View style={styles.menuRow}>
+          {renderMenuIcon('Setting   Jabatan', 'settings', () => navigation.navigate('SettingJabatan'))}
+          {renderMenuIcon('Realisasi  Kinerja', 'add-circle-outline', () => navigation.navigate('RealisasiKinerja'))}
+          {renderMenuIcon('Persetujuan Kontrak Kinerja', 'shield-checkmark', () => navigation.navigate('Persetujuan'))}
+          {renderMenuIcon('Lainnya', 'apps', () => navigation.navigate('Allmenu'))}
+        </View>
+        <View style={styles.dashboardNav}>
+          {/* Baris 1: Dua tombol pertama */}
+          <View style={styles.row}>
+            <TouchableOpacity
+              style={[styles.card,]}
+              onPress={() => navigation.navigate('Presensi')}
+            >
+              <LinearGradient colors={['#4A90E2', '#1D56C0']} style={styles.gradient}>
+                <Ardhan name="perm-contact-calendar" size={60} color="#FFFFFF"  />
+                <Text style={styles.cardTitle}>Presensi</Text>
+                <Text style={styles.cardSubtitle}>Data Presensi</Text>
+              </LinearGradient>
+            </TouchableOpacity>
 
-      {/* Dashboard Navigation */}
-      <View style={styles.dashboardNav}>
-      <TouchableOpacity
-        style={[styles.card, { backgroundColor: '#007BFF' }]}
-        onPress={() => navigation.navigate('Presensi')}
-      >
-        <Ardhan name="perm-contact-calendar" size={30} color="#FFFFFF" />
-        <Text style={styles.cardTitle}>Presensi</Text>
-        <Text style={styles.cardSubtitle}>Data Presensi</Text>
-      </TouchableOpacity>
-
-        <TouchableOpacity style={[styles.card, { backgroundColor: '#FF4757' }]}>
-          <Gusti name="email-newsletter" size={30} color="#FFFFFF" />
-          <Text style={styles.cardTitle}>Teguran</Text>
-          <Text style={styles.cardSubtitle}>Data Teguran</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.card, { backgroundColor: '#FFA502' }]}>
-          <Oliv name="file-document" size={30} color="#FFFFFF" />
-          <Text style={styles.cardTitle}>1 Kontrak Bawahan</Text>
-          <Text style={styles.cardSubtitle}>Belum Disetujui</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.card, { backgroundColor: '#7D5FFF' }]}>
-          <Oliv name="file-document" size={30} color="#FFFFFF" />
-          <Text style={styles.cardTitle}>0 Realisasi Bawahan</Text>
-          <Text style={styles.cardSubtitle}>Belum Disetujui</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Chart Section */}
-      <View style={styles.chartSection}>
-        <Text style={styles.chartTitle}>Remunerasi 2024</Text>
-        <BarChart
-        data={{
-          labels: ['Gaji Pokok', 'Tunjangan', 'Bonus', 'Potongan'],
-          datasets: [
-            {
-              data: [45000000, 20000000, 15000000, 5000000],
-              // Warna batang pada grafik menjadi ungu penuh
-              color: () => `rgba(160, 32, 240, ${opacity})`, // Ungu penuh
-            },
-          ],
-        }}
-        width={300} // Width of the chart
-        height={300} // Height of the chart
-        chartConfig={{
-          backgroundColor: '#ffffff', // Background chart warna putih
-          backgroundGradientFrom: '#ffffff',
-          backgroundGradientTo: '#ffffff',
-          decimalPlaces: 0, // No decimal places for financial data
-          color: (opacity = 1) => `rgba(160, 32, 240, ${opacity})`, // Warna untuk teks dan label (ungu)
-          labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`, // Warna label hitam
-          propsForLabels: {
-            fontSize: 10,
-            fontWeight: 'bold',
-          },
-        }}
-        accessor="population"
-        paddingLeft="15"
-        absolute // Display absolute values
-      />
-      </View>
-
-      {/* Profile Menu Modal */}
-      <Modal
-        visible={isProfileVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={toggleProfileMenu}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Profil</Text>
-            <Text style={styles.modalContent}>Detail Profil Pengguna</Text>
-            <TouchableOpacity style={styles.closeButton} onPress={toggleProfileMenu}>
-              <Text style={styles.closeButtonText}>Tutup</Text>
+            <TouchableOpacity
+              style={[styles.card,]}
+              onPress={() => navigation.navigate('Teguran')}
+            >
+              <LinearGradient colors={['#FF6F61', '#E53935', '#B71C1C']} style={styles.gradient}>
+                <Gusti name="email-newsletter" size={60} color="#FFFFFF" />
+                <Text style={styles.cardTitle}>Teguran</Text>
+                <Text style={styles.cardSubtitle}>Data Teguran</Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
+
+          {/* Baris 2: Dua tombol berikutnya */}
+          <View style={styles.row}>
+          <TouchableOpacity
+              style={[styles.card,]}
+              onPress={() => navigation.navigate('Persetujuan')}
+            >
+              <LinearGradient colors={['#D32F2F', '#F44336']} style={styles.gradient}>
+                <Oliv name="file-document" size={60} color="#FFFFFF" />
+                <Text style={styles.cardTitle}>1 Kontrak Bawahan</Text>
+                <Text style={styles.cardSubtitle}>Belum Disetujui</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.card,]}
+              onPress={() => navigation.navigate('PersetujuanR')}
+            >
+                <LinearGradient colors={['#F57F17', '#FBC02D']} style={styles.gradient}>
+                <Oliv name="file-document" size={60} color="#FFFFFF" />
+                <Text style={styles.cardTitle}>0 Realisasi Bawahan</Text>
+                <Text style={styles.cardSubtitle}>Belum Disetujui</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+
         </View>
-      </Modal>
+      </View>
     </ScrollView>
   );
 }
 
+const renderMenuIcon = (label, iconName, onPress) => {
+  return (
+    <TouchableOpacity onPress={onPress} style={styles.iconContainer}>
+      <View style={styles.iconCircle}>
+        <Icon name={iconName} size={30} color="#213376" />
+      </View>
+      <Text style={styles.menuText}>{label}</Text> {/* The label will wrap if too long */}
+    </TouchableOpacity>
+  );
+};
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 20,
-  },
-  header: {
-    marginBottom: 20,
-  },
-  date: {
-    fontSize: 16,
-    color: '#555',
-    marginBottom: 35,  // Menambahkan spasi di bawah teks
-    marginTop: 5,   
-  },
-  userInfo: {
+  container: { flex: 1, backgroundColor: '#F5F5F5', borderRadius: 40 },
+  header: { padding: 16, borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
+  banner: { margin: 10 },
+  bannerImage: { width: '100%', height: 150, borderRadius: 8 },
+  menuRow: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 5,
+    justifyContent: 'space-between',
+    marginVertical: 10,
+    flexWrap: 'wrap', // Allow text to wrap to the next line
+  },
+  iconContainer: {
+    alignItems: 'center',
+    width: '25%', // Adjust width to control the item spacing
+    marginVertical: 10,
+  },
+  iconCircle: {
+    height: 60,
+    width: 60,
+    borderRadius: 30,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  menuText: {
+    flexShrink: 1,  // Allow text to shrink and wrap within its container
+    textAlign: 'center', // Center align text under the icon
+    paddingTop: 5, // Optional: add space between the icon and text
+    width: '100%', // Ensure text uses available width for wrapping
   },
 
-  profileButton: {
-    flexDirection: 'row',  
-    alignItems: 'center',  
-    justifyContent: 'flex-start',  
-    shadowColor: '#000',  
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,  
-    shadowRadius: 4,  
-    elevation: 5,  
-    backgroundColor: '#fff', 
-    borderRadius : 20, // Coba tambahkan latar belakang sementara
-    paddingLeft : 10,
-  },
-  
-
-
-  profileImage: {
-    width: 40, // Adjust the size of the image
-    height: 40,
-    borderRadius: 20, // Make the image round
-    marginLeft: 10, // Add space between the image and the name
-    // Add shadow to the profile image
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5, // For Android
-  },
-  
-
-  userName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  appBar: {
-    backgroundColor: '#8080', // Blue background color
-    padding: 1,
-    borderRadius: 10,
-    marginBottom: 20,
-    marginTop: 10,
-  },
-
-  appBarTitle: {
-  fontSize: 15,
-  fontWeight: 'bold',
-  color: 'rgba(180, 180, 184, 20)', // Add opacity using RGBA
-},
-
-
-  appBarSubtitle: {
-    fontSize: 14,
-    color: '#fff',
-    marginTop: 5,
+  logo: {
+    width: '50%',
+    height: undefined,
+    aspectRatio: 5,
+    marginRight: 190,
+    resizeMode: 'contain',
+    alignSelf: 'center',
   },
 
   dashboardNav: {
+    marginTop: 20,
+    paddingHorizontal: 5,
+  },
+
+  row: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 50,
   },
   card: {
-    width: '48%',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
+    width: '50%', // Mengatur lebar card agar dua card dalam satu baris
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: -60,
   },
+  
+  gradient: {
+    flex: 1,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+
   cardTitle: {
-    fontSize: 18,
+    fontSize: 25,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 5,
+    marginTop: 10,
+    marginRight: 30,
   },
+
   cardSubtitle: {
     fontSize: 14,
     color: '#fff',
-  },
-  chartSection: {
-    marginTop: 20,
-    marginBottom : 60,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
-    alignItems: 'center', // Centering the chart
-  },
-  chartTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#333',
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContainer: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    width: 300,
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  modalContent: {
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  closeButton: {
-    backgroundColor: '#FF4757',
-    padding: 10,
-    borderRadius: 5,
-  },
-  closeButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    marginTop: 4,
+    marginRight: 30,
   },
 });
