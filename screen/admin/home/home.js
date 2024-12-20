@@ -12,6 +12,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import LinearGradient from 'react-native-linear-gradient';
+import {useNavigation} from '@react-navigation/native';
 
 // Axios instance
 const apiClient = axios.create({
@@ -23,6 +24,7 @@ const apiClient = axios.create({
 });
 
 const Home = () => {
+  const navigation = useNavigation();
   const [totalContracts, setTotalContracts] = useState(null);
   const [year, setYear] = useState('null');
   const [attendanceChanges, setAttendanceChanges] = useState(null);
@@ -85,39 +87,46 @@ const Home = () => {
     {
       title: `User`,
       icon: 'calendar-outline',
-      color: ['#1D56C0', '#013A91'], // Gradasi biru tua ke biru terang
+      color: ['#1D56C0', '#013A91'],
       subtitle: '__________',
+      navigateTo: 'User', // Nama layar navigasi
     },
     {
       title: 'Teguran',
       icon: 'document-outline',
-      color: ['#FF6F61', '#E53935', '#B71C1C'], // Gradasi merah terang ke merah tua
+      color: ['#FF6F61', '#E53935', '#B71C1C'],
       subtitle: '__________',
+      navigateTo: 'Teguran', // Nama layar navigasi
     },
     {
       title: `${totalContracts || 0} Kontrak`,
       subtitle: `Belum Disetujui (${year || ''})`,
       icon: 'document-outline',
-      color: ['#D32F2F', '#F44336'], // Gradasi merah terang ke merah muda
+      color: ['#D32F2F', '#F44336'],
+      navigateTo: 'Kontrak', // Nama layar navigasi
     },
     {
       title: '0 Realisasi Desember',
       subtitle: 'Belum Disetujui',
       icon: 'document-outline',
-      color: ['#1D56C0', '#013A91'], // Gradasi biru tua ke biru terang
+      color: ['#1D56C0', '#013A91'],
+      navigateTo: 'Realisasi', // Nama layar navigasi
     },
     {
       title: `${attendanceChanges || 0} Perubahan Presensi`,
       subtitle: 'Belum Dikonfirmasi',
       icon: 'calendar-outline',
-      color: ['#F9A825', '#FBC02D'], // Kuning tua yang lebih hangat ke kuning lembut
+      color: ['#F9A825', '#FBC02D'],
+      navigateTo: 'PerubahanPresensi', // Nama layar navigasi
     },
   ];
 
   const renderItem = ({item}) => {
     return (
-      <TouchableOpacity style={styles.verticalCard}>
-        {/* Selalu gunakan verticalCard */}
+      <TouchableOpacity
+        style={styles.verticalCard}
+        onPress={() => navigation.navigate(item.navigateTo)} // Navigasi
+      >
         <LinearGradient colors={item.color} style={styles.cardBackground}>
           <View style={styles.cardContent}>
             <Ionicons
@@ -149,72 +158,91 @@ const Home = () => {
         <View style={styles.headerRight}></View>
       </View>
 
-        {/* Circular Buttons Container with Gradient */}
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <LinearGradient
-        colors={['#1D56C0', '#013A91']} // Gradasi biru tua ke biru terang
-        style={styles.circularButtonsContainer}
-      >
-        <Text style={styles.buttonsTitle}></Text>
-        <View style={styles.buttonsContainer}>
-          {/* Circular Buttons */}
-          {[
-            {
-              title: '1 User',
-              subtitle: 'Presensi Harian',
-              icon: 'person',
-            },
-            {
-              title: `${
-                usersNotSubmittedRealization
-                  ? usersNotSubmittedRealization.total
-                  : 0
-              } User`,
-              subtitle: `Belum Kirim Realisasi ${
-                usersNotSubmittedRealization
-                  ? usersNotSubmittedRealization.bulan
-                  : 'bulan'
-              }`,
-              icon: 'people',
-            },
-            {
-              title: `${
-                usersNotSubmittedContracts
-                  ? usersNotSubmittedContracts.total
-                  : 20
-              } User`,
-              subtitle: `Belum Kirim Kontrak ${
-                usersNotSubmittedContracts
-                  ? usersNotSubmittedContracts.tahun
-                  : ''
-              }`,
-              icon: 'people-circle',
-            },
-          ].map((item, index) => (
-            <View key={index} style={styles.buttonWrapper}>
-              <TouchableOpacity style={styles.circleButton}>
-                <Ionicons name={item.icon} size={35} color="#fff" />
-              </TouchableOpacity>
-              <Text style={styles.buttonLabel}>{item.title}</Text>
-              <Text style={styles.buttonSubtitle}>{item.subtitle}</Text>
-            </View>
-          ))}
-        </View>
-      </LinearGradient>
+      {/* Circular Buttons Container with Gradient */}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <LinearGradient
+          colors={['#1D56C0', '#013A91']} // Gradasi biru tua ke biru terang
+          style={styles.circularButtonsContainer}>
+          <Text style={styles.buttonsTitle}></Text>
+          <View style={styles.buttonsContainer}>
+            {/* Circular Buttons */}
+            {[
+              {
+                title: '1 User',
+                subtitle: 'Presensi Harian',
+                icon: 'person',
+                navigateTo: 'Presensi', // Menambahkan navigateTo
+              },
+              {
+                title: `${
+                  usersNotSubmittedRealization
+                    ? usersNotSubmittedRealization.total
+                    : 0
+                } User`,
+                subtitle: `Belum Kirim Realisasi ${
+                  usersNotSubmittedRealization
+                    ? usersNotSubmittedRealization.bulan
+                    : 'bulan'
+                }`,
+                icon: 'people',
+                navigateTo: 'BelumKirimRealisasi', // Menambahkan navigateTo
+              },
+              {
+                title: `${
+                  usersNotSubmittedContracts
+                    ? usersNotSubmittedContracts.total
+                    : 20
+                } User`,
+                subtitle: `Belum Kirim Kontrak ${
+                  usersNotSubmittedContracts
+                    ? usersNotSubmittedContracts.tahun
+                    : ''
+                }`,
+                icon: 'people-circle',
+                navigateTo: 'BelumKirimKontrak', // Menambahkan navigateTo
+              },
+            ].map((item, index) => (
+              <View key={index} style={styles.buttonWrapper}>
+                <TouchableOpacity
+                  style={styles.circleButton}
+                  onPress={() => navigation.navigate(item.navigateTo)} // Menambahkan navigasi
+                >
+                  <Ionicons name={item.icon} size={35} color="#fff" />
+                </TouchableOpacity>
+                <Text style={styles.buttonLabel}>{item.title}</Text>
+                <Text style={styles.buttonSubtitle}>{item.subtitle}</Text>
+              </View>
+            ))}
+          </View>
+        </LinearGradient>
 
         {/* Menu Buttons */}
         <View style={styles.menuButtonsContainer}>
           X
           <View style={styles.menuRow}>
             {[
-              {title: 'Surat Tugas', icon: 'document-text'},
-              {title: 'Potongan Lain', icon: 'pricetag'},
-              {title: 'Lock', icon: 'lock-closed'},
-              {title: 'Lainnya', icon: 'ellipsis-horizontal-circle-sharp'},
+              {
+                title: 'Surat Tugas',
+                icon: 'document-text',
+                navigateTo: 'SuratTugas',
+              },
+              {
+                title: 'Potongan Lain',
+                icon: 'pricetag',
+                navigateTo: 'PotonganLain',
+              },
+              {title: 'Lock', icon: 'lock-closed', navigateTo: 'Lock'},
+              {
+                title: 'Lainnya',
+                icon: 'ellipsis-horizontal-circle-sharp',
+                navigateTo: 'Lainnya',
+              },
             ].map((item, index) => (
               <View key={index} style={styles.menuButtonWrapper}>
                 <View style={styles.menuButton}>
-                  <TouchableOpacity style={styles.touchableMenuButton}>
+                  <TouchableOpacity
+                    style={styles.touchableMenuButton}
+                    onPress={() => navigation.navigate(item.navigateTo)}>
                     <Ionicons name={item.icon} size={30} color="#213376" />
                   </TouchableOpacity>
                 </View>
@@ -334,14 +362,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     marginBottom: 12,
   },
-menuButton: {
-  height: 60,
-  width: 60,
-  borderRadius: 30,
-  backgroundColor: '#fff',
-  justifyContent: 'center',
-  alignItems: 'center',
-},
+  menuButton: {
+    height: 60,
+    width: 60,
+    borderRadius: 30,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 
   touchableMenuButton: {
     width: '120%',
@@ -357,7 +385,6 @@ menuButton: {
     textAlign: 'center',
     marginTop: 8,
   },
-  
 
   circularButtonsContainer: {
     justifyContent: 'center',
@@ -389,17 +416,16 @@ menuButton: {
     width: '30%',
   },
 
-circleButton: {
-  width: 50,
-  height: 50,
-  borderRadius: 30,
-  backgroundColor: 'transparent',
-  borderWidth: 1, // Menambahkan border
-  borderColor: '#fff', // Warna border putih agar kontras
-  justifyContent: 'center',
-  alignItems: 'center',
-},
-
+  circleButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 30,
+    backgroundColor: 'transparent',
+    borderWidth: 1, // Menambahkan border
+    borderColor: '#fff', // Warna border putih agar kontras
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 
   buttonLabel: {
     fontSize: 16, // Menambah ukuran teks untuk keterbacaan yang lebih baik
@@ -425,9 +451,11 @@ circleButton: {
     justifyContent: 'space-around',
     borderTopWidth: 1,
     borderTopColor: '#ddd',
-  },navItem: {
+  },
+  navItem: {
     alignItems: 'center',
-  },navLabel: {
+  },
+  navLabel: {
     fontSize: 12,
     color: '#333',
   },
