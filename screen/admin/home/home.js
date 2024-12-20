@@ -5,12 +5,11 @@ View,Text,StyleSheet,TouchableOpacity,FlatList,Image,ScrollView, // Tambahkan Sc
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import LinearGradient from 'react-native-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
-
+import {useNavigation} from '@react-navigation/native';
 
 // Axios instance
 const apiClient = axios.create({
-  baseURL: 'http://192.168.110.179:8000/api/v1',
+  baseURL: 'http://192.168.101.179:8000/api/v1',
   headers: {
     Authorization:
       'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjExMC4xNzk6ODAwMFwvYXBpXC92MVwvYXV0aFwvcmVmcmVzaCIsImlhdCI6MTczNDQ4Mzk1NSwiZXhwIjoxNzM0NTA3NDIwLCJuYmYiOjE3MzQ1MDM4MjAsImp0aSI6Imx0RlFJZXNaUTRwN0VPMmsiLCJzdWIiOjEsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.Ydzj5km-TM0BI5pHehFE8vWHR2T2KytTDLPCBhU-gPg',
@@ -80,71 +79,64 @@ const Home = () => {
   const items = [
     {
       title: `User`,
-      icon: 'person',
-      color: ['#1D56C0', '#013A91'], // Gradasi biru tua ke biru terang
+      icon: 'calendar-outline',
+      color: ['#1D56C0', '#013A91'],
       subtitle: '__________',
+      navigateTo: 'User', // Nama layar navigasi
     },
     {
       title: 'Teguran',
-      icon: 'alert-circle',
-      color: ['#FF6F61', '#E53935', '#B71C1C'], // Gradasi merah terang ke merah tua
+      icon: 'document-outline',
+      color: ['#FF6F61', '#E53935', '#B71C1C'],
       subtitle: '__________',
+      navigateTo: 'Teguran', // Nama layar navigasi
     },
     {
       title: `${totalContracts || 0} Kontrak`,
       subtitle: `Belum Disetujui (${year || ''})`,
       icon: 'document-outline',
-      color: ['#D32F2F', '#F44336'], // Gradasi merah terang ke merah muda
-      
+      color: ['#D32F2F', '#F44336'],
+      navigateTo: 'Kontrak', // Nama layar navigasi
     },
     {
       title: '0 Realisasi Desember',
       subtitle: 'Belum Disetujui',
       icon: 'document-outline',
-      color: ['#1D56C0', '#013A91'], // Gradasi biru tua ke biru terang
+      color: ['#1D56C0', '#013A91'],
+      navigateTo: 'Realisasi', // Nama layar navigasi
     },
     {
       title: `${attendanceChanges || 0} Perubahan Presensi`,
       subtitle: 'Belum Dikonfirmasi',
       icon: 'calendar-outline',
-      color: ['#F9A825', '#FBC02D'], // Kuning tua yang lebih hangat ke kuning lembut
+      color: ['#F9A825', '#FBC02D'],
+      navigateTo: 'PerubahanPresensi', // Nama layar navigasi
     },
   ];
 
-// Menggunakan navigasi dengan memastikan nama navigator yang benar
-const handlePress = (title) => {
-  if (title.includes('Perubahan Presensi')) {
-    // Navigasi ke layar DetailScreen yang ada di dalam DetailNavigator
-    navigation.navigate('Tabs', {
-      screen: 'Presensi', // Menyebutkan nama screen yang ada dalam DetailNavigator
-    });
-  } else {
-    console.log(`Navigasi untuk ${title} belum diimplementasikan.`);
-  }
-};
-
-  
-
-  const renderItem = ({item}) => (
-    <TouchableOpacity
-      style={styles.verticalCard}
-      onPress={() => handlePress(item.title)}>
-      <LinearGradient colors={item.color} style={styles.cardBackground}>
-        <View style={styles.cardContent}>
-          <Ionicons
-            name={item.icon}
-            size={30}
-            color="white"
-            style={styles.cardIcon}
-          />
-          <View>
-            <Text style={styles.cardTitle}>{item.title}</Text>
-            <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+  const renderItem = ({item}) => {
+    return (
+      <TouchableOpacity
+        style={styles.verticalCard}
+        onPress={() => navigation.navigate(item.navigateTo)} // Navigasi
+      >
+        <LinearGradient colors={item.color} style={styles.cardBackground}>
+          <View style={styles.cardContent}>
+            <Ionicons
+              name={item.icon}
+              size={30}
+              color="white"
+              style={styles.cardIcon}
+            />
+            <View>
+              <Text style={styles.cardTitle}>{item.title}</Text>
+              <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+            </View>
           </View>
-        </View>
-      </LinearGradient>
-    </TouchableOpacity>
-  );
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -172,6 +164,7 @@ const handlePress = (title) => {
                 title: '1 User',
                 subtitle: 'Presensi Harian',
                 icon: 'person',
+                navigateTo: 'Presensi', // Menambahkan navigateTo
               },
               {
                 title: `${
@@ -185,6 +178,7 @@ const handlePress = (title) => {
                     : 'bulan'
                 }`,
                 icon: 'people',
+                navigateTo: 'BelumKirimRealisasi', // Menambahkan navigateTo
               },
               {
                 title: `${
@@ -198,10 +192,14 @@ const handlePress = (title) => {
                     : ''
                 }`,
                 icon: 'people-circle',
+                navigateTo: 'BelumKirimKontrak', // Menambahkan navigateTo
               },
             ].map((item, index) => (
               <View key={index} style={styles.buttonWrapper}>
-                <TouchableOpacity style={styles.circleButton}>
+                <TouchableOpacity
+                  style={styles.circleButton}
+                  onPress={() => navigation.navigate(item.navigateTo)} // Menambahkan navigasi
+                >
                   <Ionicons name={item.icon} size={35} color="#fff" />
                 </TouchableOpacity>
                 <Text style={styles.buttonLabel}>{item.title}</Text>
@@ -216,14 +214,28 @@ const handlePress = (title) => {
           X
           <View style={styles.menuRow}>
             {[
-              {title: 'Surat Tugas', icon: 'document-text'},
-              {title: 'Potongan Lain', icon: 'pricetag'},
-              {title: 'Lock', icon: 'lock-closed'},
-              {title: 'Lainnya', icon: 'ellipsis-horizontal-circle-sharp'},
+              {
+                title: 'Surat Tugas',
+                icon: 'document-text',
+                navigateTo: 'SuratTugas',
+              },
+              {
+                title: 'Potongan Lain',
+                icon: 'pricetag',
+                navigateTo: 'PotonganLain',
+              },
+              {title: 'Lock', icon: 'lock-closed', navigateTo: 'Lock'},
+              {
+                title: 'Lainnya',
+                icon: 'ellipsis-horizontal-circle-sharp',
+                navigateTo: 'Lainnya',
+              },
             ].map((item, index) => (
               <View key={index} style={styles.menuButtonWrapper}>
                 <View style={styles.menuButton}>
-                  <TouchableOpacity style={styles.touchableMenuButton}>
+                  <TouchableOpacity
+                    style={styles.touchableMenuButton}
+                    onPress={() => navigation.navigate(item.navigateTo)}>
                     <Ionicons name={item.icon} size={30} color="#213376" />
                   </TouchableOpacity>
                 </View>
@@ -261,26 +273,15 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 15,
     borderBottomRightRadius: 15,
   },
-  headerLeft: {
-    flex: 1,
-  },
   logo: {
     width: 140,
     height: 40,
     resizeMode: 'contain',
   },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    flex: 1,
-  },
-  iconWrapper: {
-    padding: 10,
-  },
   grid: {
-    paddingHorizontal: 25,
+    paddingHorizontal: 5,
     marginTop: 20,
+    marginLeft: 10,
   },
 
   cardBackground: {
@@ -293,13 +294,14 @@ const styles = StyleSheet.create({
   cardContent: {
     flexDirection: 'column',
     alignItems: 'flex-start',
+    marginLeft: 3,
   },
   cardIcon: {
-    marginRight: 10,
-    marginBottom: 25,
+    marginRight: 25,
+    marginBottom: 17,
   },
   cardTitle: {
-    fontSize: 18,
+    fontSize: 15,
     color: '#fff',
     fontWeight: 'bold',
   },
@@ -310,7 +312,8 @@ const styles = StyleSheet.create({
   verticalCard: {
     flex: 1,
     marginRight: 10,
-    height: 150, // Tinggi vertical card lebih kecil
+    height: 121, // Tinggi vertical card lebih kecil
+    marginBottom: -10,
   },
   row: {
     justifyContent: 'space-between',
@@ -321,14 +324,14 @@ const styles = StyleSheet.create({
     padding: 25,
     backgroundColor: '#E7E9F1',
     borderRadius: 8,
-    marginBottom: -30,
+    marginBottom: -20,
     marginTop: 10,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
   },
   menuTitle: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 12,
@@ -365,7 +368,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
   },
-  
 
   circularButtonsContainer: {
     justifyContent: 'center',
@@ -377,7 +379,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   buttonsTitle: {
-    fontSize: 16,
     fontWeight: 'bold',
     color: '#fff', // Agar sesuai dengan latar belakang biru
     marginBottom: 10,
@@ -397,6 +398,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 30,
+    marginBottom: 7,
     backgroundColor: 'transparent',
     borderWidth: 1, // Menambahkan border
     borderColor: '#fff', // Warna border putih agar kontras
@@ -412,11 +414,11 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase', // Membuat teks kapital semua untuk memberi kesan lebih tegas
   },
   buttonSubtitle: {
-    fontSize: 12, // Ukuran yang lebih kecil untuk subjudul
+    fontSize: 11, // Ukuran yang lebih kecil untuk subjudul
     color: '#fff', // Menjaga warna teks tetap putih
     textAlign: 'center', // Memastikan teks tetap rata tengah
     marginTop: 6, // Memberikan jarak antara label dan subtitle
-    fontStyle: 'italic', // Memberikan efek miring untuk subtitle
+    fontStyle: 'Bold', // Memberikan efek miring untuk subtitle
   },
   bottomNavbar: {
     flexDirection: 'row',
@@ -432,7 +434,7 @@ const styles = StyleSheet.create({
   navLabel: {
     fontSize: 12,
     color: '#333',
-  },
+  },
 });
 
 export default Home;
