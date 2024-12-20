@@ -13,7 +13,7 @@ const ProfileScreen = () => {
   const [pangkats, setPangkats] = useState([]);
   const [imageUri, setImageUri] = useState(null);
 
-  const Token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjExMC4xMzU6ODAwMFwvYXBpXC92MVwvYXV0aFwvcmVmcmVzaCIsImlhdCI6MTczNDQ5NTg5NCwiZXhwIjoxNzM0NDk5Njc3LCJuYmYiOjE3MzQ0OTYwNzcsImp0aSI6ImdnTEM3cE9jTVJmYXJYUVIiLCJzdWIiOjcsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.O0Po5g4--lBhNSDFGWhccE0D49numi8bOSvqvqPjBZ0'; // Replace with your token
+  const Token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjExMC4xMzU6ODAwMFwvYXBpXC92MVwvYXV0aFwvcmVmcmVzaCIsImlhdCI6MTczNDQ5NTg5NCwiZXhwIjoxNzM0NTEyMzQxLCJuYmYiOjE3MzQ1MDg3NDEsImp0aSI6IlBzYXpucHJnUFFMVXczTFkiLCJzdWIiOjcsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.y8jo53p9aKprfQJIbjdczxOUfxqwN-WVxX32jCKEjl4'; // Replace with your token
 
   useEffect(() => {
     getPangkat();
