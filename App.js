@@ -42,6 +42,11 @@ function HomeStack() {
       />
       <Stack.Screen
         options={{headerShown: false}}
+        name="Laporan"
+        component={Laporan}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
         name="Teguran"
         component={TeguranScreen}
       />
@@ -104,8 +109,6 @@ export default function App() {
 
             if (route.name === 'Dashboard') {
               iconName = focused ? 'home' : 'home-outline';
-            } else if (route.name === 'Laporan') {
-              iconName = focused ? 'document' : 'document-outline';
             } else if (route.name === 'Presensi') {
               iconName = focused ? 'calendar' : 'calendar-outline';
             } else if (route.name === 'Profile') {
@@ -126,11 +129,7 @@ export default function App() {
           component={HomeStack}
           options={{ headerShown: false }}
         />
-        <Tab.Screen
-          name="Laporan"
-          component={Laporan}
-          options={{ headerShown: false }}
-        />
+
         <Tab.Screen
           name="Presensi"
           component={Presensi}
