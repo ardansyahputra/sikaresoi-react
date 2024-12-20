@@ -144,7 +144,7 @@ const SettingJabatan = ({ navigation }) => {
          {/* Image and Title */}
       <View style={styles.headerContent}>
         <Image
-          source={require('../../assets/images/sikaresoi.png')}
+          source={require('../../../assets/images/sikaresoi.png')}
           // Path gambar sesuai
           style={styles.headerImage}
         />

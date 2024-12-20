@@ -1,197 +1,378 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  Linking,
+  Alert,
+} from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const Table = ({ navigation }) => {
-  const [columnWidths, setColumnWidths] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const data = [
+export default function User() {
+  const staticData = [
     {
-      'no': 1,
-      'Jenis Teguran': 'Tidak apel',
-      Potongan: '1%',
-      Tanggal: '2022-09-13',
-      Dibaca: 'Dibaca',
-      user: 'YUDI SATRIA, M.T, M.Mar.E',
-      Aksi: 'Baca',
-    },
-    {
-      'no': 2,
-      'Jenis Teguran': 'Terlambat masuk kerja',
-      Potongan: '2%',
-      Tanggal: '2022-09-14',
-      Dibaca: 'Belum',
-      user: 'ANANDA PUTRA, S.T',
-      Aksi: 'Baca',
+      id: 1,
+      uuid: 'abc123',
+      user: {
+        name: 'John Doe'
+      },
+      status: 'Sudah',
+      tanggal: '2024-01-15',
+      jenis_teguran: 'tidak apel',
+      potongan: '1%',
+      file: 'https://example.com/file1.pdf'
     },
   ];
 
-  const headers = ['no', 'Jenis Teguran', 'Potongan', 'Tanggal', 'Dibaca', 'user', 'Aksi'];
+  const [data, setData] = useState(staticData);
+  const [expandedId, setExpandedId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(2);
 
-  const calculateWidth = (index, event) => {
-    const width = event.nativeEvent.layout.width;
-    setColumnWidths((prevWidths) => {
-      const newWidths = [...prevWidths];
-      newWidths[index] = Math.max(newWidths[index] || 0, width);
-      return newWidths;
-    });
+  const handleApprove = (uuid) => {
+    Alert.alert('Konfirmasi', 'Apakah Anda yakin ingin mengonfirmasi?', [
+      {text: 'Batal', style: 'cancel'},
+      {
+        text: 'Ya',
+        onPress: () => {
+          const newData = data.map(item => {
+            if (item.uuid === uuid) {
+              return {...item, status: 'DISETUJUI'};
+            }
+            return item;
+          });
+          setData(newData);
+          Alert.alert('Berhasil', 'Konfirmasi berhasil.');
+        },
+      },
+    ]);
   };
 
-  const handleBacaPress = (rowData) => {
-    // Logika ketika tombol "Baca" ditekan
-    console.log('Baca tombol ditekan untuk:', rowData);
+  const toggleExpand = id => {
+    setExpandedId(expandedId === id ? null : id);
   };
 
-  const filteredData = data.filter(item =>
-    Object.values(item).some(value =>
-      value.toString().toLowerCase().includes(searchQuery.toLowerCase())
-    )
+  const getStatusStyle = status => {
+    switch (status?.toUpperCase()) {
+      case 'DISETUJUI':
+        return styles.approvedStatus;
+      case 'DITOLAK':
+        return styles.rejectedStatus;
+      case 'MENUNGGU':
+        return styles.pendingStatus;
+      default:
+        return styles.defaultStatus;
+    }
+  };
+
+  const TableHeader = () => (
+    <View style={styles.tableHeader}>
+      <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
+      <Text style={[styles.headerCell, styles.nameCell]}>Name</Text>
+      <Text style={[styles.headerCell, styles.tableStatusCell]}>Dibaca</Text>
+      <View style={styles.expandIconCell} />
+    </View>
   );
+
+  const renderItem = ({item, index}) => {
+    const isExpanded = expandedId === item.id;
+
+    return (
+      <View style={styles.tableRow}>
+        <TouchableOpacity
+          style={styles.rowHeader}
+          onPress={() => toggleExpand(item.id)}>
+          <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
+          <Text
+            style={[styles.tableCell, styles.nameCell]}
+            numberOfLines={1}
+            ellipsizeMode="tail">
+            {item.user?.name || '-'}
+          </Text>
+          <View style={styles.statusCellContainer}>
+            <Text
+              style={[
+                styles.tableCell,
+                styles.statusCell,
+                getStatusStyle(item.status),
+              ]}>
+              {item.status || '-'}
+            </Text>
+          </View>
+          <View style={styles.expandIconCell}>
+            <Ionicons
+              name={isExpanded ? 'chevron-up' : 'chevron-down'}
+              size={20}
+              color="#333"
+            />
+          </View>
+        </TouchableOpacity>
+        {isExpanded && (
+          <View style={styles.expandedContent}>
+            <Text style={styles.expandedText}>
+              Tanggal: {item.tanggal || '-'}
+            </Text>
+            <Text style={styles.expandedText}>
+              Jenis teguran: {item.jenis_teguran || '-'}
+            </Text>
+            <Text style={styles.expandedText}>
+              Potongan: {item.potongan || '-'}
+            </Text>
+            <View style={styles.filetext}>
+              <Text>File:</Text>
+              <Text
+                style={styles.expandedLinkText}
+                onPress={() => Linking.openURL(item.file)}>
+                File Absensi
+              </Text>
+            </View>
+            <View style={styles.actionContainer}>
+              <TouchableOpacity 
+                style={styles.approveButton}
+                onPress={() => handleApprove(item.uuid)}>
+                <Ionicons name="checkmark" size={20} color="white" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.smallBackButton} onPress={() => navigation.goBack()}>
-        <Text style={styles.smallBackButtonText}>⬅</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.headerTitle}>Teguran</Text>
-
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Cari..."
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-      />
-
-      <ScrollView horizontal>
-        <View>
-          <View style={[styles.row, styles.headerRow]}>
-            {headers.map((header, index) => (
-              <Text
-                key={index}
-                style={[styles.cell, styles.headerCell, { minWidth: columnWidths[index] || 100 }]}
-                onLayout={(event) => calculateWidth(index, event)}
-              >
-                {header}
-              </Text>
-            ))}
-          </View>
-          {filteredData.map((item, rowIndex) => (
-            <View
-              key={rowIndex}
-              style={[
-                styles.row,
-                rowIndex % 2 === 0 ? styles.evenRow : styles.oddRow,
-              ]}
-            >
-              {headers.map((header, colIndex) => (
-                header === 'Aksi' ? (
-                  <TouchableOpacity
-                    key={colIndex}
-                    style={styles.bacaButton}
-                    onPress={() => handleBacaPress(item)}
-                  >
-                    <Text style={styles.bacaButtonText}>{item[header]}</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <Text
-                    key={colIndex}
-                    style={[styles.cell, { minWidth: columnWidths[colIndex] || 100 }]}
-                    onLayout={(event) => calculateWidth(colIndex, event)}
-                  >
-                    {item[header]}
-                  </Text>
-                )
-              ))}
-            </View>
-          ))}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <Image
+            source={require('../screen/assets/images/sikaresoi.png')}
+            style={styles.logo}
+          />
         </View>
-      </ScrollView>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
+          <TouchableOpacity style={styles.iconWrapper}>
+            <Ionicons name="person-circle-outline" size={24} color="#333" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <FlatList
+        ListHeaderComponent={TableHeader}
+        data={data}
+        renderItem={renderItem}
+        keyExtractor={item => item.id.toString()}
+        contentContainerStyle={styles.card}
+        ListFooterComponent={
+          <View>
+            <Text style={styles.pageInfo}>
+              Showing page {currentPage} of {lastPage}
+            </Text>
+            <View style={styles.paginationContainer}>
+              <View style={styles.paginationButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.pageButton,
+                    currentPage === 1 && styles.disabledButton,
+                  ]}
+                  disabled={currentPage === 1}
+                  onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
+                  <Text style={styles.pageButtonText}>Previous</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.pageButton,
+                    currentPage === lastPage && styles.disabledButton,
+                  ]}
+                  disabled={currentPage === lastPage}
+                  onPress={() =>
+                    setCurrentPage(prev => Math.min(prev + 1, lastPage))
+                  }>
+                  <Text style={styles.pageButtonText}>Next</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        }
+      />
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
-    padding: 16,
+    backgroundColor: '#F7F8FB',
   },
-  row: {
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 15,
+    margin: 12,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  tableHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerRow: {
-    backgroundColor: '#ffffff',
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
-    paddingVertical: 12,
-  },
-  evenRow: {
-    backgroundColor: '#ffffff',
-  },
-  oddRow: {
-    backgroundColor: '#f2f2f2',
-  },
-  cell: {
+    backgroundColor: '#E0E0E0',
     paddingVertical: 10,
-    paddingHorizontal: 12,
-    textAlign: 'center',
-    fontSize: 14,
-    color: '#333',
+    paddingHorizontal: 15,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
   },
   headerCell: {
+    fontSize: 14,
     fontWeight: 'bold',
-    fontSize: 16,
-    color: '#000',
+    color: '#333',
   },
-  smallBackButton: {
-    backgroundColor: 'transparent',
-    padding: 8,
-    borderRadius: 20,
+  tableRow: {
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+    elevation: 0,
+  },
+  rowHeader: {
+    flexDirection: 'row',
+    padding: 15,
+    backgroundColor: '#F0F0F0',
     alignItems: 'center',
-    justifyContent: 'center',
-    width: 40,
-    height: 40,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#000',
   },
-  smallBackButtonText: {
-    color: '#000',
-    fontSize: 18,
-    fontWeight: 'bold',
+  tableCell: {
+    flexWrap: 'wrap',
+    fontSize: 14,
   },
-  searchInput: {
-    height: 40,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    marginBottom: 16,
-    paddingLeft: 10,
-    borderRadius: 8,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  tableStatusCell: {
     textAlign: 'center',
-    marginBottom: 16,
-    color: '#000',
+    flex: 1,
+    paddingLeft: 0,
   },
- bacaButton: {
-    backgroundColor: '#007BFF',
-    paddingVertical: 4, // Mengurangi padding vertikal
-    paddingHorizontal: 8, // Mengurangi padding horizontal
-    borderRadius: 8,
+  numberCell: {width: 50},
+  nameCell: {
+    flex: 1,
+    overflow: 'hidden',
+  },
+  statusCellContainer: {
+    width: 100,
+  },
+  statusCell: {
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  expandIconCell: {
+    width: 40,
+    alignItems: 'flex-end',
+  },
+  approvedStatus: {
+    color: '#4CAF50',
+  },
+  rejectedStatus: {
+    color: '#F44336',
+  },
+  pendingStatus: {
+    color: '#FFC107',
+  },
+  defaultStatus: {
+    color: '#9E9E9E',
+  },
+  expandedContent: {
+    padding: 15,
+    backgroundColor: '#FAFAFA',
+  },
+  expandedText: {
+    marginBottom: 5,
+    fontSize: 14,
+  },
+  expandedLinkText: {
+    color: 'blue',
+    marginBottom: 5,
+    fontSize: 14,
+  },
+  filetext: {
+    flexDirection: 'row',
+  },
+  actionContainer: {
+    flexDirection: 'row',
+    marginTop: 10,
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 80, // Lebar minimum tombol
-    marginHorizontal: 4, // Menambahkan jarak horizontal
+    gap: 10,
   },
-  bacaButtonText: {
+  actionButton: {
+    padding: 8,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 5,
+  },
+  approveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4CAF50',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  paginationButtons: {
+    flexDirection: 'row',
+  },
+  pageButton: {
+    padding: 10,
+    backgroundColor: '#007bff',
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  pageButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 12,
+  },
+  disabledButton: {
+    backgroundColor: '#CCCCCC',
+  },
+  paginationText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  pageInfo: {
+    fontSize: 13,
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 10,
+  },
+  header: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: 4,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  logo: {
+    width: 140,
+    height: 40,
+    resizeMode: 'contain',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    flex: 1,
+  },
+  iconWrapper: {
+    marginLeft: 12,
   },
 });
-
-export default Table;

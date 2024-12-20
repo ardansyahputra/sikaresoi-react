@@ -60,7 +60,7 @@ const RealisasiKinerja = () => {
         {/* Title */}
         <View style={styles.headerContent}>
         <Image
-          source={require('../../images/sikaresoi.png')} // Path gambar sesuai
+          source={require('../../../assets/images/sikaresoi.png')} // Path gambar sesuai
           style={styles.headerImage}
         />
         <View>
