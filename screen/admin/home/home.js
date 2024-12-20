@@ -8,39 +8,47 @@ import {
   Image,
   ScrollView, // Tambahkan ScrollView di sini
 } from 'react-native';
-
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import LinearGradient from 'react-native-linear-gradient';
+import {useNavigation} from '@react-navigation/native';
 
 // Axios instance
 const apiClient = axios.create({
-  baseURL: 'http://192.168.101.179:8000/api/v1',
+  baseURL: 'http://192.168.211.10:8000/api/v1',
   headers: {
     Authorization:
-      'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIuMTAxOjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzQ0MDQ3MTQsImV4cCI6MTczNDQxMjM3NCwibmJmIjoxNzM0NDA4Nzc0LCJqdGkiOiJNVHBFSGZvQ0Z5b09MdVE5Iiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.dpvRGGPFbPDCHeJl4IpAp6COGXzyxFwYV5UyADRaJ1I',
+      'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIxMS4xMDo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM0NjU3Nzk3LCJleHAiOjE3MzQ2NjE3NTEsIm5iZiI6MTczNDY1ODE1MSwianRpIjoiYTdRTXlnWENpZElXQUZEOSIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.pUot_KxtwvIKFJUM0pT_v8ea_vjJyW-IeDaJalqGCLg',
   },
 });
 
 const Home = () => {
+  const navigation = useNavigation();
   const [totalContracts, setTotalContracts] = useState(null);
-  const [year, setYear] = useState('null');
+  const [year, setYear] = useState(null);
   const [attendanceChanges, setAttendanceChanges] = useState(null);
   const [usersNotSubmittedRealization, setUsersNotSubmittedRealization] =
     useState(null);
   const [usersNotSubmittedContracts, setUsersNotSubmittedContracts] =
     useState(null);
+  const [usersNotAttended, setUsersNotAttended] = useState(null);
+  const [realisasiDesember, setRealisasiDesember] = useState(null); // Untuk total realisasi
+  const [bulanRealisasi, setBulanRealisasi] = useState(''); // Untuk bulan realisasi
 
   useEffect(() => {
     const fetchContracts = apiClient.get('/home/all_kontrak_belum_setujui');
-    const fetchAttendanceChanges = apiClient.get(
-      '/home/perubahan_presensi_belum_konfirmasi',
-    );
+    const fetchAttendanceChanges = apiClient.get('/home/perubahan_presensi_belum_konfirmasi',);
     const fetchUsersNotSubmittedRealization = apiClient.get(
       '/home/user_belum_kirim_realisasi',
     );
     const fetchUsersNotSubmittedContracts = apiClient.get(
       '/home/user_belum_kirim_kontrak',
+    );
+    const fetchUsersNotAttended = apiClient.get(
+      '/home/presensi_belum_hadir'
+    );
+    const fetchRealisasiDesember = apiClient.get(
+      '/home/all_realisasi_belum_setujui',
     );
 
     axios
@@ -49,14 +57,18 @@ const Home = () => {
         fetchAttendanceChanges,
         fetchUsersNotSubmittedRealization,
         fetchUsersNotSubmittedContracts,
+        fetchUsersNotAttended,
+        fetchRealisasiDesember,
       ])
       .then(
         axios.spread(
           (
             contractsResponse,
             attendanceResponse,
-            usersNotAttendedResponse,
+            usersNotRealizationResponse,
             usersNotSubmittedContractsResponse,
+            usersNotAttendedResponse,
+            realisasiDesemberResponse,
           ) => {
             if (contractsResponse.data.status) {
               setTotalContracts(contractsResponse.data.data.total);
@@ -65,15 +77,22 @@ const Home = () => {
             if (attendanceResponse.data.status) {
               setAttendanceChanges(attendanceResponse.data.data.total);
             }
-            if (usersNotAttendedResponse.data.status) {
+            if (usersNotRealizationResponse.data.status) {
               setUsersNotSubmittedRealization(
-                usersNotAttendedResponse.data.data,
+                usersNotRealizationResponse.data.data,
               );
             }
             if (usersNotSubmittedContractsResponse.data.status) {
               setUsersNotSubmittedContracts(
                 usersNotSubmittedContractsResponse.data.data,
               );
+            }
+            if (usersNotAttendedResponse.data.status) {
+              setUsersNotAttended(usersNotAttendedResponse.data.data);
+            }
+            if (realisasiDesemberResponse.data.status) {
+              setRealisasiDesember(realisasiDesemberResponse.data.data.total);
+              setBulanRealisasi(realisasiDesemberResponse.data.data.bulan); // Simpan bulan dari respons API
             }
           },
         ),
@@ -84,57 +103,70 @@ const Home = () => {
   const items = [
     {
       title: `User`,
-      icon: 'calendar-outline',
-      color: ['#1D56C0', '#013A91'], // Gradasi biru tua ke biru terang
-      subtitle: '__________',
+      icon: 'person',
+      color: ['#4A90E2', '#1D56C0'], // Gradasi biru tua ke biru terang
+      subtitle: 'Management user',
     },
     {
       title: 'Teguran',
-      icon: 'document-outline',
+      icon: 'alert-circle',
       color: ['#FF6F61', '#E53935', '#B71C1C'], // Gradasi merah terang ke merah tua
-      subtitle: '__________',
+      subtitle: 'Data Teguran',
     },
     {
       title: `${totalContracts || 0} Kontrak`,
-      subtitle: `Belum Disetujui (${year || ''})`,
+      subtitle: `Belum Disetujui`,
       icon: 'document-outline',
       color: ['#D32F2F', '#F44336'], // Gradasi merah terang ke merah muda
     },
     {
-      title: '0 Realisasi Desember',
-      subtitle: 'Belum Disetujui',
+      title: `${
+        realisasiDesember !== null ? realisasiDesember : '0'
+      } Realisasi ${bulanRealisasi || ''}`, // Gunakan bulan dari API
+      subtitle: `Belum Disetujui`, // Gunakan total dari API
       icon: 'document-outline',
-      color: ['#1D56C0', '#013A91'], // Gradasi biru tua ke biru terang
+      color: ['#4A90E2', '#1D56C0'], // Gradasi biru tua ke biru terang
     },
     {
       title: `${attendanceChanges || 0} Perubahan Presensi`,
       subtitle: 'Belum Dikonfirmasi',
       icon: 'calendar-outline',
-      color: ['#F9A825', '#FBC02D'], // Kuning tua yang lebih hangat ke kuning lembut
+      color: ['#F57F17', '#FBC02D'], // Kuning tua yang lebih netral ke kuning lembut
     },
   ];
 
-  const renderItem = ({item}) => {
-    return (
-      <TouchableOpacity style={styles.verticalCard}>
-        {/* Selalu gunakan verticalCard */}
-        <LinearGradient colors={item.color} style={styles.cardBackground}>
-          <View style={styles.cardContent}>
-            <Ionicons
-              name={item.icon}
-              size={30}
-              color="white"
-              style={styles.cardIcon}
-            />
-            <View>
-              <Text style={styles.cardTitle}>{item.title}</Text>
-              <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
-            </View>
-          </View>
-        </LinearGradient>
-      </TouchableOpacity>
-    );
+  // Menggunakan navigasi dengan memastikan nama navigator yang benar
+  const handlePress = title => {
+    if (title.includes('Perubahan Presensi')) {
+      // Navigasi ke layar DetailScreen yang ada di dalam DetailNavigator
+      navigation.navigate('Tabs', {
+        screen: 'Presensi', // Menyebutkan nama screen yang ada dalam DetailNavigator
+      });
+    } else {
+      console.log(`Navigasi untuk ${title} belum diimplementasikan.`);
+    }
   };
+
+  const renderItem = ({item}) => (
+    <TouchableOpacity
+      style={styles.verticalCard}
+      onPress={() => handlePress(item.title)}>
+      <LinearGradient colors={item.color} style={styles.cardBackground}>
+        <View style={styles.cardContent}>
+          <Ionicons
+            name={item.icon}
+            size={28}
+            color="white"
+            style={styles.cardIcon}
+          />
+          <View>
+            <Text style={styles.cardTitle}>{item.title}</Text>
+            <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+          </View>
+        </View>
+      </LinearGradient>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
@@ -149,58 +181,57 @@ const Home = () => {
         <View style={styles.headerRight}></View>
       </View>
 
-        {/* Circular Buttons Container with Gradient */}
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <LinearGradient
-        colors={['#1D56C0', '#013A91']} // Gradasi biru tua ke biru terang
-        style={styles.circularButtonsContainer}
-      >
-        <Text style={styles.buttonsTitle}></Text>
-        <View style={styles.buttonsContainer}>
-          {/* Circular Buttons */}
-          {[
-            {
-              title: '1 User',
-              subtitle: 'Presensi Harian',
-              icon: 'person',
-            },
-            {
-              title: `${
-                usersNotSubmittedRealization
-                  ? usersNotSubmittedRealization.total
-                  : 0
-              } User`,
-              subtitle: `Belum Kirim Realisasi ${
-                usersNotSubmittedRealization
-                  ? usersNotSubmittedRealization.bulan
-                  : 'bulan'
-              }`,
-              icon: 'people',
-            },
-            {
-              title: `${
-                usersNotSubmittedContracts
-                  ? usersNotSubmittedContracts.total
-                  : 20
-              } User`,
-              subtitle: `Belum Kirim Kontrak ${
-                usersNotSubmittedContracts
-                  ? usersNotSubmittedContracts.tahun
-                  : ''
-              }`,
-              icon: 'people-circle',
-            },
-          ].map((item, index) => (
-            <View key={index} style={styles.buttonWrapper}>
-              <TouchableOpacity style={styles.circleButton}>
-                <Ionicons name={item.icon} size={35} color="#fff" />
-              </TouchableOpacity>
-              <Text style={styles.buttonLabel}>{item.title}</Text>
-              <Text style={styles.buttonSubtitle}>{item.subtitle}</Text>
-            </View>
-          ))}
-        </View>
-      </LinearGradient>
+      {/* Circular Buttons Container with Gradient */}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <LinearGradient
+          colors={['#1D56C0', '#4A90E2']} // Gradasi biru tua ke biru terang
+          style={styles.circularButtonsContainer}>
+          <Text style={styles.buttonsTitle}></Text>
+          <View style={styles.buttonsContainer}>
+            {/* Circular Buttons */}
+            {[
+              {
+                title: `${usersNotAttended ? usersNotAttended.total : 0} User`,
+                subtitle: `Belum Absen`,
+                icon: 'person', // You can use any suitable icon
+              },
+              {
+                title: `${
+                  usersNotSubmittedRealization
+                    ? usersNotSubmittedRealization.total
+                    : 0
+                } User`,
+                subtitle: `Belum Kirim Realisasi ${
+                  usersNotSubmittedRealization
+                    ? usersNotSubmittedRealization.bulan
+                    : 'bulan'
+                }`,
+                icon: 'people',
+              },
+              {
+                title: `${
+                  usersNotSubmittedContracts
+                    ? usersNotSubmittedContracts.total
+                    : 20
+                } User`,
+                subtitle: `Belum Kirim Kontrak ${
+                  usersNotSubmittedContracts
+                    ? usersNotSubmittedContracts.tahun
+                    : ''
+                }`,
+                icon: 'people-circle',
+              },
+            ].map((item, index) => (
+              <View key={index} style={styles.buttonWrapper}>
+                <TouchableOpacity style={styles.circleButton}>
+                  <Ionicons name={item.icon} size={35} color="#fff" />
+                </TouchableOpacity>
+                <Text style={styles.buttonLabel}>{item.title}</Text>
+                <Text style={styles.buttonSubtitle}>{item.subtitle}</Text>
+              </View>
+            ))}
+          </View>
+        </LinearGradient>
 
         {/* Menu Buttons */}
         <View style={styles.menuButtonsContainer}>
@@ -208,9 +239,9 @@ const Home = () => {
           <View style={styles.menuRow}>
             {[
               {title: 'Surat Tugas', icon: 'document-text'},
-              {title: 'Potongan Lain', icon: 'pricetag'},
+              {title: 'Potongan Lain', icon: 'receipt'},
               {title: 'Lock', icon: 'lock-closed'},
-              {title: 'Lainnya', icon: 'ellipsis-horizontal-circle-sharp'},
+              {title: 'Lainnya', icon: 'apps'},
             ].map((item, index) => (
               <View key={index} style={styles.menuButtonWrapper}>
                 <View style={styles.menuButton}>
@@ -252,26 +283,15 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 15,
     borderBottomRightRadius: 15,
   },
-  headerLeft: {
-    flex: 1,
-  },
   logo: {
     width: 140,
     height: 40,
     resizeMode: 'contain',
   },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    flex: 1,
-  },
-  iconWrapper: {
-    padding: 10,
-  },
   grid: {
-    paddingHorizontal: 25,
+    paddingHorizontal: 5,
     marginTop: 20,
+    marginLeft: 10,
   },
 
   cardBackground: {
@@ -284,13 +304,14 @@ const styles = StyleSheet.create({
   cardContent: {
     flexDirection: 'column',
     alignItems: 'flex-start',
+    marginLeft: 3,
   },
   cardIcon: {
-    marginRight: 10,
-    marginBottom: 25,
+    marginRight: 25,
+    marginBottom: 17,
   },
   cardTitle: {
-    fontSize: 18,
+    fontSize: 15,
     color: '#fff',
     fontWeight: 'bold',
   },
@@ -301,7 +322,8 @@ const styles = StyleSheet.create({
   verticalCard: {
     flex: 1,
     marginRight: 10,
-    height: 150, // Tinggi vertical card lebih kecil
+    height: 121, // Tinggi vertical card lebih kecil
+    marginBottom: -10,
   },
   row: {
     justifyContent: 'space-between',
@@ -312,14 +334,14 @@ const styles = StyleSheet.create({
     padding: 25,
     backgroundColor: '#E7E9F1',
     borderRadius: 8,
-    marginBottom: -30,
+    marginBottom: -20,
     marginTop: 10,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
   },
   menuTitle: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 12,
@@ -334,15 +356,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     marginBottom: 12,
   },
-menuButton: {
-  height: 60,
-  width: 60,
-  borderRadius: 30,
-  backgroundColor: '#fff',
-  justifyContent: 'center',
-  alignItems: 'center',
-},
-
+  menuButton: {
+    height: 60,
+    width: 60,
+    borderRadius: 30,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   touchableMenuButton: {
     width: '120%',
     height: '120%',
@@ -357,7 +378,6 @@ menuButton: {
     textAlign: 'center',
     marginTop: 8,
   },
-  
 
   circularButtonsContainer: {
     justifyContent: 'center',
@@ -365,42 +385,36 @@ menuButton: {
     marginTop: 20,
     borderRadius: 15,
     width: 370,
-    height: 145,
+    height: 160,
     alignSelf: 'center',
   },
-
   buttonsTitle: {
-    fontSize: 16,
     fontWeight: 'bold',
     color: '#fff', // Agar sesuai dengan latar belakang biru
     marginBottom: 10,
     textAlign: 'center',
   },
-
   buttonsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-evenly',
   },
-
   buttonWrapper: {
     alignItems: 'center',
-    marginBottom: 27,
+    marginBottom: 22,
     width: '30%',
   },
-
-circleButton: {
-  width: 50,
-  height: 50,
-  borderRadius: 30,
-  backgroundColor: 'transparent',
-  borderWidth: 1, // Menambahkan border
-  borderColor: '#fff', // Warna border putih agar kontras
-  justifyContent: 'center',
-  alignItems: 'center',
-},
-
-
+  circleButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 30,
+    marginBottom: 7,
+    backgroundColor: 'transparent',
+    borderWidth: 1, // Menambahkan border
+    borderColor: '#fff', // Warna border putih agar kontras
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   buttonLabel: {
     fontSize: 16, // Menambah ukuran teks untuk keterbacaan yang lebih baik
     fontWeight: 'bold', // Membuat teks lebih tebal
@@ -409,15 +423,13 @@ circleButton: {
     textAlign: 'center', // Memastikan teks tetap rata tengah
     textTransform: 'uppercase', // Membuat teks kapital semua untuk memberi kesan lebih tegas
   },
-
   buttonSubtitle: {
-    fontSize: 12, // Ukuran yang lebih kecil untuk subjudul
+    fontSize: 11, // Ukuran yang lebih kecil untuk subjudul
     color: '#fff', // Menjaga warna teks tetap putih
     textAlign: 'center', // Memastikan teks tetap rata tengah
     marginTop: 6, // Memberikan jarak antara label dan subtitle
-    fontStyle: 'italic', // Memberikan efek miring untuk subtitle
+    fontStyle: 'Bold', // Memberikan efek miring untuk subtitle
   },
-
   bottomNavbar: {
     flexDirection: 'row',
     backgroundColor: '#fff',
@@ -425,9 +437,11 @@ circleButton: {
     justifyContent: 'space-around',
     borderTopWidth: 1,
     borderTopColor: '#ddd',
-  },navItem: {
+  },
+  navItem: {
     alignItems: 'center',
-  },navLabel: {
+  },
+  navLabel: {
     fontSize: 12,
     color: '#333',
   },
