@@ -3,6 +3,7 @@ import { SafeAreaView, StatusBar, StyleSheet } from 'react-native';
 import HomeScreen from './screen/HomeScreen'; 
 import BottomNavBar from './screen/BottomNavBar/BottomNavBar'; 
 
+
 export default function App() {
   return (
     <SafeAreaView style={styles.container}>

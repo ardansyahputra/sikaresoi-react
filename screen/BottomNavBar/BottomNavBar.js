@@ -7,6 +7,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import HomeScreen from '../HomeScreen'; // Pastikan path ini benar
 import KontrakKinerjaScreen from '../KontrakKinerjaScreen';
+import ProfileScreen from '../ProfileScreen';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
@@ -18,15 +19,6 @@ function RealisasiKerjaScreen() {
   );
 }
 
-
-// Komponen untuk masing-masing layar
-function ProfileScreen() {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Profil</Text>
-      </View>
-    );
-  }
 
 const Tab = createBottomTabNavigator();
 
