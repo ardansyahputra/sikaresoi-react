@@ -1,91 +1,147 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {NavigationContainer} from '@react-navigation/native';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {createNativeStackNavigator} from '@react-navigation/native-stack'; // Menggunakan native-stack
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Import screens
 import Home from './screen/admin/home/home';
+import TeguranScreen from './screen/admin/user/teguran/Teguran';
+import KontrakScreen from './screen/admin/kontrak/konfirm/Konfirm';
+import RealisasiScreen from './screen/admin/realisasi/konfirm/Konfirm';
+import PerubahanPresensiScreen from './screen/admin/absensi/Perubahan';
 import Laporan from './screen/admin/laporan/Laporan';
 import User from './screen/admin/user/User';
 import Presensi from './screen/admin/presensi/Presensi';
 
-// Membuat Tab dan Stack navigators
+//Menu Button Screens
+import SuratTugasScreen from './screen/admin/surattugas/surattugas';
+import PotonganLainScreen from './screen/admin/potongan_lain/potonganlain';
+import LockScreen from './screen/admin/lock/lock';
+import LainnyaScreen from './screen/admin/lainnya/lainnya';
+
+//ciruclar Screens
+import BelumKirimKontrakScreen from './screen/admin/kontrak/kirim/Kirim';
+import BelumKirimRealisasiScreen from './screen/admin/realisasi/kirim/Kirim';
+
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// Stack Navigator utama yang berisi Tab Navigator dan DetailNavigator
-function MainNavigator() {
+function HomeStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Tabs" component={TabNavigator} />
-      <Stack.Screen name="DetailNavigator" component={DetailNavigator} />
-    </Stack.Navigator>
-  );
-}
-
-// Stack Navigator untuk Layar Detail
-function DetailNavigator() {
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="DetailScreen" component={Presensi} />
-    </Stack.Navigator>
-  );
-}
-
-
-// Tab Navigator utama
-function TabNavigator() {
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-
-          if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Laporan') {
-            iconName = focused ? 'remove-circle' : 'remove-circle-outline';
-          } else if (route.name === 'Presensi') {
-            iconName = focused ? 'calendar' : 'calendar-outline';
-          }else if (route.name === 'Profile') {
-            iconName = focused ? 'person-outline' : 'person-outline';
-          } 
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: 'black',
-        tabBarInactiveTintColor: 'black',
-        tabBarStyle: { backgroundColor: 'white' },
-      })}
-    >
-      <Tab.Screen
+    <Stack.Navigator>
+      <Stack.Screen
         name="Home"
         component={Home}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
-      <Tab.Screen
-        name="Laporan"
-        component={Laporan}
-        options={{ headerShown: false }}
-      />
-      <Tab.Screen
-        name="Presensi"
-        component={Presensi}
-        options={{ headerShown: false }}
-      />
-      <Tab.Screen
-        name="Profile"
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="User"
         component={User}
-        options={{ headerShown: false }}
       />
-    </Tab.Navigator>
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="Teguran"
+        component={TeguranScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="Kontrak"
+        component={KontrakScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="Realisasi"
+        component={RealisasiScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="PerubahanPresensi"
+        component={PerubahanPresensiScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="SuratTugas"
+        component={SuratTugasScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="PotonganLain"
+        component={PotonganLainScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="Lock"
+        component={LockScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="Lainnya"
+        component={LainnyaScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="BelumKirimKontrak"
+        component={BelumKirimKontrakScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="BelumKirimRealisasi"
+        component={BelumKirimRealisasiScreen}
+      />
+    </Stack.Navigator>
   );
 }
 
 export default function App() {
   return (
     <NavigationContainer>
-      <MainNavigator /> {/* Gunakan MainNavigator sebagai navigator utama */}
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
+
+            if (route.name === 'Dashboard') {
+              iconName = focused ? 'home' : 'home-outline';
+            } else if (route.name === 'Laporan') {
+              iconName = focused ? 'document' : 'document-outline';
+            } else if (route.name === 'Presensi') {
+              iconName = focused ? 'calendar' : 'calendar-outline';
+            } else if (route.name === 'Profile') {
+              iconName = focused ? 'person' : 'person-outline';
+            }
+
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: 'black',
+          tabBarInactiveTintColor: 'black',
+          tabBarStyle: {
+            backgroundColor: 'white',
+          },
+        })}
+      >
+        <Tab.Screen
+          name="Dashboard"
+          component={HomeStack}
+          options={{ headerShown: false }}
+        />
+        <Tab.Screen
+          name="Laporan"
+          component={Laporan}
+          options={{ headerShown: false }}
+        />
+        <Tab.Screen
+          name="Presensi"
+          component={Presensi}
+          options={{ headerShown: false }}
+        />
+        <Tab.Screen
+          name="Profile"
+          component={User}
+          options={{ headerShown: false }}
+        />
+      </Tab.Navigator>
     </NavigationContainer>
   );
 }
