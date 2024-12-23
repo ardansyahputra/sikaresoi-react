@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'; // Import Icon Library
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const Allmenu = ({ navigation }) => { // Menambahkan navigation sebagai prop
@@ -9,6 +8,8 @@ const Allmenu = ({ navigation }) => { // Menambahkan navigation sebagai prop
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
+        {/* Icon Background */}
+        <MaterialCommunityIcons name="menu" size={150} color="#ffffff20" style={styles.headerBackgroundIcon} />
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color="#FAFAFA" />
         </TouchableOpacity>
@@ -22,6 +23,8 @@ const Allmenu = ({ navigation }) => { // Menambahkan navigation sebagai prop
         <Text style={styles.sectionSubtitle}>4 menu favorit yang ada di dashboard Anda</Text>
 
         <View style={styles.iconGrid}>
+          {/* Icon Grid Background */}
+          <MaterialCommunityIcons name="grid-large" size={200} color="#ffffff10" style={styles.gridBackgroundIcon} />
           {renderIcon('Setting Jabatan', 'settings', () => navigation.navigate('SettingJabatan'))}
           {renderIcon('Realisasi Kinerja', 'add-circle-outline', () => navigation.navigate('RealisasiKinerja'))}
           {renderIcon('Persetujuan Kontrak Kinerja', 'shield-checkmark', () => navigation.navigate('Persetujuan'))}
@@ -31,6 +34,9 @@ const Allmenu = ({ navigation }) => { // Menambahkan navigation sebagai prop
         {/* Menu Lainnya */}
         <Text style={styles.sectionTitle}>LAPORAN</Text>
         <View style={styles.iconGrid}>
+          {renderIcon('Kontrak Kerja', 'bag-check-outline')}
+          {renderIcon('Pencapaian Kerja', 'gift-outline')}
+          {renderIcon('Remunerasi', 'checkmark-done-circle')}
           {renderIcon('Kontrak Kerja', 'bag-check-outline')}
           {renderIcon('Pencapaian Kerja', 'gift-outline')}
           {renderIcon('Remunerasi', 'checkmark-done-circle')}
@@ -63,15 +69,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 20,
+    position: 'relative',
+  },
+  headerBackgroundIcon: {
+    position: 'absolute',
+    top: -30,
+    right: -10,
+    zIndex: -1,
+    opacity: 0.2,
   },
   headerTitle: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  editText: {
-    color: '#fff',
-    fontSize: 16,
   },
   sectionTitle: {
     color: '#fff',
@@ -91,6 +101,14 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'start',
     marginBottom: 20,
+    position: 'relative',
+  },
+  gridBackgroundIcon: {
+    position: 'absolute',
+    left: -20,
+    top: -20,
+    zIndex: -1,
+    opacity: 0.2,
   },
   iconContainer: {
     alignItems: 'center',
