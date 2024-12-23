@@ -1,0 +1,75 @@
+export const BASE_URL = 'https://192.168.3.113:8000/api/v1';
+
+export const API_ENDPOINTS = {
+  user: {
+    profile: `${BASE_URL}/user/update_profile`,
+    changePassword: `${BASE_URL}/user/change_password`,
+    dewas: {
+      show: `${BASE_URL}/user/dewas/show`,
+      index: `${BASE_URL}/user/dewas/index`,
+      create: `${BASE_URL}/user/dewas/create`,
+      edit: (uuid) => `${BASE_URL}/user/dewas/${uuid}/edit`,
+      update: (uuid) => `${BASE_URL}/user/dewas/${uuid}/update`,
+      delete: (uuid) => `${BASE_URL}/user/dewas/${uuid}/delete`,
+    },
+    absensi: {
+      index: `${BASE_URL}/user/absensi/index`,
+      fetch: `${BASE_URL}/user/absensi/fetch`,
+      now: `${BASE_URL}/user/absensi/now`,
+      in: `${BASE_URL}/user/absensi/in`,
+      out: `${BASE_URL}/user/absensi/out`,
+    },
+    jabatan: {
+      show: `${BASE_URL}/user/jabatan/show`,
+      aktif: `${BASE_URL}/user/jabatan/aktif`,
+      index: `${BASE_URL}/user/jabatan/index`,
+      create: `${BASE_URL}/user/jabatan/create`,
+      edit: (uuid) => `${BASE_URL}/user/jabatan/${uuid}/edit`,
+      update: (uuid) => `${BASE_URL}/user/jabatan/${uuid}/update`,
+      delete: (uuid) => `${BASE_URL}/user/jabatan/${uuid}/delete`,
+      changeAktif: (uuid) => `${BASE_URL}/user/jabatan/${uuid}/changeAktif`,
+    },
+    kinerja: {
+      index: `${BASE_URL}/user/kinerja/index`,
+      salin: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/salin`,
+      persetujuan: `${BASE_URL}/user/kinerja/persetujuan`,
+      resend: `${BASE_URL}/user/kinerja/resend`,
+      revisi: `${BASE_URL}/user/kinerja/revisi`,
+      batal: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/batal`,
+      send: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/send`,
+      konfirmasi: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/konfirmasi`,
+      realisasi: {
+        resend: `${BASE_URL}/user/kinerja/resend_realisasi`,
+        send: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/send_realisasi`,
+        revisi: `${BASE_URL}/user/kinerja/revisi_realisasi`,
+        konfirmasi: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/konfirmasi_realisasi`,
+        batal: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/batal_realisasi`,
+      },
+      list: {
+        index: `${BASE_URL}/user/kinerja/list/index`,
+        save: `${BASE_URL}/user/kinerja/list/save`,
+        edit: (uuid) => `${BASE_URL}/user/kinerja/list/${uuid}/edit`,
+        update: (uuid) => `${BASE_URL}/user/kinerja/list/${uuid}/update`,
+        delete: (uuid) => `${BASE_URL}/user/kinerja/list/${uuid}/delete`,
+        totalTarget: (uuid) => `${BASE_URL}/user/kinerja/list/${uuid}/total-target`,
+        autoSum: (uuid) => `${BASE_URL}/user/kinerja/list/${uuid}/auto-sum`,
+        target: {
+          save: (list_uuid) => `${BASE_URL}/user/kinerja/list/target/${list_uuid}/save`,
+          update: (uuid) => `${BASE_URL}/user/kinerja/list/target/${uuid}/update`,
+          otomatis: (list_uuid) => `${BASE_URL}/user/kinerja/list/target/${list_uuid}/otomatis`,
+          kumulatif: (list_uuid) => `${BASE_URL}/user/kinerja/list/target/${list_uuid}/kumulatif`,
+        },
+        realisasi: {
+          index: `${BASE_URL}/user/kinerja/list/target/realisasi/index`,
+          update: (uuid) => `${BASE_URL}/user/kinerja/list/target/realisasi/${uuid}/update`,
+          updateJabatan: (uuid) => `${BASE_URL}/user/kinerja/list/target/realisasi/${uuid}/updateJabatan`,
+          reset: (uuid) => `${BASE_URL}/user/kinerja/list/target/realisasi/${uuid}/reset`,
+          deleteTambahan: (uuid) => `${BASE_URL}/user/kinerja/list/target/realisasi/${uuid}/delete_tambahan`,
+          file: {
+            delete: (uuid) => `${BASE_URL}/user/kinerja/list/target/realisasi/file/${uuid}/delete`,
+          },
+        },
+      },
+    },
+  },
+};

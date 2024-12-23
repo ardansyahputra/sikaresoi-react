@@ -1,33 +1,8 @@
+import axios from 'axios';
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, ScrollView } from 'react-native';
 import { Card } from 'react-native-paper';
 
-const Header = () => {
-  return (
-    <View style={styles.headerContainer}>
-      <View style={styles.infoColumn}>
-        <Text style={styles.infoLabel}>NAMA</Text>
-        <Text style={styles.infoValue}>: Capt. SIDROTUL MUNTAHA, M.Si.,M.Mar</Text>
-      </View>
-      <View style={styles.infoColumn}>
-        <Text style={styles.infoLabel}>NIP</Text>
-        <Text style={styles.infoValue}>: 19670712 199808 1 001</Text>
-      </View>
-      <View style={styles.infoColumn}>
-        <Text style={styles.infoLabel}>JABATAN</Text>
-        <Text style={styles.infoValue}>: Direktur</Text>
-      </View>
-      <View style={styles.infoColumn}>
-        <Text style={styles.infoLabel}>UNIT KERJA</Text>
-        <Text style={styles.infoValue}>: Politeknik Pelayaran Barombong</Text>
-      </View>
-      <View style={styles.infoColumn}>
-        <Text style={styles.infoLabel}>PERIODE</Text>
-        <Text style={styles.infoValue}>: 02 Januari 2024 s/d 31 Desember 2024</Text>
-      </View>
-    </View>
-  );
-};
 
 const KontrakKinerjaScreen = () => {
   const [data, setData] = useState([]);
@@ -37,25 +12,27 @@ const KontrakKinerjaScreen = () => {
 
   const fetchKinerjaData = async () => {
     try {
-      const response = await fetch('http://192.168.2.135:8000/api/v1/user/kinerja/list/index', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIuMTM1OjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzM4ODkzODEsImV4cCI6MTczMzg5NTQ0NSwibmJmIjoxNzMzODkxODQ1LCJqdGkiOiJKS0JvSGlmYnU5OTZHbTIxIiwic3ViIjoyLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.ucvZE8r_R83fKW7YmgnGPzsSOVVMN95vE3LB8dia4MQ`
-
-      }
-  });
-  setData(response.data.data);  // Assuming response.data.data contains the paginated data
-  setTotalPages(response.data.total_pages); // Assuming the API returns total pages
-} catch (error) {
-  Alert.alert('Error', 'Gagal mengambil data.');
-} finally {
-  setLoading(false);
+      setLoading(true);
+      const response = await axios.post('http://192.168.2.135:8000/api/v1/user/kinerja/list/index', {
+          page: currentPage,
+          limit: 10, // Change this to the number of items per page
+      }, {
+          headers: {
+              'Authorization': `Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIuMTM1OjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzM4ODkzODEsImV4cCI6MTczMzg5NTQ0NSwibmJmIjoxNzMzODkxODQ1LCJqdGkiOiJKS0JvSGlmYnU5OTZHbTIxIiwic3ViIjoyLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.ucvZE8r_R83fKW7YmgnGPzsSOVVMN95vE3LB8dia4MQ`
+          }
+      });
+      setData(response.data.data);  // Assuming response.data.data contains the paginated data
+      setTotalPages(response.data.total_pages); // Assuming the API returns total pages
+  } catch (error) {
+      Alert.alert('Error', 'Gagal mengambil data.');
+  } finally {
+      setLoading(false);
 }
   };
 
   useEffect(() => {
     fetchKinerjaData();
-  }, []);
+  }, []);    
 
   const renderItem = ({ item }) => (
     <Card style={styles.card}>
@@ -116,7 +93,6 @@ const KontrakKinerjaScreen = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <Header />
       <View style={styles.listContainer}>
         <FlatList
           data={data}

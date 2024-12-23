@@ -40,7 +40,7 @@ const ProfileEdit = () => {
   ]);
   const [nip, setNip] = useState('19740714 200502 1 007');
   const [name, setName] = useState('OBET LUMALAN BIJANG, S.Si.T.M.Ap,M.Mar');
-  const [imageUri, setImageUri] = useState(require('./assets/300-14.jpg'));
+  const [imageUri, setImageUri] = useState(require('../../assets/300-14.jpg'));
   const [isEditing, setIsEditing] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
 
