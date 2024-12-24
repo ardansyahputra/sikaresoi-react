@@ -106,6 +106,7 @@ const onPressDownload = async (type) => {
         <Text style={styles.laporanjudul}>
           Laporan
         </Text>
+
     {/* Dropdown untuk Laporan Rekapitulasi Tugas Tambahan */}
     <View style={styles.dropdownWrapperTitle}>
       <TouchableOpacity
@@ -153,7 +154,6 @@ const onPressDownload = async (type) => {
               dropdownStyle={styles.dropdownStyle}
             />
           </View>
-
           <TouchableOpacity
             style={styles.downloadButton}
             onPress={() => onPressDownload('capaianKinerja')}>
@@ -164,6 +164,63 @@ const onPressDownload = async (type) => {
         </View>
       )}
     </View>
+    <View style={styles.dropdownWrapperTitle}>
+      <TouchableOpacity
+        onPress={() => setIsMonthYearOpenTugas(!isMonthYearOpenTugas)}
+        style={styles.titleWrapper}>
+        <Text style={styles.reportTitle}>
+          Renumerasi
+        </Text>
+        <Icon
+          name={isMonthYearOpenTugas ? 'chevron-up' : 'chevron-down'}
+          size={18}
+          color="black"
+          style={styles.iconStyle}
+        />
+      </TouchableOpacity>
+      {isMonthYearOpenTugas && (
+        <View style={styles.formContainer}>
+          <View style={styles.dropdownWrapper}>
+            <Text style={styles.label}>Pilih Bulan *</Text>
+            <Dropdown
+              style={styles.dropdown}
+              data={monthData}
+              labelField="label"
+              valueField="value"
+              placeholder="Pilih Bulan"
+              value={selectedMonth}
+              onChange={item => setSelectedMonth(item.value)}
+              placeholderStyle={styles.placeholderStyle}
+              selectedTextStyle={styles.selectedTextStyle}
+              dropdownStyle={styles.dropdownStyle}
+            />
+          </View>
+          <View style={styles.dropdownWrapper}>
+            <Text style={styles.label}>Pilih Tahun *</Text>
+            <Dropdown
+              style={styles.dropdown}
+              data={yearData}
+              labelField="label"
+              valueField="value"
+              placeholder="Pilih Tahun"
+              value={selectedYear}
+              onChange={item => setSelectedYear(item.value)}
+              placeholderStyle={styles.placeholderStyle}
+              selectedTextStyle={styles.selectedTextStyle}
+              dropdownStyle={styles.dropdownStyle}
+            />
+          </View>
+          <TouchableOpacity
+            style={styles.downloadButton}
+            onPress={() => onPressDownload('capaianKinerja')}>
+            <Text style={styles.downloadButtonText}>
+              Download Laporan Capaian Kinerja
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+    
     {/* Dropdown untuk Report Rekapitulasi Capaian Kinerja */}
     <View style={styles.dropdownWrapperTitle}>
       <TouchableOpacity
@@ -212,7 +269,6 @@ const onPressDownload = async (type) => {
               dropdownStyle={styles.dropdownStyle}
             />
           </View>
-
           <TouchableOpacity
             style={styles.downloadButton}
             onPress={() => onPressDownload('rekapitulasi')}>

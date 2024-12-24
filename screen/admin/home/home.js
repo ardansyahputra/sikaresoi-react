@@ -9,10 +9,10 @@ import {useNavigation} from '@react-navigation/native';
 
 // Axios instance
 const apiClient = axios.create({
-  baseURL: 'http://192.168.61.163:8000/api/v1',
+  baseURL: 'http://192.168.60.163:8000/api/v1',
   headers: {
     Authorization:
-      'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYxLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM0OTE1OTkyLCJleHAiOjE3MzQ5MjAxNDMsIm5iZiI6MTczNDkxNjU0MywianRpIjoib21BdkN4R1ZPV3IwZmNpNiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.jnhlAQBgORzkMQ69Vb6hUjPoZyWKEIT3hJYorCcbUH8',
+      'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1MDAyNDAzLCJleHAiOjE3MzUwMDYyOTAsIm5iZiI6MTczNTAwMjY5MCwianRpIjoiMU43ekNoTFFWdUlmRWlSSCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.xuFQh94DARucc2ESzM7s4jIg5k_80AgFKBNIl0Adhm8',
   },
 });
 
