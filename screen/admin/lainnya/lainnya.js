@@ -1,16 +1,22 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'; // Import Icon Library
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const Allmenu = ({ navigation }) => { // Menambahkan navigation sebagai prop
+const Allmenu = ({navigation}) => {
+  // Menambahkan navigation sebagai prop
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        {/* Icon Background */}
-        <MaterialCommunityIcons name="menu" size={150} color="#ffffff20" style={styles.headerBackgroundIcon} />
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}>
           <Icon name="arrow-back" size={24} color="#FAFAFA" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Menu Cepat</Text>
@@ -18,28 +24,146 @@ const Allmenu = ({ navigation }) => { // Menambahkan navigation sebagai prop
 
       {/* Body */}
       <ScrollView>
-        {/* Menu Favorit */}
-        <Text style={styles.sectionTitle}>Menu Favorit</Text>
-        <Text style={styles.sectionSubtitle}>4 menu favorit yang ada di dashboard Anda</Text>
-
+        {/* LAPORAN */}
+        <Text style={styles.sectionTitle}>Laporan</Text>
         <View style={styles.iconGrid}>
-          {/* Icon Grid Background */}
-          <MaterialCommunityIcons name="grid-large" size={200} color="#ffffff10" style={styles.gridBackgroundIcon} />
-          {renderIcon('Setting Jabatan', 'settings', () => navigation.navigate('SettingJabatan'))}
-          {renderIcon('Realisasi Kinerja', 'add-circle-outline', () => navigation.navigate('RealisasiKinerja'))}
-          {renderIcon('Persetujuan Kontrak Kinerja', 'shield-checkmark', () => navigation.navigate('Persetujuan'))}
-          {renderIcon('Persetujuan Realisasi', 'documents-outline', () => navigation.navigate('PersetujuanR'))}
+          {renderIcon('Tugas Tambahan', 'clipboard-outline', () =>
+            navigation.navigate('TugasTambahan'),
+          )}{' '}
+          {/* Ikon untuk Tugas Tambahan */}
+          {renderIcon('Kontrak Kerja', 'bag-check-outline', () =>
+            navigation.navigate('KontrakKerja'),
+          )}{' '}
+          {/* Ikon untuk Kontrak Kerja */}
+          {renderIcon('Capaian Kinerja', 'stats-chart-outline', () =>
+            navigation.navigate('CapaianKinerja'),
+          )}{' '}
+          {/* Ikon untuk Capaian Kinerja */}
+          {renderIcon('Rekapitulasi', 'document-text-outline', () =>
+            navigation.navigate('Rekapitulasi'),
+          )}{' '}
+          {/* Ikon untuk Rekapitulasi */}
+          {renderIcon('Remunerasi', 'checkmark-done-circle', () =>
+            navigation.navigate('Remunerasi'),
+          )}{' '}
+          {/* Ikon untuk Remunerasi */}
+          {renderIcon('Tunjangan Tambahan', 'wallet-outline', () =>
+            navigation.navigate('TunjanganTambahan'),
+          )}{' '}
+          {/* Ikon untuk Tunjangan Tambahan */}
         </View>
 
-        {/* Menu Lainnya */}
-        <Text style={styles.sectionTitle}>LAPORAN</Text>
+        {/* USER */}
+        <Text style={styles.sectionTitle}>User</Text>
         <View style={styles.iconGrid}>
-          {renderIcon('Kontrak Kerja', 'bag-check-outline')}
-          {renderIcon('Pencapaian Kerja', 'gift-outline')}
-          {renderIcon('Remunerasi', 'checkmark-done-circle')}
-          {renderIcon('Kontrak Kerja', 'bag-check-outline')}
-          {renderIcon('Pencapaian Kerja', 'gift-outline')}
-          {renderIcon('Remunerasi', 'checkmark-done-circle')}
+          {renderIcon('User', 'person', () => navigation.navigate('User'))}
+          {renderIcon('User Group', 'people', () =>
+            navigation.navigate('UserGroup'),
+          )}
+          {renderIcon('Persentase Kegiatan', 'pie-chart-outline', () =>
+            navigation.navigate('PersentaseKegiatan'),
+          )}
+        </View>
+
+        {/* MASTER */}
+        <Text style={styles.sectionTitle}>Master</Text>
+        <View style={styles.iconGrid}>
+          {renderIcon('Pemotongan', 'cut', () =>
+            navigation.navigate('Pemotongan'),
+          )}
+          {renderIcon('Uang Makan', 'restaurant-outline', () =>
+            navigation.navigate('UangMakan'),
+          )}
+          {renderIcon('Jabatan', 'briefcase-outline', () =>
+            navigation.navigate('Jabatan'),
+          )}
+          {renderIcon('Unit Kerja', 'business-outline', () =>
+            navigation.navigate('UnitKerja'),
+          )}
+          {renderIcon('Pangkat', 'ribbon-outline', () =>
+            navigation.navigate('Pangkat'),
+          )}
+          {renderIcon('Satuan', 'grid-outline', () =>
+            navigation.navigate('Satuan'),
+          )}
+          {renderIcon('Uraian', 'document-text-outline', () =>
+            navigation.navigate('Uraian'),
+          )}
+          {renderIcon('Bulan & Tahun', 'calendar-outline', () =>
+            navigation.navigate('BulanTahun'),
+          )}
+          {renderIcon('Dewan Pengawas', 'shield-outline', () =>
+            navigation.navigate('DewanPengawas'),
+          )}
+          {renderIcon('PIR', 'git-network-outline', () =>
+            navigation.navigate('PIR'),
+          )}
+          {renderIcon('Kegiatan', 'clipboard-outline', () =>
+            navigation.navigate('Kegiatan'),
+          )}
+          {renderIcon('Jenis Pegawai', 'person-add-outline', () =>
+            navigation.navigate('JenisPegawai'),
+          )}
+          {renderIcon('Lokasi Absensi', 'location-outline', () =>
+            navigation.navigate('LokasiAbsensi'),
+          )}
+          {renderIcon('No WA', 'call-outline', () =>
+            navigation.navigate('NoWa'),
+          )}
+          {renderIcon('Jenis Absensi', 'finger-print-outline', () =>
+            navigation.navigate('JenisAbsensi'),
+          )}
+          {renderIcon('Reward & Punishment', 'gift-outline', () =>
+            navigation.navigate('RewardPunishment'),
+          )}
+          {renderIcon('Deadline Kinerja', 'timer-outline', () =>
+            navigation.navigate('DeadlineKinerja'),
+          )}
+          {renderIcon('Master PTKP', 'document-attach-outline', () =>
+            navigation.navigate('MasterPTKP'),
+          )}
+          {renderIcon('Jam Kerja', 'time-outline', () =>
+            navigation.navigate('JamKerja'),
+          )}
+        </View>
+
+        {/* FINGERPRINT */}
+        <Text style={styles.sectionTitle}>Fingerprint</Text>
+        <View style={styles.iconGrid}>
+          {renderIcon('Jam Finger', 'time-outline', () =>
+            navigation.navigate('JamFingerprint'),
+          )}
+          {renderIcon('Mesin', 'hardware-chip-outline', () =>
+            navigation.navigate('Mesin'),
+          )}
+        </View>
+
+        <Text style={styles.sectionTitle}>Pengaturan Tambahan</Text>
+        <View style={styles.iconGrid}>
+          {renderIcon('Potongan Lain', 'cut-outline', () =>
+            navigation.navigate('PotonganLain'),
+          )}
+          {renderIcon('Tanggung Renteng', 'cube-outline', () =>
+            navigation.navigate('TanggungRenteng'),
+          )}
+          {renderIcon('Setting Hari Kerja', 'calendar-outline', () =>
+            navigation.navigate('SettingHariKerja'),
+          )}
+          {renderIcon('Peta Jabatan', 'map-outline', () =>
+            navigation.navigate('PetaJabatan'),
+          )}
+          {renderIcon('Setting', 'settings-outline', () =>
+            navigation.navigate('Setting'),
+          )}
+          {renderIcon('Surat Tugas', 'document-outline', () =>
+            navigation.navigate('SuratTugas'),
+          )}
+          {renderIcon('Verifikasi Surat Tugas', 'checkmark-done-outline', () =>
+            navigation.navigate('VerifikasiSuratTugas'),
+          )}
+          {renderIcon('Persentase Capaian', 'stats-chart-outline', () =>
+            navigation.navigate('SettingPersentaseCapaian'),
+          )}
         </View>
       </ScrollView>
     </View>

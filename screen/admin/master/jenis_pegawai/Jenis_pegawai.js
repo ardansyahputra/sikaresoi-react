@@ -1,10 +1,10 @@
 import React from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 
-export default function User() {
+export default function JenisPegawai() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>User Screen</Text>
+      <Text style={styles.text}>Jenis Pegawai Screen</Text>
     </View>
   );
 }
