@@ -175,7 +175,7 @@ const Home = () => {
       {/* Circular Buttons Container with Gradient */}
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <LinearGradient
-          colors={['#1D56C0', '#013A91']} // Gradasi biru tua ke biru terang
+          colors={['#1D56C0','#4A90E2']} // Gradasi biru tua ke biru terang
           style={styles.circularButtonsContainer}>
           <Text style={styles.buttonsTitle}></Text>
           <View style={styles.buttonsContainer}>

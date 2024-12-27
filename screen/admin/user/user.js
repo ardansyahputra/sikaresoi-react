@@ -12,10 +12,8 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
-import {Pressable} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import {Dropdown} from 'react-native-element-dropdown';
+import { Dropdown } from 'react-native-element-dropdown'
 import axios from 'axios';
 
 export default function Presensi() {
@@ -23,53 +21,27 @@ export default function Presensi() {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [lastPage, setLastPage] = useState(1);  
+  const [lastPage, setLastPage] = useState(1);
   const [isModalVisible, setModalVisible] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);
-  const [activeButton, setActiveButton] = useState('kontrak');
-
+  
   useEffect(() => {
-    if (activeButton === 'kontrak') {
-      fetchKontrakData(currentPage); // Panggil fetchKontrakData saat tombol Kontrak aktif
-    }
-  }, [activeButton, currentPage, selectedDisplay]); // Tambahkan currentPage & selectedDisplay untuk memuat data sesuai perubahan
+    fetchData(currentPage, selectedDisplay);
+  }, [currentPage, selectedDisplay]);
 
-  const fetchRealisasiData = async page => {
+  const fetchData = async page => {
     try {
       setLoading(true);
       const response = await axios.post(
-        'http://192.168.61.123:8000/api/v1/lock/indexRealisasi',
+        '${process.env.API_URL}perubahan_absensi/indexandro',
         {page},
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYxLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM0NjY1NTk4LCJleHAiOjE3MzQ2NzEyMjYsIm5iZiI6MTczNDY2NzYyNiwianRpIjoiZXVXUzAzaEZMQlBCc2FTZCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.Obcgx0eW73lkqdw9xyucv_SBgq9L_gNvmGtcRxH5GMU',
-          },
-        },
-      );
-      setData(response.data.data);
-      setCurrentPage(response.data.current_page);
-      setLastPage(response.data.last_page);
-    } catch (error) {
-      console.error('Error fetching data', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchKontrakData = async page => {
-    try {
-      setLoading(true);
-      const response = await axios.post(
-        'http://192.168.61.123:8000/api/v1/lock/indexKontrak',
-        {page},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYxLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM0NjY1NTk4LCJleHAiOjE3MzQ2NzEyMjYsIm5iZiI6MTczNDY2NzYyNiwianRpIjoiZXVXUzAzaEZMQlBCc2FTZCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.Obcgx0eW73lkqdw9xyucv_SBgq9L_gNvmGtcRxH5GMU',
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYxLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM0NTg0MjY2LCJleHAiOjE3MzQ1OTc5OTQsIm5iZiI6MTczNDU5NDM5NCwianRpIjoiMXZQT3lNMFVhdzdiak1CdCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.Jj3yyLl1vCqszKDQxSuqVXAdp8O8sjdgS6Y_u2g5g1o',
           },
         },
       );
@@ -118,7 +90,7 @@ export default function Presensi() {
           headers: {
             Authorization:
               'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIuMTUzOjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzQzOTk0NDQsImV4cCI6MTczNDQxNDc0MiwibmJmIjoxNzM0NDExMTQyLCJqdGkiOiJhS0xXR2w5Y3pkN0pVM1NMIiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.BXVqz9M9HJ18YZOo7-3uqMpTXHTS5MXTWNH9uu63NcQ',
-            Accept: 'application/json',
+            Accept: 'application/json'
           },
         },
       );
@@ -132,11 +104,11 @@ export default function Presensi() {
   };
 
   const display = [
-    {label: '5', value: 1},
-    {label: '10', value: 2},
-    {label: '25', value: 3},
-    {label: '50', value: 4},
-    {label: '100', value: 5},
+    { label: '5', value: 1 },
+    { label: '10', value: 2 },
+    { label: '25', value: 3 },
+    { label: '50', value: 4 },
+    { label: '100', value: 5 },
   ];
 
   const toggleExpand = id => {
@@ -156,106 +128,44 @@ export default function Presensi() {
     }
   };
 
-  const handlePress = buttonName => {
-    setActiveButton(buttonName); // Atur tombol aktif
-    if (buttonName === 'kontrak') {
-      fetchKontrakData(currentPage); // Langsung fetch data saat tombol Kontrak dipilih
-    } else {
-      fetchRealisasiData(currentPage); // Langsung fetch data saat tombol Realisasi dipilih      
-    }
-  };
-
   const TableHeader = () => (
     <View>
-      <View style={styles.tambahContainer}>
-        <TouchableOpacity style={styles.tambahButton}>
-          <FontAwesome name="plus" size={20} color="#fff" style={styles.icon} />
-          <Text style={styles.tambahText}>TAMBAH</Text>
-        </TouchableOpacity>
-        <View style={styles.kontrakContainer}>
-          <Pressable
-            style={({pressed}) => [
-              styles.button,
-              pressed && styles.buttonPressed,
-              activeButton === 'kontrak' && styles.buttonActive,
-            ]}
-            onPress={() => handlePress('kontrak')}>
-            <View style={styles.kontrakButton}>
-              <FontAwesome
-                name="tint"
-                size={24}
-                color={activeButton === 'kontrak' ? '#A463FC' : 'gray'}
-                style={styles.icon}
-              />
-              <Text
-                style={[
-                  styles.buttonText,
-                  activeButton === 'kontrak' && styles.textActive,
-                ]}>
-                Kontrak
-              </Text>
-            </View>
-          </Pressable>
-
-          <Pressable
-            style={({pressed}) => [
-              styles.button,
-              pressed && styles.buttonPressed,
-              activeButton === 'realisasi' && styles.buttonActive,
-            ]}
-            onPress={() => handlePress('realisasi')}>
-            <View style={styles.kontrakButton}>
-              <FontAwesome
-                name="tint"
-                size={24}
-                color={activeButton === 'realisasi' ? '#A463FC' : 'gray'}
-                style={styles.icon}
-              />
-              <Text
-                style={[
-                  styles.buttonText,
-                  activeButton === 'realisasi' && styles.textActive,
-                ]}>
-                Realisasi
-              </Text>
-            </View>
-          </Pressable>
-        </View>
+    <View style={styles.filterContainer}>
+    <View style={styles.displayContainer}>
+    <Text style={styles.displayText}>
+      Display
+    </Text>
+    <Dropdown
+          style={styles.dropdown}
+          data={display}
+          labelField="label"
+          valueField="value"
+          placeholder="10"
+          value={selectedDisplay}
+          onChange={item => setSelectedDisplay(item.value)}
+          renderItem={(item) => (
+          <Text style={[styles.dropdownItem, styles.customFont]}>
+            {item.label}
+          </Text>
+        )}
+        />
+      </View>  
+    {/* Search Bar */}
+    <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchBar}
+          placeholder="Search"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
       </View>
-      <View style={styles.filterContainer}>
-        <View style={styles.displayContainer}>
-          <Text style={styles.displayText}>Display</Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={display}
-            labelField="label"
-            valueField="value"
-            placeholder="10"
-            value={selectedDisplay}
-            onChange={item => setSelectedDisplay(item.value)}
-            renderItem={item => (
-              <Text style={[styles.dropdownItem, styles.customFont]}>
-                {item.label}
-              </Text>
-            )}
-          />
-        </View>
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchBar}
-            placeholder="Search"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-      </View>
-      <View style={styles.tableHeader}>
-        <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
-        <Text style={[styles.headerCell, styles.nameCell]}>Jenis</Text>
-        <Text style={[styles.headerCell, styles.tableStatusCell]}>Status</Text>
-        <View style={styles.expandIconCell} />
-      </View>
+    </View>
+    <View style={styles.tableHeader}>
+      <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
+      <Text style={[styles.headerCell, styles.nameCell]}>Name</Text>
+      <Text style={[styles.headerCell, styles.tableStatusCell]}>Status</Text>
+      <View style={styles.expandIconCell} />
+    </View>
     </View>
   );
 
@@ -272,7 +182,7 @@ export default function Presensi() {
             style={[styles.tableCell, styles.nameCell]}
             numberOfLines={1}
             ellipsizeMode="tail">
-            {item.jenis || '-'}
+            {item.user?.name || '-'}
           </Text>
           <View style={styles.statusCellContainer}>
             <Text
@@ -312,7 +222,7 @@ export default function Presensi() {
               </Text>
             </View>
             <View style={styles.actionContainer}>
-              <TouchableOpacity
+              <TouchableOpacity 
                 style={styles.approveButton}
                 onPress={() => handleApprove(item.uuid)}>
                 <Ionicons name="checkmark" size={20} color="white" />
@@ -369,9 +279,7 @@ export default function Presensi() {
                       currentPage === 1 && styles.disabledButton,
                     ]}
                     disabled={currentPage === 1}
-                    onPress={() =>
-                      setCurrentPage(prev => Math.max(prev - 1, 1))
-                    }>
+                    onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
                     <Text style={styles.pageButtonText}>Previous</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -391,7 +299,7 @@ export default function Presensi() {
           }
         />
       )}
-
+  
       {/* Modal Input Alasan Penolakan */}
       <Modal
         visible={isModalVisible}
@@ -425,7 +333,7 @@ export default function Presensi() {
         </View>
       </Modal>
     </View>
-  );
+  );  
 }
 
 const styles = StyleSheet.create({
@@ -479,7 +387,7 @@ const styles = StyleSheet.create({
     paddingLeft: 0,
   },
   numberCell: {
-    width: 50,
+    width: 50
   },
   nameCell: {
     flex: 1,
@@ -666,6 +574,10 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
   },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
   searchContainer: {
     width: 150,
     backgroundColor: '#FFFFFF',
@@ -685,7 +597,7 @@ const styles = StyleSheet.create({
   displayContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems:'center',
     marginRight: 20,
   },
   displayText: {
@@ -707,63 +619,10 @@ const styles = StyleSheet.create({
   },
   dropdownItem: {
     padding: 10,
-    fontSize: 13,
+    fontSize: 16,
     color: '#333',
   },
   customFont: {
     fontFamily: 'Poppins-Regular',
-  },
-  tambahContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  tambahButton: {
-    flexDirection: 'row',
-    backgroundColor: '#3699FF',
-    width: 90,
-    height: 40,
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tambahText: {
-    marginTop: 1,
-    fontFamily: 'Poppins-Regular',
-    color: 'white',
-    marginLeft: 5,
-    lineHeight: 20,
-    fontSize: 13,
-    textAlignVertical: 'center',
-  },
-  button: {
-    height: 40,
-    width: 90,
-    backgroundColor: '#fff',
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonPressed: {
-    backgroundColor: '#fff',
-  },
-  buttonActive: {
-    backgroundColor: '#E6E7F0',
-  },
-  buttonText: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 14,
-    color: 'grey',
-  },
-  textActive: {
-    fontFamily: 'Poppins-Regular',
-    color: '#A463FC',
-  },
-  kontrakContainer: {
-    flexDirection: 'row',
-  },
-  kontrakButton: {
-    flexDirection: 'row',
-    gap: 5,
-  },
+  }
 });
