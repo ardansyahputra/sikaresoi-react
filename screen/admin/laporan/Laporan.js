@@ -58,7 +58,7 @@ export default function Laporan() {
       return;
     }
 
-    const apiUrl = `http://192.168.211.10:8000/report/admin/tugas_tambahan/${selectedMonth}/${selectedYear}`;
+    const apiUrl = `http://192.168.60.85:8000/report/admin/tugas_tambahan/${selectedMonth}/${selectedYear}`;
     return apiUrl;
   };
 

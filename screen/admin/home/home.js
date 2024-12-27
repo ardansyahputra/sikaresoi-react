@@ -11,11 +11,12 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import LinearGradient from 'react-native-linear-gradient';
+//import AuthGuard from './screen/auth/';
 import {useNavigation} from '@react-navigation/native';
 
 // Axios instance
 const apiClient = axios.create({
-  baseURL: 'http://192.168.211.10:8000/api/v1',
+  baseURL: 'http://192.168.60.85:8000/api/v1',
   headers: {
     Authorization:
       'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIxMS4xMDo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM0NjU3Nzk3LCJleHAiOjE3MzQ2NjE3NTEsIm5iZiI6MTczNDY1ODE1MSwianRpIjoiYTdRTXlnWENpZElXQUZEOSIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.pUot_KxtwvIKFJUM0pT_v8ea_vjJyW-IeDaJalqGCLg',

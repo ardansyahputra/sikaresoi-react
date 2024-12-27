@@ -13,7 +13,7 @@ import {
   Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Dropdown } from 'react-native-element-dropdown'
+import {Dropdown} from 'react-native-element-dropdown';
 import axios from 'axios';
 
 export default function Presensi() {
@@ -27,7 +27,7 @@ export default function Presensi() {
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);
-  
+
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
   }, [currentPage, selectedDisplay]);
@@ -36,7 +36,7 @@ export default function Presensi() {
     try {
       setLoading(true);
       const response = await axios.post(
-        'http://192.168.61.123:8000/api/v1/perubahan_absensi/indexandro',
+        'http://192.168.60.85:8000/api/v1/perubahan_absensi/indexandro',
         {page},
         {
           headers: {
@@ -63,7 +63,7 @@ export default function Presensi() {
           text: 'Ya',
           onPress: async () => {
             await axios.post(
-              `http://192.168.2.152:8000/perubahan_absensi/${uuid}/change`,
+              `http://192.168.60.85:8000/perubahan_absensi/${uuid}/change`,
               {status: '1', revisi: null},
             );
             Alert.alert('Berhasil', 'Konfirmasi berhasil.');
@@ -84,13 +84,13 @@ export default function Presensi() {
   const submitDecline = async () => {
     try {
       await axios.post(
-        `http://192.168.2.152:8000/api/v1/perubahan_absensi/${selectedUuid}/change`,
+        `http://192.168.60.85:8000/api/v1/perubahan_absensi/${selectedUuid}/change`,
         {status: '2', revisi: declineReason},
         {
           headers: {
             Authorization:
               'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIuMTUzOjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzQzOTk0NDQsImV4cCI6MTczNDQxNDc0MiwibmJmIjoxNzM0NDExMTQyLCJqdGkiOiJhS0xXR2w5Y3pkN0pVM1NMIiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.BXVqz9M9HJ18YZOo7-3uqMpTXHTS5MXTWNH9uu63NcQ',
-            Accept: 'application/json'
+            Accept: 'application/json',
           },
         },
       );
@@ -104,11 +104,11 @@ export default function Presensi() {
   };
 
   const display = [
-    { label: '5', value: 1 },
-    { label: '10', value: 2 },
-    { label: '25', value: 3 },
-    { label: '50', value: 4 },
-    { label: '100', value: 5 },
+    {label: '5', value: 1},
+    {label: '10', value: 2},
+    {label: '25', value: 3},
+    {label: '50', value: 4},
+    {label: '100', value: 5},
   ];
 
   const toggleExpand = id => {
@@ -130,42 +130,40 @@ export default function Presensi() {
 
   const TableHeader = () => (
     <View>
-    <View style={styles.filterContainer}>
-    <View style={styles.displayContainer}>
-    <Text style={styles.displayText}>
-      Display
-    </Text>
-    <Dropdown
-          style={styles.dropdown}
-          data={display}
-          labelField="label"
-          valueField="value"
-          placeholder="10"
-          value={selectedDisplay}
-          onChange={item => setSelectedDisplay(item.value)}
-          renderItem={(item) => (
-          <Text style={[styles.dropdownItem, styles.customFont]}>
-            {item.label}
-          </Text>
-        )}
-        />
-      </View>  
-    {/* Search Bar */}
-    <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchBar}
-          placeholder="Search"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
+      <View style={styles.filterContainer}>
+        <View style={styles.displayContainer}>
+          <Text style={styles.displayText}>Display</Text>
+          <Dropdown
+            style={styles.dropdown}
+            data={display}
+            labelField="label"
+            valueField="value"
+            placeholder="10"
+            value={selectedDisplay}
+            onChange={item => setSelectedDisplay(item.value)}
+            renderItem={item => (
+              <Text style={[styles.dropdownItem, styles.customFont]}>
+                {item.label}
+              </Text>
+            )}
+          />
+        </View>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchBar}
+            placeholder="Search"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
       </View>
-    </View>
-    <View style={styles.tableHeader}>
-      <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
-      <Text style={[styles.headerCell, styles.nameCell]}>Name</Text>
-      <Text style={[styles.headerCell, styles.tableStatusCell]}>Status</Text>
-      <View style={styles.expandIconCell} />
-    </View>
+      <View style={styles.tableHeader}>
+        <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
+        <Text style={[styles.headerCell, styles.nameCell]}>Name</Text>
+        <Text style={[styles.headerCell, styles.tableStatusCell]}>Status</Text>
+        <View style={styles.expandIconCell} />
+      </View>
     </View>
   );
 
@@ -222,7 +220,7 @@ export default function Presensi() {
               </Text>
             </View>
             <View style={styles.actionContainer}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.approveButton}
                 onPress={() => handleApprove(item.uuid)}>
                 <Ionicons name="checkmark" size={20} color="white" />
@@ -279,7 +277,9 @@ export default function Presensi() {
                       currentPage === 1 && styles.disabledButton,
                     ]}
                     disabled={currentPage === 1}
-                    onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
+                    onPress={() =>
+                      setCurrentPage(prev => Math.max(prev - 1, 1))
+                    }>
                     <Text style={styles.pageButtonText}>Previous</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -299,7 +299,7 @@ export default function Presensi() {
           }
         />
       )}
-  
+
       {/* Modal Input Alasan Penolakan */}
       <Modal
         visible={isModalVisible}
@@ -333,7 +333,7 @@ export default function Presensi() {
         </View>
       </Modal>
     </View>
-  );  
+  );
 }
 
 const styles = StyleSheet.create({
@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
     paddingLeft: 0,
   },
   numberCell: {
-    width: 50
+    width: 50,
   },
   nameCell: {
     flex: 1,
@@ -597,7 +597,7 @@ const styles = StyleSheet.create({
   displayContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems:'center',
+    alignItems: 'center',
     marginRight: 20,
   },
   displayText: {
@@ -624,5 +624,5 @@ const styles = StyleSheet.create({
   },
   customFont: {
     fontFamily: 'Poppins-Regular',
-  }
+  },
 });
