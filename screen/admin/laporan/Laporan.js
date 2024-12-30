@@ -7,19 +7,21 @@ import {
   TouchableOpacity,
   Modal,
   Image,
-  TextInput,
+  ScrollView,
 } from 'react-native';
-import {Dropdown} from 'react-native-element-dropdown'; // Import Dropdown
+import {Dropdown} from 'react-native-element-dropdown';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 export default function Laporan() {
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [selectedYear, setSelectedYear] = useState(null);
-  const [isModalVisible, setIsModalVisible] = useState(false); // State untuk modal
-  const [modalMessage, setModalMessage] = useState(''); // State untuk pesan modal
-  const [taskName, setTaskName] = useState(''); // State untuk nama tugas
-  const [taskDescription, setTaskDescription] = useState(''); // State untuk deskripsi tugas
+  const [selectedMonthReport, setSelectedMonthReport] = useState(null);
+  const [selectedYearReport, setSelectedYearReport] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+  const [isMonthYearOpenTugas, setIsMonthYearOpenTugas] = useState(false); // State untuk toggle dropdown Tugas
+  const [isMonthYearOpenCapaian, setIsMonthYearOpenCapaian] = useState(false); // State untuk toggle dropdown Capaian Kinerja
 
-  // Data untuk dropdown
   const monthData = [
     {label: 'Januari', value: 1},
     {label: 'Februari', value: 2},
@@ -44,51 +46,63 @@ export default function Laporan() {
     {label: '2025', value: '2025'},
   ];
 
-  // Reset dropdown ketika halaman dimuat
   useEffect(() => {
     setSelectedMonth(null);
     setSelectedYear(null);
+    setSelectedMonthReport(null);
+    setSelectedYearReport(null);
   }, []);
 
-  // Fungsi untuk mengunduh Excel
   const handleDownload = async () => {
-    if (!selectedMonth || !selectedYear) {
-      setModalMessage('Harap pilih bulan dan tahun terlebih dahulu!');
-      setIsModalVisible(true); // Menampilkan modal jika data tidak lengkap
-      return;
-    }
-
-    const apiUrl = `http://192.168.60.85:8000/report/admin/tugas_tambahan/${selectedMonth}/${selectedYear}`;
-    return apiUrl;
-  };
-
-  const onPressDownload = async () => {
-    const url = await handleDownload(); // Mendapatkan URL dari handleDownload
-    if (url) {
-      Linking.openURL(url); // Membuka URL jika ditemukan
-    }
-  };
-
-  // Fungsi untuk mengirimkan data form tugas tambahan
-  const handleAddTask = () => {
-    if (!taskName || !taskDescription) {
-      setModalMessage('Harap isi nama dan deskripsi tugas terlebih dahulu!');
+    if (
+      !selectedMonth &&
+      !selectedYear &&
+      !selectedMonthReport &&
+      !selectedYearReport
+    ) {
+      setModalMessage('Harap pilih bulan dan tahun untuk salah satu laporan!');
       setIsModalVisible(true);
       return;
     }
-    // Kirimkan data tugas tambahan ke API atau lakukan penyimpanan
-    console.log('Task Added:', taskName, taskDescription);
-    setTaskName(''); // Reset form setelah berhasil
-    setTaskDescription('');
+
+    let capaianKinerjaUrl = '';
+    let rekapitulasiUrl = '';
+
+    // Jika bulan dan tahun "Laporan Rekapitulasi Tugas Tambahan" diisi
+    if (selectedMonth && selectedYear) {
+      capaianKinerjaUrl = `http://192.168.61.163:8000/report/admin/tugas_tambahan/${selectedMonth}/${selectedYear}`;
+    }
+    if (selectedMonthReport && selectedYearReport) {
+      rekapitulasiUrl = `http://192.168.61.163:8000/report/admin/rekapitulasi/${selectedMonthReport}/${selectedYearReport}`;
+    }
+    if (!capaianKinerjaUrl && !rekapitulasiUrl) {
+      setModalMessage(
+        'Harap pilih bulan dan tahun untuk laporan yang ingin di-download!',
+      );
+      setIsModalVisible(true);
+      return;
+    }
+    return {capaianKinerjaUrl, rekapitulasiUrl};
   };
 
-  // State untuk dropdown toggle
-  const [isMonthYearOpen, setIsMonthYearOpen] = useState(false);
-  const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
+  const onPressDownload = async type => {
+    const urls = await handleDownload();
+    if (urls) {
+      // Pilih API yang akan dipanggil berdasarkan parameter 'type'
+      const url =
+        type === 'rekapitulasi' ? urls.rekapitulasiUrl : urls.capaianKinerjaUrl;
+
+      if (url) {
+        Linking.openURL(url);
+      } else {
+        setModalMessage('Tidak ada laporan yang dapat didownload');
+        setIsModalVisible(true);
+      }
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
+    <ScrollView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Image
@@ -96,107 +110,194 @@ export default function Laporan() {
             style={styles.logo}
           />
         </View>
-        <View style={styles.headerRight}></View>
       </View>
 
-      {/* Konten */}
-      <View style={styles.content}>
-        {/* Dropdown untuk Laporan */}
-        <View style={styles.dropdownWrapperTitle}>
-          <TouchableOpacity
-            onPress={() => setIsMonthYearOpen(!isMonthYearOpen)}>
-            <Text style={styles.reportTitle}>
-              Laporan Rekapitulasi Tugas Tambahan
-            </Text>
-          </TouchableOpacity>
-          {isMonthYearOpen && (
-            <View style={styles.formContainer}>
-              {/* Dropdown Bulan */}
-              <View style={styles.dropdownWrapper}>
-                <Text style={styles.label}>Pilih Bulan *</Text>
-                <Dropdown
-                  style={styles.dropdown}
-                  data={monthData}
-                  labelField="label"
-                  valueField="value"
-                  placeholder="Pilih Bulan"
-                  value={selectedMonth}
-                  onChange={item => setSelectedMonth(item.value)}
-                  placeholderStyle={styles.placeholderStyle}
-                  selectedTextStyle={styles.selectedTextStyle}
-                  dropdownStyle={styles.dropdownStyle}
-                  iconColor="black"
-                  arrowSize={18}
-                  animationDuration={300}
-                />
-              </View>
+      {/* Breadcrumbs */}
+      <View style={styles.breadcrumbsContainer}>
+        <Text style={styles.breadcrumbText}>
+          <Text style={styles.boldText}>Admin</Text> {'-'} Report
+        </Text>
+      </View>
 
-              {/* Dropdown Tahun */}
-              <View style={styles.dropdownWrapper}>
-                <Text style={styles.label}>Pilih Tahun *</Text>
-                <Dropdown
-                  style={styles.dropdown}
-                  data={yearData}
-                  labelField="label"
-                  valueField="value"
-                  placeholder="Pilih Tahun"
-                  value={selectedYear}
-                  onChange={item => setSelectedYear(item.value)}
-                  placeholderStyle={styles.placeholderStyle}
-                  selectedTextStyle={styles.selectedTextStyle}
-                  dropdownStyle={styles.dropdownStyle}
-                  arrowSize={18}
-                  iconColor="black"
-                  animationDuration={300}
-                />
-              </View>
+      <View style={styles.containers}>
+        <View style={styles.content}>
+          <Text style={styles.laporanjudul}>Laporan</Text>
 
-              {/* Tombol untuk Download Excel */}
-              <TouchableOpacity
-                style={styles.downloadButton}
-                onPress={onPressDownload}>
-                <Text style={styles.downloadButtonText}>
-                  Download Laporan Excel
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-
-        {/* Dropdown untuk Tambah Tugas */}
-        <View style={styles.dropdownWrapperTitle}>
-          <TouchableOpacity onPress={() => setIsTaskFormOpen(!isTaskFormOpen)}>
-            <Text style={styles.reportTitle}>Tambah Tugas Tambahan</Text>
-          </TouchableOpacity>
-          {isTaskFormOpen && (
-            <View style={styles.formContainer}>
-              {/* Input Tugas */}
-              <TextInput
-                style={styles.input}
-                placeholder="Nama Tugas"
-                value={taskName}
-                onChangeText={setTaskName}
+          {/* Dropdown untuk Laporan Rekapitulasi Tugas Tambahan */}
+          <View style={styles.dropdownWrapperTitle}>
+            <TouchableOpacity
+              onPress={() => setIsMonthYearOpenTugas(!isMonthYearOpenTugas)}
+              style={styles.titleWrapper}>
+              <Text style={styles.reportTitle}>
+                Laporan Rekapitulasi Tugas Tambahan
+              </Text>
+              <Icon
+                name={isMonthYearOpenTugas ? 'chevron-up' : 'chevron-down'}
+                size={18}
+                color="black"
+                style={styles.iconStyle}
               />
-              {/* Input Deskripsi Tugas */}
-              <TextInput
-                style={styles.input}
-                placeholder="Deskripsi Tugas"
-                value={taskDescription}
-                onChangeText={setTaskDescription}
+            </TouchableOpacity>
+            {isMonthYearOpenTugas && (
+              <View style={styles.formContainer}>
+                <View style={styles.dropdownWrapper}>
+                  <Text style={styles.label}>Pilih Bulan *</Text>
+                  <Dropdown
+                    style={styles.dropdown}
+                    data={monthData}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Pilih Bulan"
+                    value={selectedMonth}
+                    onChange={item => setSelectedMonth(item.value)}
+                    placeholderStyle={styles.placeholderStyle}
+                    selectedTextStyle={styles.selectedTextStyle}
+                    dropdownStyle={styles.dropdownStyle}
+                  />
+                </View>
+                <View style={styles.dropdownWrapper}>
+                  <Text style={styles.label}>Pilih Tahun *</Text>
+                  <Dropdown
+                    style={styles.dropdown}
+                    data={yearData}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Pilih Tahun"
+                    value={selectedYear}
+                    onChange={item => setSelectedYear(item.value)}
+                    placeholderStyle={styles.placeholderStyle}
+                    selectedTextStyle={styles.selectedTextStyle}
+                    dropdownStyle={styles.dropdownStyle}
+                  />
+                </View>
+                <TouchableOpacity
+                  style={styles.downloadButton}
+                  onPress={() => onPressDownload('capaianKinerja')}>
+                  <Text style={styles.downloadButtonText}>
+                    Download Laporan Capaian Kinerja
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+          <View style={styles.dropdownWrapperTitle}>
+            <TouchableOpacity
+              onPress={() => setIsMonthYearOpenTugas(!isMonthYearOpenTugas)}
+              style={styles.titleWrapper}>
+              <Text style={styles.reportTitle}>Renumerasi</Text>
+              <Icon
+                name={isMonthYearOpenTugas ? 'chevron-up' : 'chevron-down'}
+                size={18}
+                color="black"
+                style={styles.iconStyle}
               />
-              {/* Tombol untuk Tambahkan Tugas */}
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={handleAddTask}>
-                <Text style={styles.addButtonText}>Tambah Tugas</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+            </TouchableOpacity>
+            {isMonthYearOpenTugas && (
+              <View style={styles.formContainer}>
+                <View style={styles.dropdownWrapper}>
+                  <Text style={styles.label}>Pilih Bulan *</Text>
+                  <Dropdown
+                    style={styles.dropdown}
+                    data={monthData}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Pilih Bulan"
+                    value={selectedMonth}
+                    onChange={item => setSelectedMonth(item.value)}
+                    placeholderStyle={styles.placeholderStyle}
+                    selectedTextStyle={styles.selectedTextStyle}
+                    dropdownStyle={styles.dropdownStyle}
+                  />
+                </View>
+                <View style={styles.dropdownWrapper}>
+                  <Text style={styles.label}>Pilih Tahun *</Text>
+                  <Dropdown
+                    style={styles.dropdown}
+                    data={yearData}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Pilih Tahun"
+                    value={selectedYear}
+                    onChange={item => setSelectedYear(item.value)}
+                    placeholderStyle={styles.placeholderStyle}
+                    selectedTextStyle={styles.selectedTextStyle}
+                    dropdownStyle={styles.dropdownStyle}
+                  />
+                </View>
+                <TouchableOpacity
+                  style={styles.downloadButton}
+                  onPress={() => onPressDownload('capaianKinerja')}>
+                  <Text style={styles.downloadButtonText}>
+                    Download Laporan Capaian Kinerja
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+
+          {/* Dropdown untuk Report Rekapitulasi Capaian Kinerja */}
+          <View style={styles.dropdownWrapperTitle}>
+            <TouchableOpacity
+              onPress={() => setIsMonthYearOpenCapaian(!isMonthYearOpenCapaian)}
+              style={styles.titleWrapper}>
+              <Text style={styles.reportTitle}>
+                Report Rekapitulasi Capaian Kinerja
+              </Text>
+              <Icon
+                name={isMonthYearOpenCapaian ? 'chevron-up' : 'chevron-down'}
+                size={18}
+                color="black"
+                style={styles.iconStyles}
+              />
+            </TouchableOpacity>
+            {isMonthYearOpenCapaian && (
+              <View style={styles.formContainer}>
+                <View style={styles.dropdownWrapper}>
+                  <Text style={styles.label}>Pilih Bulan *</Text>
+                  <Dropdown
+                    style={styles.dropdown}
+                    data={monthData}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Pilih Bulan"
+                    value={selectedMonthReport}
+                    onChange={item => setSelectedMonthReport(item.value)}
+                    placeholderStyle={styles.placeholderStyle}
+                    selectedTextStyle={styles.selectedTextStyle}
+                    dropdownStyle={styles.dropdownStyle}
+                  />
+                </View>
+
+                <View style={styles.dropdownWrapper}>
+                  <Text style={styles.label}>Pilih Tahun *</Text>
+                  <Dropdown
+                    style={styles.dropdown}
+                    data={yearData}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Pilih Tahun"
+                    value={selectedYearReport}
+                    onChange={item => setSelectedYearReport(item.value)}
+                    placeholderStyle={styles.placeholderStyle}
+                    selectedTextStyle={styles.selectedTextStyle}
+                    dropdownStyle={styles.dropdownStyle}
+                  />
+                </View>
+                <TouchableOpacity
+                  style={styles.downloadButton}
+                  onPress={() => onPressDownload('rekapitulasi')}>
+                  <Text style={styles.downloadButtonText}>
+                    Download Laporan Rekapitulasi Excel
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
         </View>
       </View>
-      {/* Modal untuk menampilkan pesan error */}
+
       <Modal
-        animationType="fade" // Mengganti slide menjadi fade untuk animasi
+        animationType="fade"
         transparent={true}
         visible={isModalVisible}
         onRequestClose={() => setIsModalVisible(false)}>
@@ -211,7 +312,7 @@ export default function Laporan() {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -228,90 +329,140 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 15,
     borderBottomRightRadius: 15,
   },
-  headerLeft: {flex: 1},
-  headerRight: {flex: 1, alignItems: 'flex-end'},
+  containers: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 15,
+    margin: 12,
+    marginTop: 25,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
   logo: {
     width: 140,
     height: 40,
     resizeMode: 'contain',
   },
-  content: {paddingHorizontal: 20, paddingVertical: 50},
-  dropdownWrapperTitle: {
-    marginBottom: 20,
-    borderRadius: 12,
-    backgroundColor: '#fff',
+  breadcrumbsContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 8,
+    backgroundColor: '#f5f5f5',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+    marginBottom: -15,
+  },
+  breadcrumbText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  boldText: {
+    fontWeight: 'bold', // Menambahkan bold di sini
+  },
+  laporanjudul: {
+    fontWeight: 'bold', // Menambahkan bold di sini
+    fontSize: 24,
+    marginBottom: 20,
+    marginTop: -20,
+  },
+  content: {flex: 1, paddingHorizontal: 1, paddingVertical: 30},
+  dropdownWrapperTitle: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginBottom: 20,
+    padding: 30,
+    elevation: 5,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 6,
-    elevation: 3,
+  },
+  titleWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  reportTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  iconStyle: {
+    marginLeft: 10,
+  },
+  iconStyles: {
+    marginLeft: 30,
+  },
+  formContainer: {marginTop: 10},
+  label: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
   },
   dropdownWrapper: {
-    marginBottom: 15,
-    borderRadius: 12,
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    marginBottom: 20,
   },
-  label: {fontSize: 16, color: '#555', marginBottom: 10},
   dropdown: {
-    height: 50,
-    backgroundColor: '#fafafa',
-    borderRadius: 12,
-    borderColor: '#ddd',
     borderWidth: 1,
-    paddingHorizontal: 10,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    height: 50,
   },
-  placeholderStyle: {color: '#aaa', fontSize: 14},
-  selectedTextStyle: {color: '#555', fontSize: 16},
-  dropdownStyle: {backgroundColor: '#fff', borderRadius: 12},
-  reportTitle: {fontSize: 15, fontWeight: 'bold'},
-  formContainer: {marginTop: 10},
+  placeholderStyle: {
+    fontSize: 14,
+    color: '#888',
+  },
+  selectedTextStyle: {
+    fontSize: 14,
+    color: '#333',
+  },
+  dropdownStyle: {
+    borderRadius: 8,
+    padding: 10,
+  },
   downloadButton: {
     backgroundColor: '#28c4ac',
     paddingVertical: 12,
     borderRadius: 8,
+    alignItems: 'center',
     marginTop: 15,
   },
-  downloadButtonText: {color: '#fff', textAlign: 'center', fontSize: 16},
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    marginBottom: 15,
-    paddingHorizontal: 15,
-    fontSize: 16,
+  downloadButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
-  addButton: {
-    backgroundColor: '#28c4ac',
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  addButtonText: {color: '#fff', textAlign: 'center', fontSize: 16},
-
   modalOverlay: {
     flex: 1,
-    justifyContent: 'center', // Menyusun isi modal di tengah layar
-    alignItems: 'center', // Menyusun isi modal di tengah layar
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Efek latar belakang gelap
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
     backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
+    padding: 30,
+    borderRadius: 8,
+    width: 300,
     alignItems: 'center',
-    width: 300, // Lebar modal yang pas
-    elevation: 10, // Tambahkan shadow untuk memberi efek keluar dari layar
   },
-  modalMessage: {fontSize: 16, textAlign: 'center', marginBottom: 20},
+  modalMessage: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 20,
+  },
   closeButton: {
-    backgroundColor: '#28c4ac',
+    backgroundColor: '#f76c6c',
     paddingVertical: 10,
-    paddingHorizontal: 30,
-    borderRadius: 6,
+    paddingHorizontal: 20,
+    borderRadius: 8,
   },
-  closeButtonText: {color: '#fff', fontSize: 16},
+  closeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });

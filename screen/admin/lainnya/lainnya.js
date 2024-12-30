@@ -193,6 +193,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 20,
+    position: 'relative',
+  },
+  headerBackgroundIcon: {
+    position: 'absolute',
+    top: -30,
+    right: -10,
+    zIndex: -1,
+    opacity: 0.2,
   },
   headerTitle: {
     color: '#fff',
@@ -217,6 +225,14 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'start',
     marginBottom: 20,
+    position: 'relative',
+  },
+  gridBackgroundIcon: {
+    position: 'absolute',
+    left: -20,
+    top: -20,
+    zIndex: -1,
+    opacity: 0.2,
   },
   iconContainer: {
     alignItems: 'center',
