@@ -23,7 +23,7 @@ export default function Presensi() {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [lastPage, setLastPage] = useState(1);  
+  const [lastPage, setLastPage] = useState(1);
   const [isModalVisible, setModalVisible] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
   const [selectedUuid, setSelectedUuid] = useState(null);
@@ -41,7 +41,7 @@ export default function Presensi() {
     try {
       setLoading(true);
       const response = await axios.post(
-        'http://192.168.61.123:8000/api/v1/lock/indexRealisasi',
+        'http://192.168.60.85:8000/api/v1/lock/indexRealisasi',
         {page},
         {
           headers: {
@@ -64,7 +64,7 @@ export default function Presensi() {
     try {
       setLoading(true);
       const response = await axios.post(
-        'http://192.168.61.123:8000/api/v1/lock/indexKontrak',
+        'http://192.168.60.85:8000/api/v1/lock/indexKontrak',
         {page},
         {
           headers: {
@@ -91,7 +91,7 @@ export default function Presensi() {
           text: 'Ya',
           onPress: async () => {
             await axios.post(
-              `http://192.168.2.152:8000/perubahan_absensi/${uuid}/change`,
+              `http://192.168.60.85:8000/perubahan_absensi/${uuid}/change`,
               {status: '1', revisi: null},
             );
             Alert.alert('Berhasil', 'Konfirmasi berhasil.');
@@ -112,7 +112,7 @@ export default function Presensi() {
   const submitDecline = async () => {
     try {
       await axios.post(
-        `http://192.168.2.152:8000/api/v1/perubahan_absensi/${selectedUuid}/change`,
+        `http://192.168.60.85:8000/api/v1/perubahan_absensi/${selectedUuid}/change`,
         {status: '2', revisi: declineReason},
         {
           headers: {
@@ -161,7 +161,7 @@ export default function Presensi() {
     if (buttonName === 'kontrak') {
       fetchKontrakData(currentPage); // Langsung fetch data saat tombol Kontrak dipilih
     } else {
-      fetchRealisasiData(currentPage); // Langsung fetch data saat tombol Realisasi dipilih      
+      fetchRealisasiData(currentPage); // Langsung fetch data saat tombol Realisasi dipilih
     }
   };
 
