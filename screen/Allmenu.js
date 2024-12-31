@@ -25,13 +25,13 @@ const Allmenu = ({ navigation }) => { // Menambahkan navigation sebagai prop
           {renderIcon('Setting Jabatan', 'settings', () => navigation.navigate('SettingJabatan'))}
           {renderIcon('Realisasi Kinerja', 'add-circle-outline', () => navigation.navigate('RealisasiKinerja'))}
           {renderIcon('Persetujuan Kontrak Kinerja', 'shield-checkmark', () => navigation.navigate('Persetujuan'))}
-          {renderIcon('Persetujuan Realisasi', 'documents-outline', () => navigation.navigate('PersetujuanR'))}
+          {renderIcon('Persetujuan Realisasi', 'documents-outline', () => navigation.navigate('PersetujuanRealisasi'))}
         </View>
 
         {/* Menu Lainnya */}
         <Text style={styles.sectionTitle}>LAPORAN</Text>
         <View style={styles.iconGrid}>
-          {renderIcon('Kontrak Kerja', 'bag-check-outline')}
+          {renderIcon('Kontrak Kerja', 'bag-check-outline', () => navigation.navigate('KontrakKerja'))}
           {renderIcon('Pencapaian Kerja', 'gift-outline')}
           {renderIcon('Remunersari', 'checkmark-done-circle')}
         </View>

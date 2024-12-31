@@ -10,10 +10,10 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';
 import DatePicker from 'react-native-date-picker';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const SettingJabatan = ({ navigation }) => {
   const [search, setSearch] = useState('');
@@ -21,15 +21,18 @@ const SettingJabatan = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentJabatan, setCurrentJabatan] = useState(null);
-  const [formData, setFormData] = useState({  
+  const [formData, setFormData] = useState({
     detail_jabatan: '',
     detail_pimpinan: '',
-    periode: new Date(),
+    periode_mulai: new Date(),
+    periode_selesai: new Date(),
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [expandedId, setExpandedId] = useState(null);
 
-  const token = 'Bearer Tokenmu'; // Replace with actual token
-  const baseURL = 'http://192.168.ip-mu/api/v1'
+  const baseURL = 'http://192.168.60.230:8000/api/v1';
+  const token = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjIzMDo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NTIyNDkzLCJleHAiOjE3MzU1NDg0MjYsIm5iZiI6MTczNTU0NDgyNiwianRpIjoicEcxem55bkJTQ0M2UTBmWSIsInN1YiI6NywicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.ofr1Pwng1T9hwbflfze9GzjFSnJX3JL3U79BLyaee8E';
 
   useEffect(() => {
     fetchData();
@@ -37,18 +40,24 @@ const SettingJabatan = ({ navigation }) => {
 
   const fetchData = async () => {
     setLoading(true);
+    setError('');
     try {
       const response = await axios.post(
-        ` ${baseURL}/user/jabatan/index`,
+        `${baseURL}/user/jabatan/index`,
         {},
         { headers: { Authorization: token } }
       );
       setData(response.data.data || []);
-    } catch (error) {
-      console.error('Error fetching jabatan data', error.response?.data || error.message);
+    } catch (err) {
+      setError('Gagal memuat data, silakan coba lagi.');
+      console.error(err.response?.data || err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleExpand = (id) => {
+    setExpandedId(expandedId === id ? null : id);
   };
 
   const toggleSwitch = async (id) => {
@@ -58,9 +67,8 @@ const SettingJabatan = ({ navigation }) => {
     const updatedStatus = !jabatanToUpdate.aktif;
 
     try {
-      await axios.patch(
+      await axios.get(
         `${baseURL}/user/jabatan/${id}/changeAktif`,
-        { aktif: updatedStatus },
         { headers: { Authorization: token } }
       );
       setData((prevData) =>
@@ -69,7 +77,8 @@ const SettingJabatan = ({ navigation }) => {
         )
       );
     } catch (error) {
-      console.error('Error updating jabatan status', error);
+      setError('Gagal mengubah status.');
+      console.error(error.response?.data || error.message);
     }
   };
 
@@ -81,12 +90,9 @@ const SettingJabatan = ({ navigation }) => {
       );
       setData((prevData) => prevData.filter((item) => item.id !== id));
     } catch (error) {
-      console.error('Error deleting jabatan', error);
+      setError('Gagal menghapus data.');
+      console.error(error.response?.data || error.message);
     }
-  };
-
-  const handleDateChange = (date) => {
-    setFormData({ ...formData, periode: date });
   };
 
   const openModal = (jabatan = null) => {
@@ -95,7 +101,8 @@ const SettingJabatan = ({ navigation }) => {
     setFormData({
       detail_jabatan: jabatan?.detail_jabatan || '',
       detail_pimpinan: jabatan?.detail_pimpinan || '',
-      periode: jabatan?.periode ? new Date(jabatan.periode) : new Date(),
+      periode_mulai: jabatan?.periode_mulai ? new Date(jabatan.periode_mulai) : new Date(),
+      periode_selesai: jabatan?.periode_selesai ? new Date(jabatan.periode_selesai) : new Date(),
     });
     setModalVisible(true);
   };
@@ -105,12 +112,14 @@ const SettingJabatan = ({ navigation }) => {
     setFormData({
       detail_jabatan: '',
       detail_pimpinan: '',
-      periode: new Date(),
+      periode_mulai: new Date(),
+      periode_selesai: new Date(),
     });
     setCurrentJabatan(null);
   };
 
   const handleSave = async () => {
+    setError('');
     const endpoint = isEditMode
       ? `${baseURL}/user/jabatan/${currentJabatan.id}/update`
       : `${baseURL}/user/jabatan/store`;
@@ -134,61 +143,31 @@ const SettingJabatan = ({ navigation }) => {
       }
       closeModal();
     } catch (error) {
-      console.error('Error saving jabatan', error.response?.data || error.message);
+      setError('Gagal menyimpan data.');
+      console.error(error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const renderItem = ({ item }) => (
-    <View style={[styles.card, item.aktif && styles.cardActive]}>
-      <View style={styles.rowBetween}>
-        <View style={styles.textContainer}>
-          <Text style={[styles.jabatan, item.aktif && styles.textActive]}>
-            {item.detail_jabatan}
-          </Text>
-          <Text style={[styles.pimpinan, item.aktif && styles.textActive]}>
-            {item.detail_pimpinan.replace(/<br>/g, '\n')}
-          </Text>
-          <Text style={[styles.periode, item.aktif && styles.textActive]}>
-            {item.periode}
-          </Text>
-        </View>
-        <Switch
-          trackColor={{ false: '#BDBDBD', true: '#A1887F' }}
-          thumbColor={item.aktif ? '#FFD600' : '#FAFAFA'}
-          onValueChange={() => toggleSwitch(item.id)}
-          value={!!item.aktif}
-        />
-      </View>
-      <View style={[styles.rowBetween, styles.buttonRow]}>
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => openModal(item)}
-        >
-          <Icon name="edit" size={20} color="#FFFFFF" />
-          <Text style={styles.buttonText}>Edit</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => deleteJabatan(item.id)}
-        >
-          <Icon name="delete" size={20} color="#FFFFFF" />
-          <Text style={styles.buttonText}>Hapus</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+  const filteredData = data.filter((item) =>
+    item.detail_jabatan.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color="#FAFAFA" />
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="#FAFAFA" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Jabatan</Text>
+        <TouchableOpacity onPress={() => openModal()}>
+          <Ionicons name="add" size={24} color="#FAFAFA" />
+        </TouchableOpacity>
       </View>
 
+      {/* Search */}
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -196,58 +175,74 @@ const SettingJabatan = ({ navigation }) => {
           value={search}
           onChangeText={setSearch}
         />
-        <TouchableOpacity style={styles.addButton} onPress={() => openModal()}>
-          <Icon name="add" size={24} color="#FAFAFA" />
-          <Text style={styles.buttonText}>Tambah</Text>
-        </TouchableOpacity>
       </View>
 
       {loading ? (
         <ActivityIndicator size="large" color="#FFD600" />
       ) : (
         <FlatList
-          data={data.filter((item) =>
-            item.detail_jabatan.toLowerCase().includes(search.toLowerCase())
-          )}
+          data={filteredData}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={renderItem}
+          renderItem={({ item }) => (
+            <View>
+              <TouchableOpacity onPress={() => toggleExpand(item.id)}>
+                <Text>{item.detail_jabatan}</Text>
+                <Switch
+                  value={item.aktif}
+                  onValueChange={() => toggleSwitch(item.id)}
+                />
+              </TouchableOpacity>
+              {expandedId === item.id && (
+                <View>
+                  <Text>Periode: {item.periode_mulai} - {item.periode_selesai}</Text>
+                  <TouchableOpacity onPress={() => openModal(item)}>
+                    <Ionicons name="create" size={24} color="blue" />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => deleteJabatan(item.id)}>
+                    <Ionicons name="trash" size={24} color="red" />
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
         />
       )}
 
-      <Modal visible={modalVisible} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
+      {/* Error Message */}
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+      {/* Modal */}
+      {modalVisible && (
+        <Modal transparent visible={modalVisible}>
+          <View style={styles.modalContainer}>
             <TextInput
               placeholder="Detail Jabatan"
               value={formData.detail_jabatan}
-              onChangeText={(text) => setFormData({ ...formData, detail_jabatan: text })}
-              style={styles.input}
+              onChangeText={(text) =>
+                setFormData({ ...formData, detail_jabatan: text })
+              }
             />
-            
-            <Picker
-              selectedValue={formData.detail_pimpinan}
-              style={styles.input}
-              onValueChange={(itemValue) => setFormData({ ...formData, detail_pimpinan: itemValue })}
-            >
-              <Picker.Item label="Pimpinan 1" value="pimpinan_1" />
-              <Picker.Item label="Pimpinan 2" value="pimpinan_2" />
-            </Picker>
-
             <DatePicker
-              date={formData.periode}
-              onDateChange={handleDateChange}
+              date={formData.periode_mulai}
+              onDateChange={(date) =>
+                setFormData({ ...formData, periode_mulai: date })
+              }
             />
-
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-              <Text style={styles.saveButtonText}>Simpan</Text>
+            <DatePicker
+              date={formData.periode_selesai}
+              onDateChange={(date) =>
+                setFormData({ ...formData, periode_selesai: date })
+              }
+            />
+            <TouchableOpacity onPress={handleSave}>
+              <Text>Simpan</Text>
             </TouchableOpacity>
-
-            <TouchableOpacity style={styles.cancelButton} onPress={closeModal}>
-              <Text style={styles.cancelButtonText}>Batal</Text>
+            <TouchableOpacity onPress={closeModal}>
+              <Text>Batal</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+      )}
     </View>
   );
 };
@@ -255,129 +250,106 @@ const SettingJabatan = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EFEFEF',
-    padding: 16,
+    backgroundColor: '#FAFAFA',
   },
-  header: { flexDirection: "row", alignItems: "center", backgroundColor: "#2563EB", paddingHorizontal: 16, paddingVertical: 18, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, shadowColor: "#000", shadowOpacity: 0.1, elevation: 5, marginBottom: 20, width: '100%',  },
-  backButton: {
-    marginRight: 16,
-  },
-
-  searchContainer: {
+  header: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'space-between',
+    padding: 10,
+    backgroundColor: '#FFD600',
   },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    borderColor: '#BDBDBD',
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    backgroundColor: '#FFFFFF',
-    marginRight: 8,
-    color: '#424242',
+  backButton: {
+    alignSelf: 'center',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FAFAFA',
   },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFD600',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 12,
-    shadowColor: '#000000',
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  rowBetween: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start', // Align items at the top to prevent overlap
-    flexWrap: 'wrap', // Allows wrapping if space is needed
-  },
-  
-  textContainer: {
-    flex: 1, // Ensures that the text container takes up available space
-  },
-  
-  jabatan: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#424242',
-    flexWrap: 'wrap', // Allow text to wrap if it's too long
-    flex: 1, // Ensures it takes up available space without pushing the switch button out of view
-  },
-  
-  switchContainer: {
-    justifyContent: 'center', // Ensure the switch is centered vertically
-  },
-
-  pimpinan: {
-    fontSize: 14,
-    color: '#757575',
-    marginTop: 4,
-  },
-  periode: {
-    fontSize: 14,
-    color: '#9E9E9E',
-    marginTop: 4,
-  },
-  editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#00ACC1',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-  },
-  deleteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#D32F2F',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    marginLeft: 8,
   },
   buttonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    marginLeft: 8,
+    color: '#FAFAFA',
+    marginLeft: 5,
   },
-  listContainer: {
-    paddingBottom: 16,
+  searchContainer: {
+    padding: 10,
   },
-
-  headerImage: {
-    size: 10,
-    width: 200,
-    marginTop: 10,
-    marginBottom: 10,
-    height: 40,
+  searchInput: {
+    padding: 10,
+    borderRadius: 5,
+    backgroundColor: '#fff',
   },
-  
-  headerContent: {
-    flex:1,
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#FFD600',
+    paddingVertical: 10,
   },
-
-  headerTitle: {
-    fontSize: 24,
+  headerCell: {
+    flex: 1,
     fontWeight: 'bold',
-    color: '#FAFAFA', // Warna teks
-    marginTop: 10,
-    marginBottom: 5,
+    color: '#fff',
   },
-
-  headerSubtitle: { color: "#D1D5DB", marginTop: 4 },
-
+  numberCell: {
+    width: 50,
+  },
+  nameCell: {
+    flex: 2,
+  },
+  tableStatusCell: {
+    width: 100,
+  },
+  expandIconCell: {
+    width: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  tableRow: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  rowHeader: {
+    flexDirection: 'row',
+    padding: 10,
+  },
+  tableCell: {
+    fontSize: 14,
+  },
+  statusCellContainer: {
+    justifyContent: 'center',
+  },
+  statusCell: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 5,
+    fontSize: 14,
+    color: '#fff',
+  },
+  expandedContent: {
+    paddingLeft: 10,
+    paddingBottom: 10,
+    backgroundColor: '#f9f9f9',
+  },
+  expandedText: {
+    fontSize: 14,
+  },
+  actionContainer: {
+    flexDirection: 'row',
+    marginTop: 10,
+  },
+  approveButton: {
+    backgroundColor: 'green',
+    padding: 10,
+    marginRight: 10,
+    borderRadius: 5,
+  },
+  declineButton: {
+    backgroundColor: 'red',
+    padding: 10,
+    borderRadius: 5,
+  },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -385,44 +357,38 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
+    width: '80%',
     padding: 20,
-    width: '90%',
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
+    backgroundColor: 'white',
+    borderRadius: 10,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#BDBDBD',
-    borderRadius: 8,
+    borderColor: '#ccc',
     padding: 10,
-    marginVertical: 5,
-    color: '#424242',
+    borderRadius: 5,
+    marginBottom: 15,
   },
-  modalButtonContainer: {
+  modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
   },
-  modalButton: {
+  saveButton: {
     backgroundColor: '#FFD600',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+    padding: 10,
+    borderRadius: 5,
+  },
+  saveButtonText: {
+    color: '#fff',
   },
   cancelButton: {
-    backgroundColor: '#BDBDBD',
+    backgroundColor: 'gray',
+    padding: 10,
+    borderRadius: 5,
   },
-  
-
+  cancelButtonText: {
+    color: '#fff',
+  },
 });
-
-
 
 export default SettingJabatan;

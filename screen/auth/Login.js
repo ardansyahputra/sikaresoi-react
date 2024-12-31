@@ -9,8 +9,10 @@ import {
   Image,
   ActivityIndicator,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Keychain from 'react-native-keychain'; // Tambahkan import Keychain
 import axios from 'axios';
+
+const baseURL = 'http://192.168.60.230:8000/api/v1'
 
 const LoginScreen = ({ navigation }) => {
   const [nip, setNip] = useState('');
@@ -22,38 +24,45 @@ const LoginScreen = ({ navigation }) => {
       Alert.alert('Error', 'NIP dan Password harus diisi.');
       return;
     }
-
+  
     setLoading(true);
-
+  
     try {
-      const response = await axios.post('https://192.168.110.135/api/v1/auth/login', {
+      const response = await axios.post(`${baseURL}/api/v1/auth/login`, {
         nip,
         password,
       });
-
+  
       const { token, user } = response.data;
-
-      // Simpan token dan data pengguna ke AsyncStorage
-      await AsyncStorage.setItem('authToken', token);
-      await AsyncStorage.setItem('userData', JSON.stringify(user));
-
+  
+      // Simpan token dan data pengguna menggunakan Keychain
+      await Keychain.setGenericPassword('authToken', JSON.stringify({ token, user }));
+  
+      // Tambahkan log untuk token dan data user
+      console.log('Token:', token);
+      console.log('User Data:', user);
+  
       Alert.alert('Berhasil', 'Selamat datang!');
       navigation.replace('Home'); // Arahkan ke halaman beranda setelah login
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || 'Terjadi kesalahan. Silakan coba lagi.';
       Alert.alert('Login Gagal', errorMessage);
+  
+      // Tambahkan log untuk error
+      console.error('Login Error:', error);
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <View style={styles.container}>
       <View style={styles.logoContainer}>
         {/* Logo */}
         <Image
-          source={require('../BottomNavBar/images/sikaresoi.png')}
+          source={require('../assets/images/sikaresoi.png')}
           style={styles.logo}
         />
       </View>

@@ -1,26 +1,49 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import axios from 'axios';
 
-const PersetujuanR =  ({ navigation }) => {
-  const handleCheckDetails = () => {
-    alert('Detail persetujuan realisasi.');
+const PersetujuanRealisasi = ({ navigation }) => {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      const response = await axios.get('https://your-api-url/api/realisasi/stats');
+      setStats(response.data);
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
       {/* Header Section */}
       <View style={styles.headerContainer}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                
-                  <Icon name="arrow-back" size={24} color="#fff" />
-                </TouchableOpacity>
+          <Icon name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
         <Text style={styles.subtitle}>Persetujuan Realisasi</Text>
       </View>
 
@@ -28,42 +51,30 @@ const PersetujuanR =  ({ navigation }) => {
       <View style={styles.statsContainer}>
         <View style={[styles.statBox, styles.boxYellow]}>
           <Icon name="flame" size={30} color="#FF6F00" />
-          <Text style={styles.statValue}>2,000</Text>
+          <Text style={styles.statValue}>{stats?.targetRealisasi || 0}</Text>
           <Text style={styles.statLabel}>Realisasi Target</Text>
         </View>
         <View style={[styles.statBox, styles.boxBlue]}>
           <Icon name="water" size={30} color="#4FC3F7" />
-          <Text style={styles.statValue}>10</Text>
+          <Text style={styles.statValue}>{stats?.dokumenRealisasi || 0}</Text>
           <Text style={styles.statLabel}>Realisasi Dokumen</Text>
         </View>
         <View style={[styles.statBox, styles.boxPink]}>
           <Icon name="walk" size={30} color="#F06292" />
-          <Text style={styles.statValue}>5,000</Text>
+          <Text style={styles.statValue}>{stats?.langkahVerifikasi || 0}</Text>
           <Text style={styles.statLabel}>Langkah Verifikasi</Text>
         </View>
-      </View>
-
-      {/* Weekly Progress Section */}
-      <View style={styles.progressContainer}>
-        <Text style={styles.progressTitle}>Your Weekly Progress</Text>
-        <Text style={styles.progressSubtitle}>Weekly Report</Text>
-        <View style={styles.progressCircle}>
-          <Text style={styles.progressValue}>65%</Text>
-        </View>
-      </View>
-
-      {/* Learn More Section */}
-      <View style={styles.learnContainer}>
-        <Text style={styles.learnTitle}>Learn About Realisasi</Text>
-        <TouchableOpacity style={styles.learnButton} onPress={handleCheckDetails}>
-          <Text style={styles.learnButtonText}>Check Now</Text>
-        </TouchableOpacity>
       </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
@@ -168,4 +179,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PersetujuanR;
+export default PersetujuanRealisasi;
