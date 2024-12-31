@@ -343,9 +343,7 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      {!isSplashLoaded ? (
-        <SplashScreen /> // Tampilkan SplashScreen sebelum aplikasi siap
-      ) : (
+      <AuthProvider>
         <Tab.Navigator
           screenOptions={({route}) => ({
             tabBarIcon: ({focused, color, size}) => {
@@ -383,7 +381,7 @@ export default function App() {
             options={{headerShown: false}}
           />
         </Tab.Navigator>
-      )}
+      </AuthProvider>
     </NavigationContainer>
   );
 }

@@ -140,12 +140,25 @@ export default function Presensi() {
             valueField="value"
             placeholder="10"
             value={selectedDisplay}
-            onChange={item => setSelectedDisplay(item.value)}
+            onChange={item => {
+              setSelectedDisplay(item.value);
+              fetchData(currentPage); // Panggil fetchData setelah nilai dropdown diperbarui
+            }}
             renderItem={item => (
               <Text style={[styles.dropdownItem, styles.customFont]}>
                 {item.label}
               </Text>
             )}
+            placeholderStyle={styles.customFont}
+          />
+        </View>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchBar}
+            placeholder="Search"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
           />
         </View>
         {/* Search Bar */}
@@ -211,25 +224,34 @@ export default function Presensi() {
             <Text style={styles.expandedText}>
               Jam Keluar: {item.jam_keluar || '-'}
             </Text>
+            <Text style={styles.expandedText}>
+              Keterangan: {item.revisi || '-'}
+            </Text>
             <View style={styles.filetext}>
               <Text>File:</Text>
               <Text
                 style={styles.expandedLinkText}
                 onPress={() => Linking.openURL(item.file)}>
-                File Absensi
+                Lihat File
               </Text>
             </View>
             <View style={styles.actionContainer}>
-              <TouchableOpacity
-                style={styles.approveButton}
-                onPress={() => handleApprove(item.uuid)}>
-                <Ionicons name="checkmark" size={20} color="white" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.declineButton}
-                onPress={() => handleDecline(item.uuid)}>
-                <Ionicons name="close" size={20} color="white" />
-              </TouchableOpacity>
+              {item.status !== 'DISETUJUI' && item.status !== 'DITOLAK' ? (
+                <>
+                  <TouchableOpacity
+                    style={styles.approveButton}
+                    onPress={() => handleApprove(item.uuid)}>
+                    <Ionicons name="checkmark" size={20} color="white" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.declineButton}
+                    onPress={() => handleDecline(item.uuid)}>
+                    <Ionicons name="close" size={20} color="white" />
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <Text style={styles.statusText}>{item.status}</Text>
+              )}
             </View>
           </View>
         )}
@@ -299,6 +321,29 @@ export default function Presensi() {
           }
         />
       )}
+      <Modal
+        visible={isApproveModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setApproveModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Setujui Data</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setApproveModalVisible(false)}>
+                <Text style={styles.buttonText}>Batal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.submitButton, styles.approveButton]}
+                onPress={submitApprove}>
+                <Text style={styles.buttonText}>Setujui</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Modal Input Alasan Penolakan */}
       <Modal
