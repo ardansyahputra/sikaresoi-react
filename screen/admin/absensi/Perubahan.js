@@ -1,5 +1,19 @@
-import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  Image,
+  Modal,
+  TextInput,
+  Alert,
+} from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import {Dropdown} from 'react-native-element-dropdown';
+import useApiClient from '../../../src/api/apiClient'; // Import useApiClient
 
 export default function PerubahanPresensi() {
   const [data, setData] = useState([]);
@@ -229,7 +243,122 @@ export default function PerubahanPresensi() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Perubahan Presensi Screen</Text>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <Image
+            source={require('../assets/images/logo.png')}
+            style={styles.logo}
+          />
+        </View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
+          <TouchableOpacity style={styles.iconWrapper}>
+            <Ionicons name="person-circle-outline" size={24} color="#333" />
+          </TouchableOpacity>
+        </View>
+      </View>
+      {/* Loading Indicator */}
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <FlatList
+          ListHeaderComponent={TableHeader}
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={item => item.id.toString()}
+          contentContainerStyle={styles.card}
+          ListFooterComponent={
+            <View>
+              <Text style={styles.pageInfo}>
+                Showing page {currentPage} of {lastPage}
+              </Text>
+              <View style={styles.paginationContainer}>
+                <View style={styles.paginationButtons}>
+                  <TouchableOpacity
+                    style={[
+                      styles.pageButton,
+                      currentPage === 1 && styles.disabledButton,
+                    ]}
+                    disabled={currentPage === 1}
+                    onPress={() =>
+                      setCurrentPage(prev => Math.max(prev - 1, 1))
+                    }>
+                    <Text style={styles.pageButtonText}>Previous</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.pageButton,
+                      currentPage === lastPage && styles.disabledButton,
+                    ]}
+                    disabled={currentPage === lastPage}
+                    onPress={() =>
+                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
+                    }>
+                    <Text style={styles.pageButtonText}>Next</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          }
+        />
+      )}
+      <Modal
+        visible={isApproveModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setApproveModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Setujui Data</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setApproveModalVisible(false)}>
+                <Text style={styles.buttonText}>Batal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.submitButton, styles.approveButton]}
+                onPress={submitApprove}>
+                <Text style={styles.buttonText}>Setujui</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal Input Alasan Penolakan */}
+      <Modal
+        visible={isModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Tolak Data</Text>
+            <Text style={styles.modalLabel}>Alasan Penolakan:</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Masukkan alasan"
+              multiline
+              value={declineReason}
+              onChangeText={setDeclineReason}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setModalVisible(false)}>
+                <Text style={styles.buttonText}>Batal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={submitDecline}>
+                <Text style={styles.buttonText}>Tolak</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -237,10 +366,290 @@ export default function PerubahanPresensi() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F7F8FB',
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 15,
+    margin: 12,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#E0E0E0',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+  },
+  headerCell: {
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 13,
+    color: '#333',
+  },
+  tableRow: {
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+    elevation: 0,
+  },
+  rowHeader: {
+    flexDirection: 'row',
+    padding: 15,
+    backgroundColor: '#F0F0F0',
+    alignItems: 'center',
+  },
+  tableCell: {
+    fontFamily: 'Poppins-Regular',
+    flexWrap: 'wrap',
+    fontSize: 14,
+  },
+  tableStatusCell: {
+    textAlign: 'center',
+    flex: 1,
+    paddingLeft: 0,
+  },
+  numberCell: {
+    width: 50,
+  },
+  nameCell: {
+    flex: 1,
+    overflow: 'hidden',
+  },
+  statusCellContainer: {
+    width: 100,
+  },
+  statusCell: {
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  expandIconCell: {
+    width: 40,
+    alignItems: 'flex-end',
+  },
+  approvedStatus: {
+    color: '#4CAF50',
+  },
+  rejectedStatus: {
+    color: '#F44336',
+  },
+  pendingStatus: {
+    color: '#FFC107',
+  },
+  defaultStatus: {
+    color: '#9E9E9E',
+  },
+  expandedContent: {
+    padding: 15,
+    backgroundColor: '#FAFAFA',
+  },
+  expandedText: {
+    marginBottom: 5,
+    fontSize: 14,
+  },
+  expandedLinkText: {
+    color: 'blue',
+    marginBottom: 5,
+    fontSize: 14,
+  },
+  filetext: {
+    flexDirection: 'row',
+  },
+  actionContainer: {
+    flexDirection: 'row',
+    marginTop: 10,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 10,
+  },
+  actionButton: {
+    padding: 8,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 5,
+  },
+  approveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4CAF50',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  declineButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F44336',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  paginationButtons: {
+    flexDirection: 'row',
+  },
+  pageButton: {
+    padding: 10,
+    backgroundColor: '#007bff',
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  pageButtonText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 13,
+    color: '#fff',
+  },
+  disabledButton: {
+    backgroundColor: '#CCCCCC',
+  },
+  paginationText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  pageInfo: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 13,
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 10,
+  },
+  header: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: 4,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  logo: {
+    width: 140,
+    height: 40,
+    resizeMode: 'contain',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    flex: 1,
+  },
+  iconWrapper: {
+    marginLeft: 12,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modalLabel: {
+    fontSize: 14,
+    marginBottom: 5,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    minHeight: 80,
+    marginBottom: 15,
+    textAlignVertical: 'top',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  cancelButton: {
+    backgroundColor: '#ccc',
+    padding: 10,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  submitButton: {
+    backgroundColor: '#F44336',
+    padding: 10,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  searchContainer: {
+    width: 150,
+    backgroundColor: '#FFFFFF',
+  },
+  searchBar: {
+    height: 40,
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 12,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  displayContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 20,
+  },
+  displayText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 13,
+    marginRight: 8,
+    textAlign: 'center',
+    color: '#3f4254',
+  },
+  dropdown: {
+    height: 40,
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    width: 75,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  text: {
-    fontSize: 24,
+  dropdownItem: {
+    padding: 10,
+    fontSize: 16,
+    color: '#333',
+  },
+  customFont: {
+    fontFamily: 'Poppins-Regular',
   },
 });

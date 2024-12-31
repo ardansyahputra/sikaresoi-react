@@ -332,15 +332,6 @@ function HomeStack() {
 }
 
 export default function App() {
-  const [isSplashLoaded, setSplashLoaded] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSplashLoaded(true); // Splash screen selesai setelah beberapa detik
-    }, 3000); // Tampilkan splash selama 3 detik
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <NavigationContainer>
       <AuthProvider>
