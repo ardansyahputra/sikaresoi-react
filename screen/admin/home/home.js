@@ -1,6 +1,12 @@
 import React, {useState, useEffect} from 'react';
 import {
-View,Text,StyleSheet,TouchableOpacity,FlatList,Image,ScrollView, // Tambahkan ScrollView di sini
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  Image,
+  ScrollView, // Tambahkan ScrollView di sini
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
@@ -9,15 +15,14 @@ import {useNavigation} from '@react-navigation/native';
 
 // Axios instance
 const apiClient = axios.create({
-  baseURL: 'http://192.168.211.10:8000/api/v1',
+  baseURL: 'http://192.168.60.163:8000/api/v1',
   headers: {
     Authorization:
-      'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIxMS4xMDo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM0NjU3Nzk3LCJleHAiOjE3MzQ2NjE3NTEsIm5iZiI6MTczNDY1ODE1MSwianRpIjoiYTdRTXlnWENpZElXQUZEOSIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.pUot_KxtwvIKFJUM0pT_v8ea_vjJyW-IeDaJalqGCLg',
+      'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1MDAyNDAzLCJleHAiOjE3MzUwMDYyOTAsIm5iZiI6MTczNTAwMjY5MCwianRpIjoiMU43ekNoTFFWdUlmRWlSSCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.xuFQh94DARucc2ESzM7s4jIg5k_80AgFKBNIl0Adhm8',
   },
 });
 
 const Home = () => {
-
   const navigation = useNavigation();
   const [totalContracts, setTotalContracts] = useState(null);
   const [year, setYear] = useState(null);
@@ -32,16 +37,16 @@ const Home = () => {
 
   useEffect(() => {
     const fetchContracts = apiClient.get('/home/all_kontrak_belum_setujui');
-    const fetchAttendanceChanges = apiClient.get('/home/perubahan_presensi_belum_konfirmasi',);
+    const fetchAttendanceChanges = apiClient.get(
+      '/home/perubahan_presensi_belum_konfirmasi',
+    );
     const fetchUsersNotSubmittedRealization = apiClient.get(
       '/home/user_belum_kirim_realisasi',
     );
     const fetchUsersNotSubmittedContracts = apiClient.get(
       '/home/user_belum_kirim_kontrak',
     );
-    const fetchUsersNotAttended = apiClient.get(
-      '/home/presensi_belum_hadir'
-    );
+    const fetchUsersNotAttended = apiClient.get('/home/presensi_belum_hadir');
     const fetchRealisasiDesember = apiClient.get(
       '/home/all_realisasi_belum_setujui',
     );
@@ -175,7 +180,7 @@ const Home = () => {
       {/* Circular Buttons Container with Gradient */}
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <LinearGradient
-          colors={['#1D56C0','#4A90E2']} // Gradasi biru tua ke biru terang
+          colors={['#1D56C0', '#4A90E2']} // Gradasi biru tua ke biru terang
           style={styles.circularButtonsContainer}>
           <Text style={styles.buttonsTitle}></Text>
           <View style={styles.buttonsContainer}>
@@ -241,9 +246,9 @@ const Home = () => {
                 navigateTo: 'SuratTugas',
               },
               {
-                title: 'Potongan Lain',
-                icon: 'pricetag',
-                navigateTo: 'PotonganLain',
+                title: 'Laporan',
+                icon: 'document',
+                navigateTo: 'Laporan',
               },
               {title: 'Lock', icon: 'lock-closed', navigateTo: 'Lock'},
               {
@@ -482,17 +487,15 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#ddd',
   },
-  navItem: {
-  },
+  navItem: {},
   navItem: {
     alignItems: 'center',
   },
-  navLabel: {
-  },
+  navLabel: {},
   navLabel: {
     fontSize: 12,
     color: '#333',
-  },
+  },
 });
 
 export default Home;

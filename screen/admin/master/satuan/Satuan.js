@@ -8,26 +8,32 @@ import {
   ActivityIndicator,
   Image,
   Linking,
+  Switch,
   Modal,
   TextInput,
   Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import axios from 'axios';
 
-export default function PerubahanPresensi() {
+export default function Satuan() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [isModalVisible, setModalVisible] = useState(false);
-  const [isApproveModalVisible, setApproveModalVisible] = useState(false);
-  const [declineReason, setDeclineReason] = useState('');
+  const [isTambahModalVisible, setTambahModalVisible] = useState(false);
+  const [isHapusModalVisible, setHapusModalVisible] = useState(false);
+  const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);
+  const [selectedNamaPangkat, setSelectedNamaPangkat] = useState(null);
+  const [selectedGolongan, setSelectedGolongan] = useState(null);
+  const [editData, setEditData] = useState({});
+  const [selectedRuang, setSelectedRuang] = useState(null);
 
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
@@ -37,15 +43,12 @@ export default function PerubahanPresensi() {
     try {
       setLoading(true);
       const response = await axios.post(
-        'http://192.168.60.123:8000/api/v1/perubahan_absensi/indexadmin',
-        {
-          page,
-          per: selectedDisplay, // Menambahkan parameter 'per' untuk membatasi jumlah data yang ditampilkan
-        },
+        'http://192.168.60.123:8000/api/v1/satuan/index',
+        {page},
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1MjYxODUwLCJleHAiOjE3ODkyOTc0OTMsIm5iZiI6MTczNTI4NDExMywianRpIjoibU1EZkYya29yZHZxazlUcyIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.AFoGaMmIHW30bVc1bviTh-E-XlZLEKkMMzGkRKXJ0j0',
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjA4NDA3LCJleHAiOjE3ODk2MjgzMDYsIm5iZiI6MTczNTYxNDkyNiwianRpIjoiNDFJQ0FYM2NWeWJTQU5VNiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.sa7wR1T6N0Pq1312gGY2aReyAYxPd2xs5WzKlVpYxPw',
           },
         },
       );
@@ -59,90 +62,143 @@ export default function PerubahanPresensi() {
     }
   };
 
-  const handleSearch = query => {
-    setSearchQuery(query);
-  };
-
-  const handleApprove = uuid => {
-    setSelectedUuid(uuid);
-    setApproveModalVisible(true);
-  };
-  
-  const handleDecline = uuid => {
-    setSelectedUuid(uuid);
-    setModalVisible(true);
-  };
-
-  const submitDecline = async () => {
+  const submitEdit = async () => {
     try {
       await axios.post(
-        `http://192.168.61.123:8000/api/v1/perubahan_absensi/${selectedUuid}/change`,
-        {status: '2', revisi: declineReason},
+        `http://192.168.60.123:8000/api/v1/pangkat/${editData.uuid}/update`,
+        {
+          nm_pangkat: editData.nm_pangkat,
+          golongan: editData.golongan,
+          ruang: editData.ruang,
+        },
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1MDAyNjMwLCJleHAiOjE3MzUwMDc4MzksIm5iZiI6MTczNTAwNDIzOSwianRpIjoiRGVURnF0eGxGN3ZoTUJiNyIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.qWJKrWFeTHYx2MmxUj8sIag6odyp4zgt5WC4_UDd6fA',
-            Accept: 'application/json',
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjA4NDA3LCJleHAiOjE3ODk2MjQ2MTAsIm5iZiI6MTczNTYxMTIzMCwianRpIjoiZlR5M3Z1NVczbEZlV0pxUCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.WAST_AaPLN0LHUiLvUpMvuw73WydPtkIbypMo-ICt2I',
+          },
+        },
+      );
+      Alert.alert('Berhasil', 'Data berhasil diperbarui.');
+      setEditModalVisible(false);
+      fetchData(currentPage); // Refresh data
+    } catch (error) {
+      Alert.alert('Error', 'Gagal memperbarui data.');
+    }
+  };
+
+  const fetchEditData = async uuid => {
+    try {
+      const response = await axios.get(
+        `http://192.168.60.123:8000/api/v1/pangkat/${uuid}/edit`,
+        {
+          headers: {
+            Authorization:
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjA4NDA3LCJleHAiOjE3ODk2MjQ2MTAsIm5iZiI6MTczNTYxMTIzMCwianRpIjoiZlR5M3Z1NVczbEZlV0pxUCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.WAST_AaPLN0LHUiLvUpMvuw73WydPtkIbypMo-ICt2I',
+          },
+        },
+      );
+
+      console.log('Respons data yang diterima:', response.data); // Cetak semua respons data
+      console.log('Data yang akan disimpan ke state:', response.data.data); // Cetak bagian data untuk state
+
+      setEditData(response.data.data); // Simpan data edit di state
+      setEditModalVisible(true); // Tampilkan modal edit
+    } catch (error) {
+      console.error('Error fetching edit data:', error);
+      Alert.alert('Error', 'Gagal mengambil data untuk diedit.');
+    }
+  };
+
+  const handleEdit = uuid => {
+    fetchEditData(uuid);
+  };
+
+  const handleHapus = uuid => {
+    setSelectedUuid(uuid);
+    setHapusModalVisible(true);
+  };
+
+  const submitHapus = async () => {
+    try {
+      await axios.delete(
+        `http://192.168.60.123:8000/api/v1/uang_makan/${selectedUuid}/delete`,
+        {
+          headers: {
+            Authorization:
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NTIxMTM2LCJleHAiOjE3ODk1NTI4NjgsIm5iZiI6MTczNTUzOTQ4OCwianRpIjoidGp1bzNMeDBLeW01SEFzciIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.cB8STElqPpBVz2nSM-xWKnSPytw2dI6oGLSRLXkaO7M',
           },
         },
       );
       Alert.alert('Berhasil', 'Penolakan berhasil.');
-      setModalVisible(false);
-      setDeclineReason('');
-      fetchData(currentPage); // Refresh data
-    } catch (error) {
-      Alert.alert('Error', 'Gagal menolak data.');
-    }
-  };
-  const submitApprove = async () => {
-    try {
-      await axios.post(
-        `http://192.168.61.123:8000/api/v1/perubahan_absensi/${selectedUuid}/change`,
-        {status: '1', revisi: null},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1MDAyNjMwLCJleHAiOjE3MzUwMDc4MzksIm5iZiI6MTczNTAwNDIzOSwianRpIjoiRGVURnF0eGxGN3ZoTUJiNyIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.qWJKrWFeTHYx2MmxUj8sIag6odyp4zgt5WC4_UDd6fA',
-            Accept: 'application/json',
-          },
-        },
-      );
-      Alert.alert('Berhasil', 'Persetujuan Berhasil.');
-      setModalVisible(false);
-      setDeclineReason('');
+      setHapusModalVisible(false);
       fetchData(currentPage); // Refresh data
     } catch (error) {
       Alert.alert('Error', 'Gagal menolak data.');
     }
   };
 
+  const handleTambah = () => {
+    setTambahModalVisible(true);
+  };
+
+  const submitTambah = async () => {
+    try {
+      await axios.post(
+        'http://192.168.60.123:8000/api/v1/pangkat/create',
+        {
+          nm_pangkat: selectedNamaPangkat,
+          golongan: selectedGolongan,
+          ruang: selectedRuang,
+        },
+        {
+          headers: {
+            Authorization:
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjA4NDA3LCJleHAiOjE3ODk2MjI3NDcsIm5iZiI6MTczNTYwOTM2NywianRpIjoiZmo5cTVTbjV5YVdid3VEOCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.xO7FzFoMxXirMh5v8kgoZyVbcs5RwBjy4cvrexh7k8s',
+          },
+        },
+      );
+      Alert.alert('Berhasil', 'Data berhasil ditambahkan.');
+      setTambahModalVisible(false);
+      fetchData(currentPage); // Refresh data
+
+      // Reset form setelah berhasil
+      setSelectedNamaPangkat('');
+      setSelectedGolongan('');
+      setSelectedRuang('');
+
+      } catch (error) {
+      console.error('Error saat mengirim data:', error);
+      Alert.alert('Error', 'Gagal menambahkan data.');
+    }
+  };
+
+  const handleCloseTambahModal = () => {
+    setSelectedNamaPangkat('');
+      setSelectedGolongan('');
+      setSelectedRuang('');
+    setTambahModalVisible(false);
+  };
+
   const display = [
-    {label: '5', value: 5},
-    {label: '10', value: 10},
-    {label: '25', value: 25},
-    {label: '50', value: 50},
-    {label: '100', value: 100},
+    {label: '5', value: 1},
+    {label: '10', value: 2},
+    {label: '25', value: 3},
+    {label: '50', value: 4},
+    {label: '100', value: 5},
   ];
 
   const toggleExpand = id => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const getStatusStyle = status => {
-    switch (status?.toUpperCase()) {
-      case 'DISETUJUI':
-        return styles.approvedStatus;
-      case 'DITOLAK':
-        return styles.rejectedStatus;
-      case 'MENUNGGU':
-        return styles.pendingStatus;
-      default:
-        return styles.defaultStatus;
-    }
-  };
-
   const TableHeader = () => (
     <View>
+      <View style={styles.tambahContainer}>
+        <TouchableOpacity style={styles.tambahButton} onPress={handleTambah}>
+          <FontAwesome name="plus" size={20} color="#fff" style={styles.icon} />
+          <Text style={styles.tambahText}>TAMBAH</Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.filterContainer}>
         <View style={styles.displayContainer}>
           <Text style={styles.displayText}>Display</Text>
@@ -153,16 +209,12 @@ export default function PerubahanPresensi() {
             valueField="value"
             placeholder="10"
             value={selectedDisplay}
-            onChange={item => {
-              setSelectedDisplay(item.value);
-              fetchData(currentPage); // Panggil fetchData setelah nilai dropdown diperbarui
-            }}
+            onChange={item => setSelectedDisplay(item.value)}
             renderItem={item => (
               <Text style={[styles.dropdownItem, styles.customFont]}>
                 {item.label}
               </Text>
             )}
-            placeholderStyle={styles.customFont}
           />
         </View>
         {/* Search Bar */}
@@ -177,8 +229,10 @@ export default function PerubahanPresensi() {
       </View>
       <View style={styles.tableHeader}>
         <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
-        <Text style={[styles.headerCell, styles.nameCell]}>Name</Text>
-        <Text style={[styles.headerCell, styles.tableStatusCell]}>Status</Text>
+        <Text style={[styles.headerCell, styles.nameCell]}>Nama Pangkat</Text>
+        <Text style={[styles.headerCell, styles.tableStatusCell]}>
+          Aksi
+        </Text>
         <View style={styles.expandIconCell} />
       </View>
     </View>
@@ -189,7 +243,7 @@ export default function PerubahanPresensi() {
 
     return (
       <View style={styles.tableRow}>
-        <TouchableOpacity
+        <View 
           style={styles.rowHeader}
           onPress={() => toggleExpand(item.id)}>
           <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
@@ -197,68 +251,23 @@ export default function PerubahanPresensi() {
             style={[styles.tableCell, styles.nameCell]}
             numberOfLines={1}
             ellipsizeMode="tail">
-            {item.user?.name || '-'}
+            {item.nm_satuan || '-'}
           </Text>
-          <View style={styles.statusCellContainer}>
-            <Text
-              style={[
-                styles.tableCell,
-                styles.statusCell,
-                getStatusStyle(item.status),
-              ]}>
-              {item.status || '-'}
-            </Text>
-          </View>
-          <View style={styles.expandIconCell}>
-            <Ionicons
-              name={isExpanded ? 'chevron-up' : 'chevron-down'}
-              size={20}
-              color="#333"
-            />
-          </View>
-        </TouchableOpacity>
-        {isExpanded && (
-          <View style={styles.expandedContent}>
-            <Text style={styles.expandedText}>
-              Tanggal: {item.tanggal || '-'}
-            </Text>
-            <Text style={styles.expandedText}>
-              Jam Masuk: {item.jam_masuk || '-'}
-            </Text>
-            <Text style={styles.expandedText}>
-              Jam Keluar: {item.jam_keluar || '-'}
-            </Text>
-            <Text style={styles.expandedText}>
-              Keterangan: {item.revisi || '-'}
-            </Text>
-            <View style={styles.filetext}>
-              <Text>File:</Text>
-              <Text
-                style={styles.expandedLinkText}
-                onPress={() => Linking.openURL(item.file)}>
-                Lihat File
-              </Text>
-            </View>
-            <View style={styles.actionContainer}>
-              {item.status !== 'DISETUJUI' && item.status !== 'DITOLAK' ? (
-                <>
-                  <TouchableOpacity
-                    style={styles.approveButton}
-                    onPress={() => handleApprove(item.uuid)}>
-                    <Ionicons name="checkmark" size={20} color="white" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.declineButton}
-                    onPress={() => handleDecline(item.uuid)}>
-                    <Ionicons name="close" size={20} color="white" />
-                  </TouchableOpacity>
-                </>
-              ) : (
-                <Text style={styles.statusText}>{item.status}</Text>
-              )}
-            </View>
-          </View>
-        )}
+          <View style={styles.actionContainer}>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => handleEdit(item.uuid)}>
+              <FontAwesome name="pencil" size={16} color="#fff" />
+              <Text style={styles.customFont}>Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.declineButton}
+              onPress={() => handleHapus(item.uuid)}>
+              <FontAwesome name="trash" size={16} color="#fff" />
+              <Text style={styles.customFont}>Hapus</Text>
+            </TouchableOpacity>
+          </View>  
+        </View>
       </View>
     );
   };
@@ -267,12 +276,7 @@ export default function PerubahanPresensi() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Image
-            source={require('../assets/images/logo.png')}
-            style={styles.logo}
-          />
-        </View>
+        <View style={styles.headerLeft}></View>
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
           <TouchableOpacity style={styles.iconWrapper}>
@@ -325,57 +329,138 @@ export default function PerubahanPresensi() {
           }
         />
       )}
+
+      {/* Edit Pangkat Modal */}
       <Modal
-        visible={isApproveModalVisible}
+        visible={isEditModalVisible}
         animationType="fade"
         transparent
-        onRequestClose={() => setApproveModalVisible(false)}>
+        onRequestClose={() => setEditModalVisible(false)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Setujui Data</Text>
+            <Text style={styles.modalTitle}>Edit Data</Text>
+            <Text style={styles.modalLabel}>Pangkat</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Pangkat"
+              value={editData.nm_pangkat || ''} // Pastikan menggunakan default kosong jika null
+              onChangeText={text =>
+                setEditData(prev => ({...prev, nm_pangkat: text}))
+              }
+              placeholderTextColor={'#B6B9CA'}
+            />
+            <Text style={styles.modalLabel}>Golongan</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Golongan"
+              value={editData.golongan || ''} // Pastikan menggunakan default kosong jika null
+              onChangeText={text =>
+                setEditData(prev => ({...prev, golongan: text}))
+              }
+              placeholderTextColor={'#B6B9CA'}
+            />
+            <Text style={styles.modalLabel}>Ruang</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Ruang"
+              value={editData.ruang || ''} // Pastikan menggunakan default kosong jika null
+              onChangeText={text =>
+                setEditData(prev => ({...prev, ruang: text}))
+              }
+              placeholderTextColor={'#B6B9CA'}
+            />
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={styles.cancelButton}
-                onPress={() => setApproveModalVisible(false)}>
+                onPress={() => setEditModalVisible(false)}>
                 <Text style={styles.buttonText}>Batal</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.submitButton, styles.approveButton]}
-                onPress={submitApprove}>
-                <Text style={styles.buttonText}>Setujui</Text>
+                style={styles.submitButton}
+                onPress={submitEdit} // Fungsi untuk menyimpan perubahan
+              >
+                <Text style={styles.buttonText}>Simpan</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
 
-      {/* Modal Input Alasan Penolakan */}
+      {/* Tambah Pangkat Modal */}
       <Modal
-        visible={isModalVisible}
+        visible={isTambahModalVisible}
         animationType="fade"
         transparent
-        onRequestClose={() => setModalVisible(false)}>
+        onRequestClose={() => setTambahModalVisible(false)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Tolak Data</Text>
-            <Text style={styles.modalLabel}>Alasan Penolakan:</Text>
+            <Text style={styles.modalTitle}>Tambah Data</Text>
+            <Text style={styles.modalLabel}>Nama Unit Kerja</Text>
             <TextInput
               style={styles.modalInput}
-              placeholder="Masukkan alasan"
+              placeholder="Nama Pangkat"
               multiline
-              value={declineReason}
-              onChangeText={setDeclineReason}
+              value={selectedNamaPangkat}
+              onChangeText={setSelectedNamaPangkat}
+              placeholderTextColor={'#B6B9CA'}
             />
+
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Golongan"
+              multiline
+              value={selectedGolongan}
+              onChangeText={setSelectedGolongan}
+              placeholderTextColor={'#B6B9CA'}
+            />
+
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Ruang"
+              multiline
+              value={selectedRuang}
+              onChangeText={setSelectedRuang}
+              placeholderTextColor={'#B6B9CA'}
+            />
+
+            {/* Tombol Modal */}
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={styles.cancelButton}
-                onPress={() => setModalVisible(false)}>
+                onPress={() => handleCloseTambahModal()}>
                 <Text style={styles.buttonText}>Batal</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.submitButton}
-                onPress={submitDecline}>
-                <Text style={styles.buttonText}>Tolak</Text>
+                onPress={() => {
+                  submitTambah(); // Tutup modal setelah menyimpan
+                }}>
+                <Text style={styles.buttonText}>Simpan</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Hapus Pangkat Modal */}
+      <Modal
+        visible={isHapusModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setHapusModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Hapus Data</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setHapusModalVisible(false)}>
+                <Text style={styles.buttonText}>Batal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.submitButton, styles.approveButton]}
+                onPress={submitHapus}>
+                <Text style={styles.buttonText}>Setujui</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -428,7 +513,7 @@ const styles = StyleSheet.create({
   tableCell: {
     fontFamily: 'Poppins-Regular',
     flexWrap: 'wrap',
-    fontSize: 14,
+    fontSize: 12,
   },
   tableStatusCell: {
     textAlign: 'center',
@@ -436,7 +521,7 @@ const styles = StyleSheet.create({
     paddingLeft: 0,
   },
   numberCell: {
-    width: 50,
+    width: 30,
   },
   nameCell: {
     flex: 1,
@@ -507,12 +592,13 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   declineButton: {
+    gap: 5,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F44336',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
+    paddingVertical: 7,
+    paddingHorizontal: 7,
+    borderRadius: 5,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
@@ -604,7 +690,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 5,
     padding: 10,
-    minHeight: 80,
+    minHeight: 10,
     marginBottom: 15,
     textAlignVertical: 'top',
   },
@@ -656,22 +742,73 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#3f4254',
   },
-    dropdown: {
-      height: 40,
-      borderColor: '#CCCCCC',
-      borderWidth: 1,
-      borderRadius: 5,
-      paddingHorizontal: 10,
-      width: 75,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    dropdownItem: {
-      padding: 10,
-      fontSize: 16,
-      color: '#333',
-    },
+  dropdown: {
+    height: 40,
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    width: 75,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dropdownItem: {
+    padding: 10,
+    fontSize: 12,
+    color: '#333',
+  },
   customFont: {
     fontFamily: 'Poppins-Regular',
+  },
+  tambahContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  tambahButton: {
+    flexDirection: 'row',
+    backgroundColor: '#3699FF',
+    width: 90,
+    height: 40,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tambahText: {
+    marginTop: 1,
+    fontFamily: 'Poppins-Regular',
+    color: 'white',
+    marginLeft: 5,
+    lineHeight: 20,
+    fontSize: 13,
+    textAlignVertical: 'center',
+  },
+  editButton: {
+    gap: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#3699FF',
+    paddingVertical: 7,
+    paddingHorizontal: 7,
+    borderRadius: 5,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  customFont: {
+    color: 'white',
+    fontFamily: 'Poppins-Regular',
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: 10,
+  },
+  switchLabel: {
+    fontSize: 16,
+    color: '#333',
   },
 });
