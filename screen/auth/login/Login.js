@@ -9,25 +9,28 @@ import {
   Image,
   ImageBackground,
 } from 'react-native';
-import axios from 'axios';
 import * as Keychain from 'react-native-keychain';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import {useAuth} from '../AuthContext'; // Import useAuth untuk konteks autentikasi
+import {useAuth} from '../AuthContext';
+import useApiClient from '../../../src/api/apiClient';
 
 const LoginScreen = ({navigation}) => {
   const [nip, setNip] = useState('');
   const [password, setPassword] = useState('');
-  const {login} = useAuth(); // Ambil fungsi login dari context
+  const {login} = useAuth(); // Gunakan fungsi login dari context
+  const apiClient = useApiClient(); // Gunakan API client
 
-  // Periksa status login di awal aplikasi
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
         const credentials = await Keychain.getGenericPassword();
         if (credentials) {
           const token = credentials.password;
-          await fetchUser(token); // Ambil data user dengan token
-          navigation.replace('Home'); // Langsung masuk ke Home jika token valid
+          const userData = await fetchUser(token); // Ambil data user
+          if (userData) {
+            login(userData, token); // Simpan data ke context
+            navigation.replace('Home'); // Navigasi ke Home
+          }
         }
       } catch (error) {
         console.error('Error checking login status:', error);
@@ -43,24 +46,21 @@ const LoginScreen = ({navigation}) => {
     }
 
     try {
-      const loginResponse = await axios.post(
-        'http://192.168.60.85:8000/api/v1/auth/login',
-        {nip, password},
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-        },
-      );
+      const loginResponse = await apiClient.post('/auth/login', {
+        nip,
+        password,
+      });
 
       if (loginResponse.status === 200 && loginResponse.data.status === true) {
         Alert.alert('Success', 'Login successful!');
         const token = loginResponse.headers['authorization'];
         if (token) {
           await saveTokenToKeychain(token);
-          await fetchUser(token);
-          navigation.replace('Home');
+          const userData = await fetchUser(token);
+          if (userData) {
+            login(userData, token); // Simpan data ke context
+            navigation.replace('Home'); // Navigasi ke Home
+          }
         } else {
           Alert.alert('Error', 'Token not found in response.');
         }
@@ -71,6 +71,7 @@ const LoginScreen = ({navigation}) => {
         );
       }
     } catch (error) {
+      console.error('Login error:', error);
       Alert.alert(
         'Error',
         error.response?.data?.message || 'An error occurred during login.',
@@ -80,24 +81,22 @@ const LoginScreen = ({navigation}) => {
 
   const fetchUser = async token => {
     try {
-      const userResponse = await axios.get(
-        'http://192.168.60.85:8000/api/v1/auth/user',
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
-          },
+      const userResponse = await apiClient.get('/auth/user', {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
 
       if (userResponse.status === 200) {
-        const userData = userResponse.data.data;
-        login(userData, token); // Menyimpan user dan token ke context
+        return userResponse.data.data; // Kembalikan data user
       } else {
         Alert.alert('Error', 'Failed to fetch user data.');
+        return null;
       }
     } catch (error) {
+      console.error('Fetch user error:', error);
       Alert.alert('Error', 'An error occurred while fetching user data.');
+      return null;
     }
   };
 
@@ -106,19 +105,6 @@ const LoginScreen = ({navigation}) => {
       await Keychain.setGenericPassword('token', token);
     } catch (error) {
       console.error('Failed to save token to Keychain:', error);
-    }
-  };
-
-  const getTokenFromKeychain = async () => {
-    try {
-      const credentials = await Keychain.getGenericPassword();
-      if (credentials) {
-        await fetchUser(credentials.password);
-      } else {
-        setUser(null);
-      }
-    } catch (error) {
-      console.error('Failed to retrieve token from Keychain:', error);
     }
   };
 
