@@ -30,10 +30,8 @@ export default function Satuan() {
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);
-  const [selectedNamaPangkat, setSelectedNamaPangkat] = useState(null);
-  const [selectedGolongan, setSelectedGolongan] = useState(null);
+  const [selectedNamaSatuan, setSelectedNamaSatuan] = useState('');
   const [editData, setEditData] = useState({});
-  const [selectedRuang, setSelectedRuang] = useState(null);
 
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
@@ -48,7 +46,7 @@ export default function Satuan() {
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjA4NDA3LCJleHAiOjE3ODk2MjgzMDYsIm5iZiI6MTczNTYxNDkyNiwianRpIjoiNDFJQ0FYM2NWeWJTQU5VNiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.sa7wR1T6N0Pq1312gGY2aReyAYxPd2xs5WzKlVpYxPw',
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
           },
         },
       );
@@ -65,16 +63,14 @@ export default function Satuan() {
   const submitEdit = async () => {
     try {
       await axios.post(
-        `http://192.168.60.123:8000/api/v1/pangkat/${editData.uuid}/update`,
+        `http://192.168.60.123:8000/api/v1/satuan/${editData.uuid}/update`,
         {
-          nm_pangkat: editData.nm_pangkat,
-          golongan: editData.golongan,
-          ruang: editData.ruang,
+          nm_satuan: editData.nm_satuan,
         },
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjA4NDA3LCJleHAiOjE3ODk2MjQ2MTAsIm5iZiI6MTczNTYxMTIzMCwianRpIjoiZlR5M3Z1NVczbEZlV0pxUCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.WAST_AaPLN0LHUiLvUpMvuw73WydPtkIbypMo-ICt2I',
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
           },
         },
       );
@@ -89,11 +85,11 @@ export default function Satuan() {
   const fetchEditData = async uuid => {
     try {
       const response = await axios.get(
-        `http://192.168.60.123:8000/api/v1/pangkat/${uuid}/edit`,
+        `http://192.168.60.123:8000/api/v1/satuan/${uuid}/edit`,
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjA4NDA3LCJleHAiOjE3ODk2MjQ2MTAsIm5iZiI6MTczNTYxMTIzMCwianRpIjoiZlR5M3Z1NVczbEZlV0pxUCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.WAST_AaPLN0LHUiLvUpMvuw73WydPtkIbypMo-ICt2I',
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
           },
         },
       );
@@ -121,11 +117,11 @@ export default function Satuan() {
   const submitHapus = async () => {
     try {
       await axios.delete(
-        `http://192.168.60.123:8000/api/v1/uang_makan/${selectedUuid}/delete`,
+        `http://192.168.60.123:8000/api/v1/satuan/${selectedUuid}/delete`,
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NTIxMTM2LCJleHAiOjE3ODk1NTI4NjgsIm5iZiI6MTczNTUzOTQ4OCwianRpIjoidGp1bzNMeDBLeW01SEFzciIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.cB8STElqPpBVz2nSM-xWKnSPytw2dI6oGLSRLXkaO7M',
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
           },
         },
       );
@@ -144,16 +140,14 @@ export default function Satuan() {
   const submitTambah = async () => {
     try {
       await axios.post(
-        'http://192.168.60.123:8000/api/v1/pangkat/create',
+        'http://192.168.60.123:8000/api/v1/satuan/create',
         {
-          nm_pangkat: selectedNamaPangkat,
-          golongan: selectedGolongan,
-          ruang: selectedRuang,
+          nm_satuan: selectedNamaSatuan,
         },
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjA4NDA3LCJleHAiOjE3ODk2MjI3NDcsIm5iZiI6MTczNTYwOTM2NywianRpIjoiZmo5cTVTbjV5YVdid3VEOCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.xO7FzFoMxXirMh5v8kgoZyVbcs5RwBjy4cvrexh7k8s',
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
           },
         },
       );
@@ -162,9 +156,7 @@ export default function Satuan() {
       fetchData(currentPage); // Refresh data
 
       // Reset form setelah berhasil
-      setSelectedNamaPangkat('');
-      setSelectedGolongan('');
-      setSelectedRuang('');
+      setSelectedNamaSatuan('');
 
       } catch (error) {
       console.error('Error saat mengirim data:', error);
@@ -173,9 +165,7 @@ export default function Satuan() {
   };
 
   const handleCloseTambahModal = () => {
-    setSelectedNamaPangkat('');
-      setSelectedGolongan('');
-      setSelectedRuang('');
+    setSelectedNamaSatuan('');
     setTambahModalVisible(false);
   };
 
@@ -339,33 +329,13 @@ export default function Satuan() {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Edit Data</Text>
-            <Text style={styles.modalLabel}>Pangkat</Text>
+            <Text style={styles.modalLabel}>Nama Satuan</Text>
             <TextInput
               style={styles.modalInput}
-              placeholder="Pangkat"
-              value={editData.nm_pangkat || ''} // Pastikan menggunakan default kosong jika null
+              placeholder="Nama Satuan"
+              value={editData.nm_satuan || ''} // Pastikan menggunakan default kosong jika null
               onChangeText={text =>
-                setEditData(prev => ({...prev, nm_pangkat: text}))
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <Text style={styles.modalLabel}>Golongan</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Golongan"
-              value={editData.golongan || ''} // Pastikan menggunakan default kosong jika null
-              onChangeText={text =>
-                setEditData(prev => ({...prev, golongan: text}))
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <Text style={styles.modalLabel}>Ruang</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Ruang"
-              value={editData.ruang || ''} // Pastikan menggunakan default kosong jika null
-              onChangeText={text =>
-                setEditData(prev => ({...prev, ruang: text}))
+                setEditData(prev => ({...prev, nm_satuan: text}))
               }
               placeholderTextColor={'#B6B9CA'}
             />
@@ -394,32 +364,14 @@ export default function Satuan() {
         onRequestClose={() => setTambahModalVisible(false)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Tambah Data</Text>
-            <Text style={styles.modalLabel}>Nama Unit Kerja</Text>
+            <Text style={styles.modalTitle}>Tambah Satuan Data</Text>
+            <Text style={styles.modalLabel}>Nama Satuan</Text>
             <TextInput
               style={styles.modalInput}
-              placeholder="Nama Pangkat"
+              placeholder="Nama Satuan"
               multiline
-              value={selectedNamaPangkat}
-              onChangeText={setSelectedNamaPangkat}
-              placeholderTextColor={'#B6B9CA'}
-            />
-
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Golongan"
-              multiline
-              value={selectedGolongan}
-              onChangeText={setSelectedGolongan}
-              placeholderTextColor={'#B6B9CA'}
-            />
-
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Ruang"
-              multiline
-              value={selectedRuang}
-              onChangeText={setSelectedRuang}
+              value={selectedNamaSatuan}
+              onChangeText={setSelectedNamaSatuan}
               placeholderTextColor={'#B6B9CA'}
             />
 
@@ -535,7 +487,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   expandIconCell: {
-    width: 40,
+    width: 80, 
     alignItems: 'flex-end',
   },
   approvedStatus: {
