@@ -1,8 +1,13 @@
 import React from 'react';
+import {AuthProvider} from './screen/auth/AuthContext';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {createNativeStackNavigator} from '@react-navigation/native-stack'; // Menggunakan native-stack
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import SplashScreen from './screen/components/splashscreen/SplashScreen';
+
 import Ionicons from 'react-native-vector-icons/Ionicons';
+//login screens
+import LoginScreen from './screen/auth/login/Login';
 
 // Import screens
 import Home from './screen/admin/home/home';
@@ -74,295 +79,300 @@ const Stack = createNativeStackNavigator();
 
 function HomeStack() {
   return (
-    <Stack.Navigator
-    screenOptions={{
-      animation: 'slide_from_right',
-    }}>
-      <Stack.Screen
-        name="Home"
-        component={Home}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="User"
-        component={User}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="Laporan"
-        component={Laporan}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="Teguran"
-        component={TeguranScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="Kontrak"
-        component={KontrakScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="Realisasi"
-        component={RealisasiScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="PerubahanPresensi"
-        component={PerubahanPresensiScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="SuratTugas"
-        component={SuratTugasScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="PotonganLain"
-        component={PotonganLainScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="Lock"
-        component={LockScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="Lainnya"
-        component={LainnyaScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="BelumKirimKontrak"
-        component={BelumKirimKontrakScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="BelumKirimRealisasi"
-        component={BelumKirimRealisasiScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="TugasTambahan"
-        component={TugasTambahanScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="KontrakKerja"
-        component={KontrakKerjaScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="CapaianKinerja"
-        component={CapaianKinerjaScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="Rekapitulasi"
-        component={RekapitulasiScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="Remunerasi"
-        component={RemunerasiScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="TunjanganTambahan"
-        component={TunjanganTambahanScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="UserGroup"
-        component={UserGroupScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="PersentaseKegiatan"
-        component={PersentaseKegiatanScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="Pemotongan"
-        component={PemotonganScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="UangMakan"
-        component={UangMakanScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="Jabatan"
-        component={JabatanScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="UnitKerja"
-        component={UnitKerjaScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="Pangkat"
-        component={PangkatScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="Satuan"
-        component={SatuanScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="Uraian"
-        component={UraianScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="BulanTahun"
-        component={BulanTahunScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="DewanPengawas"
-        component={DewanPengawasScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="PIR"
-        component={PIRScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="Kegiatan"
-        component={KegiatanScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="JenisPegawai"
-        component={JenisPegawaiScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="LokasiAbsensi"
-        component={LokasiAbsensiScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="NoWa"
-        component={NoWaScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="JenisAbsensi"
-        component={JenisAbsensiScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="RewardPunishment"
-        component={RewardPunishmentScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="DeadlineKinerja"
-        component={DeadlineKinerjaScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="MasterPTKP"
-        component={MasterPTKPScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="JamKerja"
-        component={JamKerjaScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="JamFingerprint"
-        component={JamFingerprintScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="Mesin"
-        component={MesinScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="TanggungRenteng"
-        component={TanggungRentengScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="SettingHariKerja"
-        component={SettingHariKerjaScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="PetaJabatan"
-        component={PetaJabatanScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="Setting"
-        component={SettingScreen}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="VerifikasiSuratTugas"
-        component={VerifikasiSuratTugas}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="SettingPersentaseCapaian"
-        component={SettingPersentaseCapaianScreen}
-      />
-    </Stack.Navigator>
+    <AuthProvider>
+      <Stack.Navigator>
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Home"
+          component={Home}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="User"
+          component={User}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="Laporan"
+          component={Laporan}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="Teguran"
+          component={TeguranScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="Kontrak"
+          component={KontrakScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="Realisasi"
+          component={RealisasiScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="PerubahanPresensi"
+          component={PerubahanPresensiScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="SuratTugas"
+          component={SuratTugasScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="PotonganLain"
+          component={PotonganLainScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="Lock"
+          component={LockScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="Lainnya"
+          component={LainnyaScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="BelumKirimKontrak"
+          component={BelumKirimKontrakScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="BelumKirimRealisasi"
+          component={BelumKirimRealisasiScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="TugasTambahan"
+          component={TugasTambahanScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="KontrakKerja"
+          component={KontrakKerjaScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="CapaianKinerja"
+          component={CapaianKinerjaScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="Rekapitulasi"
+          component={RekapitulasiScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="Remunerasi"
+          component={RemunerasiScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="TunjanganTambahan"
+          component={TunjanganTambahanScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="UserGroup"
+          component={UserGroupScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="PersentaseKegiatan"
+          component={PersentaseKegiatanScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="Pemotongan"
+          component={PemotonganScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="UangMakan"
+          component={UangMakanScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="Jabatan"
+          component={JabatanScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="UnitKerja"
+          component={UnitKerjaScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="Pangkat"
+          component={PangkatScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="Satuan"
+          component={SatuanScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="Uraian"
+          component={UraianScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="BulanTahun"
+          component={BulanTahunScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="DewanPengawas"
+          component={DewanPengawasScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="PIR"
+          component={PIRScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="Kegiatan"
+          component={KegiatanScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="JenisPegawai"
+          component={JenisPegawaiScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="LokasiAbsensi"
+          component={LokasiAbsensiScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="NoWa"
+          component={NoWaScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="JenisAbsensi"
+          component={JenisAbsensiScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="RewardPunishment"
+          component={RewardPunishmentScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="DeadlineKinerja"
+          component={DeadlineKinerjaScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="MasterPTKP"
+          component={MasterPTKPScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="JamKerja"
+          component={JamKerjaScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="JamFingerprint"
+          component={JamFingerprintScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="Mesin"
+          component={MesinScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="TanggungRenteng"
+          component={TanggungRentengScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="SettingHariKerja"
+          component={SettingHariKerjaScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="PetaJabatan"
+          component={PetaJabatanScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="Setting"
+          component={SettingScreen}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="VerifikasiSuratTugas"
+          component={VerifikasiSuratTugas}
+        />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="SettingPersentaseCapaian"
+          component={SettingPersentaseCapaianScreen}
+        />
+      </Stack.Navigator>
+    </AuthProvider>
   );
 }
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({route}) => ({
-          tabBarIcon: ({focused, color, size}) => {
-            let iconName;
+      <AuthProvider>
+        <Tab.Navigator
+          screenOptions={({route}) => ({
+            tabBarIcon: ({focused, color, size}) => {
+              let iconName;
 
-            if (route.name === 'Dashboard') {
-              iconName = focused ? 'home' : 'home-outline';
-            } else if (route.name === 'Presensi') {
-              iconName = focused ? 'calendar' : 'calendar-outline';
-            } else if (route.name === 'Profile') {
-              iconName = focused ? 'person' : 'person-outline';
-            }
+              if (route.name === 'Dashboard') {
+                iconName = focused ? 'home' : 'home-outline';
+              } else if (route.name === 'Presensi') {
+                iconName = focused ? 'calendar' : 'calendar-outline';
+              } else if (route.name === 'Profile') {
+                iconName = focused ? 'person' : 'person-outline';
+              }
 
-            return <Ionicons name={iconName} size={size} color={color} />;
-          },
-          tabBarActiveTintColor: 'black',
-          tabBarInactiveTintColor: 'black',
-          tabBarStyle: {
-            backgroundColor: 'white',
-          },
-        })}>
-        <Tab.Screen
-          name="Dashboard"
-          component={HomeStack}
-          options={{headerShown: false}}
-        />
-
-        <Tab.Screen
-          name="Presensi"
-          component={Presensi}
-          options={{headerShown: false}}
-        />
-        <Tab.Screen
-          name="Profile"
-          component={User}
-          options={{headerShown: false}}
-        />
-      </Tab.Navigator>
+              return <Ionicons name={iconName} size={size} color={color} />;
+            },
+            tabBarActiveTintColor: 'black',
+            tabBarInactiveTintColor: 'black',
+            tabBarStyle: {
+              backgroundColor: 'white',
+            },
+          })}>
+          <Tab.Screen
+            name="Dashboard"
+            component={HomeStack}
+            options={{headerShown: false}}
+          />
+          <Tab.Screen
+            name="Presensi"
+            component={Presensi} // Pastikan Presensi sudah ada
+            options={{headerShown: false}}
+          />
+          <Tab.Screen
+            name="Profile"
+            component={User}
+            options={{headerShown: false}}
+          />
+        </Tab.Navigator>
+      </AuthProvider>
     </NavigationContainer>
   );
 }

@@ -381,6 +381,122 @@ export default function PerubahanPresensi() {
           </View>
         </View>
       </Modal>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <Image
+            source={require('../assets/images/logo.png')}
+            style={styles.logo}
+          />
+        </View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
+          <TouchableOpacity style={styles.iconWrapper}>
+            <Ionicons name="person-circle-outline" size={24} color="#333" />
+          </TouchableOpacity>
+        </View>
+      </View>
+      {/* Loading Indicator */}
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <FlatList
+          ListHeaderComponent={TableHeader}
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={item => item.id.toString()}
+          contentContainerStyle={styles.card}
+          ListFooterComponent={
+            <View>
+              <Text style={styles.pageInfo}>
+                Showing page {currentPage} of {lastPage}
+              </Text>
+              <View style={styles.paginationContainer}>
+                <View style={styles.paginationButtons}>
+                  <TouchableOpacity
+                    style={[
+                      styles.pageButton,
+                      currentPage === 1 && styles.disabledButton,
+                    ]}
+                    disabled={currentPage === 1}
+                    onPress={() =>
+                      setCurrentPage(prev => Math.max(prev - 1, 1))
+                    }>
+                    <Text style={styles.pageButtonText}>Previous</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.pageButton,
+                      currentPage === lastPage && styles.disabledButton,
+                    ]}
+                    disabled={currentPage === lastPage}
+                    onPress={() =>
+                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
+                    }>
+                    <Text style={styles.pageButtonText}>Next</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          }
+        />
+      )}
+      <Modal
+        visible={isApproveModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setApproveModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Setujui Data</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setApproveModalVisible(false)}>
+                <Text style={styles.buttonText}>Batal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.submitButton, styles.approveButton]}
+                onPress={submitApprove}>
+                <Text style={styles.buttonText}>Setujui</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal Input Alasan Penolakan */}
+      <Modal
+        visible={isModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Tolak Data</Text>
+            <Text style={styles.modalLabel}>Alasan Penolakan:</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Masukkan alasan"
+              multiline
+              value={declineReason}
+              onChangeText={setDeclineReason}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setModalVisible(false)}>
+                <Text style={styles.buttonText}>Batal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={submitDecline}>
+                <Text style={styles.buttonText}>Tolak</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

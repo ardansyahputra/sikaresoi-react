@@ -9,21 +9,16 @@ import {
   ScrollView, // Tambahkan ScrollView di sini
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import axios from 'axios';
 import LinearGradient from 'react-native-linear-gradient';
 import {useNavigation} from '@react-navigation/native';
-
-// Axios instance
-const apiClient = axios.create({
-  baseURL: 'http://192.168.60.163:8000/api/v1',
-  headers: {
-    Authorization:
-      'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1MDAyNDAzLCJleHAiOjE3MzUwMDYyOTAsIm5iZiI6MTczNTAwMjY5MCwianRpIjoiMU43ekNoTFFWdUlmRWlSSCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.xuFQh94DARucc2ESzM7s4jIg5k_80AgFKBNIl0Adhm8',
-  },
-});
+import {useAuth} from '../../auth/AuthContext';
+import axios from 'axios';
+import useApiClient from '../../../src/api/apiClient';
 
 const Home = () => {
   const navigation = useNavigation();
+  const {token} = useAuth();
+  const apiClient = useApiClient(); // Gunakan useApiClient
   const [totalContracts, setTotalContracts] = useState(null);
   const [year, setYear] = useState(null);
   const [attendanceChanges, setAttendanceChanges] = useState(null);
@@ -35,6 +30,7 @@ const Home = () => {
   const [realisasiDesember, setRealisasiDesember] = useState(null); // Untuk total realisasi
   const [bulanRealisasi, setBulanRealisasi] = useState(''); // Untuk bulan realisasi
 
+  // Fetch Data
   useEffect(() => {
     const fetchContracts = apiClient.get('/home/all_kontrak_belum_setujui');
     const fetchAttendanceChanges = apiClient.get(
@@ -92,13 +88,13 @@ const Home = () => {
             }
             if (realisasiDesemberResponse.data.status) {
               setRealisasiDesember(realisasiDesemberResponse.data.data.total);
-              setBulanRealisasi(realisasiDesemberResponse.data.data.bulan); // Simpan bulan dari respons API
+              setBulanRealisasi(realisasiDesemberResponse.data.data.bulan);
             }
           },
         ),
       )
       .catch(error => console.error('Error fetching data:', error));
-  }, []);
+  }, [apiClient]);
 
   const items = [
     {
