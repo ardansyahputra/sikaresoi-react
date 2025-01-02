@@ -1,6 +1,6 @@
 import axios from 'axios';
-//import {API_URL} from '@env';
-import config from '../config/config';
+import {API_URL} from '@env';
+// import config from '../config/config';
 import {useAuth} from '../../screen/auth/AuthContext';
 import {useNavigation} from '@react-navigation/native';
 
@@ -10,7 +10,7 @@ const useApiClient = () => {
 
   // Buat instance Axios
   const apiClient = axios.create({
-    baseURL: config.API_URL,
+    baseURL: API_URL,
   });
 
   // Interceptor untuk request: Tambahkan Authorization Header
