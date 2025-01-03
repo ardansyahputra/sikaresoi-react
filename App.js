@@ -337,12 +337,18 @@ function HomeStack() {
           name="SettingPersentaseCapaian"
           component={SettingPersentaseCapaianScreen}
         />
+        <Stack.Screen
+          options={{headerShown: false}}
+          name="Presensi"
+          component={Presensi}
+        />
       </Stack.Navigator>
     </AuthProvider>
   );
 }
 function AppTabs() {
   const {shouldShowTabNavigator} = useNavigationContext();
+  console.log(shouldShowTabNavigator);
 
   return (
     <AuthProvider>
