@@ -1,4 +1,4 @@
-import {useState, useEffect} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -7,11 +7,8 @@ import {
   TouchableOpacity,
   Modal,
   Image,
-  Switch,
   ScrollView,
-  TextInput,
 } from 'react-native';
-import axios from 'axios';
 import {Dropdown} from 'react-native-element-dropdown';
 import Icon from 'react-native-vector-icons/Ionicons';
 
@@ -127,15 +124,7 @@ export default function Laporan() {
       !selectedMonth &&
       !selectedYear &&
       !selectedMonthReport &&
-      !selectedYearReport &&
-      !(
-        selectedMonth &&
-        selectedYear &&
-        selectedTax &&
-        selectedType &&
-        selectedLeftSign &&
-        selectedRightSign
-      )
+      !selectedYearReport
     ) {
       setModalMessage('Harap pilih bulan dan tahun untuk salah satu laporan!');
       setIsModalVisible(true);
@@ -153,49 +142,14 @@ export default function Laporan() {
     if (selectedMonthReport && selectedYearReport) {
       rekapitulasiUrl = `http://192.168.61.163:8000/report/admin/rekapitulasi/${selectedMonthReport}/${selectedYearReport}`;
     }
-
-    // Jika semua field remunerasi terisi
-    if (
-      selectedMonth &&
-      selectedYear &&
-      selectedTax &&
-      selectedType &&
-      selectedLeftSign &&
-      selectedRightSign
-    ) {
-      remunerasiUrl = `http://192.168.60.163:8000/report/admin/remunerasi/${selectedMonth}/${selectedYear}?p=${selectedTax}&kiri=${selectedLeftSign}&kanan=${selectedRightSign}&tipe=${selectedType}`;
-    }
-    if (
-      selectedMonth &&
-      selectedYear &&
-      selectedTax &&
-      selectedType &&
-      selectedLeftSign &&
-      selectedRightSign
-    ) {
-      tunjanganTambahanUrl = `http://192.168.60.163:8000/report/admin/tunjangan_tambahan_gaji/${selectedMonth}/${selectedYear}?p=${selectedTax}&kiri=${selectedLeftSign}&kanan=${selectedRightSign}&tk=${selectedType}&persentase=${percentage}&p2murni=${isP2Active}`;
-    }
-    console.log('Tunjangan Tambahan URL:', tunjanganTambahanUrl);
-
-    if (
-      !capaianKinerjaUrl &&
-      !rekapitulasiUrl &&
-      !remunerasiUrl &&
-      !tunjanganTambahanUrl
-    ) {
+    if (!capaianKinerjaUrl && !rekapitulasiUrl) {
       setModalMessage(
         'Harap pilih bulan dan tahun untuk laporan yang ingin di-download!',
       );
       setIsModalVisible(true);
       return;
     }
-
-    return {
-      capaianKinerjaUrl,
-      rekapitulasiUrl,
-      remunerasiUrl,
-      tunjanganTambahanUrl,
-    };
+    return {capaianKinerjaUrl, rekapitulasiUrl};
   };
 
   const onPressDownload = async type => {
@@ -203,15 +157,7 @@ export default function Laporan() {
     if (urls) {
       // Pilih API yang akan dipanggil berdasarkan parameter 'type'
       const url =
-        type === 'rekapitulasi'
-          ? urls.rekapitulasiUrl
-          : type === 'remunerasi'
-          ? urls.remunerasiUrl
-          : type === 'tunjanganTambahan'
-          ? urls.tunjanganTambahanUrl // Pastikan memilih URL yang benar
-          : urls.capaianKinerjaUrl;
-
-      console.log('Download URL:', url); // Log untuk memastikan URL yang dipilih benar
+        type === 'rekapitulasi' ? urls.rekapitulasiUrl : urls.capaianKinerjaUrl;
 
       if (url) {
         Linking.openURL(url); // Buka URL
@@ -246,8 +192,62 @@ export default function Laporan() {
               onPress={() => setIsMonthYearOpenTugas(!isMonthYearOpenTugas)}
               style={styles.titleWrapper}>
               <Text style={styles.reportTitle}>
-                LAPORAN REKAPITULASI TUGAS TAMBAHAN
+                Laporan Rekapitulasi Tugas Tambahan
               </Text>
+              <Icon
+                name={isMonthYearOpenTugas ? 'chevron-up' : 'chevron-down'}
+                size={18}
+                color="black"
+                style={styles.iconStyle}
+              />
+            </TouchableOpacity>
+            {isMonthYearOpenTugas && (
+              <View style={styles.formContainer}>
+                <View style={styles.dropdownWrapper}>
+                  <Text style={styles.label}>Pilih Bulan *</Text>
+                  <Dropdown
+                    style={styles.dropdown}
+                    data={monthData}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Pilih Bulan"
+                    value={selectedMonth}
+                    onChange={item => setSelectedMonth(item.value)}
+                    placeholderStyle={styles.placeholderStyle}
+                    selectedTextStyle={styles.selectedTextStyle}
+                    dropdownStyle={styles.dropdownStyle}
+                  />
+                </View>
+                <View style={styles.dropdownWrapper}>
+                  <Text style={styles.label}>Pilih Tahun *</Text>
+                  <Dropdown
+                    style={styles.dropdown}
+                    data={yearData}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Pilih Tahun"
+                    value={selectedYear}
+                    onChange={item => setSelectedYear(item.value)}
+                    placeholderStyle={styles.placeholderStyle}
+                    selectedTextStyle={styles.selectedTextStyle}
+                    dropdownStyle={styles.dropdownStyle}
+                  />
+                </View>
+                <TouchableOpacity
+                  style={styles.downloadButton}
+                  onPress={() => onPressDownload('capaianKinerja')}>
+                  <Text style={styles.downloadButtonText}>
+                    Download Laporan Capaian Kinerja
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+          <View style={styles.dropdownWrapperTitle}>
+            <TouchableOpacity
+              onPress={() => setIsMonthYearOpenTugas(!isMonthYearOpenTugas)}
+              style={styles.titleWrapper}>
+              <Text style={styles.reportTitle}>Renumerasi</Text>
               <Icon
                 name={isMonthYearOpenTugas ? 'chevron-up' : 'chevron-down'}
                 size={18}
@@ -303,7 +303,9 @@ export default function Laporan() {
             <TouchableOpacity
               onPress={() => setIsMonthYearOpenCapaian(!isMonthYearOpenCapaian)}
               style={styles.titleWrapper}>
-              <Text style={styles.reportTitle}>REPORT REK</Text>
+              <Text style={styles.reportTitle}>
+                Report Rekapitulasi Capaian Kinerja
+              </Text>
               <Icon
                 name={isMonthYearOpenCapaian ? 'chevron-up' : 'chevron-down'}
                 size={18}
@@ -349,303 +351,6 @@ export default function Laporan() {
                   onPress={() => onPressDownload('rekapitulasi')}>
                   <Text style={styles.downloadButtonText}>
                     Download Laporan Rekapitulasi Excel
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-
-          {/* Remunerasi */}
-          <View style={styles.dropdownWrapperTitle}>
-            <TouchableOpacity
-              onPress={() => setIsRemunerasiOpen(!isRemunerasiOpen)}
-              style={styles.titleWrapper}>
-              <Text style={styles.reportTitle}>REMUNERASI</Text>
-              <Icon
-                name={isRemunerasiOpen ? 'chevron-up' : 'chevron-down'}
-                size={18}
-                color="black"
-                style={styles.iconStyles}
-              />
-            </TouchableOpacity>
-            {isRemunerasiOpen && (
-              <View style={styles.dropdownWrapper}>
-                <View style={styles.formContainer}>
-                  {/* Dropdown Tahun */}
-                  <View style={styles.dropdownWrapper}>
-                    <Text style={styles.label}>Pilih Tahun *</Text>
-                    <Dropdown
-                      style={styles.dropdown}
-                      data={yearData} // Menggunakan data dari yearData
-                      labelField="label"
-                      valueField="value"
-                      placeholder="Pilih Tahun"
-                      value={selectedYear}
-                      onChange={item => setSelectedYear(item.value)}
-                      placeholderStyle={styles.placeholderStyle}
-                      selectedTextStyle={styles.selectedTextStyle}
-                      dropdownStyle={styles.dropdownStyle}
-                    />
-                  </View>
-
-                  {/* Dropdown Bulan */}
-                  <View style={styles.dropdownWrapper}>
-                    <Text style={styles.label}>Pilih Bulan *</Text>
-                    <Dropdown
-                      style={styles.dropdown}
-                      data={monthData} // Menggunakan data dari monthData
-                      labelField="label"
-                      valueField="value"
-                      placeholder="Pilih Bulan"
-                      value={selectedMonth}
-                      onChange={item => setSelectedMonth(item.value)}
-                      placeholderStyle={styles.placeholderStyle}
-                      selectedTextStyle={styles.selectedTextStyle}
-                      dropdownStyle={styles.dropdownStyle}
-                    />
-                  </View>
-                  <View style={styles.dropdownWrapper}>
-                    <Text style={styles.label}>Potongan Pajak *</Text>
-                    <Dropdown
-                      style={styles.dropdown}
-                      data={[
-                        {label: 'Progresif', value: 'PROGRESIF'},
-                        {label: 'Final', value: 'FINAL'},
-                      ]}
-                      labelField="label"
-                      valueField="value"
-                      placeholder="Pilih Potongan Pajak"
-                      value={selectedTax} // Menggunakan state selectedTax untuk menyimpan pilihan
-                      onChange={item => setSelectedTax(item.value)} // Menyimpan nilai yang dipilih
-                      placeholderStyle={styles.placeholderStyle}
-                      selectedTextStyle={styles.selectedTextStyle}
-                      dropdownStyle={styles.dropdownStyle}
-                    />
-                  </View>
-
-                  <View style={styles.dropdownWrapper}>
-                    <Text style={styles.label}>Pilih Tipe *</Text>
-                    <Dropdown
-                      style={styles.dropdown}
-                      data={[
-                        {label: 'P1', value: 'P1'},
-                        {label: 'P2', value: 'P2'},
-                        {label: 'P1 & P2', value: 'ALL'},
-                      ]}
-                      labelField="label"
-                      valueField="value"
-                      placeholder="Pilih Tipe"
-                      value={selectedType} // Menggunakan state selectedType untuk menyimpan pilihan
-                      onChange={item => setSelectedType(item.value)} // Menyimpan nilai yang dipilih
-                      placeholderStyle={styles.placeholderStyle}
-                      selectedTextStyle={styles.selectedTextStyle}
-                      dropdownStyle={styles.dropdownStyle}
-                    />
-                  </View>
-                  {/* Dropdown untuk Tanda Tangan Kiri */}
-                  <View style={styles.dropdownWrapper}>
-                    <Text style={styles.label}>Tanda Tangan Kiri *</Text>
-                    <Dropdown
-                      style={styles.dropdown}
-                      labelField="label"
-                      valueField="value"
-                      placeholder="Pilih TTD Kiri"
-                      value={selectedLeftSign} // Menggunakan state selectedLeftSign
-                      onChange={item => handleLeftSignChange(item)} // Menyimpan ID yang dipilih
-                      placeholderStyle={styles.placeholderStyle}
-                      selectedTextStyle={styles.selectedTextStyle}
-                      dropdownStyle={styles.dropdownStyle}
-                      data={userData} // Menggunakan data yang sudah diproses
-                    />
-                  </View>
-
-                  {/* Dropdown untuk Tanda Tangan Kanan */}
-                  <View style={styles.dropdownWrapper}>
-                    <Text style={styles.label}>Tanda Tangan Kanan *</Text>
-                    <Dropdown
-                      style={styles.dropdown}
-                      labelField="label"
-                      valueField="value"
-                      placeholder="Pilih TTD Kanan"
-                      value={selectedRightSign} // Menggunakan state selectedRightSign
-                      onChange={item => handleRightSignChange(item)} // Menyimpan ID yang dipilih
-                      placeholderStyle={styles.placeholderStyle}
-                      selectedTextStyle={styles.selectedTextStyle}
-                      dropdownStyle={styles.dropdownStyle}
-                      data={userData} // Menggunakan data yang sudah diproses
-                    />
-                  </View>
-                </View>
-                {/* Tombol Download Excel */}\
-                <TouchableOpacity
-                  style={styles.downloadButton}
-                  onPress={() => onPressDownload('remunerasi')}>
-                  <Text style={styles.downloadButtonText}>
-                    Download Laporan Remunerasi
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-
-          {/* Tunjangan Tambahan */}
-          <View style={styles.dropdownWrapperTitle}>
-            <TouchableOpacity
-              onPress={() =>
-                setIsTunjanganTambahanOpen(!isTunjanganTambahanOpen)
-              }
-              style={styles.titleWrapper}>
-              <Text style={styles.reportTitle}>TUNJANGAN TAMBAHAN</Text>
-              <Icon
-                name={isTunjanganTambahanOpen ? 'chevron-up' : 'chevron-down'}
-                size={18}
-                color="black"
-                style={styles.iconStyles}
-              />
-            </TouchableOpacity>
-            {isTunjanganTambahanOpen && (
-              <View style={styles.dropdownWrapper}>
-                <View style={styles.formContainer}>
-                  <View style={styles.dropdownWrapper}>
-                    <Text style={styles.label}>Tunjangan Ke *</Text>
-                    <Dropdown
-                      style={styles.dropdown}
-                      data={[
-                        {label: '13', value: '13'},
-                        {label: '14', value: '14'},
-                        {label: '15', value: '15'},
-                        {label: '16', value: '16'},
-                        {label: 'Insentif', value: 'INSENTIF'},
-                      ]}
-                      labelField="label"
-                      valueField="value"
-                      placeholder="Pilih Tunjangan Ke"
-                      value={selectedType} // Menggunakan state untuk tunjangan ke
-                      onChange={item => setSelectedType(item.value)} // Menyimpan nilai yang dipilih
-                      placeholderStyle={styles.placeholderStyle}
-                      selectedTextStyle={styles.selectedTextStyle}
-                      dropdownStyle={styles.dropdownStyle}
-                    />
-                  </View>
-
-                  <View style={styles.dropdownWrapper}>
-                    <Text style={styles.label}>P2 Murni *</Text>
-                    {/* Wrapper untuk Switch dan Label */}
-                    <View style={styles.switchWrapper}>
-                      <Switch
-                        value={isP2Active}
-                        onValueChange={setIsP2Active} // Toggle nilai antara true dan false
-                      />
-                      <Text style={styles.switchLabel}>
-                        {isP2Active ? 'Aktif' : 'Tidak Aktif'}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Dropdown presentage */}
-                  <View style={styles.dropdownWrapper}>
-                    <Text style={styles.label}>Persentase *</Text>s
-                    <TextInput
-                      style={styles.input}
-                      value={`${percentage}`}
-                      onChangeText={text => setPercentage(Number(text))}
-                      keyboardType="numeric"
-                    />
-                  </View>
-
-                  {/* Dropdown Bulan */}
-                  <View style={styles.dropdownWrapper}>
-                    <Text style={styles.label}>Pilih Bulan *</Text>
-                    <Dropdown
-                      style={styles.dropdown}
-                      data={monthData} // Data bulan
-                      labelField="label"
-                      valueField="value"
-                      placeholder="Pilih Bulan"
-                      value={selectedMonth}
-                      onChange={item => setSelectedMonth(item.value)}
-                      placeholderStyle={styles.placeholderStyle}
-                      selectedTextStyle={styles.selectedTextStyle}
-                      dropdownStyle={styles.dropdownStyle}
-                    />
-                  </View>
-                  {/* Dropdown Tahun */}
-                  <View style={styles.dropdownWrapper}>
-                    <Text style={styles.label}>Pilih Tahun *</Text>
-                    <Dropdown
-                      style={styles.dropdown}
-                      data={yearData} // Data tahun
-                      labelField="label"
-                      valueField="value"
-                      placeholder="Pilih Tahun"
-                      value={selectedYear}
-                      onChange={item => setSelectedYear(item.value)}
-                      placeholderStyle={styles.placeholderStyle}
-                      selectedTextStyle={styles.selectedTextStyle}
-                      dropdownStyle={styles.dropdownStyle}
-                    />
-                  </View>
-
-                  <View style={styles.dropdownWrapper}>
-                    <Text style={styles.label}>Potongan Pajak *</Text>
-                    <Dropdown
-                      style={styles.dropdown}
-                      data={[
-                        {label: 'Progresif', value: 'PROGRESIF'},
-                        {label: 'Final', value: 'FINAL'},
-                      ]}
-                      labelField="label"
-                      valueField="value"
-                      placeholder="Pilih Potongan Pajak"
-                      value={selectedTax} // Menggunakan state selectedTax untuk menyimpan pilihan
-                      onChange={item => setSelectedTax(item.value)} // Menyimpan nilai yang dipilih
-                      placeholderStyle={styles.placeholderStyle}
-                      selectedTextStyle={styles.selectedTextStyle}
-                      dropdownStyle={styles.dropdownStyle}
-                    />
-                  </View>
-
-                  {/* Dropdown untuk Tanda Tangan Kiri */}
-                  <View style={styles.dropdownWrapper}>
-                    <Text style={styles.label}>Tanda Tangan Kiri *</Text>
-                    <Dropdown
-                      style={styles.dropdown}
-                      labelField="label"
-                      valueField="value"
-                      placeholder="Pilih TTD Kiri"
-                      value={selectedLeftSign} // Menggunakan state selectedLeftSign
-                      onChange={item => handleLeftSignChange(item)} // Menyimpan ID yang dipilih
-                      placeholderStyle={styles.placeholderStyle}
-                      selectedTextStyle={styles.selectedTextStyle}
-                      dropdownStyle={styles.dropdownStyle}
-                      data={userData} // Menggunakan data yang sudah diproses
-                    />
-                  </View>
-
-                  {/* Dropdown untuk Tanda Tangan Kanan */}
-                  <View style={styles.dropdownWrapper}>
-                    <Text style={styles.label}>Tanda Tangan Kanan *</Text>
-                    <Dropdown
-                      style={styles.dropdown}
-                      labelField="label"
-                      valueField="value"
-                      placeholder="Pilih TTD Kanan"
-                      value={selectedRightSign} // Menggunakan state selectedRightSign
-                      onChange={item => handleRightSignChange(item)} // Menyimpan ID yang dipilih
-                      placeholderStyle={styles.placeholderStyle}
-                      selectedTextStyle={styles.selectedTextStyle}
-                      dropdownStyle={styles.dropdownStyle}
-                      data={userData} // Menggunakan data yang sudah diproses
-                    />
-                  </View>
-                </View>
-
-                {/* Tombol Download Laporan Tunjangan Tambahan */}
-                <TouchableOpacity
-                  style={styles.downloadButton}
-                  onPress={() => onPressDownload('tunjanganTambahan')}>
-                  <Text style={styles.downloadButtonText}>
-                    Download Laporan Tunjangan Tambahan
                   </Text>
                 </TouchableOpacity>
               </View>
