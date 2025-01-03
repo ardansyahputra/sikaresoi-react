@@ -105,6 +105,13 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+
+    // Pengecualian dependensi 'com.android.support'
+    configurations.all {
+        exclude group: 'com.android.support', module: 'support-compat'
+        exclude group: 'com.android.support', module: 'support-media-compat'
+        // Tambahkan pengecualian lainnya jika perlu
+    }
 }
 
 dependencies {
