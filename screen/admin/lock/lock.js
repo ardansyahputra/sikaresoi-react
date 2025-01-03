@@ -41,7 +41,7 @@ export default function Presensi() {
     try {
       setLoading(true);
       const response = await axios.post(
-        'http://192.168.61.123:8000/api/v1/lock/indexRealisasi',
+        'http://192.168.60.123:8000/api/v1/lock/indexRealisasi',
         {page},
         {
           headers: {
@@ -64,12 +64,12 @@ export default function Presensi() {
     try {
       setLoading(true);
       const response = await axios.post(
-        'http://192.168.61.123:8000/api/v1/lock/indexKontrak',
+        'http://192.168.60.163:8000/api/v1/lock/indexKontrak',
         {page},
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYxLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM0NjY1NTk4LCJleHAiOjE3MzQ2NzEyMjYsIm5iZiI6MTczNDY2NzYyNiwianRpIjoiZXVXUzAzaEZMQlBCc2FTZCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.Obcgx0eW73lkqdw9xyucv_SBgq9L_gNvmGtcRxH5GMU',
+            'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1MjYxNTI0LCJleHAiOjE3MzUyODg2NjgsIm5iZiI6MTczNTI4NTA2OCwianRpIjoibjJ2RFpLdnlBaWU4ZFJNZiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.kC53vxS8y9VrkV47RurIakQwdYQpbxn0bM_leKPXPco',
           },
         },
       );
@@ -112,12 +112,12 @@ export default function Presensi() {
   const submitDecline = async () => {
     try {
       await axios.post(
-        `http://192.168.2.152:8000/api/v1/perubahan_absensi/${selectedUuid}/change`,
+        `http://192.168.60.163:8000/api/v1/perubahan_absensi/${selectedUuid}/change`,
         {status: '2', revisi: declineReason},
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIuMTUzOjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzQzOTk0NDQsImV4cCI6MTczNDQxNDc0MiwibmJmIjoxNzM0NDExMTQyLCJqdGkiOiJhS0xXR2w5Y3pkN0pVM1NMIiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.BXVqz9M9HJ18YZOo7-3uqMpTXHTS5MXTWNH9uu63NcQ',
+            'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1MjYxNTI0LCJleHAiOjE3MzUyODg2NjgsIm5iZiI6MTczNTI4NTA2OCwianRpIjoibjJ2RFpLdnlBaWU4ZFJNZiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.kC53vxS8y9VrkV47RurIakQwdYQpbxn0bM_leKPXPco',
             Accept: 'application/json',
           },
         },

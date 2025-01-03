@@ -38,6 +38,8 @@ import PersentaseKegiatanScreen from './screen/admin/master/persentase_kegiatan/
 
 //Master
 import PemotonganScreen from './screen/admin/master/pemotongan/Pemotongan';
+import EditPA from './screen/admin/master/pemotongan/EditPA/EditPA';
+import TambahPA from './screen/admin/master/pemotongan/TambahPA/TambahPA';
 import UangMakanScreen from './screen/admin/master/uang_makan/Uang_makan';
 import JabatanScreen from './screen/admin/master/jabatan/Jabatan';
 import UnitKerjaScreen from './screen/admin/master/unit_kerja/Unit_kerja';
@@ -314,6 +316,16 @@ function HomeStack() {
         options={{headerShown: false}}
         name="SettingPersentaseCapaian"
         component={SettingPersentaseCapaianScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditPa"
+        component={EditPA}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="TambahPa"
+        component={TambahPA}
       />
     </Stack.Navigator>
   );
