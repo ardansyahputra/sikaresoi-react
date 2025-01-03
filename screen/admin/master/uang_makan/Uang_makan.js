@@ -16,6 +16,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import axios from 'axios';
+import useApiClient from '../../../../src/api/apiClient';
 
 export default function UangMakan() {
   const [data, setData] = useState([]);
@@ -33,7 +34,6 @@ export default function UangMakan() {
   const [selectedNominal, setSelectedNominal] = useState(null);
   const [editData, setEditData] = useState({});
 
-
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
   }, [currentPage, selectedDisplay]);
@@ -41,16 +41,7 @@ export default function UangMakan() {
   const fetchData = async page => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.60.123:8000/api/v1/uang_makan/index',
-        {page},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-          },
-        },
-      );
+      const response = await ApiClient.post('/uang_makan/index', {page});
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -63,15 +54,10 @@ export default function UangMakan() {
 
   const submitEdit = async () => {
     try {
-      await axios.post(
-        `http://192.168.60.123:8000/api/v1/uang_makan/${editData.uuid}/update`,
-        { golongan: editData.golongan, nominal: editData.nominal },
-        {
-          headers: {
-            Authorization: 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-          },
-        }
-      );
+      await ApiClient.post(`/uang_makan/${editData.uuid}/update`, {
+        golongan: editData.golongan,
+        nominal: editData.nominal,
+      });
       Alert.alert('Berhasil', 'Data berhasil diperbarui.');
       setEditModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -79,18 +65,10 @@ export default function UangMakan() {
       Alert.alert('Error', 'Gagal memperbarui data.');
     }
   };
-  
 
-  const fetchEditData = async (uuid) => {
+  const fetchEditData = async uuid => {
     try {
-      const response = await axios.get(
-        `http://192.168.60.123:8000/api/v1/uang_makan/${uuid}/edit`,
-        {
-          headers: {
-            Authorization: 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-          },
-        }
-      );
+      const response = await ApiClient.get(`/uang_makan/${uuid}/edit`);
       setEditData(response.data.data); // Simpan data edit di state
       setEditModalVisible(true); // Tampilkan modal edit
     } catch (error) {
@@ -98,7 +76,6 @@ export default function UangMakan() {
       Alert.alert('Error', 'Gagal mengambil data untuk diedit.');
     }
   };
-  
 
   const handleEdit = uuid => {
     fetchEditData(uuid);
@@ -111,15 +88,7 @@ export default function UangMakan() {
 
   const submitHapus = async () => {
     try {
-      await axios.delete(
-        `http://192.168.60.123:8000/api/v1/uang_makan/${selectedUuid}/delete`,
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-          },
-        },
-      );
+      await axios.delete(`/uang_makan/${selectedUuid}/delete`);
       Alert.alert('Berhasil', 'Penolakan berhasil.');
       setHapusModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -134,16 +103,10 @@ export default function UangMakan() {
 
   const submitTambah = async () => {
     try {
-      await axios.post(
-        'http://192.168.60.123:8000/api/v1/uang_makan/create',
-        {golongan: selectedGolongan, nominal: selectedNominal},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-          },
-        },
-      );
+      await axios.post('/uang_makan/create', {
+        golongan: selectedGolongan,
+        nominal: selectedNominal,
+      });
       Alert.alert('Berhasil', 'Data berhasil ditambahkan.');
       setTambahModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -330,53 +293,50 @@ export default function UangMakan() {
       )}
 
       <Modal
-  visible={isEditModalVisible}
-  animationType="fade"
-  transparent
-  onRequestClose={() => setEditModalVisible(false)}
->
-  <View style={styles.modalContainer}>
-    <View style={styles.modalContent}>
-      <Text style={styles.modalTitle}>Edit Data</Text>
-      <Text style={styles.modalLabel}>Golongan</Text>
-      <TextInput
-        style={styles.modalInput}
-        placeholder="Golongan"
-        value={editData.golongan || ''} // Pastikan menggunakan default kosong jika null
-        onChangeText={(text) =>
-          setEditData((prev) => ({ ...prev, golongan: text }))
-        }
-        placeholderTextColor={'#B6B9CA'}
-      />
-      <Text style={styles.modalLabel}>Nominal</Text>
-      <TextInput
-        style={styles.modalInput}
-        placeholder="Nominal"
-        value={editData.nominal || ''}
-        onChangeText={(text) =>
-          setEditData((prev) => ({ ...prev, nominal: text }))
-        }
-        placeholderTextColor={'#B6B9CA'}
-        keyboardType="numeric"
-      />
-      <View style={styles.modalButtons}>
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={() => setEditModalVisible(false)}
-        >
-          <Text style={styles.buttonText}>Batal</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.submitButton}
-          onPress={submitEdit} // Fungsi untuk menyimpan perubahan
-        >
-          <Text style={styles.buttonText}>Simpan</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  </View>
-</Modal>
-
+        visible={isEditModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setEditModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Edit Data</Text>
+            <Text style={styles.modalLabel}>Golongan</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Golongan"
+              value={editData.golongan || ''} // Pastikan menggunakan default kosong jika null
+              onChangeText={text =>
+                setEditData(prev => ({...prev, golongan: text}))
+              }
+              placeholderTextColor={'#B6B9CA'}
+            />
+            <Text style={styles.modalLabel}>Nominal</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Nominal"
+              value={editData.nominal || ''}
+              onChangeText={text =>
+                setEditData(prev => ({...prev, nominal: text}))
+              }
+              placeholderTextColor={'#B6B9CA'}
+              keyboardType="numeric"
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setEditModalVisible(false)}>
+                <Text style={styles.buttonText}>Batal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={submitEdit} // Fungsi untuk menyimpan perubahan
+              >
+                <Text style={styles.buttonText}>Simpan</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Tambah Uang Makan Modal */}
       <Modal

@@ -37,7 +37,7 @@ export default function PerubahanPresensi() {
     try {
       setLoading(true);
       const response = await axios.post(
-        'http://192.168.60.123:8000/api/v1/perubahan_absensi/indexadmin',
+        'http://192.168.60.123:8000/api/v1/perubahan_absensi/indexandro',
         {
           page,
           per: selectedDisplay, // Menambahkan parameter 'per' untuk membatasi jumlah data yang ditampilkan
@@ -67,7 +67,7 @@ export default function PerubahanPresensi() {
     setSelectedUuid(uuid);
     setApproveModalVisible(true);
   };
-  
+
   const handleDecline = uuid => {
     setSelectedUuid(uuid);
     setModalVisible(true);
@@ -772,21 +772,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#3f4254',
   },
-    dropdown: {
-      height: 40,
-      borderColor: '#CCCCCC',
-      borderWidth: 1,
-      borderRadius: 5,
-      paddingHorizontal: 10,
-      width: 75,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    dropdownItem: {
-      padding: 10,
-      fontSize: 16,
-      color: '#333',
-    },
+  dropdown: {
+    height: 40,
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    width: 75,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dropdownItem: {
+    padding: 10,
+    fontSize: 16,
+    color: '#333',
+  },
   customFont: {
     fontFamily: 'Poppins-Regular',
   },
