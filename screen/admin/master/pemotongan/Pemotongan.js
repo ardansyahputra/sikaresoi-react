@@ -53,7 +53,7 @@ export default function UangMakan() {
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9sb2dpbiIsImlhdCI6MTczNTg3ODI4NywiZXhwIjoxNzM1ODgxODg3LCJuYmYiOjE3MzU4NzgyODcsImp0aSI6IkdjeVZITVZxVUp3U1V5Y1oiLCJzdWIiOjEsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.syiDpEn-YPk3NePXW5-YygdxCj35J2wbvcOM1eC8u0Y',
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2MTI2MDQ2LCJleHAiOjE3MzYxNTYyMzMsIm5iZiI6MTczNjE1MjYzMywianRpIjoiaGdHdmRHNlJ3aHU3c3dqUCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.U352Q3tI0CEoeGSJyBUKg7oCQWHbLxtuWYOS_Ad86nE',
           },
         },
       );
@@ -82,8 +82,8 @@ export default function UangMakan() {
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9sb2dpbiIsImlhdCI6MTczNTg3ODI4NywiZXhwIjoxNzM1ODgxODg3LCJuYmYiOjE3MzU4NzgyODcsImp0aSI6IkdjeVZITVZxVUp3U1V5Y1oiLCJzdWIiOjEsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.syiDpEn-YPk3NePXW5-YygdxCj35J2wbvcOM1eC8u0Y',
-          },
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2MTI2MDQ2LCJleHAiOjE3MzYxNTYyMzMsIm5iZiI6MTczNjE1MjYzMywianRpIjoiaGdHdmRHNlJ3aHU3c3dqUCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.U352Q3tI0CEoeGSJyBUKg7oCQWHbLxtuWYOS_Ad86nE',
+          }
         }
       );
   

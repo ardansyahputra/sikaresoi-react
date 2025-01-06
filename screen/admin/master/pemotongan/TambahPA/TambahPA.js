@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { TimerPicker } from 'react-native-timer-picker'; // Pastikan mengimpor TimerPicker dengan benar
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -45,105 +45,103 @@ const TambahPa = ({ navigation }) => {
     setShowDropdown(false); // Menyembunyikan dropdown saat cancel
   };
 
-  const handleOutsidePress = () => {
-    setShowDropdown(false); // Menyembunyikan dropdown ketika area luar diklik
-    Keyboard.dismiss(); // Menyembunyikan keyboard jika ada
-  };
-
   return (
-    <TouchableWithoutFeedback onPress={handleOutsidePress}> {/* Membungkus dengan satu View */}
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.headerTitle}>Tambah Data</Text>
-          </TouchableOpacity>
-        </View>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Text style={styles.headerTitle}>Tambah Data</Text>
+        </TouchableOpacity>
+      </View>
 
-        <View style={styles.cardContainer}>
-          <Text style={styles.label}>Potongan</Text>
-          <TextInput
-            style={styles.input}
-            value={selectedPotongan}
-            onChangeText={setSelectedPotongan}
-            keyboardType="numeric"
-            placeholder="Masukkan Potongan dalam Persen"
-          />
+      <View style={styles.cardContainer}>
+        <Text style={styles.label}>Potongan</Text>
+        <TextInput
+          style={styles.input}
+          value={selectedPotongan}
+          onChangeText={setSelectedPotongan}
+          keyboardType="numeric"
+          placeholder="Masukkan Potongan dalam Persen"
+        />
 
-          <Text style={styles.label}>Batas Atas</Text>
-          <TouchableOpacity
-            style={styles.input}
-            onPress={() => handleShowDropdown('batasAtas')}
-          >
-            <Text>{selectedBatasAtas}</Text>
-          </TouchableOpacity>
+        <Text style={styles.label}>Batas Atas</Text>
+        <TouchableOpacity
+          style={styles.input}
+          onPress={() => handleShowDropdown('batasAtas')}
+        >
+          <Text>{selectedBatasAtas}</Text>
+        </TouchableOpacity>
 
-          <Text style={styles.label}>Batas Bawah</Text>
-          <TouchableOpacity
-            style={styles.input}
-            onPress={() => handleShowDropdown('batasBawah')}
-          >
-            <Text>{selectedBatasBawah}</Text>
-          </TouchableOpacity>
+        <Text style={styles.label}>Batas Bawah</Text>
+        <TouchableOpacity
+          style={styles.input}
+          onPress={() => handleShowDropdown('batasBawah')}
+        >
+          <Text>{selectedBatasBawah}</Text>
+        </TouchableOpacity>
 
-          {/* Dropdown untuk memilih waktu */}
-          {showDropdown && (
-            <View style={styles.dropdown}>
-              <TimerPicker
-                isVisible={showDropdown} // Menampilkan dropdown hanya jika showDropdown true
-                padWithNItems={2}
-                LinearGradient={LinearGradient}
-                initialTime={currentTimeType === 'batasAtas' ? selectedBatasAtas : selectedBatasBawah}
-                styles={{
-                  theme: 'light',
-                  backgroundColor: '#333',
-                  pickerItem: {
-                    fontSize: 14, // Ukuran font lebih kecil
-                    color: '#000',
-                  },
-                  pickerLabel: {
-                    fontSize: 12, // Ukuran font lebih kecil untuk label
-                    marginTop: 0,
-                    color: '#000',
-                  },
-                  pickerContainer: {
-                    marginRight: 6,
-                    backgroundColor: '#FFF',
-                  },
-                }}
-                onConfirm={handleTimeSelect}
-                onCancel={handleCancel} // Menyembunyikan dropdown saat cancel
-              />
-            </View>
-          )}
-
-          <View style={styles.buttons}>
-            <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
-              <Text style={styles.buttonText}>Batal</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-              <Text style={styles.buttonText}>Simpan</Text>
-            </TouchableOpacity>
+        {/* Dropdown untuk memilih waktu */}
+        {showDropdown && (
+          <View style={styles.dropdown}>
+            <TimerPicker
+              isVisible={showDropdown} // Menampilkan dropdown hanya jika showDropdown true
+              padWithNItems={2}
+              LinearGradient={LinearGradient}
+              initialTime={currentTimeType === 'batasAtas' ? selectedBatasAtas : selectedBatasBawah}
+              styles={{
+                theme: 'light',
+                backgroundColor: '#333',
+                pickerItem: {
+                  fontSize: 14, // Ukuran font lebih kecil
+                  color: '#000',
+                },
+                pickerLabel: {
+                  fontSize: 12, // Ukuran font lebih kecil untuk label
+                  marginTop: 0,
+                  color: '#000',
+                },
+                pickerContainer: {
+                  marginRight: 6,
+                  backgroundColor: '#FFF',
+                },
+              }}
+              onConfirm={handleTimeSelect}
+              onCancel={handleCancel} // Menyembunyikan dropdown saat cancel
+            />
           </View>
+        )}
+
+        <View style={styles.buttons}>
+          <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
+            <Text style={styles.buttonText}>Batal</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+            <Text style={styles.buttonText}>Simpan</Text>
+          </TouchableOpacity>
         </View>
       </View>
-    </TouchableWithoutFeedback>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#E7E9F1' },
+  container: { flex: 1, backgroundColor: '#E7E9F1', paddingTop: 20 },  // Menambahkan padding top agar header tidak terpotong
   header: {
     backgroundColor: '#fff',
     paddingHorizontal: 16,
     paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',  // Mengatur agar judul header berada di tengah
     elevation: 4,
     borderBottomLeftRadius: 15,
     borderBottomRightRadius: 15,
+    position: 'absolute',  // Menetapkan header tetap di atas
+    top: 0,
+    left: 0,
+    right: 0,  // Menjaga agar header tetap lebar penuh
+    zIndex: 10,  // Memberikan prioritas rendering agar header tidak tertutup oleh konten
   },
-  headerTitle: { flex: 2, textAlign: 'center', fontSize: 20, fontWeight: 'bold' },
+  headerTitle: { textAlign: 'center', fontSize: 20, fontWeight: 'bold' },  // Mengubah agar text header tetap berada di tengah
   cardContainer: {
     backgroundColor: '#FFFF',
     paddingVertical: 20,
@@ -156,6 +154,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     marginHorizontal: 20,
+    marginTop: 37,  // Memberikan margin agar konten tidak tumpang tindih dengan header
   },
   label: { fontSize: 16, marginTop: 10 },
   input: {

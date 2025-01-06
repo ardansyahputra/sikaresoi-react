@@ -1,165 +1,275 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet } from 'react-native';
-import { TimerPicker } from 'react-native-timer-picker';  // Pastikan mengimpor TimerPicker dengan benar
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Keyboard,
+  StyleSheet,
+  Alert,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import { TimerPicker } from 'react-native-timer-picker';
 import LinearGradient from 'react-native-linear-gradient';
+import axios from 'axios';
 
-const EditPage = ({ route, navigation }) => {
-  const { initialPotongan, initialBatasAtas, initialBatasBawah } = route.params;
+const EditPage = ({ navigation, route }) => {
+  const { initialPotongan, initialBatasAtas, initialBatasBawah, id, uuid } = route.params;
 
   const [selectedPotongan, setSelectedPotongan] = useState(initialPotongan);
   const [selectedBatasAtas, setSelectedBatasAtas] = useState(initialBatasAtas);
   const [selectedBatasBawah, setSelectedBatasBawah] = useState(initialBatasBawah);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [currentTimeType, setCurrentTimeType] = useState(null);  // Untuk menandai apakah batas atas atau batas bawah yang sedang dipilih
+  const [showDropdownAtas, setShowDropdownAtas] = useState(false);
+  const [showDropdownBawah, setShowDropdownBawah] = useState(false);
+  const [currentTimeType, setCurrentTimeType] = useState(null);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const [tempSelectedTime, setTempSelectedTime] = useState(null);
 
-  const handleSave = () => {
-    console.log('Potongan:', selectedPotongan);
-    console.log('Batas Atas:', selectedBatasAtas);
-    console.log('Batas Bawah:', selectedBatasBawah);
-    navigation.goBack();
-  };
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => setKeyboardOpen(true));
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => setKeyboardOpen(false));
 
-  const handleShowPicker = (timeType) => {
-    setCurrentTimeType(timeType);
-    setIsModalVisible(true);
-  };
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
-  const handleModalCancel = () => {
-    setIsModalVisible(false);
-  };
-
-  // Perbaikan handle modal untuk menyimpan waktu
-  const handleModalSave = () => {
-    if (currentTimeType === 'batasAtas') {
-      console.log("New Batas Atas:", selectedBatasAtas);  // Debug
-      setSelectedBatasAtas(selectedBatasAtas);  // Memastikan nilai yang dipilih untuk batas atas diset
-    } else if (currentTimeType === 'batasBawah') {
-      console.log("New Batas Bawah:", selectedBatasBawah);  // Debug
-      setSelectedBatasBawah(selectedBatasBawah);  // Memastikan nilai yang dipilih untuk batas bawah diset
+  const handleSave = async (uuid, selectedPotongan, selectedBatasAtas, selectedBatasBawah, navigation) => {
+    if (!selectedPotongan || !selectedBatasAtas || !selectedBatasBawah) {
+      Alert.alert('Error', 'Please fill in all fields before saving.');
+      return;
     }
-    setIsModalVisible(false);  // Menutup modal setelah memilih waktu
-  };
-  
 
+    const payload = {
+      batas_bawah: selectedBatasBawah,
+      batas_atas: selectedBatasAtas,
+      potongan: selectedPotongan,
+    };
+
+    console.log('Sending Payload:', payload);
+
+    try {
+      const response = await axios.post(
+        `http://192.168.60.163:8000/api/v1/pemotongan_pulang_awal/${uuid}/update`,
+        payload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2MTI2MDQ2LCJleHAiOjE3MzYxNTYxNDYsIm5iZiI6MTczNjE1MjU0NiwianRpIjoiM0FnazJveGg4ckFJVkNWNiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.YMUgJ_tzCRcNOaq2xEr_ayDt7QGTT8ttjyB8caebAkM`,
+          },
+        }
+      );
+
+      if (response.status === 200 && response.data.status) {
+        console.log('Server Response:', response.data);
+
+        setSelectedPotongan(response.data.potongan || selectedPotongan);
+        setSelectedBatasAtas(response.data.batas_atas || selectedBatasAtas);
+        setSelectedBatasBawah(response.data.batas_bawah || selectedBatasBawah);
+
+        Alert.alert('Success', 'Data has been updated successfully.');
+        navigation.goBack();
+      } else {
+        console.error('Failed to update ', response.status);
+        Alert.alert('Error', 'Failed to update data. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error during API request:', error);
+      Alert.alert('Error', 'Failed to update data.');
+    }
+  };
+
+  const toggleDropdown = (timeType) => {
+    if (keyboardOpen) {
+      Keyboard.dismiss();
+    }
+
+    if (timeType === 'batasAtas') {
+      setShowDropdownAtas(!showDropdownAtas);
+      setShowDropdownBawah(false);
+    } else {
+      setShowDropdownBawah(!showDropdownBawah);
+      setShowDropdownAtas(false);
+    }
+
+    setCurrentTimeType(timeType);
+    setTempSelectedTime(null);
+  };
+
+  const handleTimeSelect = (time) => {
+    setTempSelectedTime(time); // Ensure this sets the selected time correctly
+  };
+
+  const handleOkButton = () => {
+    if (!tempSelectedTime) {
+      console.log('No temporary time selected');
+      return;
+    }
+
+    if (currentTimeType === 'batasAtas') {
+      setSelectedBatasAtas(tempSelectedTime);
+    } else if (currentTimeType === 'batasBawah') {
+      setSelectedBatasBawah(tempSelectedTime);
+    }
+
+    setTempSelectedTime(null); // Reset temp time
+    setShowDropdownAtas(false);
+    setShowDropdownBawah(false);
+  };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.headerTitle}>Edit Data</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.cardContainer}>
-        <Text style={styles.label}>Potongan</Text>
-        <TextInput
-          style={styles.input}
-          value={selectedPotongan}
-          onChangeText={setSelectedPotongan}
-          keyboardType="numeric"
-          placeholder="Masukkan Potongan dalam Persen"
-        />
-
-        <Text style={styles.label}>Batas Atas</Text>
-        <TouchableOpacity
-          style={styles.input}
-          onPress={() => handleShowPicker('batasAtas')}  // Show picker for batas atas
-        >
-          <Text>{selectedBatasAtas}</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.label}>Batas Bawah</Text>
-        <TouchableOpacity
-          style={styles.input}
-          onPress={() => handleShowPicker('batasBawah')}  // Show picker for batas bawah
-        >
-          <Text>{selectedBatasBawah}</Text>
-        </TouchableOpacity>
-
-        <View style={styles.buttons}>
-          <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.buttonText}>Batal</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.buttonText}>Simpan</Text>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Text style={styles.headerTitle}>Edit Data</Text>
           </TouchableOpacity>
         </View>
-      </View>
 
-      {/* Modal untuk TimerPicker */}
-      <Modal
-        transparent={true}
-        visible={isModalVisible}
-        animationType="fade"
-        onRequestClose={handleModalCancel}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-          <TimerPicker
-  isVisible={isModalVisible}
-  padWithNItems={2}
-  LinearGradient={LinearGradient}
-  initialTime={currentTimeType === 'batasAtas' ? selectedBatasAtas : selectedBatasBawah}  // Pastikan nilai ini sudah benar
-  styles={{
-    theme: "light",  
-    backgroundColor: "#FFF",  
-    pickerItem: {
-      fontSize: 24,  
-      color: "#000",  
-    },
-    pickerLabel: {
-      fontSize: 20,  
-      marginTop: 0,
-      color: "#000",  
-    },
-    pickerContainer: {
-      marginRight: 6,
-      backgroundColor: "#FFF",  
-    },
-  }}
-  onConfirm={(time) => {
-    console.log("Confirmed time:", time);  // Debug untuk memastikan waktu yang dipilih
-    if (currentTimeType === 'batasAtas') {
-      setSelectedBatasAtas(time);  // Pastikan waktu yang dipilih diset ke selectedBatasAtas
-    } else if (currentTimeType === 'batasBawah') {
-      setSelectedBatasBawah(time);  // Pastikan waktu yang dipilih diset ke selectedBatasBawah
-    }
-    setIsModalVisible(false);  // Menutup modal setelah memilih waktu
-  }}
-  onCancel={handleModalCancel}  // Menutup modal jika dibatalkan
-/>
+        <View style={styles.cardContainer}>
+          <Text style={styles.label}>Potongan</Text>
+          <TextInput
+            style={styles.input}
+            value={selectedPotongan}
+            onChangeText={setSelectedPotongan}
+            keyboardType="numeric"
+            placeholder="Masukkan Potongan dalam Persen"
+          />
 
+          <Text style={styles.label}>Batas Atas</Text>
+          <TouchableOpacity
+            style={styles.input}
+            onPress={() => toggleDropdown('batasAtas')}
+            disabled={keyboardOpen}>
+            <Text>{selectedBatasAtas}</Text>
+          </TouchableOpacity>
 
-            {/* Tombol Simpan dan Batal dalam Modal */}
-            <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.cancelButton} onPress={handleModalCancel}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.saveButton} onPress={handleModalSave}>
-                <Text style={styles.buttonText}>Simpan</Text>
+          {showDropdownAtas && (
+            <View style={styles.dropdownAtas}>
+              <TimerPicker
+                isVisible={showDropdownAtas}
+                padWithNItems={2}
+                hourLabel="             :"
+                minuteLabel="             :"
+                secondLabel=""
+                LinearGradient={LinearGradient}
+                initialTime={selectedBatasAtas} // Pass the initial time
+                onTimeChange={handleTimeSelect}
+                styles={{
+                  theme: 'light',
+                  backgroundColor: '#333',
+                  pickerItem: {
+                    fontSize: 14,
+                    color: '#000',
+                  },
+                  pickerLabel: {
+                    fontSize: 12,
+                    marginTop: 0,
+                    color: '#000',
+                  },
+                  pickerContainer: {
+                    marginRight: 6,
+                    backgroundColor: '#FFF',
+                  },
+                }}
+              />
+              <TouchableOpacity style={styles.saveOk} onPress={handleOkButton}>
+                <Text style={styles.buttonOk}>Ok</Text>
               </TouchableOpacity>
             </View>
+          )}
+
+          <Text style={styles.label}>Batas Bawah</Text>
+          <TouchableOpacity
+            style={styles.input}
+            onPress={() => toggleDropdown('batasBawah')}
+            disabled={keyboardOpen}>
+            <Text>{selectedBatasBawah}</Text>
+          </TouchableOpacity>
+
+          {showDropdownBawah && (
+            <View style={styles.dropdownBawah}>
+              <TimerPicker
+                isVisible={showDropdownBawah}
+                padWithNItems={2}
+                hourLabel="        :"
+                minuteLabel="        :"
+                secondLabel=""
+                LinearGradient={LinearGradient}
+                initialTime={selectedBatasBawah} // Pass the initial time from selectedBatasBawah
+                onTimeChange={handleTimeSelect}
+                styles={{
+                  theme: 'light',
+                  backgroundColor: '#333',
+                  pickerItem: {
+                    fontSize: 14,
+                    color: '#000',
+                  },
+                  pickerLabel: {
+                    fontSize: 12,
+                    marginTop: 0,
+                    color: '#000',
+                  },
+                  pickerContainer: {
+                    marginRight: 6,
+                    backgroundColor: '#FFF',
+                  },
+                }}
+              />
+              <TouchableOpacity style={styles.saveOk} onPress={handleOkButton}>
+                <Text style={styles.buttonOk}>Ok</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <View style={styles.buttons}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => navigation.goBack()}>
+              <Text style={styles.buttonText}>Batal</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={() =>
+                handleSave(
+                  uuid,
+                  selectedPotongan,
+                  selectedBatasAtas,
+                  selectedBatasBawah,
+                  navigation,
+                )
+              }>
+              <Text style={styles.buttonText}>Simpan</Text>
+            </TouchableOpacity>
           </View>
         </View>
-      </Modal>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#E7E9F1' },
+  container: { flex: 1, backgroundColor: '#E7E9F1', paddingTop: 20 },
   header: {
     backgroundColor: '#fff',
     paddingHorizontal: 16,
     paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     elevation: 4,
     borderBottomLeftRadius: 15,
     borderBottomRightRadius: 15,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
-  headerTitle: { flex: 2, textAlign: 'center', fontSize: 20, fontWeight: 'bold' },
+  headerTitle: { textAlign: 'center', fontSize: 20, fontWeight: 'bold' },
   cardContainer: {
     backgroundColor: '#FFFF',
     paddingVertical: 20,
@@ -172,6 +282,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     marginHorizontal: 20,
+    marginTop: 37,
   },
   label: { fontSize: 16, marginTop: 10 },
   input: {
@@ -181,30 +292,55 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginVertical: 10,
   },
-  buttons: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 },
-  cancelButton: { backgroundColor: '#CCC', padding: 15, borderRadius: 5 },
-  saveButton: { backgroundColor: '#007BFF', padding: 15, borderRadius: 5 },
-  buttonText: { color: '#FFF', fontWeight: 'bold' },
-  
-  // Modal Styles
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparan hitam
+  dropdownAtas: {
+    position: 'absolute',
+    top: 195,
+    left: 20,
+    right: 180,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    padding: 10,
+    zIndex: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
   },
-  modalContent: {
-    backgroundColor: '#fff', // Background putih
-    padding: 20,
-    borderRadius: 10,
-    width: '80%',
-    alignItems: 'center',
+  dropdownBawah: {
+    position: 'absolute',
+    top: 289,
+    left: 20,
+    right: 180,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    padding: 10,
+    zIndex: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
   },
-  modalButtons: {
+  buttons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 20,
-    width: '100%',
+  },
+  cancelButton: { backgroundColor: '#CCC', padding: 15, borderRadius: 5 },
+  saveButton: { backgroundColor: '#007BFF', padding: 15, borderRadius: 5 },
+  saveOk: {
+    backgroundColor: '#333',
+    padding: 10,
+    borderRadius: 5,
+    justifyContent: 'center', // Add this property
+    alignItems: 'center', // Add this property
+  },
+  buttonText: { color: '#FFF', fontWeight: 'bold' },
+  buttonOk: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 
