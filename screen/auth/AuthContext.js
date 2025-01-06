@@ -1,27 +1,41 @@
-import React, {createContext, useState, useContext} from 'react';
+import React, {createContext, useState, useContext, useEffect} from 'react';
 import axios from 'axios';
 import * as Keychain from 'react-native-keychain';
-import {useNavigation} from '@react-navigation/native';
 
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
-export const AuthProvider = ({children}) => {
+export const AuthProvider = ({children, navigation}) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const navigation = useNavigation();
+  const [loading, setLoading] = useState(false); // For loading state
+  const [error, setError] = useState(null); // For error handling
+
+  const loadTokenFromKeychain = async () => {
+    const credentials = await Keychain.getGenericPassword();
+    if (credentials) {
+      setToken(credentials.password); // Set token from Keychain if it exists
+    }
+  };
+
+  useEffect(() => {
+    loadTokenFromKeychain(); // Load token when app starts
+  }, []);
 
   const login = (userData, token) => {
     setUser(userData);
     setToken(token);
+    Keychain.setGenericPassword('token', token); // Store token securely
   };
 
-  const logout = () => {
+  const logout = navigation => {
     setUser(null);
     setToken(null);
-    Keychain.resetGenericPassword();
-    navigation.replace('Login');
+    Keychain.resetGenericPassword(); // Remove token from Keychain
+    if (navigation) {
+      navigation.replace('Login');
+    }
   };
 
   // Fungsi untuk refresh token
@@ -29,31 +43,31 @@ export const AuthProvider = ({children}) => {
     try {
       const credentials = await Keychain.getGenericPassword();
       if (credentials) {
-        const refreshToken = credentials.password; // Dapatkan refresh token dari Keychain
+        const refreshToken = credentials.password;
 
         const response = await axios.post(
-          'http://192.168.60.85:8000/api/v1/auth/refresh', // Endpoint untuk refresh token
-          {refresh_token: refreshToken}, // Kirim refresh token ke server
+          'http://192.168.60.85:8000/api/v1/auth/refresh',
+          {refresh_token: refreshToken},
         );
 
         if (response.status === 200) {
           const newToken = response.data.token;
-          await Keychain.setGenericPassword('token', newToken); // Simpan token baru
-          setToken(newToken); // Update token di context
+          await Keychain.setGenericPassword('token', newToken);
+          setToken(newToken);
           return newToken;
         } else {
-          logout(); // Jika refresh gagal, logout
+          logout(navigation);
         }
       }
     } catch (error) {
-      console.error('Error refreshing token:', error);
-      logout();
+      logout(navigation);
     }
     return null;
   };
 
   return (
-    <AuthContext.Provider value={{user, token, login, logout, refreshToken}}>
+    <AuthContext.Provider
+      value={{user, token, login, logout, refreshToken, loading, error}}>
       {children}
     </AuthContext.Provider>
   );

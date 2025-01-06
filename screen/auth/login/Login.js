@@ -12,24 +12,25 @@ import {
 import * as Keychain from 'react-native-keychain';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {useAuth} from '../AuthContext';
-import useApiClient from '../../../src/api/apiClient';
+import axios from 'axios';
 
 const LoginScreen = ({navigation}) => {
   const [nip, setNip] = useState('');
   const [password, setPassword] = useState('');
-  const {login} = useAuth(); // Gunakan fungsi login dari context
-  const apiClient = useApiClient(); // Gunakan API client
+  const {login, token, refreshToken} = useAuth(); // Gunakan fungsi dari context
 
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
         const credentials = await Keychain.getGenericPassword();
         if (credentials) {
-          const token = credentials.password;
-          const userData = await fetchUser(token); // Ambil data user
+          const storedToken = credentials.password;
+
+          // Verifikasi token dengan endpoint user
+          const userData = await fetchUser(storedToken);
           if (userData) {
-            login(userData, token); // Simpan data ke context
-            navigation.replace('Home'); // Navigasi ke Home
+            login(userData, storedToken);
+            navigation.replace('Home');
           }
         }
       } catch (error) {
@@ -39,6 +40,41 @@ const LoginScreen = ({navigation}) => {
     checkLoginStatus();
   }, []);
 
+  useEffect(() => {
+    // Axios interceptor untuk menambahkan header Authorization
+    const requestInterceptor = axios.interceptors.request.use(
+      async config => {
+        if (!config.headers.Authorization && token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      error => Promise.reject(error),
+    );
+
+    const responseInterceptor = axios.interceptors.response.use(
+      response => response,
+      async error => {
+        // Jika token expired, refresh token
+        if (error.response?.status === 401) {
+          const newToken = await refreshToken();
+          if (newToken) {
+            error.config.headers.Authorization = `Bearer ${newToken}`;
+            return axios(error.config); // Retry request dengan token baru
+          } else {
+            navigation.replace('Login'); // Logout jika refresh gagal
+          }
+        }
+        return Promise.reject(error);
+      },
+    );
+
+    return () => {
+      axios.interceptors.request.eject(requestInterceptor);
+      axios.interceptors.response.eject(responseInterceptor);
+    };
+  }, [token, refreshToken]);
+
   const loginHandler = async () => {
     if (!nip || !password) {
       Alert.alert('Error', 'Please fill in all fields.');
@@ -46,29 +82,27 @@ const LoginScreen = ({navigation}) => {
     }
 
     try {
-      const loginResponse = await apiClient.post('/auth/login', {
-        nip,
-        password,
-      });
+      const response = await axios.post(
+        'http://192.168.60.85:8000/api/v1/auth/login',
+        {
+          nip,
+          password,
+        },
+      );
 
-      if (loginResponse.status === 200 && loginResponse.data.status === true) {
-        Alert.alert('Success', 'Login successful!');
-        const token = loginResponse.headers['authorization'];
-        if (token) {
-          await saveTokenToKeychain(token);
-          const userData = await fetchUser(token);
-          if (userData) {
-            login(userData, token); // Simpan data ke context
-            navigation.replace('Home'); // Navigasi ke Home
-          }
-        } else {
-          Alert.alert('Error', 'Token not found in response.');
+      console.log('Login response:', response); // Cek response untuk debugging
+
+      if (response.status === 200 && response.headers.authorization) {
+        const token = response.headers.authorization;
+        await Keychain.setGenericPassword('token', token);
+
+        const userData = await fetchUser(token);
+        if (userData) {
+          login(userData, token);
+          navigation.replace('Home');
         }
       } else {
-        Alert.alert(
-          'Error',
-          loginResponse.data.message || 'Invalid credentials',
-        );
+        Alert.alert('Error', 'Token not found in response.');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -81,14 +115,17 @@ const LoginScreen = ({navigation}) => {
 
   const fetchUser = async token => {
     try {
-      const userResponse = await apiClient.get('/auth/user', {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await axios.get(
+        'http://192.168.60.85:8000/api/v1/auth/user',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
-      if (userResponse.status === 200) {
-        return userResponse.data.data; // Kembalikan data user
+      if (response.status === 200) {
+        return response.data.data;
       } else {
         Alert.alert('Error', 'Failed to fetch user data.');
         return null;
@@ -97,14 +134,6 @@ const LoginScreen = ({navigation}) => {
       console.error('Fetch user error:', error);
       Alert.alert('Error', 'An error occurred while fetching user data.');
       return null;
-    }
-  };
-
-  const saveTokenToKeychain = async token => {
-    try {
-      await Keychain.setGenericPassword('token', token);
-    } catch (error) {
-      console.error('Failed to save token to Keychain:', error);
     }
   };
 

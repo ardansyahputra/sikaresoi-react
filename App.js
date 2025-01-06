@@ -348,7 +348,6 @@ function HomeStack() {
 }
 function AppTabs() {
   const {shouldShowTabNavigator} = useNavigationContext();
-  console.log(shouldShowTabNavigator);
 
   return (
     <AuthProvider>
