@@ -21,7 +21,29 @@ export default function Laporan() {
   const [modalMessage, setModalMessage] = useState('');
   const [isMonthYearOpenTugas, setIsMonthYearOpenTugas] = useState(false); // State untuk toggle dropdown Tugas
   const [isMonthYearOpenCapaian, setIsMonthYearOpenCapaian] = useState(false); // State untuk toggle dropdown Capaian Kinerja
+  const [selectedTax, setSelectedTax] = useState(null);
+  const [selectedType, setSelectedType] = useState(null);
+  const [selectedLeftSign, setSelectedLeftSign] = useState(null); // State untuk tanda tangan kiri
+  const [selectedRightSign, setSelectedRightSign] = useState(null); // State untuk tanda tangan kanan
+  const [userData, setUserData] = useState([]); // State untuk menyimpan data pengguna
+  const [isRemunerasiOpen, setIsRemunerasiOpen] = useState(false);
+  const [isTunjanganTambahanOpen, setIsTunjanganTambahanOpen] = useState(false); // Toggle untuk tunjangan tambahan
+  const [isP2Active, setIsP2Active] = useState(false);
+  const [percentage, setPercentage] = useState(0); // Persentase mulai dari 0%
 
+  const increasePercentage = () => {
+    if (percentage < 100) {
+      setPercentage(percentage + 1);
+    }
+  };
+
+  const decreasePercentage = () => {
+    if (percentage > 0) {
+      setPercentage(percentage - 1);
+    }
+  };
+
+  // Data bulan dan tahun
   const monthData = [
     {label: 'Januari', value: 1},
     {label: 'Februari', value: 2},
@@ -47,11 +69,55 @@ export default function Laporan() {
   ];
 
   useEffect(() => {
-    setSelectedMonth(null);
-    setSelectedYear(null);
-    setSelectedMonthReport(null);
-    setSelectedYearReport(null);
+    // Mengambil data tanda tangan kiri dan kanan setelah komponen dimuat
+    console.log('Fetching signatures...');
+    fetchSignatures();
   }, []);
+
+  // Fetch data dari API
+  const fetchSignatures = async () => {
+    try {
+      const response = await axios.get(
+        'http://192.168.60.163:8000/api/v1/user_master/show',
+        {
+          headers: {
+            Authorization:
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NTIwNjAzLCJleHAiOjE3MzU1NDMzNzUsIm5iZiI6MTczNTUzOTc3NSwianRpIjoiM2swZ1kyMlM3SW1HNkJtVyIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.-P7sXHff7wcAqYJ_44Ddv4-WxokcNVrONHuyD6g31pY',
+          },
+        },
+      );
+
+      // Mengakses array data dari respons
+      const data = response.data.data;
+
+      if (Array.isArray(data)) {
+        // Membuat opsi dropdown berdasarkan 'name' dan 'id'
+        const nameOptions = data.map(item => ({
+          label: item.name, // Menampilkan 'name' di dropdown
+          value: item.id, // Menggunakan 'id' sebagai value
+        }));
+
+        // Menyimpan data ke dalam state untuk dropdown kiri dan kanan
+        setUserData(nameOptions);
+      } else {
+        console.error(
+          'Data tidak berupa array atau tidak memiliki properti name.',
+        );
+      }
+    } catch (error) {
+      console.error('Error fetching signatures:', error);
+    }
+  };
+
+  // Menghandle perubahan dropdown tanda tangan kiri
+  const handleLeftSignChange = item => {
+    setSelectedLeftSign(item.value); // Menyimpan ID tanda tangan kiri
+  };
+
+  // Menghandle perubahan dropdown tanda tangan kanan
+  const handleRightSignChange = item => {
+    setSelectedRightSign(item.value); // Menyimpan ID tanda tangan kanan
+  };
 
   const handleDownload = async () => {
     if (
@@ -67,6 +133,7 @@ export default function Laporan() {
 
     let capaianKinerjaUrl = '';
     let rekapitulasiUrl = '';
+    let remunerasiUrl = '';
 
     // Jika bulan dan tahun "Laporan Rekapitulasi Tugas Tambahan" diisi
     if (selectedMonth && selectedYear) {
@@ -93,7 +160,7 @@ export default function Laporan() {
         type === 'rekapitulasi' ? urls.rekapitulasiUrl : urls.capaianKinerjaUrl;
 
       if (url) {
-        Linking.openURL(url);
+        Linking.openURL(url); // Buka URL
       } else {
         setModalMessage('Tidak ada laporan yang dapat didownload');
         setIsModalVisible(true);
@@ -105,10 +172,6 @@ export default function Laporan() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Image
-            source={require('../assets/images/logo.png')}
-            style={styles.logo}
-          />
         </View>
       </View>
 
@@ -367,18 +430,19 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     marginTop: -20,
   },
-  content: {flex: 1, paddingHorizontal: 1, paddingVertical: 30},
+  content: {flex: 1, paddingHorizontal: 1, paddingVertical: 20},
   dropdownWrapperTitle: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    marginBottom: 20,
-    padding: 30,
+    marginBottom: 20, // Cek apakah marginBottom terlalu besar
+    padding: 25, // Cek apakah padding terlalu besar
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 6,
   },
+
   titleWrapper: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -400,7 +464,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 8,
+    marginBottom: 6,
+    marginTop: 15,
   },
   dropdownWrapper: {
     marginBottom: 20,
@@ -464,5 +529,43 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  switchWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  switchLabel: {
+    fontSize: 16,
+    color: 'black',
+    marginLeft: 10,
+  },
+  percentageContainer: {
+    marginRight: 200,
+    backgroundColor: '#D3D3D3', // Warna abu-abu untuk kotak persentase
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    marginBottom: 10, // Memberikan jarak antara persentase dan input
+  },
+  percentageText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'black',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'left',
+  },
+  input: {
+    height: 40,
+    width: 80,
+    borderWidth: 1,
+    borderColor: '#D3D3D3', // Warna border kotak input
+    borderRadius: 5,
+    textAlign: 'center',
+    fontSize: 16,
+    marginHorizontal: 10,
   },
 });

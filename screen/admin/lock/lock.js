@@ -16,7 +16,6 @@ import {Pressable} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
-import DatePicker from 'react-native-modern-datepicker';
 import CalendarPicker from 'react-native-calendar-picker';
 import axios from 'axios';
 
