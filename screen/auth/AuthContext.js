@@ -32,7 +32,7 @@ export const AuthProvider = ({children}) => {
         const refreshToken = credentials.password; // Dapatkan refresh token dari Keychain
 
         const response = await axios.post(
-          'http://192.168.60.85:8000/api/v1/auth/refresh', // Endpoint untuk refresh token
+          'http://192.168.60.163:8000/api/v1/auth/refresh', // Endpoint untuk refresh token
           {refresh_token: refreshToken}, // Kirim refresh token ke server
         );
 
