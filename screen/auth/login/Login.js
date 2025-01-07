@@ -13,11 +13,13 @@ import * as Keychain from 'react-native-keychain';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {useAuth} from '../AuthContext';
 import axios from 'axios';
+import useApiClient from '../../../src/api/apiClient';
 
 const LoginScreen = ({navigation}) => {
   const [nip, setNip] = useState('');
   const [password, setPassword] = useState('');
-  const {login, token, refreshToken} = useAuth(); // Gunakan fungsi dari context
+  const {login, token, refreshToken} = useAuth();
+  const apiClient = useApiClient();
 
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -82,13 +84,10 @@ const LoginScreen = ({navigation}) => {
     }
 
     try {
-      const response = await axios.post(
-        'http://192.168.60.85:8000/api/v1/auth/login',
-        {
-          nip,
-          password,
-        },
-      );
+      const response = await apiClient.post('/auth/login', {
+        nip,
+        password,
+      });
 
       console.log('Login response:', response); // Cek response untuk debugging
 
@@ -115,14 +114,11 @@ const LoginScreen = ({navigation}) => {
 
   const fetchUser = async token => {
     try {
-      const response = await axios.get(
-        'http://192.168.60.85:8000/api/v1/auth/user',
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const response = await apiClient.get('/auth/user', {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
 
       if (response.status === 200) {
         return response.data.data;

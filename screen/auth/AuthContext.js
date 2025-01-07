@@ -1,6 +1,7 @@
 import React, {createContext, useState, useContext, useEffect} from 'react';
 import axios from 'axios';
 import * as Keychain from 'react-native-keychain';
+import {API_URL} from '@env';
 
 const AuthContext = createContext();
 
@@ -45,10 +46,9 @@ export const AuthProvider = ({children, navigation}) => {
       if (credentials) {
         const refreshToken = credentials.password;
 
-        const response = await axios.post(
-          'http://192.168.60.85:8000/api/v1/auth/refresh',
-          {refresh_token: refreshToken},
-        );
+        const response = await axios.post(`${API_URL}auth/refresh`, {
+          refresh_token: refreshToken,
+        });
 
         if (response.status === 200) {
           const newToken = response.data.token;

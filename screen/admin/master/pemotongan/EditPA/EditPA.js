@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -11,25 +11,36 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { TimerPicker } from 'react-native-timer-picker';
+import {TimerPicker} from 'react-native-timer-picker';
 import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios';
+import useApiClient from '../../../../../src/api/apiClient';
 
-const EditPage = ({ navigation, route }) => {
-  const { initialPotongan, initialBatasAtas, initialBatasBawah, id, uuid } = route.params;
+const EditPage = ({navigation, route}) => {
+  const {initialPotongan, initialBatasAtas, initialBatasBawah, id, uuid} =
+    route.params;
 
   const [selectedPotongan, setSelectedPotongan] = useState(initialPotongan);
   const [selectedBatasAtas, setSelectedBatasAtas] = useState(initialBatasAtas);
-  const [selectedBatasBawah, setSelectedBatasBawah] = useState(initialBatasBawah);
+  const [selectedBatasBawah, setSelectedBatasBawah] =
+    useState(initialBatasBawah);
   const [showDropdownAtas, setShowDropdownAtas] = useState(false);
   const [showDropdownBawah, setShowDropdownBawah] = useState(false);
   const [currentTimeType, setCurrentTimeType] = useState(null);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [tempSelectedTime, setTempSelectedTime] = useState(null);
 
+  const apiClient = useApiClient();
+
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => setKeyboardOpen(true));
-    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => setKeyboardOpen(false));
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => setKeyboardOpen(true),
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => setKeyboardOpen(false),
+    );
 
     return () => {
       keyboardDidShowListener.remove();
@@ -37,7 +48,13 @@ const EditPage = ({ navigation, route }) => {
     };
   }, []);
 
-  const handleSave = async (uuid, selectedPotongan, selectedBatasAtas, selectedBatasBawah, navigation) => {
+  const handleSave = async (
+    uuid,
+    selectedPotongan,
+    selectedBatasAtas,
+    selectedBatasBawah,
+    navigation,
+  ) => {
     if (!selectedPotongan || !selectedBatasAtas || !selectedBatasBawah) {
       Alert.alert('Error', 'Please fill in all fields before saving.');
       return;
@@ -53,14 +70,8 @@ const EditPage = ({ navigation, route }) => {
 
     try {
       const response = await axios.post(
-        `http://192.168.60.163:8000/api/v1/pemotongan_pulang_awal/${uuid}/update`,
+        `/pemotongan_pulang_awal/${uuid}/update`,
         payload,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2MTI2MDQ2LCJleHAiOjE3MzYxNTYxNDYsIm5iZiI6MTczNjE1MjU0NiwianRpIjoiM0FnazJveGg4ckFJVkNWNiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.YMUgJ_tzCRcNOaq2xEr_ayDt7QGTT8ttjyB8caebAkM`,
-          },
-        }
       );
 
       if (response.status === 200 && response.data.status) {
@@ -82,7 +93,7 @@ const EditPage = ({ navigation, route }) => {
     }
   };
 
-  const toggleDropdown = (timeType) => {
+  const toggleDropdown = timeType => {
     if (keyboardOpen) {
       Keyboard.dismiss();
     }
@@ -99,7 +110,7 @@ const EditPage = ({ navigation, route }) => {
     setTempSelectedTime(null);
   };
 
-  const handleTimeSelect = (time) => {
+  const handleTimeSelect = time => {
     setTempSelectedTime(time); // Ensure this sets the selected time correctly
   };
 
@@ -121,7 +132,9 @@ const EditPage = ({ navigation, route }) => {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <KeyboardAvoidingView
+      style={{flex: 1}}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -252,7 +265,7 @@ const EditPage = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#E7E9F1', paddingTop: 20 },
+  container: {flex: 1, backgroundColor: '#E7E9F1', paddingTop: 20},
   header: {
     backgroundColor: '#fff',
     paddingHorizontal: 16,
@@ -269,7 +282,7 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
   },
-  headerTitle: { textAlign: 'center', fontSize: 20, fontWeight: 'bold' },
+  headerTitle: {textAlign: 'center', fontSize: 20, fontWeight: 'bold'},
   cardContainer: {
     backgroundColor: '#FFFF',
     paddingVertical: 20,
@@ -278,13 +291,13 @@ const styles = StyleSheet.create({
     elevation: 4,
     marginVertical: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.1,
     shadowRadius: 10,
     marginHorizontal: 20,
     marginTop: 37,
   },
-  label: { fontSize: 16, marginTop: 10 },
+  label: {fontSize: 16, marginTop: 10},
   input: {
     borderWidth: 1,
     borderColor: '#CCC',
@@ -302,7 +315,7 @@ const styles = StyleSheet.create({
     padding: 10,
     zIndex: 5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 5,
@@ -317,7 +330,7 @@ const styles = StyleSheet.create({
     padding: 10,
     zIndex: 5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 5,
@@ -327,8 +340,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 20,
   },
-  cancelButton: { backgroundColor: '#CCC', padding: 15, borderRadius: 5 },
-  saveButton: { backgroundColor: '#007BFF', padding: 15, borderRadius: 5 },
+  cancelButton: {backgroundColor: '#CCC', padding: 15, borderRadius: 5},
+  saveButton: {backgroundColor: '#007BFF', padding: 15, borderRadius: 5},
   saveOk: {
     backgroundColor: '#333',
     padding: 10,
@@ -336,7 +349,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', // Add this property
     alignItems: 'center', // Add this property
   },
-  buttonText: { color: '#FFF', fontWeight: 'bold' },
+  buttonText: {color: '#FFF', fontWeight: 'bold'},
   buttonOk: {
     color: '#FFF',
     fontWeight: 'bold',
