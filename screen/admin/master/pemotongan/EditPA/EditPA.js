@@ -7,7 +7,6 @@ import {
   Keyboard,
   StyleSheet,
   Alert,
-  ScrollView,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -25,7 +24,7 @@ const EditPage = ({ navigation, route }) => {
   const [showDropdownBawah, setShowDropdownBawah] = useState(false);
   const [currentTimeType, setCurrentTimeType] = useState(null);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
-  const [tempSelectedTime, setTempSelectedTime] = useState(null);
+  const [tempSelectedTime, setTempSelectedTime] = useState(null);  // temporary state for selected time
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => setKeyboardOpen(true));
@@ -38,19 +37,22 @@ const EditPage = ({ navigation, route }) => {
   }, []);
 
   const handleSave = async (uuid, selectedPotongan, selectedBatasAtas, selectedBatasBawah, navigation) => {
-    if (!selectedPotongan || !selectedBatasAtas || !selectedBatasBawah) {
+    const finalBatasAtas = tempSelectedTime && currentTimeType === 'batasAtas' ? tempSelectedTime : selectedBatasAtas;
+    const finalBatasBawah = tempSelectedTime && currentTimeType === 'batasBawah' ? tempSelectedTime : selectedBatasBawah;
+  
+    if (!selectedPotongan || !finalBatasAtas || !finalBatasBawah) {
       Alert.alert('Error', 'Please fill in all fields before saving.');
       return;
     }
-
+  
     const payload = {
-      batas_bawah: selectedBatasBawah,
-      batas_atas: selectedBatasAtas,
+      batas_bawah: finalBatasBawah,
+      batas_atas: finalBatasAtas,
       potongan: selectedPotongan,
     };
-
+  
     console.log('Sending Payload:', payload);
-
+  
     try {
       const response = await axios.post(
         `http://192.168.60.163:8000/api/v1/pemotongan_pulang_awal/${uuid}/update`,
@@ -58,18 +60,18 @@ const EditPage = ({ navigation, route }) => {
         {
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2MTI2MDQ2LCJleHAiOjE3MzYxNTYxNDYsIm5iZiI6MTczNjE1MjU0NiwianRpIjoiM0FnazJveGg4ckFJVkNWNiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.YMUgJ_tzCRcNOaq2xEr_ayDt7QGTT8ttjyB8caebAkM`,
+            Authorization: 'Bearer <YOUR_TOKEN>',
           },
         }
       );
-
+  
       if (response.status === 200 && response.data.status) {
         console.log('Server Response:', response.data);
-
+  
         setSelectedPotongan(response.data.potongan || selectedPotongan);
-        setSelectedBatasAtas(response.data.batas_atas || selectedBatasAtas);
-        setSelectedBatasBawah(response.data.batas_bawah || selectedBatasBawah);
-
+        setSelectedBatasAtas(response.data.batas_atas || finalBatasAtas);
+        setSelectedBatasBawah(response.data.batas_bawah || finalBatasBawah);
+  
         Alert.alert('Success', 'Data has been updated successfully.');
         navigation.goBack();
       } else {
@@ -96,33 +98,60 @@ const EditPage = ({ navigation, route }) => {
     }
 
     setCurrentTimeType(timeType);
-    setTempSelectedTime(null);
+    setTempSelectedTime(null); // Reset tempSelectedTime
   };
 
   const handleTimeSelect = (time) => {
-    setTempSelectedTime(time); // Ensure this sets the selected time correctly
+    console.log('Time selected:', time);
+    if (time) {
+      const hours = time.getHours();
+      const minutes = time.getMinutes();
+      const seconds = time.getSeconds();
+      const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      console.log('Formatted time:', formattedTime);  // Verifikasi waktu yang diformat
+      setTempSelectedTime(formattedTime);
+    } else {
+      console.log('No time selected');
+    }
   };
+  
 
   const handleOkButton = () => {
+    console.log('handleOkButton called. Temp selected time:', tempSelectedTime);
     if (!tempSelectedTime) {
       console.log('No temporary time selected');
       return;
     }
-
+  
+    console.log('Setting selected time for:', currentTimeType);
     if (currentTimeType === 'batasAtas') {
-      setSelectedBatasAtas(tempSelectedTime);
+      setSelectedBatasAtas(tempSelectedTime);  // Update batasAtas
     } else if (currentTimeType === 'batasBawah') {
-      setSelectedBatasBawah(tempSelectedTime);
+      setSelectedBatasBawah(tempSelectedTime);  // Update batasBawah
     }
+  
+    setTempSelectedTime(null);  // Reset temporary time after applying
+    setShowDropdownAtas(false); // Close dropdown
+    setShowDropdownBawah(false); // Close dropdown
+  };
+  
 
-    setTempSelectedTime(null); // Reset temp time
+  const handleConfirmTime = ({ hours, minutes, seconds }) => {
+    const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    console.log('Confirmed time:', formattedTime);  // Verifikasi waktu yang dikonfirmasi
+    setTempSelectedTime(formattedTime);  // Set waktu terformat
+    
+    // Menutup dropdown setelah pemilihan waktu
     setShowDropdownAtas(false);
     setShowDropdownBawah(false);
   };
+  
+  
+  
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.headerTitle}>Edit Data</Text>
@@ -151,6 +180,7 @@ const EditPage = ({ navigation, route }) => {
             <View style={styles.dropdownAtas}>
               <TimerPicker
                 isVisible={showDropdownAtas}
+                onConfirm={handleConfirmTime}
                 padWithNItems={2}
                 hourLabel="             :"
                 minuteLabel="             :"
@@ -194,6 +224,7 @@ const EditPage = ({ navigation, route }) => {
             <View style={styles.dropdownBawah}>
               <TimerPicker
                 isVisible={showDropdownBawah}
+                onConfirm={handleConfirmTime}
                 padWithNItems={2}
                 hourLabel="        :"
                 minuteLabel="        :"
@@ -225,31 +256,18 @@ const EditPage = ({ navigation, route }) => {
             </View>
           )}
 
-          <View style={styles.buttons}>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => navigation.goBack()}>
-              <Text style={styles.buttonText}>Batal</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.saveButton}
-              onPress={() =>
-                handleSave(
-                  uuid,
-                  selectedPotongan,
-                  selectedBatasAtas,
-                  selectedBatasBawah,
-                  navigation,
-                )
-              }>
-              <Text style={styles.buttonText}>Simpan</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={() => handleSave(uuid, selectedPotongan, selectedBatasAtas, selectedBatasBawah, navigation)}>
+            <Text style={styles.saveButtonText}>Save</Text>
+          </TouchableOpacity>
         </View>
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 };
+
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#E7E9F1', paddingTop: 20 },
