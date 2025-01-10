@@ -15,7 +15,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
-import axios from 'axios';
+import useApiClient from '../../../../src/api/apiClient';
 
 export default function Jabatan() {
   const [data, setData] = useState([]);
@@ -37,6 +37,7 @@ export default function Jabatan() {
   const [isSub, setIsSub] = useState(false);
   const [pickJabatanOptions, setPickJabatanOptions] = useState([]);
   const [jabatanOptions, setJabatanOptions] = useState([]);
+  const apiClient = useApiClient();
 
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
@@ -50,15 +51,7 @@ export default function Jabatan() {
 
   const fetchJabatanOptions = async () => {
     try {
-      const response = await axios.get(
-        'http://192.168.60.123:8000/api/v1/jabatan/getjabatan',
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-          },
-        },
-      );
+      const response = await apiClient.get('/jabatan/getjabatan');
       setJabatanOptions(
         response.data.data.map(item => ({
           label: `${item.kd_jabatan} - ${item.nm_jabatan}`,
@@ -74,16 +67,7 @@ export default function Jabatan() {
   const fetchData = async page => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.60.123:8000/api/v1/jabatan/index',
-        {page},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-          },
-        },
-      );
+      const response = await apiClient.post('/jabatan/index', {page});
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -96,21 +80,11 @@ export default function Jabatan() {
 
   const submitEdit = async () => {
     try {
-      await axios.post(
-        `http://192.168.60.123:8000/api/v1/jabatan/${editData.uuid}/update`,
-        {
-          nm_jabatan: editData.nm_jabatan,
-          grade: editData.grade,
-          jv: editData.jv,
-        },
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-            Accept: 'application/json',
-          },
-        },
-      );
+      await apiClient.post(`/jabatan/${editData.uuid}/update`, {
+        nm_jabatan: editData.nm_jabatan,
+        grade: editData.grade,
+        jv: editData.jv,
+      });
       Alert.alert('Berhasil', 'Data berhasil diperbarui.');
       setEditModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -121,15 +95,7 @@ export default function Jabatan() {
 
   const fetchEditData = async uuid => {
     try {
-      const response = await axios.get(
-        `http://192.168.60.123:8000/api/v1/jabatan/${uuid}/edit`,
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-          },
-        },
-      );
+      const response = await apiClient.get(`/jabatan/${uuid}/edit`);
       setEditData(response.data.data); // Simpan data edit di state
       setEditModalVisible(true); // Tampilkan modal edit
     } catch (error) {
@@ -149,15 +115,7 @@ export default function Jabatan() {
 
   const submitHapus = async () => {
     try {
-      await axios.delete(
-        `http://192.168.60.123:8000/api/v1/uang_makan/${selectedUuid}/delete`,
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-          },
-        },
-      );
+      await apiClient.delete(`/uang_makan/${selectedUuid}/delete`);
       Alert.alert('Berhasil', 'Penolakan berhasil.');
       setHapusModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -170,34 +128,24 @@ export default function Jabatan() {
     setTambahModalVisible(true);
   };
 
-  const submitTambah = async () => {  
+  const submitTambah = async () => {
     try {
-      await axios.post(
-        'http://192.168.60.123:8000/api/v1/jabatan/create',
-        {
-          nm_jabatan: selectedJabatan,
-          grade: selectedGrade,
-          jv: selectedNilaiJabatan,
-          code: pickJabatanOptions,
-          master: isMaster,
-          sub_master: isSub,
-        },
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',  // Gantilah dengan token yang sesuai
-            Accept: 'application/json',
-          },
-        }
-      );
+      await apiClient.post('/jabatan/create', {
+        nm_jabatan: selectedJabatan,
+        grade: selectedGrade,
+        jv: selectedNilaiJabatan,
+        code: pickJabatanOptions,
+        master: isMaster,
+        sub_master: isSub,
+      });
 
-      setSelectedJabatan(null);          // Reset dropdown jabatan
-      setSelectedGrade(null);            // Reset grade
-      setSelectedNilaiJabatan(null);     // Reset nilai jabatan
-      setIsMaster(false);                // Reset status master
-      setIsSub(false);                   // Reset status sub_master
-      setPickJabatanOptions(null);       // Reset dropdown jabatan sub
-  
+      setSelectedJabatan(null); // Reset dropdown jabatan
+      setSelectedGrade(null); // Reset grade
+      setSelectedNilaiJabatan(null); // Reset nilai jabatan
+      setIsMaster(false); // Reset status master
+      setIsSub(false); // Reset status sub_master
+      setPickJabatanOptions(null); // Reset dropdown jabatan sub
+
       Alert.alert('Berhasil', 'Data berhasil ditambahkan.');
       setTambahModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -206,7 +154,6 @@ export default function Jabatan() {
       Alert.alert('Error', 'Gagal menambahkan data.');
     }
   };
-  
 
   const handleCloseTambahModal = () => {
     setSelectedJabatan('');

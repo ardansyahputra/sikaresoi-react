@@ -16,7 +16,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
-import axios from 'axios';
+import useApiClient from '../../../../src/api/apiClient';
 
 export default function Pangkat() {
   const [data, setData] = useState([]);
@@ -34,6 +34,7 @@ export default function Pangkat() {
   const [selectedGolongan, setSelectedGolongan] = useState(null);
   const [editData, setEditData] = useState({});
   const [selectedRuang, setSelectedRuang] = useState(null);
+  const apiClient = useApiClient();
 
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
@@ -42,16 +43,7 @@ export default function Pangkat() {
   const fetchData = async page => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.60.123:8000/api/v1/pangkat/index',
-        {page},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-          },
-        },
-      );
+      const response = await apiClient.post('/pangkat/index', {page});
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -64,20 +56,11 @@ export default function Pangkat() {
 
   const submitEdit = async () => {
     try {
-      await axios.post(
-        `http://192.168.60.123:8000/api/v1/pangkat/${editData.uuid}/update`,
-        {
-          nm_pangkat: editData.nm_pangkat,
-          golongan: editData.golongan,
-          ruang: editData.ruang,
-        },
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-          },
-        },
-      );
+      await apiClient.post(`/pangkat/${editData.uuid}/update`, {
+        nm_pangkat: editData.nm_pangkat,
+        golongan: editData.golongan,
+        ruang: editData.ruang,
+      });
       Alert.alert('Berhasil', 'Data berhasil diperbarui.');
       setEditModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -88,15 +71,7 @@ export default function Pangkat() {
 
   const fetchEditData = async uuid => {
     try {
-      const response = await axios.get(
-        `http://192.168.60.123:8000/api/v1/pangkat/${uuid}/edit`,
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-          },
-        },
-      );
+      const response = await apiClient.get(`/pangkat/${uuid}/edit`);
 
       console.log('Respons data yang diterima:', response.data); // Cetak semua respons data
       console.log('Data yang akan disimpan ke state:', response.data.data); // Cetak bagian data untuk state
@@ -120,15 +95,7 @@ export default function Pangkat() {
 
   const submitHapus = async () => {
     try {
-      await axios.delete(
-        `http://192.168.60.123:8000/api/v1/uang_makan/${selectedUuid}/delete`,
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-          },
-        },
-      );
+      await apiClient.delete(`/uang_makan/${selectedUuid}/delete`);
       Alert.alert('Berhasil', 'Penolakan berhasil.');
       setHapusModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -143,20 +110,11 @@ export default function Pangkat() {
 
   const submitTambah = async () => {
     try {
-      await axios.post(
-        'http://192.168.60.123:8000/api/v1/pangkat/create',
-        {
-          nm_pangkat: selectedNamaPangkat,
-          golongan: selectedGolongan,
-          ruang: selectedRuang,
-        },
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-          },
-        },
-      );
+      await apiClient.post('/pangkat/create', {
+        nm_pangkat: selectedNamaPangkat,
+        golongan: selectedGolongan,
+        ruang: selectedRuang,
+      });
       Alert.alert('Berhasil', 'Data berhasil ditambahkan.');
       setTambahModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -165,8 +123,7 @@ export default function Pangkat() {
       setSelectedNamaPangkat('');
       setSelectedGolongan('');
       setSelectedRuang('');
-
-      } catch (error) {
+    } catch (error) {
       console.error('Error saat mengirim data:', error);
       Alert.alert('Error', 'Gagal menambahkan data.');
     }
@@ -174,8 +131,8 @@ export default function Pangkat() {
 
   const handleCloseTambahModal = () => {
     setSelectedNamaPangkat('');
-      setSelectedGolongan('');
-      setSelectedRuang('');
+    setSelectedGolongan('');
+    setSelectedRuang('');
     setTambahModalVisible(false);
   };
 
@@ -428,7 +385,7 @@ export default function Pangkat() {
               onChangeText={setSelectedNamaPangkat}
               placeholderTextColor={'#B6B9CA'}
             />
-            <Text style={styles.modalLabel}>Golongan</Text>            
+            <Text style={styles.modalLabel}>Golongan</Text>
             <TextInput
               style={styles.modalInput}
               placeholder="Golongan"

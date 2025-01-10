@@ -16,7 +16,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
-import axios from 'axios';
+import useApiClient from '../../../../src/api/apiClient';
 
 export default function Uraian() {
   const [data, setData] = useState([]);
@@ -40,6 +40,7 @@ export default function Uraian() {
   const [jabatanOptions, setJabatanOptions] = useState([]);
   const [pickSatuanOptions, setPickSatuanOptions] = useState(null);
   const [satuanOptions, setSatuanOptions] = useState([]);
+  const apiClient = useApiClient();
 
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
@@ -49,14 +50,7 @@ export default function Uraian() {
 
   const fetchSatuanOptions = async () => {
     try {
-      const response = await axios.get(
-        'http://192.168.60.123:8000/api/v1/satuan/show'
-      , {
-        headers: {
-          Authorization: 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2NDM2OTAsIm5iZiI6MTczNTYzMDMxMCwianRpIjoicVoyRmV6eVRZRlNkeUhqQiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.w220jIUISR7jGxLQzrs7dOjnS1Bl5lgBgJLE21OfEos'
-          }
-        }
-      );
+      const response = await apiClient.get('/satuan/show');
       setSatuanOptions(
         response.data.data.map(item => ({
           label: item.nm_satuan,
@@ -71,15 +65,7 @@ export default function Uraian() {
 
   const fetchJabatanOptions = async () => {
     try {
-      const response = await axios.get(
-        'http://192.168.60.123:8000/api/v1/jabatan/show',
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2NDM2OTAsIm5iZiI6MTczNTYzMDMxMCwianRpIjoicVoyRmV6eVRZRlNkeUhqQiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.w220jIUISR7jGxLQzrs7dOjnS1Bl5lgBgJLE21OfEos',
-          },
-        },
-      );
+      const response = await apiClient.get('/jabatan/show');
       setJabatanOptions(
         response.data.data.map(item => ({
           label: `${item.kd_jabatan} - ${item.nm_jabatan}`,
@@ -95,16 +81,7 @@ export default function Uraian() {
   const fetchData = async page => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.60.123:8000/api/v1/uraian/index',
-        {page},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2NDM2OTAsIm5iZiI6MTczNTYzMDMxMCwianRpIjoicVoyRmV6eVRZRlNkeUhqQiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.w220jIUISR7jGxLQzrs7dOjnS1Bl5lgBgJLE21OfEos',
-          },
-        },
-      );
+      const response = await apiClient.post('/uraian/index', {page});
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -117,20 +94,11 @@ export default function Uraian() {
 
   const submitEdit = async () => {
     try {
-      await axios.post(
-        `http://192.168.60.123:8000/api/v1/pangkat/${editData.uuid}/update`,
-        {
-          nm_pangkat: editData.nm_pangkat,
-          golongan: editData.golongan,
-          ruang: editData.ruang,
-        },
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2NDM2OTAsIm5iZiI6MTczNTYzMDMxMCwianRpIjoicVoyRmV6eVRZRlNkeUhqQiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.w220jIUISR7jGxLQzrs7dOjnS1Bl5lgBgJLE21OfEos',
-          },
-        },
-      );
+      await apiClient.post(`/pangkat/${editData.uuid}/update`, {
+        nm_pangkat: editData.nm_pangkat,
+        golongan: editData.golongan,
+        ruang: editData.ruang,
+      });
       Alert.alert('Berhasil', 'Data berhasil diperbarui.');
       setEditModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -141,15 +109,7 @@ export default function Uraian() {
 
   const fetchEditData = async uuid => {
     try {
-      const response = await axios.get(
-        `http://192.168.60.123:8000/api/v1/pangkat/${uuid}/edit`,
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2NDM2OTAsIm5iZiI6MTczNTYzMDMxMCwianRpIjoicVoyRmV6eVRZRlNkeUhqQiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.w220jIUISR7jGxLQzrs7dOjnS1Bl5lgBgJLE21OfEos',
-          },
-        },
-      );
+      const response = await apiClient.get(`/pangkat/${uuid}/edit`);
 
       console.log('Respons data yang diterima:', response.data); // Cetak semua respons data
       console.log('Data yang akan disimpan ke state:', response.data.data); // Cetak bagian data untuk state
@@ -173,15 +133,7 @@ export default function Uraian() {
 
   const submitHapus = async () => {
     try {
-      await axios.delete(
-        `http://192.168.60.123:8000/api/v1/uang_makan/${selectedUuid}/delete`,
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2NDM2OTAsIm5iZiI6MTczNTYzMDMxMCwianRpIjoicVoyRmV6eVRZRlNkeUhqQiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.w220jIUISR7jGxLQzrs7dOjnS1Bl5lgBgJLE21OfEos',
-          },
-        },
-      );
+      await apiClient.delete(`/uang_makan/${selectedUuid}/delete`);
       Alert.alert('Berhasil', 'Penolakan berhasil.');
       setHapusModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -196,28 +148,17 @@ export default function Uraian() {
 
   const submitTambah = async () => {
     try {
-      await axios.post(
-        'http://192.168.60.123:8000/api/v1/uraian/create',
-        {
-          angka_kredit: selectedAngkaCredit,
-          biaya: selectedBiaya,
-          jabatan_id: pickJabatanOptions,
-          nm_uraian: selectedNamaUraian,
-          satuan: pickSatuanOptions,
-          wpt: selectedWpt,
-        },
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2NDM2OTAsIm5iZiI6MTczNTYzMDMxMCwianRpIjoicVoyRmV6eVRZRlNkeUhqQiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.w220jIUISR7jGxLQzrs7dOjnS1Bl5lgBgJLE21OfEos',
-            Accept: 'application/json',
-          },
-        },
-      );
+      await apiClient.post('/uraian/create', {
+        angka_kredit: selectedAngkaCredit,
+        biaya: selectedBiaya,
+        jabatan_id: pickJabatanOptions,
+        nm_uraian: selectedNamaUraian,
+        satuan: pickSatuanOptions,
+        wpt: selectedWpt,
+      });
       Alert.alert('Berhasil', 'Data berhasil ditambahkan.');
       setTambahModalVisible(false);
       fetchData(currentPage); // Refresh data
-
     } catch (error) {
       console.error('Error saat mengirim data:', error);
       Alert.alert('Error', 'Gagal menambahkan data.');

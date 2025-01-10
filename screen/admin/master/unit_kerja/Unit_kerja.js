@@ -16,7 +16,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
-import axios from 'axios';
+import useApiClient from '../../../../src/api/apiClient';
 
 export default function UnitKerja() {
   const [data, setData] = useState([]);
@@ -36,53 +36,37 @@ export default function UnitKerja() {
   const [isSub, setIsSub] = useState(false);
   const [pickUnitKerjaOptions, setPickUnitKerjaOptions] = useState([]);
   const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
+  const apiClient = useApiClient();
 
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
   }, [currentPage, selectedDisplay]);
 
   useEffect(() => {
-      if (isSub) {
-        fetchUnitKerjaOptions();
-      }
-    }, [isSub]);
+    if (isSub) {
+      fetchUnitKerjaOptions();
+    }
+  }, [isSub]);
 
-    const fetchUnitKerjaOptions = async () => {
-      try {
-        const response = await axios.get(
-          'http://192.168.60.123:8000/api/v1/unit_kerja/get_unit_kerja',
-          {
-            headers: {
-              Authorization:
-                'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-            },
-          },
-        );
-        setUnitKerjaOptions(
-          response.data.data.map(item => ({
-            label: `${item.kd_unit_kerja} - ${item.nm_unit_kerja}`,
-            value: item.id,
-          })),
-        );
-      } catch (error) {
-        console.error('Error fetching jabatan options:', error);
-        Alert.alert('Error', 'Gagal memuat data jabatan.');
-      }
-    };  
+  const fetchUnitKerjaOptions = async () => {
+    try {
+      const response = await apiClient.get('/unit_kerja/get_unit_kerja');
+      setUnitKerjaOptions(
+        response.data.data.map(item => ({
+          label: `${item.kd_unit_kerja} - ${item.nm_unit_kerja}`,
+          value: item.id,
+        })),
+      );
+    } catch (error) {
+      console.error('Error fetching jabatan options:', error);
+      Alert.alert('Error', 'Gagal memuat data jabatan.');
+    }
+  };
 
   const fetchData = async page => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.60.123:8000/api/v1/unit_kerja/index',
-        {page},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-          },
-        },
-      );
+      const response = await apiClient.post('/unit_kerja/index', {page});
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -95,16 +79,11 @@ export default function UnitKerja() {
 
   const submitEdit = async () => {
     try {
-      await axios.post(
-        `http://192.168.60.123:8000/api/v1/unit_kerja/${editData.uuid}/update`,
-        {nm_unit_kerja: editData.nm_unit_kerja, kd_unit_kerja: editData.kd_unit_kerja, master: editData.master},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-          },
-        },
-      );
+      await apiClient.post(`/unit_kerja/${editData.uuid}/update`, {
+        nm_unit_kerja: editData.nm_unit_kerja,
+        kd_unit_kerja: editData.kd_unit_kerja,
+        master: editData.master,
+      });
       Alert.alert('Berhasil', 'Data berhasil diperbarui.');
       setEditModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -115,18 +94,10 @@ export default function UnitKerja() {
 
   const fetchEditData = async uuid => {
     try {
-      const response = await axios.get(
-        `http://192.168.60.123:8000/api/v1/unit_kerja/${uuid}/edit`,
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-          },
-        },
-      );
+      const response = await apiClient.get(`/unit_kerja/${uuid}/edit`);
 
-      console.log("Respons data yang diterima:", response.data); // Cetak semua respons data
-      console.log("Data yang akan disimpan ke state:", response.data.data); // Cetak bagian data untuk state
+      console.log('Respons data yang diterima:', response.data); // Cetak semua respons data
+      console.log('Data yang akan disimpan ke state:', response.data.data); // Cetak bagian data untuk state
 
       setEditData(response.data.data); // Simpan data edit di state
       setEditModalVisible(true); // Tampilkan modal edit
@@ -147,15 +118,7 @@ export default function UnitKerja() {
 
   const submitHapus = async () => {
     try {
-      await axios.delete(
-        `http://192.168.60.123:8000/api/v1/uang_makan/${selectedUuid}/delete`,
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-          },
-        },
-      );
+      await apiClient.delete(`/uang_makan/${selectedUuid}/delete`);
       Alert.alert('Berhasil', 'Penolakan berhasil.');
       setHapusModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -170,33 +133,29 @@ export default function UnitKerja() {
 
   const submitTambah = async () => {
     try {
-        await axios.post(
-            'http://192.168.60.123:8000/api/v1/unit_kerja/create',
-            {nm_unit_kerja: selectedUnitKerja, is_master: isMaster, is_sub: isSub, code: pickUnitKerjaOptions},
-            {
-                headers: {
-                    Authorization:
-                        'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-                },
-            }
-        );
+      await apiClient.post('/unit_kerja/create', {
+        nm_unit_kerja: selectedUnitKerja,
+        is_master: isMaster,
+        is_sub: isSub,
+        code: pickUnitKerjaOptions,
+      });
 
-        console.log("Data berhasil dikirim.");
-        Alert.alert('Berhasil', 'Data berhasil ditambahkan.');
-        setTambahModalVisible(false);
-        fetchData(currentPage); // Refresh data
+      console.log('Data berhasil dikirim.');
+      Alert.alert('Berhasil', 'Data berhasil ditambahkan.');
+      setTambahModalVisible(false);
+      fetchData(currentPage); // Refresh data
 
-        // Reset form setelah berhasil
-        setSelectedUnitKerja('');
-        setUnitKerjaOptions('');
-        setIsMaster(false);
-        setIsSub(false);
-        console.log("Form telah direset.");
+      // Reset form setelah berhasil
+      setSelectedUnitKerja('');
+      setUnitKerjaOptions('');
+      setIsMaster(false);
+      setIsSub(false);
+      console.log('Form telah direset.');
     } catch (error) {
-        console.error("Error saat mengirim data:", error);
-        Alert.alert('Error', 'Gagal menambahkan data.');
+      console.error('Error saat mengirim data:', error);
+      Alert.alert('Error', 'Gagal menambahkan data.');
     }
-};
+  };
 
   const handleCloseTambahModal = () => {
     setSelectedUnitKerja('');
@@ -432,7 +391,7 @@ export default function UnitKerja() {
               onChangeText={setSelectedUnitKerja}
               placeholderTextColor={'#B6B9CA'}
             />
-            
+
             {/* Switch untuk Master */}
             <View style={styles.switchContainer}>
               <Text style={styles.switchLabel}>Master</Text>

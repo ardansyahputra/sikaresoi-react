@@ -37,7 +37,7 @@ export default function PerubahanPresensi() {
     try {
       setLoading(true);
       const response = await axios.post(
-        'http://192.168.60.123:8000/api/v1/perubahan_absensi/indexandro',
+        'http://192.168.60.123:8000/api/v1/perubahan_absensi/indexadmin',
         {
           page,
           per: selectedDisplay, // Menambahkan parameter 'per' untuk membatasi jumlah data yang ditampilkan

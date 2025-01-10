@@ -15,7 +15,6 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
-import axios from 'axios';
 import useApiClient from '../../../../src/api/apiClient';
 
 export default function UangMakan() {
@@ -33,6 +32,7 @@ export default function UangMakan() {
   const [selectedGolongan, setSelectedGolongan] = useState(null);
   const [selectedNominal, setSelectedNominal] = useState(null);
   const [editData, setEditData] = useState({});
+  const apiClient = useApiClient();
 
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
@@ -41,7 +41,7 @@ export default function UangMakan() {
   const fetchData = async page => {
     try {
       setLoading(true);
-      const response = await ApiClient.post('/uang_makan/index', {page});
+      const response = await apiClient.post('/uang_makan/index', {page});
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -54,7 +54,7 @@ export default function UangMakan() {
 
   const submitEdit = async () => {
     try {
-      await ApiClient.post(`/uang_makan/${editData.uuid}/update`, {
+      await apiClient.post(`/uang_makan/${editData.uuid}/update`, {
         golongan: editData.golongan,
         nominal: editData.nominal,
       });
@@ -68,7 +68,7 @@ export default function UangMakan() {
 
   const fetchEditData = async uuid => {
     try {
-      const response = await ApiClient.get(`/uang_makan/${uuid}/edit`);
+      const response = await apiClient.get(`/uang_makan/${uuid}/edit`);
       setEditData(response.data.data); // Simpan data edit di state
       setEditModalVisible(true); // Tampilkan modal edit
     } catch (error) {
@@ -88,7 +88,7 @@ export default function UangMakan() {
 
   const submitHapus = async () => {
     try {
-      await axios.delete(`/uang_makan/${selectedUuid}/delete`);
+      await apiClient.delete(`/uang_makan/${selectedUuid}/delete`);
       Alert.alert('Berhasil', 'Penolakan berhasil.');
       setHapusModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -103,7 +103,7 @@ export default function UangMakan() {
 
   const submitTambah = async () => {
     try {
-      await axios.post('/uang_makan/create', {
+      await apiClient.post('/uang_makan/create', {
         golongan: selectedGolongan,
         nominal: selectedNominal,
       });

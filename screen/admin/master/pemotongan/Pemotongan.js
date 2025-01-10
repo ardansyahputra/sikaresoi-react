@@ -15,6 +15,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import axios from 'axios';
 import {useNavigation} from '@react-navigation/native';
+import useApiClient from '../../../../src/api/apiClient';
 
 export default function UangMakan() {
   const navigation = useNavigation();
@@ -40,6 +41,8 @@ export default function UangMakan() {
   const [selectedGolongan, setSelectedGolongan] = useState('');
   const [selectedNominal, setSelectedNominal] = useState('');
 
+  const apiClient = useApiClient();
+
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
   }, [currentPage, selectedDisplay]);
@@ -47,16 +50,10 @@ export default function UangMakan() {
   const fetchData = async (page, display) => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.60.163:8000/api/v1/pemotongan_pulang_awal/index',
-        {page, display},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2MjEyODU2LCJleHAiOjE3MzYyMjQwNjgsIm5iZiI6MTczNjIyMDQ2OCwianRpIjoiTm1BRzFwandxZmJidXhjVCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.71GSwQR75aj85SeBYvBOXb__bRB7unbVBlpe5bOnAUU',
-          },
-        },
-      );
+      const response = await apiClient.post('/pemotongan_pulang_awal/index', {
+        page,
+        display,
+      });
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -75,29 +72,23 @@ export default function UangMakan() {
         Alert.alert('Error', 'UUID tidak valid.');
         return;
       }
-  
+
       // Permintaan data dari API
-      const response = await axios.get(
-        `http://192.168.60.163:8000/api/v1/pemotongan_pulang_awal/${uuid}/edit`,
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2MjEyODU2LCJleHAiOjE3MzYyMjQwNjgsIm5iZiI6MTczNjIyMDQ2OCwianRpIjoiTm1BRzFwandxZmJidXhjVCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.71GSwQR75aj85SeBYvBOXb__bRB7unbVBlpe5bOnAUU',
-          }
-        }
+      const response = await apiClient.get(
+        `/pemotongan_pulang_awal/${uuid}/edit`,
       );
-  
+
       const data = response.data.data;
-  
+
       // Validasi data yang diterima
       if (!data || !data.batas_atas || !data.batas_bawah || !data.potongan) {
         console.error('Data tidak lengkap:', data);
         Alert.alert('Error', 'Data tidak valid untuk diedit.');
         return;
       }
-  
+
       console.log('Data edit yang di-fetch:', data);
-  
+
       // Navigasi ke halaman edit dengan parameter data
       navigation.navigate('EditPa', {
         initialPotongan: data.potongan,
@@ -108,7 +99,8 @@ export default function UangMakan() {
     } catch (error) {
       // Menangani error permintaan API
       const errorMessage =
-        error.response?.data?.message || 'Terjadi kesalahan saat mengambil data.';
+        error.response?.data?.message ||
+        'Terjadi kesalahan saat mengambil data.';
       console.error('Error fetch data edit:', error.response || error);
       Alert.alert('Error', errorMessage);
     }
@@ -118,20 +110,20 @@ export default function UangMakan() {
     try {
       // Validasi data yang akan dikirim
       if (!potongan || !batasAtas || !batasBawah) {
-        console.error('Data tidak valid:', { potongan, batasAtas, batasBawah });
+        console.error('Data tidak valid:', {potongan, batasAtas, batasBawah});
         Alert.alert('Error', 'Pastikan semua data telah diisi.');
         return;
       }
-  
+
       // Data default yang akan digunakan untuk halaman TambahPa
       const payload = {
         potongan,
         batas_atas: batasAtas,
         batas_bawah: batasBawah,
       };
-  
+
       console.log('Navigasi ke TambahPa dengan data:', payload);
-  
+
       // Navigasi ke halaman TambahPa dengan parameter
       navigation.navigate('TambahPa', {
         initialPotongan: payload.potongan,
@@ -140,24 +132,16 @@ export default function UangMakan() {
       });
     } catch (error) {
       console.error('Error navigating to TambahPa:', error);
-      Alert.alert('Error', 'Terjadi kesalahan saat mengarahkan ke halaman Tambah.');
+      Alert.alert(
+        'Error',
+        'Terjadi kesalahan saat mengarahkan ke halaman Tambah.',
+      );
     }
   };
-  
-  
-  
 
   const submitHapus = async () => {
     try {
-      await axios.delete(
-        `http://192.168.60.163:8000/api/v1/pemotongan_pulang_awal/${selectedUuid}/delete`,
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1ODY2NzQ0LCJleHAiOjE3MzU4NzQxNDEsIm5iZiI6MTczNTg3MDU0MSwianRpIjoibHQwZ1Brb0FHNDFSS0l3VCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.q2Z3-VD91YxOwZNeUOJQrjHOcZ0nyQM8wA4O-fPJyiM',
-          },
-        },
-      );
+      await apiClient.delete(`/pemotongan_pulang_awal/${selectedUuid}/delete`);
       Alert.alert('Berhasil', 'Data berhasil dihapus.');
       setHapusModalVisible(false);
       fetchData(currentPage);
@@ -201,13 +185,12 @@ export default function UangMakan() {
   const TableHeader = () => (
     <View>
       <View style={styles.tambahContainer}>
-      <TouchableOpacity
-  style={styles.tambahButton}
-  onPress={() => handleCreate(navigation, '10%', '18:00', '08:00')}>
-  <FontAwesome name="plus" size={20} color="#fff" style={styles.icon} />
-  <Text style={styles.tambahText}>Tambah</Text>
-</TouchableOpacity>
-
+        <TouchableOpacity
+          style={styles.tambahButton}
+          onPress={() => handleCreate(navigation, '10%', '18:00', '08:00')}>
+          <FontAwesome name="plus" size={20} color="#fff" style={styles.icon} />
+          <Text style={styles.tambahText}>Tambah</Text>
+        </TouchableOpacity>
       </View>
       <View style={styles.filterContainer}>
         <View style={styles.displayContainer}>
@@ -240,7 +223,9 @@ export default function UangMakan() {
       <View style={styles.tableHeader}>
         <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
         <Text style={[styles.headerCell, styles.nameCell]}>Batas Bawah</Text>
-        <Text style={[styles.headerCell, styles.tableStatusCell]}>Batas Atas</Text>
+        <Text style={[styles.headerCell, styles.tableStatusCell]}>
+          Batas Atas
+        </Text>
         <Text style={[styles.headerCell, styles.discountCell]}>Potongan</Text>
         <View style={styles.expandIconCell} />
       </View>
@@ -288,12 +273,12 @@ export default function UangMakan() {
               Potongan: {item.potongan || '-'}
             </Text>
             <View style={styles.actionContainer}>
-            <TouchableOpacity
-      style={styles.editButton}
-      onPress={() => handleEdit(item.uuid, navigation)}>
-      <FontAwesome name="pencil" size={20} color="white" />
-      <Text style={styles.customFont}>Edit</Text>
-    </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => handleEdit(item.uuid, navigation)}>
+                <FontAwesome name="pencil" size={20} color="white" />
+                <Text style={styles.customFont}>Edit</Text>
+              </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.declineButton}
