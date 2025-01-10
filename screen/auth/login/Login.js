@@ -52,7 +52,6 @@ const LoginScreen = ({navigation}) => {
       });
 
       if (loginResponse.status === 200 && loginResponse.data.status === true) {
-        Alert.alert('Success', 'Login successful!');
         const token = loginResponse.headers['authorization'];
         if (token) {
           await saveTokenToKeychain(token);

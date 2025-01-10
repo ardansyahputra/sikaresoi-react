@@ -37,7 +37,7 @@ export default function PerubahanPresensi() {
     try {
       setLoading(true);
       const response = await axios.post(
-        'http://192.168.60.123:8000/api/v1/perubahan_absensi/indexadmin',
+        'http://192.168.60.123:8000/api/v1/perubahan_absensi/indexandro',
         {
           page,
           per: selectedDisplay, // Menambahkan parameter 'per' untuk membatasi jumlah data yang ditampilkan
@@ -45,7 +45,7 @@ export default function PerubahanPresensi() {
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9sb2dpbiIsImlhdCI6MTczNjEzMzY2MiwiZXhwIjoxNzM2MTM3MjYyLCJuYmYiOjE3MzYxMzM2NjIsImp0aSI6ImhpdGFZVUx5YW1nODlEb2QiLCJzdWIiOjEsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.sPxTT4q2kwL-CmyEuGuQPiiZkg2QxQNix_BJwgFnDsc',
           },
         },
       );
@@ -67,7 +67,7 @@ export default function PerubahanPresensi() {
     setSelectedUuid(uuid);
     setApproveModalVisible(true);
   };
-  
+
   const handleDecline = uuid => {
     setSelectedUuid(uuid);
     setModalVisible(true);
@@ -81,7 +81,7 @@ export default function PerubahanPresensi() {
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9sb2dpbiIsImlhdCI6MTczNjEzMzY2MiwiZXhwIjoxNzM2MTM3MjYyLCJuYmYiOjE3MzYxMzM2NjIsImp0aSI6ImhpdGFZVUx5YW1nODlEb2QiLCJzdWIiOjEsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.sPxTT4q2kwL-CmyEuGuQPiiZkg2QxQNix_BJwgFnDsc',
             Accept: 'application/json',
           },
         },
@@ -102,7 +102,7 @@ export default function PerubahanPresensi() {
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9sb2dpbiIsImlhdCI6MTczNjEzMzY2MiwiZXhwIjoxNzM2MTM3MjYyLCJuYmYiOjE3MzYxMzM2NjIsImp0aSI6ImhpdGFZVUx5YW1nODlEb2QiLCJzdWIiOjEsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.sPxTT4q2kwL-CmyEuGuQPiiZkg2QxQNix_BJwgFnDsc',
             Accept: 'application/json',
           },
         },
@@ -772,21 +772,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#3f4254',
   },
-    dropdown: {
-      height: 40,
-      borderColor: '#CCCCCC',
-      borderWidth: 1,
-      borderRadius: 5,
-      paddingHorizontal: 10,
-      width: 75,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    dropdownItem: {
-      padding: 10,
-      fontSize: 16,
-      color: '#333',
-    },
+  dropdown: {
+    height: 40,
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    width: 75,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dropdownItem: {
+    padding: 10,
+    fontSize: 16,
+    color: '#333',
+  },
   customFont: {
     fontFamily: 'Poppins-Regular',
   },

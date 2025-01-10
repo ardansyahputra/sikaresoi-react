@@ -35,7 +35,6 @@ export default function Uraian() {
   const [selectedWpt, setSelectedWpt] = useState(null);
   const [selectedBiaya, setSelectedBiaya] = useState(null);
   const [editData, setEditData] = useState({});
-  const [selectedRuang, setSelectedRuang] = useState(null);
   const [pickJabatanOptions, setPickJabatanOptions] = useState(null);
   const [jabatanOptions, setJabatanOptions] = useState([]);
   const [pickSatuanOptions, setPickSatuanOptions] = useState(null);
@@ -47,15 +46,18 @@ export default function Uraian() {
     fetchSatuanOptions();
   }, [currentPage, selectedDisplay]);
 
+  const token = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2NDczMjIzLCJleHAiOjE3NDAwNzU1MzIsIm5iZiI6MTczNjQ3NTUzMiwianRpIjoiQ0tBSGpCMWtQSklQQmVqaiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.qydXAhdK7rnRdB8Pe5tuOcIlMbTr6Axe0M90J0DmGtM';
+
   const fetchSatuanOptions = async () => {
     try {
       const response = await axios.get(
-        'http://192.168.60.123:8000/api/v1/satuan/show'
-      , {
-        headers: {
-          Authorization: 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2NDM2OTAsIm5iZiI6MTczNTYzMDMxMCwianRpIjoicVoyRmV6eVRZRlNkeUhqQiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.w220jIUISR7jGxLQzrs7dOjnS1Bl5lgBgJLE21OfEos'
-          }
-        }
+        'http://192.168.60.123:8000/api/v1/satuan/show',
+        {
+          headers: {
+            Authorization:
+              token,
+          },
+        },
       );
       setSatuanOptions(
         response.data.data.map(item => ({
@@ -76,7 +78,7 @@ export default function Uraian() {
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2NDM2OTAsIm5iZiI6MTczNTYzMDMxMCwianRpIjoicVoyRmV6eVRZRlNkeUhqQiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.w220jIUISR7jGxLQzrs7dOjnS1Bl5lgBgJLE21OfEos',
+              token,
           },
         },
       );
@@ -101,7 +103,7 @@ export default function Uraian() {
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2NDM2OTAsIm5iZiI6MTczNTYzMDMxMCwianRpIjoicVoyRmV6eVRZRlNkeUhqQiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.w220jIUISR7jGxLQzrs7dOjnS1Bl5lgBgJLE21OfEos',
+              token,
           },
         },
       );
@@ -118,16 +120,19 @@ export default function Uraian() {
   const submitEdit = async () => {
     try {
       await axios.post(
-        `http://192.168.60.123:8000/api/v1/pangkat/${editData.uuid}/update`,
+        `http://192.168.60.123:8000/api/v1/uraian/${editData.uuid}/update`,
         {
-          nm_pangkat: editData.nm_pangkat,
-          golongan: editData.golongan,
-          ruang: editData.ruang,
+          nm_uraian: editData.nm_uraian,
+          angka_kredit: editData.angka_kredit,
+          wpt: editData.wpt,
+          biaya: editData.biaya,
+          jabatan_id: editData.jabatan_id,
+          satuan: editData.satuan,
         },
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2NDM2OTAsIm5iZiI6MTczNTYzMDMxMCwianRpIjoicVoyRmV6eVRZRlNkeUhqQiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.w220jIUISR7jGxLQzrs7dOjnS1Bl5lgBgJLE21OfEos',
+              token,
           },
         },
       );
@@ -142,11 +147,11 @@ export default function Uraian() {
   const fetchEditData = async uuid => {
     try {
       const response = await axios.get(
-        `http://192.168.60.123:8000/api/v1/pangkat/${uuid}/edit`,
+        `http://192.168.60.123:8000/api/v1/uraian/${uuid}/edit`,
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2NDM2OTAsIm5iZiI6MTczNTYzMDMxMCwianRpIjoicVoyRmV6eVRZRlNkeUhqQiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.w220jIUISR7jGxLQzrs7dOjnS1Bl5lgBgJLE21OfEos',
+              token,
           },
         },
       );
@@ -164,6 +169,7 @@ export default function Uraian() {
 
   const handleEdit = uuid => {
     fetchEditData(uuid);
+    setEditModalVisible(true);
   };
 
   const handleHapus = uuid => {
@@ -174,11 +180,11 @@ export default function Uraian() {
   const submitHapus = async () => {
     try {
       await axios.delete(
-        `http://192.168.60.123:8000/api/v1/uang_makan/${selectedUuid}/delete`,
+        `http://192.168.60.123:8000/api/v1/uraian/${selectedUuid}/delete`,
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2NDM2OTAsIm5iZiI6MTczNTYzMDMxMCwianRpIjoicVoyRmV6eVRZRlNkeUhqQiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.w220jIUISR7jGxLQzrs7dOjnS1Bl5lgBgJLE21OfEos',
+              token,
           },
         },
       );
@@ -209,7 +215,7 @@ export default function Uraian() {
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2NDM2OTAsIm5iZiI6MTczNTYzMDMxMCwianRpIjoicVoyRmV6eVRZRlNkeUhqQiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.w220jIUISR7jGxLQzrs7dOjnS1Bl5lgBgJLE21OfEos',
+              token,
             Accept: 'application/json',
           },
         },
@@ -217,7 +223,6 @@ export default function Uraian() {
       Alert.alert('Berhasil', 'Data berhasil ditambahkan.');
       setTambahModalVisible(false);
       fetchData(currentPage); // Refresh data
-
     } catch (error) {
       console.error('Error saat mengirim data:', error);
       Alert.alert('Error', 'Gagal menambahkan data.');
@@ -413,7 +418,7 @@ export default function Uraian() {
         />
       )}
 
-      {/* Edit Pangkat Modal */}
+      {/* Edit Uraian Modal */}
       <Modal
         visible={isEditModalVisible}
         animationType="fade"
@@ -422,35 +427,102 @@ export default function Uraian() {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Edit Data</Text>
-            <Text style={styles.modalLabel}>Pangkat</Text>
+            <Text style={styles.modalLabel}>Nama Uraian</Text>
             <TextInput
               style={styles.modalInput}
-              placeholder="Pangkat"
-              value={editData.nm_pangkat || ''} // Pastikan menggunakan default kosong jika null
+              placeholder="Nama Uraian"
+              value={editData.nm_uraian || ''} // Pastikan menggunakan default kosong jika null
               onChangeText={text =>
-                setEditData(prev => ({...prev, nm_pangkat: text}))
+                setEditData(prev => ({...prev, nm_uraian: text}))
               }
               placeholderTextColor={'#B6B9CA'}
             />
-            <Text style={styles.modalLabel}>Golongan</Text>
+            <Text style={styles.modalLabel}>Jabatan</Text>
+            <Dropdown
+              style={styles.modalInput}
+              data={jabatanOptions}
+              labelField="label"
+              valueField="value"
+              placeholder="Pilih Jabatan"
+              placeholderStyle={{color: '#B6B9CA'}}
+              value={editData.nm_jabatan} // Gunakan nilai dari `editData`
+              onChange={
+                item => setEditData(prev => ({...prev, nm_jabatan: item.value})) // Update `editData.jabatan`
+              }
+              renderItem={item => (
+                <Text
+                  style={[
+                    styles.dropdownItem,
+                    styles.customFont,
+                    {color: '#333'},
+                  ]}>
+                  {item.label}
+                </Text>
+              )}
+            />
+            <Text style={styles.modalLabel}>Angka Kredit</Text>
             <TextInput
               style={styles.modalInput}
-              placeholder="Golongan"
-              value={editData.golongan || ''} // Pastikan menggunakan default kosong jika null
-              onChangeText={text =>
-                setEditData(prev => ({...prev, golongan: text}))
+              placeholder="Angka Kredit"
+              value={
+                editData.angka_kredit !== null &&
+                editData.angka_kredit !== undefined
+                  ? String(editData.angka_kredit)
+                  : ''
+              } // Konversi angka ke string
+              onChangeText={
+                text => setEditData(prev => ({...prev, angka_kredit: text})) // Tetap simpan sebagai string
               }
               placeholderTextColor={'#B6B9CA'}
             />
-            <Text style={styles.modalLabel}>Ruang</Text>
+            <Text style={styles.modalLabel}>WPT</Text>
             <TextInput
               style={styles.modalInput}
-              placeholder="Ruang"
-              value={editData.ruang || ''} // Pastikan menggunakan default kosong jika null
-              onChangeText={text =>
-                setEditData(prev => ({...prev, ruang: text}))
+              placeholder="WPT"
+              value={
+                editData.wpt !== null && editData.wpt !== undefined
+                  ? String(editData.wpt)
+                  : ''
+              } // Konversi angka ke string
+              onChangeText={
+                text => setEditData(prev => ({...prev, wpt: text})) // Tetap simpan sebagai string
               }
               placeholderTextColor={'#B6B9CA'}
+            />
+            <Text style={styles.modalLabel}>Biaya</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Biaya"
+              value={
+                editData.wpt !== null && editData.biaya !== undefined
+                  ? String(editData.biaya)
+                  : ''
+              } // Konversi angka ke string
+              onChangeText={
+                text => setEditData(prev => ({...prev, biaya: text})) // Tetap simpan sebagai string
+              }
+              placeholderTextColor={'#B6B9CA'}
+            />
+            <Text style={styles.modalLabel}>Output</Text>
+            <Dropdown
+              style={styles.modalInput}
+              data={satuanOptions}
+              labelField="label"
+              valueField="value"
+              placeholder="Output"
+              placeholderStyle={{color: '#B6B9CA'}}
+              value={pickSatuanOptions}
+              onChange={item => setPickSatuanOptions(item.value)}
+              renderItem={item => (
+                <Text
+                  style={[
+                    styles.dropdownItem,
+                    styles.customFont,
+                    {color: '#333'},
+                  ]}>
+                  {item.label}
+                </Text>
+              )}
             />
             <View style={styles.modalButtons}>
               <TouchableOpacity
