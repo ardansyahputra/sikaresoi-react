@@ -71,6 +71,8 @@ import JamKerjaScreen from './screen/admin/master/jam_kerja/Jam_kerja';
 //Fingerprint
 import JamFingerprintScreen from './screen/admin/master/fingerprint/jam/Jam_fingerprint';
 import MesinScreen from './screen/admin/master/fingerprint/mesin/Mesin';
+import Editmesin from './screen/admin/master/fingerprint/mesin/ascreen/Editmesin';
+import Tambahmesin from './screen/admin/master/fingerprint/mesin/ascreen/Tambahmesin';
 
 //Pengaturan Tambahan
 import TanggungRentengScreen from './screen/admin/tanggung_renteng/Tanggung_renteng';
@@ -353,6 +355,16 @@ function HomeStack() {
         options={{headerShown: false}}
         name="TambahPa"
         component={TambahPA}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="Editmesin"
+        component={Editmesin}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="Tambahmesin"
+        component={Tambahmesin}
       />
       </Stack.Navigator>
     </AuthProvider>
