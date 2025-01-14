@@ -45,6 +45,7 @@ function HomeNavigator() {
   );
 }
 
+
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
