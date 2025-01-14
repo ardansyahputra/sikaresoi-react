@@ -10,6 +10,7 @@ import HomeScreen from './screen/BottomNavBar/Home/HomeScreen';
 import KontrakKinerjaScreen from './screen/BottomNavBar/KontrakKinerja/KontrakKinerjaScreen';
 import ProfileScreen from './screen/BottomNavBar/Profile/ProfileScreen';
 import SettingJabatan from './screen/BottomNavBar/Menu/SettingJabatan/SettingJabatan';
+import FormJabatan from './screen/BottomNavBar/Menu/SettingJabatan/Form';
 import RealisasiKinerja from './screen/BottomNavBar/Menu/RealisasiKinerja/RealisasiKinerja';
 import PresensiScreen from './screen/PresensiScreen';
 import TeguranScreen from './screen/TeguranScreen'
@@ -33,6 +34,7 @@ function HomeNavigator() {
       <Stack.Screen name="Teguran" component={TeguranScreen} />
       <Stack.Screen name="Allmenu" component={Allmenu} />
       <Stack.Screen name="SettingJabatan" component={SettingJabatan} />
+      <Stack.Screen name="FormJabatan" component={FormJabatan} />
       <Stack.Screen name="RealisasiKinerja" component={RealisasiKinerja} />
       <Stack.Screen name="Persetujuan" component={Persetujuan} />
       <Stack.Screen name="PersetujuanRealisasi" component={PersetujuanRealisasi} />

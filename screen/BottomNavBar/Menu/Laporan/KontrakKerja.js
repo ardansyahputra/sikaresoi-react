@@ -19,7 +19,7 @@ const KontrakKerja = () => {
   const [loading, setLoading] = useState(true);
 
   const baseURL = 'http://192.168.60.230:8000/api/v1';
-  const token = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjIzMDo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjExMzYwLCJleHAiOjE3MzU2MjE2OTQsIm5iZiI6MTczNTYxODA5NCwianRpIjoiV0RxeGQ0M0o4WVcxMFNrbyIsInN1YiI6NywicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vYyg-5ZbHk1iqgyijxRcSbklvpBeZUJt45KUGAIDyhY';
+  const token = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjIzMDo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjExMzYwLCJleHAiOjE3MzU2MjMzNDMsIm5iZiI6MTczNTYxOTc0MywianRpIjoiT0g0R3hTNEdoYUsxQVd0bSIsInN1YiI6NywicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.B1lsJgwrvwoSxuJBbCVO7UfdayRxKnx0q9F60aDKkCM';
 
   const getAktif = async () => {
     try {
@@ -31,7 +31,7 @@ const KontrakKerja = () => {
       setJabatanAktif(true);
     } catch (error) {
       Alert.alert('Error', 'Silakan pilih jabatan terlebih dahulu.', [
-        { text: 'OK', onPress: () => console.log('Redirect to Jabatan screen') },
+        { text: 'OK', onPress: () => navigation.goBack()},
       ]);
       setJabatanAktif(false);
     }

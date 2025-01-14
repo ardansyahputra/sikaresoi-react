@@ -8,37 +8,78 @@ import {
   ActivityIndicator,
   Image,
   Linking,
+  Switch,
   Modal,
   TextInput,
   Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import {Dropdown} from 'react-native-element-dropdown';
 import axios from 'axios';
 
-export default function User() {
+export default function UnitKerja() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [isModalVisible, setModalVisible] = useState(false);
-  const [declineReason, setDeclineReason] = useState('');
+  const [isTambahModalVisible, setTambahModalVisible] = useState(false);
+  const [isHapusModalVisible, setHapusModalVisible] = useState(false);
+  const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [selectedUuid, setSelectedUuid] = useState(null);
+  const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
+  const [selectedDisplay, setSelectedDisplay] = useState(null);
+  const [selectedUnitKerja, setSelectedUnitKerja] = useState(null);
+  const [editData, setEditData] = useState({});
+  const [isMaster, setIsMaster] = useState(false);
+  const [isSub, setIsSub] = useState(false);
+  const [pickUnitKerjaOptions, setPickUnitKerjaOptions] = useState([]);
+  const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
 
   useEffect(() => {
-    fetchData(currentPage);
-  }, [currentPage]);
+    fetchData(currentPage, selectedDisplay);
+  }, [currentPage, selectedDisplay]);
+
+  useEffect(() => {
+      if (isSub) {
+        fetchUnitKerjaOptions();
+      }
+    }, [isSub]);
+
+    const fetchUnitKerjaOptions = async () => {
+      try {
+        const response = await axios.get(
+          'http://192.168.60.123:8000/api/v1/unit_kerja/get_unit_kerja',
+          {
+            headers: {
+              Authorization:
+                'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9sb2dpbiIsImlhdCI6MTczNjEzMzY2MiwiZXhwIjoxNzM2MTM3MjYyLCJuYmYiOjE3MzYxMzM2NjIsImp0aSI6ImhpdGFZVUx5YW1nODlEb2QiLCJzdWIiOjEsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.sPxTT4q2kwL-CmyEuGuQPiiZkg2QxQNix_BJwgFnDsc',
+            },
+          },
+        );
+        setUnitKerjaOptions(
+          response.data.data.map(item => ({
+            label: ${item.kd_unit_kerja} - ${item.nm_unit_kerja},
+            value: item.id,
+          })),
+        );
+      } catch (error) {
+        console.error('Error fetching jabatan options:', error);
+        Alert.alert('Error', 'Gagal memuat data jabatan.');
+      }
+    };  
 
   const fetchData = async page => {
     try {
       setLoading(true);
       const response = await axios.post(
-        'http://192.168.2.153:8000/api/v1/perubahan_absensi/indexandro',
+        'http://192.168.60.123:8000/api/v1/unit_kerja/index',
         {page},
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIuMTUzOjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzQzOTk0NDQsImV4cCI6MTczNDQxNDc0MiwibmJmIjoxNzM0NDExMTQyLCJqdGkiOiJhS0xXR2w5Y3pkN0pVM1NMIiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.BXVqz9M9HJ18YZOo7-3uqMpTXHTS5MXTWNH9uu63NcQ',
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9sb2dpbiIsImlhdCI6MTczNjEzMzY2MiwiZXhwIjoxNzM2MTM3MjYyLCJuYmYiOjE3MzYxMzM2NjIsImp0aSI6ImhpdGFZVUx5YW1nODlEb2QiLCJzdWIiOjEsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.sPxTT4q2kwL-CmyEuGuQPiiZkg2QxQNix_BJwgFnDsc',
           },
         },
       );
@@ -52,77 +93,174 @@ export default function User() {
     }
   };
 
-  const handleApprove = async uuid => {
-    try {
-      Alert.alert('Konfirmasi', 'Apakah Anda yakin ingin mengonfirmasi?', [
-        {text: 'Batal', style: 'cancel'},
-        {
-          text: 'Ya',
-          onPress: async () => {
-            await axios.post(
-              `http://192.168.2.152:8000/perubahan_absensi/${uuid}/change`,
-              {status: '1', revisi: null},
-            );
-            Alert.alert('Berhasil', 'Konfirmasi berhasil.');
-            fetchData(currentPage);
-          },
-        },
-      ]);
-    } catch (error) {
-      Alert.alert('Error', 'Gagal mengonfirmasi.');
-    }
-  };
-
-  const handleDecline = uuid => {
-    setSelectedUuid(uuid);
-    setModalVisible(true);
-  };
-
-  const submitDecline = async () => {
+  const submitEdit = async () => {
     try {
       await axios.post(
-        `http://192.168.2.152:8000/api/v1/perubahan_absensi/${selectedUuid}/change`,
-        {status: '2', revisi: declineReason},
+        http://192.168.60.123:8000/api/v1/unit_kerja/${editData.uuid}/update,
+        {nm_unit_kerja: editData.nm_unit_kerja, kd_unit_kerja: editData.kd_unit_kerja, master: editData.master},
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIuMTUzOjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzQzOTk0NDQsImV4cCI6MTczNDQxNDc0MiwibmJmIjoxNzM0NDExMTQyLCJqdGkiOiJhS0xXR2w5Y3pkN0pVM1NMIiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.BXVqz9M9HJ18YZOo7-3uqMpTXHTS5MXTWNH9uu63NcQ',
-            Accept: 'application/json'
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9sb2dpbiIsImlhdCI6MTczNjEzMzY2MiwiZXhwIjoxNzM2MTM3MjYyLCJuYmYiOjE3MzYxMzM2NjIsImp0aSI6ImhpdGFZVUx5YW1nODlEb2QiLCJzdWIiOjEsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.sPxTT4q2kwL-CmyEuGuQPiiZkg2QxQNix_BJwgFnDsc',
+          },
+        },
+      );
+      Alert.alert('Berhasil', 'Data berhasil diperbarui.');
+      setEditModalVisible(false);
+      fetchData(currentPage); // Refresh data
+    } catch (error) {
+      Alert.alert('Error', 'Gagal memperbarui data.');
+    }
+  };
+
+  const fetchEditData = async uuid => {
+    try {
+      const response = await axios.get(
+        http://192.168.60.123:8000/api/v1/unit_kerja/${uuid}/edit,
+        {
+          headers: {
+            Authorization:
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9sb2dpbiIsImlhdCI6MTczNjEzMzY2MiwiZXhwIjoxNzM2MTM3MjYyLCJuYmYiOjE3MzYxMzM2NjIsImp0aSI6ImhpdGFZVUx5YW1nODlEb2QiLCJzdWIiOjEsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.sPxTT4q2kwL-CmyEuGuQPiiZkg2QxQNix_BJwgFnDsc',
+          },
+        },
+      );
+
+      console.log("Respons data yang diterima:", response.data); // Cetak semua respons data
+      console.log("Data yang akan disimpan ke state:", response.data.data); // Cetak bagian data untuk state
+
+      setEditData(response.data.data); // Simpan data edit di state
+      setEditModalVisible(true); // Tampilkan modal edit
+    } catch (error) {
+      console.error('Error fetching edit data:', error);
+      Alert.alert('Error', 'Gagal mengambil data untuk diedit.');
+    }
+  };
+
+  const handleEdit = uuid => {
+    fetchEditData(uuid);
+  };
+
+  const handleHapus = uuid => {
+    setSelectedUuid(uuid);
+    setHapusModalVisible(true);
+  };
+
+  const submitHapus = async () => {
+    try {
+      await axios.delete(
+        http://192.168.60.123:8000/api/v1/uang_makan/${selectedUuid}/delete,
+        {
+          headers: {
+            Authorization:
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9sb2dpbiIsImlhdCI6MTczNjEzMzY2MiwiZXhwIjoxNzM2MTM3MjYyLCJuYmYiOjE3MzYxMzM2NjIsImp0aSI6ImhpdGFZVUx5YW1nODlEb2QiLCJzdWIiOjEsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.sPxTT4q2kwL-CmyEuGuQPiiZkg2QxQNix_BJwgFnDsc',
           },
         },
       );
       Alert.alert('Berhasil', 'Penolakan berhasil.');
-      setModalVisible(false);
-      setDeclineReason('');
+      setHapusModalVisible(false);
       fetchData(currentPage); // Refresh data
     } catch (error) {
       Alert.alert('Error', 'Gagal menolak data.');
     }
   };
 
+  const handleTambah = () => {
+    setTambahModalVisible(true);
+  };
+
+  const submitTambah = async () => {
+    try {
+        await axios.post(
+            'http://192.168.60.123:8000/api/v1/unit_kerja/create',
+            {nm_unit_kerja: selectedUnitKerja, is_master: isMaster, is_sub: isSub, code: pickUnitKerjaOptions},
+            {
+                headers: {
+                    Authorization:
+                        'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9sb2dpbiIsImlhdCI6MTczNjEzMzY2MiwiZXhwIjoxNzM2MTM3MjYyLCJuYmYiOjE3MzYxMzM2NjIsImp0aSI6ImhpdGFZVUx5YW1nODlEb2QiLCJzdWIiOjEsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.sPxTT4q2kwL-CmyEuGuQPiiZkg2QxQNix_BJwgFnDsc',
+                },
+            }
+        );
+
+        console.log("Data berhasil dikirim.");
+        Alert.alert('Berhasil', 'Data berhasil ditambahkan.');
+        setTambahModalVisible(false);
+        fetchData(currentPage); // Refresh data
+
+        // Reset form setelah berhasil
+        setSelectedUnitKerja('');
+        setUnitKerjaOptions('');
+        setIsMaster(false);
+        setIsSub(false);
+        console.log("Form telah direset.");
+    } catch (error) {
+        console.error("Error saat mengirim data:", error);
+        Alert.alert('Error', 'Gagal menambahkan data.');
+    }
+};
+
+  const handleCloseTambahModal = () => {
+    setSelectedUnitKerja('');
+    setTambahModalVisible(false);
+  };
+
+  const display = [
+    {label: '5', value: 1},
+    {label: '10', value: 2},
+    {label: '25', value: 3},
+    {label: '50', value: 4},
+    {label: '100', value: 5},
+  ];
+
   const toggleExpand = id => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const getStatusStyle = status => {
-    switch (status?.toUpperCase()) {
-      case 'DISETUJUI':
-        return styles.approvedStatus;
-      case 'DITOLAK':
-        return styles.rejectedStatus;
-      case 'MENUNGGU':
-        return styles.pendingStatus;
-      default:
-        return styles.defaultStatus;
-    }
-  };
-
   const TableHeader = () => (
-    <View style={styles.tableHeader}>
-      <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
-      <Text style={[styles.headerCell, styles.nameCell]}>Name</Text>
-      <Text style={[styles.headerCell, styles.tableStatusCell]}>Status</Text>
-      <View style={styles.expandIconCell} />
+    <View>
+      <View style={styles.tambahContainer}>
+        <TouchableOpacity style={styles.tambahButton} onPress={handleTambah}>
+          <FontAwesome name="plus" size={20} color="#fff" style={styles.icon} />
+          <Text style={styles.tambahText}>TAMBAH</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.filterContainer}>
+        <View style={styles.displayContainer}>
+          <Text style={styles.displayText}>Display</Text>
+          <Dropdown
+            style={styles.dropdown}
+            data={display}
+            labelField="label"
+            valueField="value"
+            placeholder="10"
+            value={selectedDisplay}
+            onChange={item => setSelectedDisplay(item.value)}
+            renderItem={item => (
+              <Text style={[styles.dropdownItem, styles.customFont]}>
+                {item.label}
+              </Text>
+            )}
+          />
+        </View>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchBar}
+            placeholder="Search"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+      </View>
+      <View style={styles.tableHeader}>
+        <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
+        <Text style={[styles.headerCell, styles.nameCell]}>
+          Kode Unit Kerja
+        </Text>
+        <Text style={[styles.headerCell, styles.tableStatusCell]}>
+          Nama Unit Kerja
+        </Text>
+        <View style={styles.expandIconCell} />
+      </View>
     </View>
   );
 
@@ -139,18 +277,14 @@ export default function User() {
             style={[styles.tableCell, styles.nameCell]}
             numberOfLines={1}
             ellipsizeMode="tail">
-            {item.user?.name || '-'}
+            {item.kd_unit_kerja || '-'}
           </Text>
-          <View style={styles.statusCellContainer}>
-            <Text
-              style={[
-                styles.tableCell,
-                styles.statusCell,
-                getStatusStyle(item.status),
-              ]}>
-              {item.status || '-'}
-            </Text>
-          </View>
+          <Text
+            style={[styles.tableCell, styles.nameCell]}
+            numberOfLines={1}
+            ellipsizeMode="tail">
+            {item.nm_unit_kerja || '-'}
+          </Text>
           <View style={styles.expandIconCell}>
             <Ionicons
               name={isExpanded ? 'chevron-up' : 'chevron-down'}
@@ -162,32 +296,23 @@ export default function User() {
         {isExpanded && (
           <View style={styles.expandedContent}>
             <Text style={styles.expandedText}>
-              Tanggal: {item.tanggal || '-'}
+              Kode Unit Kerja {item.kd_unit_kerja || '-'}
             </Text>
             <Text style={styles.expandedText}>
-              Jam Masuk: {item.jam_masuk || '-'}
+              Nama Unit Kerja: {item.nm_unit_kerja || '-'}
             </Text>
-            <Text style={styles.expandedText}>
-              Jam Keluar: {item.jam_keluar || '-'}
-            </Text>
-            <View style={styles.filetext}>
-              <Text>File:</Text>
-              <Text
-                style={styles.expandedLinkText}
-                onPress={() => Linking.openURL(item.file)}>
-                File Absensi
-              </Text>
-            </View>
             <View style={styles.actionContainer}>
-              <TouchableOpacity 
-                style={styles.approveButton}
-                onPress={() => handleApprove(item.uuid)}>
-                <Ionicons name="checkmark" size={20} color="white" />
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => handleEdit(item.uuid)}>
+                <FontAwesome name="pencil" size={20} color="white" />
+                <Text style={styles.customFont}>Edit</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.declineButton}
-                onPress={() => handleDecline(item.uuid)}>
-                <Ionicons name="close" size={20} color="white" />
+                onPress={() => handleHapus(item.uuid)}>
+                <Ionicons name="trash" size={20} color="white" />
+                <Text style={styles.customFont}>Hapus</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -200,12 +325,7 @@ export default function User() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Image
-            source={require('../assets/images/logo.png')}
-            style={styles.logo}
-          />
-        </View>
+        <View style={styles.headerLeft}></View>
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
           <TouchableOpacity style={styles.iconWrapper}>
@@ -213,7 +333,6 @@ export default function User() {
           </TouchableOpacity>
         </View>
       </View>
-  
       {/* Loading Indicator */}
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
@@ -237,7 +356,9 @@ export default function User() {
                       currentPage === 1 && styles.disabledButton,
                     ]}
                     disabled={currentPage === 1}
-                    onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
+                    onPress={() =>
+                      setCurrentPage(prev => Math.max(prev - 1, 1))
+                    }>
                     <Text style={styles.pageButtonText}>Previous</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -257,41 +378,159 @@ export default function User() {
           }
         />
       )}
-  
-      {/* Modal Input Alasan Penolakan */}
+
       <Modal
-        visible={isModalVisible}
+        visible={isEditModalVisible}
         animationType="fade"
         transparent
-        onRequestClose={() => setModalVisible(false)}>
+        onRequestClose={() => setEditModalVisible(false)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Tolak Data</Text>
-            <Text style={styles.modalLabel}>Alasan Penolakan:</Text>
+            <Text style={styles.modalTitle}>Edit Data</Text>
+            <Text style={styles.modalLabel}>Golongan</Text>
             <TextInput
               style={styles.modalInput}
-              placeholder="Masukkan alasan"
-              multiline
-              value={declineReason}
-              onChangeText={setDeclineReason}
+              placeholder="Golongan"
+              value={editData.nm_unit_kerja || ''} // Pastikan menggunakan default kosong jika null
+              onChangeText={text =>
+                setEditData(prev => ({...prev, nm_unit_kerja: text}))
+              }
+              placeholderTextColor={'#B6B9CA'}
             />
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={styles.cancelButton}
-                onPress={() => setModalVisible(false)}>
+                onPress={() => setEditModalVisible(false)}>
                 <Text style={styles.buttonText}>Batal</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.submitButton}
-                onPress={submitDecline}>
-                <Text style={styles.buttonText}>Tolak</Text>
+                onPress={submitEdit} // Fungsi untuk menyimpan perubahan
+              >
+                <Text style={styles.buttonText}>Simpan</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Tambah unit kerja Modal */}
+      <Modal
+        visible={isTambahModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setTambahModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Tambah Data</Text>
+            <Text style={styles.modalLabel}>Nama Unit Kerja</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Nama Unit Kerja"
+              multiline
+              value={selectedUnitKerja}
+              onChangeText={setSelectedUnitKerja}
+              placeholderTextColor={'#B6B9CA'}
+            />
+            
+            {/* Switch untuk Master */}
+            <View style={styles.switchContainer}>
+              <Text style={styles.switchLabel}>Master</Text>
+              <Switch
+                value={isMaster}
+                onValueChange={value => {
+                  setIsMaster(value); // Perbarui Master
+                  if (value) {
+                    setIsSub(false); // Nonaktifkan Sub jika Master aktif
+                  }
+                }}
+              />
+            </View>
+
+            {/* Switch untuk Sub */}
+            <View style={styles.switchContainer}>
+              <Text style={styles.switchLabel}>Sub</Text>
+              <Switch
+                value={isSub}
+                onValueChange={value => {
+                  setIsSub(value); // Perbarui Sub
+                  if (value) {
+                    setIsMaster(false); // Nonaktifkan Master jika Sub aktif
+                  }
+                }}
+              />
+            </View>
+
+            {isSub && (
+              <>
+                <Text style={styles.modalLabel}>Jabatan Sub</Text>
+                <Dropdown
+                  style={styles.modalInput}
+                  data={unitKerjaOptions}
+                  labelField="label"
+                  valueField="value"
+                  placeholder="Pilih Jabatan"
+                  placeholderStyle={{color: '#B6B9CA'}}
+                  value={pickUnitKerjaOptions}
+                  onChange={item => setPickUnitKerjaOptions(item.value)}
+                  renderItem={item => (
+                    <Text
+                      style={[
+                        styles.dropdownItem,
+                        styles.customFont,
+                        {color: '#333'},
+                      ]}>
+                      {item.label}
+                    </Text>
+                  )}
+                />
+              </>
+            )}
+            {/* Tombol Modal */}
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => handleCloseTambahModal()}>
+                <Text style={styles.buttonText}>Batal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={() => {
+                  submitTambah(); // Tutup modal setelah menyimpan
+                }}>
+                <Text style={styles.buttonText}>Simpan</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Hapus Uang Makan Modal */}
+      <Modal
+        visible={isHapusModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setHapusModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Hapus Data</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setHapusModalVisible(false)}>
+                <Text style={styles.buttonText}>Batal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.submitButton, styles.approveButton]}
+                onPress={submitHapus}>
+                <Text style={styles.buttonText}>Setujui</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
     </View>
-  );  
+  );
 }
 
 const styles = StyleSheet.create({
@@ -319,8 +558,8 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 10,
   },
   headerCell: {
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 13,
     color: '#333',
   },
   tableRow: {
@@ -335,6 +574,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tableCell: {
+    fontFamily: 'Poppins-Regular',
     flexWrap: 'wrap',
     fontSize: 14,
   },
@@ -343,7 +583,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingLeft: 0,
   },
-  numberCell: {width: 50},
+  numberCell: {
+    width: 50,
+  },
   nameCell: {
     flex: 1,
     overflow: 'hidden',
@@ -435,8 +677,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   pageButtonText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 13,
     color: '#fff',
-    fontWeight: 'bold',
   },
   disabledButton: {
     backgroundColor: '#CCCCCC',
@@ -446,6 +689,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   pageInfo: {
+    fontFamily: 'Poppins-Regular',
     fontSize: 13,
   },
   paginationContainer: {
@@ -508,7 +752,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 5,
     padding: 10,
-    minHeight: 80,
+    minHeight: 10,
     marginBottom: 15,
     textAlignVertical: 'top',
   },
@@ -531,4 +775,102 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
+  searchContainer: {
+    width: 150,
+    backgroundColor: '#FFFFFF',
+  },
+  searchBar: {
+    height: 40,
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 12,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  displayContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 20,
+  },
+  displayText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 13,
+    marginRight: 8,
+    textAlign: 'center',
+    color: '#3f4254',
+  },
+  dropdown: {
+    height: 40,
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    width: 75,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dropdownItem: {
+    padding: 10,
+    fontSize: 12,
+    color: '#333',
+  },
+  customFont: {
+    fontFamily: 'Poppins-Regular',
+  },
+    tambahContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  tambahButton: {
+    flexDirection: 'row',
+    backgroundColor: '#3699FF',
+    width: 90,
+    height: 40,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tambahText: {
+    marginTop: 1,
+    fontFamily: 'Poppins-Regular',
+    color: 'white',
+    marginLeft: 5,
+    lineHeight: 20,
+    fontSize: 13,
+    textAlignVertical: 'center',
+  },
+  editButton: {
+    gap: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#3699FF',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  customFont: {
+    color: 'white',
+    fontFamily: 'Poppins-Regular',
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: 10,
+  },
+  switchLabel: {
+    fontSize: 16,
+    color: '#333',
+  },
 });
