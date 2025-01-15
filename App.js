@@ -14,11 +14,12 @@ import RealisasiKinerja from './screen/BottomNavBar/Menu/RealisasiKinerja/Realis
 import PresensiScreen from './screen/PresensiScreen';
 import Allmenu from './screen/Allmenu';
 import Persetujuan from './screen/Persetujuan';
-import PersetujuanR from './screen/PersetujuanR';
 import HistoryPresensi from './screen/HistoryPresensi';
 import DataTable from './screen/DataTable';
 import ProfileEdit from './screen/BottomNavBar/Profile/ProfileEdit';
 import Password from './screen/BottomNavBar/Profile/Password';
+import PersetujuanRealisasi from './screen/PersetujuanRealisasi';
+
 
 // Bottom Tab Navigator
 const Tab = createBottomTabNavigator();
@@ -35,7 +36,7 @@ function HomeNavigator() {
       <Stack.Screen name="SettingJabatan" component={SettingJabatan} />
       <Stack.Screen name="RealisasiKinerja" component={RealisasiKinerja} />
       <Stack.Screen name="Persetujuan" component={Persetujuan} />
-      <Stack.Screen name="PersetujuanR" component={PersetujuanR} />
+      <Stack.Screen name="PersetujuanRealisasi" component={PersetujuanRealisasi} />
       <Stack.Screen name="HistoryPresensi" component={HistoryPresensi} />
       <Stack.Screen name="DataTable" component={DataTable} />
     </Stack.Navigator>
@@ -65,7 +66,7 @@ export default function App() {
       routeName === 'SettingJabatan' ||
       routeName === 'RealisasiKinerja' ||
       routeName === 'Persetujuan' ||
-      routeName === 'PersetujuanR' ||
+      routeName === 'PersetujuanRealisasi' ||
       routeName === 'ProfileEdit' ||
       routeName === 'Password' ||
       routeName === 'DataTable' ||
