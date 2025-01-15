@@ -32,7 +32,7 @@ const KontrakKinerjaScreen = () => {
 
   useEffect(() => {
     fetchKinerjaData();
-  }, []);    
+  }, []);
 
   const renderItem = ({ item }) => (
     <Card style={styles.card}>

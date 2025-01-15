@@ -17,6 +17,11 @@ import Persetujuan from './screen/Persetujuan';
 import PersetujuanR from './screen/PersetujuanR';
 import HistoryPresensi from './screen/HistoryPresensi';
 import DataTable from './screen/DataTable';
+import DataTable2 from './screen/DataTable2';
+import RemunerasiScreen from './screen/BottomNavBar/Home/Persetujuan/Renumerasi.js';
+import PencapaianKerja from './screen/PencapaianKerja.js';
+import Remunerasi from './screen/Remunerasi.js';
+import KontrakKerja from './screen/KontrakKerja.js';
 
 // Bottom Tab Navigator
 const Tab = createBottomTabNavigator();
@@ -34,8 +39,15 @@ function HomeNavigator() {
       <Stack.Screen name="RealisasiKinerja" component={RealisasiKinerja} />
       <Stack.Screen name="Persetujuan" component={Persetujuan} />
       <Stack.Screen name="PersetujuanR" component={PersetujuanR} />
+      <Stack.Screen name="DataTable2" component={DataTable2} />
       <Stack.Screen name="HistoryPresensi" component={HistoryPresensi} />
       <Stack.Screen name="DataTable" component={DataTable} />
+      <Stack.Screen name="RemunerasiScreen" component={RemunerasiScreen} />
+      <Stack.Screen name="PencapaianKerja" component={PencapaianKerja} />
+      <Stack.Screen name="Remunerasi" component={Remunerasi} />
+      <Stack.Screen name="KontrakKerja" component={KontrakKerja} />
+
+
     </Stack.Navigator>
   );
 }
@@ -54,8 +66,11 @@ export default function App() {
       routeName === 'RealisasiKinerja' ||
       routeName === 'Persetujuan' ||
       routeName === 'PersetujuanR' ||
+      routeName === 'Remunerasi' ||
+      routeName === 'KontrakKerja' ||
+      routeName === 'PencapaianKerja' ||
       routeName === 'HistoryPresensi'
-    ) {
+        ) {
       return false;
     }
     return true;

@@ -1,8 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'; // Import Icon Library
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const Allmenu = ({ navigation }) => { // Menambahkan navigation sebagai prop
   return (
@@ -18,8 +16,7 @@ const Allmenu = ({ navigation }) => { // Menambahkan navigation sebagai prop
       {/* Body */}
       <ScrollView>
         {/* Menu Favorit */}
-        <Text style={styles.sectionTitle}>Menu Favorit</Text>
-        <Text style={styles.sectionSubtitle}>4 menu favorit yang ada di dashboard Anda</Text>
+        <Text style={styles.sectionTitle}>MENU</Text>
 
         <View style={styles.iconGrid}>
           {renderIcon('Setting Jabatan', 'settings', () => navigation.navigate('SettingJabatan'))}
@@ -31,9 +28,9 @@ const Allmenu = ({ navigation }) => { // Menambahkan navigation sebagai prop
         {/* Menu Lainnya */}
         <Text style={styles.sectionTitle}>LAPORAN</Text>
         <View style={styles.iconGrid}>
-          {renderIcon('Kontrak Kerja', 'bag-check-outline')}
-          {renderIcon('Pencapaian Kerja', 'gift-outline')}
-          {renderIcon('Remunersari', 'checkmark-done-circle')}
+          {renderIcon('Kontrak Kerja', 'bag-check-outline', () => navigation.navigate('KontrakKerja'))}
+          {renderIcon('Pencapaian Kerja', 'gift-outline', () => navigation.navigate('PencapaianKerja'))}
+          {renderIcon('Remunerasi', 'checkmark-done-circle', () => navigation.navigate('Remunerasi'))}
         </View>
       </ScrollView>
     </View>

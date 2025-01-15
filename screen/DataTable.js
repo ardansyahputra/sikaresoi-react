@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   },
   detailContainer: {
     padding: 10,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#f2f6fc',
   },
   detailText: {
     marginBottom: 5,
