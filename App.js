@@ -1,8 +1,8 @@
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {getFocusedRouteNameFromRoute} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Import layar utama
@@ -25,7 +25,8 @@ import HistoryPresensi from './screen/HistoryPresensi';
 import ProfileEdit from './screen/BottomNavBar/Profile/ProfileEdit';
 import Password from './screen/BottomNavBar/Profile/Password';
 import PersetujuanRealisasi from './screen/PersetujuanRealisasi';
-
+import AttendanceForm from './screen/Bacascreen.js';
+import Teguranscreen from './screen/TeguranScreen.js';
 
 // Bottom Tab Navigator
 const Tab = createBottomTabNavigator();
@@ -35,7 +36,7 @@ const Stack = createNativeStackNavigator();
 
 function HomeNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator screenOptions={{headerShown: false}}>
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Presensi" component={PresensiScreen} />
       <Stack.Screen name="Allmenu" component={Allmenu} />
@@ -50,18 +51,18 @@ function HomeNavigator() {
       <Stack.Screen name="PencapaianKerja" component={PencapaianKerja} />
       <Stack.Screen name="Remunerasi" component={Remunerasi} />
       <Stack.Screen name="KontrakKerja" component={KontrakKerja} />
-
-
+      <Stack.Screen name="Bacascreen" component={AttendanceForm} />
+      <Stack.Screen name="Teguran" component={Teguranscreen} />
     </Stack.Navigator>
   );
 }
 
 function ProfileNavigator() {
-  return(
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+  return (
+    <Stack.Navigator screenOptions={{headerShown: false}}>
       <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
-      <Stack.Screen name="ProfileEdit" component={ProfileEdit}/>
-      <Stack.Screen name="Password" component={Password}/>
+      <Stack.Screen name="ProfileEdit" component={ProfileEdit} />
+      <Stack.Screen name="Password" component={Password} />
     </Stack.Navigator>
   );
 }
@@ -69,7 +70,7 @@ function ProfileNavigator() {
 // Aplikasi Utama
 
 export default function App() {
-  const getTabBarVisibility = (route) => {
+  const getTabBarVisibility = route => {
     const routeName = getFocusedRouteNameFromRoute(route) ?? 'Home';
 
     // Sembunyikan tab bar untuk layar tertentu
@@ -83,7 +84,7 @@ export default function App() {
       routeName === 'Remunerasi' ||
       routeName === 'KontrakKerja' ||
       routeName === 'PencapaianKerja' ||
-      routeName === 'HistoryPresensi' ||  
+      routeName === 'HistoryPresensi' ||
       routeName === 'PersetujuanRealisasi' ||
       routeName === 'ProfileEdit' ||
       routeName === 'Password' ||
@@ -92,15 +93,15 @@ export default function App() {
     ) {
       return false;
     }
-    
+
     return true;
   };
 
   return (
     <NavigationContainer>
       <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => {
+        screenOptions={({route}) => ({
+          tabBarIcon: ({focused, color, size}) => {
             let iconName;
 
             if (route.name === 'Home') {
@@ -124,8 +125,7 @@ export default function App() {
             elevation: 8,
             display: getTabBarVisibility(route) ? 'flex' : 'none', // Sembunyikan tab bar
           },
-        })}
-      >
+        })}>
         <Tab.Screen name="Home" component={HomeNavigator} />
         <Tab.Screen name="Kontrak Kinerja" component={KontrakKinerjaScreen} />
         <Tab.Screen name="Profil" component={ProfileNavigator} />
