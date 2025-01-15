@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 import Ardhan from 'react-native-vector-icons/MaterialIcons';
 import Gusti from 'react-native-vector-icons/MaterialCommunityIcons';
 import Oliv from 'react-native-vector-icons/MaterialCommunityIcons';
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen({navigation}) {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Toggle the dark/light mode
@@ -15,24 +22,36 @@ export default function HomeScreen({ navigation }) {
   };
 
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1 }}> {/* Membuat halaman scrollable */}
-      <View style={[styles.container, { backgroundColor: isDarkMode ? '#333' : '#F5F5F5' }]}>
+    <ScrollView contentContainerStyle={{flexGrow: 1}}>
+      {' '}
+      {/* Membuat halaman scrollable */}
+      <View
+        style={[
+          styles.container,
+          {backgroundColor: isDarkMode ? '#333' : '#F5F5F5'},
+        ]}>
         {/* Header */}
-        <LinearGradient colors={isDarkMode ? ['#333', '#333'] : ['#FFFFFF', '#FFFFFF']} style={styles.header}>
+        <LinearGradient
+          colors={isDarkMode ? ['#333', '#333'] : ['#FFFFFF', '#FFFFFF']}
+          style={styles.header}>
           <Image
             source={require('../../assets/images/sikaresoi.png')}
             style={styles.logo}
             resizeMode="cover"
           />
           <TouchableOpacity onPress={toggleTheme} style={styles.themeToggle}>
-            <Icon name={isDarkMode ? 'moon' : 'sunny'} size={30} color={isDarkMode ? '#fff' : '#000'} />
+            <Icon
+              name={isDarkMode ? 'moon' : 'sunny'}
+              size={30}
+              color={isDarkMode ? '#fff' : '#000'}
+            />
           </TouchableOpacity>
         </LinearGradient>
 
         {/* Banner */}
         <View style={styles.banner}>
           <Image
-            source={{ uri: 'https://via.placeholder.com/350x150' }}
+            source={{uri: 'https://via.placeholder.com/350x150'}}
             style={styles.bannerImage}
             resizeMode="cover"
           />
@@ -40,30 +59,46 @@ export default function HomeScreen({ navigation }) {
 
         {/* Menu Favorite */}
         <View style={styles.menuRow}>
-          {renderMenuIcon('Setting   Jabatan', 'settings', () => navigation.navigate('SettingJabatan'))}
-          {renderMenuIcon('Realisasi  Kinerja', 'add-circle-outline', () => navigation.navigate('RealisasiKinerja'))}
-          {renderMenuIcon('Persetujuan Kontrak Kinerja', 'shield-checkmark', () => navigation.navigate('Persetujuan'))}
-          {renderMenuIcon('Lainnya', 'apps', () => navigation.navigate('Allmenu'))}
+          {renderMenuIcon('Setting   Jabatan', 'settings', () =>
+            navigation.navigate('SettingJabatan'),
+          )}
+          {renderMenuIcon('Realisasi  Kinerja', 'add-circle-outline', () =>
+            navigation.navigate('RealisasiKinerja'),
+          )}
+          {renderMenuIcon(
+            'Persetujuan Kontrak Kinerja',
+            'shield-checkmark',
+            () => navigation.navigate('Persetujuan'),
+          )}
+          {renderMenuIcon('Lainnya', 'apps', () =>
+            navigation.navigate('Allmenu'),
+          )}
         </View>
         <View style={styles.dashboardNav}>
           {/* Baris 1: Dua tombol pertama */}
           <View style={styles.row}>
             <TouchableOpacity
-              style={[styles.card,]}
-              onPress={() => navigation.navigate('Presensi')}
-            >
-              <LinearGradient colors={['#4A90E2', '#1D56C0']} style={styles.gradient}>
-                <Ardhan name="perm-contact-calendar" size={60} color="#FFFFFF"  />
+              style={[styles.card]}
+              onPress={() => navigation.navigate('Presensi')}>
+              <LinearGradient
+                colors={['#4A90E2', '#1D56C0']}
+                style={styles.gradient}>
+                <Ardhan
+                  name="perm-contact-calendar"
+                  size={60}
+                  color="#FFFFFF"
+                />
                 <Text style={styles.cardTitle}>Presensi</Text>
                 <Text style={styles.cardSubtitle}>Data Presensi</Text>
               </LinearGradient>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.card,]}
-              onPress={() => navigation.navigate('Teguran')}
-            >
-              <LinearGradient colors={['#FF6F61', '#E53935', '#B71C1C']} style={styles.gradient}>
+              style={[styles.card]}
+              onPress={() => navigation.navigate('Teguran')}>
+              <LinearGradient
+                colors={['#FF6F61', '#E53935', '#B71C1C']}
+                style={styles.gradient}>
                 <Gusti name="email-newsletter" size={60} color="#FFFFFF" />
                 <Text style={styles.cardTitle}>Teguran</Text>
                 <Text style={styles.cardSubtitle}>Data Teguran</Text>
@@ -73,11 +108,12 @@ export default function HomeScreen({ navigation }) {
 
           {/* Baris 2: Dua tombol berikutnya */}
           <View style={styles.row}>
-          <TouchableOpacity
-              style={[styles.card,]}
-              onPress={() => navigation.navigate('Persetujuan')}
-            >
-              <LinearGradient colors={['#D32F2F', '#F44336']} style={styles.gradient}>
+            <TouchableOpacity
+              style={[styles.card]}
+              onPress={() => navigation.navigate('Persetujuan')}>
+              <LinearGradient
+                colors={['#D32F2F', '#F44336']}
+                style={styles.gradient}>
                 <Oliv name="file-document" size={60} color="#FFFFFF" />
                 <Text style={styles.cardTitle}>1 Kontrak Bawahan</Text>
                 <Text style={styles.cardSubtitle}>Belum Disetujui</Text>
@@ -85,17 +121,17 @@ export default function HomeScreen({ navigation }) {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.card,]}
-              onPress={() => navigation.navigate('PersetujuanRealisasi')}
-            >
-                <LinearGradient colors={['#F57F17', '#FBC02D']} style={styles.gradient}>
+              style={[styles.card]}
+              onPress={() => navigation.navigate('PersetujuanRealisasi')}>
+              <LinearGradient
+                colors={['#F57F17', '#FBC02D']}
+                style={styles.gradient}>
                 <Oliv name="file-document" size={60} color="#FFFFFF" />
                 <Text style={styles.cardTitle}>0 Realisasi Bawahan</Text>
                 <Text style={styles.cardSubtitle}>Belum Disetujui</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
-
         </View>
       </View>
     </ScrollView>
@@ -108,16 +144,24 @@ const renderMenuIcon = (label, iconName, onPress) => {
       <View style={styles.iconCircle}>
         <Icon name={iconName} size={30} color="#213376" />
       </View>
-      <Text style={styles.menuText}>{label}</Text> {/* The label will wrap if too long */}
+      <Text style={styles.menuText}>{label}</Text>{' '}
+      {/* The label will wrap if too long */}
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1,},
-  header: { padding: 16, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  banner: { margin: 10 },
-  bannerImage: { width: '100%', height: 150, borderRadius: 8 },
+  container: {flex: 1},
+  header: {
+    padding: 16,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  banner: {margin: 10},
+  bannerImage: {width: '100%', height: 150, borderRadius: 8},
   menuRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -138,7 +182,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   menuText: {
-    flexShrink: 1,  // Allow text to shrink and wrap within its container
+    flexShrink: 1, // Allow text to shrink and wrap within its container
     textAlign: 'center', // Center align text under the icon
     paddingTop: 5, // Optional: add space between the icon and text
     width: '100%', // Ensure text uses available width for wrapping
@@ -169,7 +213,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: -60,
   },
-  
+
   gradient: {
     flex: 1,
     borderRadius: 8,
@@ -197,5 +241,5 @@ const styles = StyleSheet.create({
     top: 14,
     right: 20,
     padding: 8,
-  }  
+  },
 });
