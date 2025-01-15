@@ -12,6 +12,7 @@ export const AuthProvider = ({children, navigation}) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(false); // For loading state
   const [error, setError] = useState(null); // For error handling
+  const [pangkatItems, setPangkatItems] = useState([]);
 
   const loadTokenFromKeychain = async () => {
     const credentials = await Keychain.getGenericPassword();
@@ -20,9 +21,48 @@ export const AuthProvider = ({children, navigation}) => {
     }
   };
 
+  // Fungsi untuk fetch data pangkat
+  const fetchPangkat = async () => {
+    try {
+      const response = await axios.get(`${API_URL}pangkat/show`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const pangkatList = response.data?.data;
+
+      if (Array.isArray(pangkatList)) {
+        const formattedItems = pangkatList.map(item => ({
+          label: `${item.nm_pangkat} (${item.golongan}/${item.ruang || '-'})`,
+          value: item.id,
+        }));
+        setPangkatItems(formattedItems);
+      } else {
+        console.error('Pangkat list is not an array:', pangkatList);
+      }
+    } catch (error) {
+      if (error.response?.status === 401) {
+        const newToken = await refreshToken();
+        if (newToken) {
+          await fetchPangkat(); // Coba ulang setelah token diperbarui
+        } else {
+          logout();
+        }
+      } else {
+        console.error('Error fetching pangkat:', error);
+      }
+    }
+  };
+
   useEffect(() => {
     loadTokenFromKeychain(); // Load token when app starts
   }, []);
+
+  useEffect(() => {
+    if (token) {
+      fetchPangkat(); // Fetch pangkat items when token is available
+    }
+  }, [token]);
 
   const login = (userData, token) => {
     setUser(userData);
@@ -67,7 +107,17 @@ export const AuthProvider = ({children, navigation}) => {
 
   return (
     <AuthContext.Provider
-      value={{user, token, login, logout, refreshToken, loading, error}}>
+      value={{
+        user,
+        token,
+        login,
+        logout,
+        fetchPangkat,
+        pangkatItems,
+        refreshToken,
+        loading,
+        error,
+      }}>
       {children}
     </AuthContext.Provider>
   );

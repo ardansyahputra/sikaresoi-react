@@ -6,7 +6,7 @@ export default function User() {
     <View style={styles.container}>
       <Text style={styles.text}>User Screen</Text>
     </View>
-  );  
+  );
 }
 
 const styles = StyleSheet.create({
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     paddingLeft: 0,
   },
   numberCell: {
-    width: 50
+    width: 50,
   },
   nameCell: {
     flex: 1,
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   displayContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems:'center',
+    alignItems: 'center',
     marginRight: 20,
   },
   displayText: {
@@ -297,5 +297,5 @@ const styles = StyleSheet.create({
   },
   customFont: {
     fontFamily: 'Poppins-Regular',
-  }
+  },
 });

@@ -41,9 +41,13 @@ import RemunerasiScreen from './screen/admin/laporan/remunerasi/Remunerasi';
 import TunjanganTambahanScreen from './screen/admin/laporan/tunjangan_tambahan/Tunjangan_tambahan';
 
 //User
-import User from './screen/admin/master/user/User';
 import UserGroupScreen from './screen/admin/master/user_group/User_group';
 import PersentaseKegiatanScreen from './screen/admin/master/persentase_kegiatan/Persentase_kegiatan';
+
+//profile
+import ProfileEdit from './screen/admin/master/user/ProfileEdit';
+import Password from './screen/admin/master/user/Password';
+import User from './screen/admin/master/user/ProfileScreen';
 
 //Master
 import PemotonganScreen from './screen/admin/master/pemotongan/Pemotongan';
@@ -102,11 +106,6 @@ function HomeStack() {
         name="Home"
         component={Home}
         options={{headerShown: false}}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="User"
-        component={User}
       />
       <Stack.Screen
         options={{headerShown: false}}
@@ -356,6 +355,17 @@ function HomeStack() {
     </Stack.Navigator>
   );
 }
+
+function ProfileStack() {
+  return (
+    <Stack.Navigator screenOptions={{headerShown: false}}>
+      <Stack.Screen name="ProfileScreen" component={User} />
+      <Stack.Screen name="ProfileEdit" component={ProfileEdit} />
+      <Stack.Screen name="Password" component={Password} />
+    </Stack.Navigator>
+  );
+}
+
 function AppTabs() {
   const {shouldShowTabNavigator} = useNavigationContext();
 
@@ -389,12 +399,12 @@ function AppTabs() {
       />
       <Tab.Screen
         name="Presensi"
-        component={Presensi} // Pastikan Presensi sudah ada
+        component={Presensi}
         options={{headerShown: false}}
       />
       <Tab.Screen
         name="Profile"
-        component={User}
+        component={ProfileStack}
         options={{headerShown: false}}
       />
     </Tab.Navigator>
