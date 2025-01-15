@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
+import { Picker } from '@react-native-picker/picker';
+import DatePicker from 'react-native-date-picker';
 
 const SettingJabatan = ({ navigation }) => {
   const [search, setSearch] = useState('');
@@ -19,14 +21,15 @@ const SettingJabatan = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentJabatan, setCurrentJabatan] = useState(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({  
     detail_jabatan: '',
     detail_pimpinan: '',
-    periode: '',
+    periode: new Date(),
   });
   const [loading, setLoading] = useState(false);
 
-  const token = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYxLjIzMDo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM0NTg5MTY4LCJleHAiOjE3MzQ1OTI5NzQsIm5iZiI6MTczNDU4OTM3NCwianRpIjoiMklhWE8zbUhBN1hxZnM2OCIsInN1YiI6NywicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.IWF2N22XfTbQhdd86I9BeydFvJJTl-hqfNMTw6plcNE';
+  const baseURL = 'http://192.168.61.230:8000/api/v1'
+  const token = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjIzMDo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NTIyNDkzLCJleHAiOjE3MzU1MzE0MzEsIm5iZiI6MTczNTUyNzgzMSwianRpIjoiV1RiRzNzNWlSaHJJWHBRSSIsInN1YiI6NywicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.XPEEriuqfPX_L_SCgcJfJMTgYbgKVWmk2-_VKfE3aBY';
 
   useEffect(() => {
     fetchData();
@@ -36,7 +39,7 @@ const SettingJabatan = ({ navigation }) => {
     setLoading(true);
     try {
       const response = await axios.post(
-        'http://192.168.61.230:8000/api/v1/user/jabatan/index',
+        ` ${baseURL}/user/jabatan/index`,
         {},
         { headers: { Authorization: token } }
       );
@@ -56,7 +59,7 @@ const SettingJabatan = ({ navigation }) => {
 
     try {
       await axios.patch(
-        `http://192.168.61.230:8000/api/v1/user/jabatan/${id}/changeAktif`,
+        `${baseURL}/user/jabatan/${id}/changeAktif`,
         { aktif: updatedStatus },
         { headers: { Authorization: token } }
       );
@@ -73,7 +76,7 @@ const SettingJabatan = ({ navigation }) => {
   const deleteJabatan = async (id) => {
     try {
       await axios.delete(
-        `http://192.168.61.230:8000/api/v1/user/jabatan/${id}/delete`,
+        `${baseURL}/user/jabatan/${id}/delete`,
         { headers: { Authorization: token } }
       );
       setData((prevData) => prevData.filter((item) => item.id !== id));
@@ -82,27 +85,36 @@ const SettingJabatan = ({ navigation }) => {
     }
   };
 
+  const handleDateChange = (date) => {
+    setFormData({ ...formData, periode: date });
+  };
+
   const openModal = (jabatan = null) => {
     setIsEditMode(!!jabatan);
     setCurrentJabatan(jabatan);
     setFormData({
       detail_jabatan: jabatan?.detail_jabatan || '',
       detail_pimpinan: jabatan?.detail_pimpinan || '',
-      periode: jabatan?.periode || '',
+      periode: jabatan?.periode ? new Date(jabatan.periode) : new Date(),
     });
     setModalVisible(true);
+    console.log('Periode:', jabatan?.periode);
   };
 
   const closeModal = () => {
     setModalVisible(false);
-    setFormData({ detail_jabatan: '', detail_pimpinan: '', periode: '' });
+    setFormData({
+      detail_jabatan: '',
+      detail_pimpinan: '',
+      periode: new Date(),
+    });
     setCurrentJabatan(null);
   };
 
   const handleSave = async () => {
     const endpoint = isEditMode
-      ? `http://192.168.61.230:8000/api/v1/user/jabatan/${currentJabatan.id}/update`
-      : 'http://192.168.61.230:8000/api/v1/user/jabatan/store';
+      ? `${baseURL}/user/jabatan/${currentJabatan.id}/update`
+      : `${baseURL}/user/jabatan/store`;
 
     try {
       setLoading(true);
@@ -171,7 +183,6 @@ const SettingJabatan = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color="#FAFAFA" />
@@ -179,7 +190,6 @@ const SettingJabatan = ({ navigation }) => {
         <Text style={styles.headerTitle}>Jabatan</Text>
       </View>
 
-      {/* Search and Add */}
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -193,7 +203,6 @@ const SettingJabatan = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* List Data */}
       {loading ? (
         <ActivityIndicator size="large" color="#FFD600" />
       ) : (
@@ -206,7 +215,6 @@ const SettingJabatan = ({ navigation }) => {
         />
       )}
 
-      {/* Modal Tambah/Edit */}
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -216,26 +224,28 @@ const SettingJabatan = ({ navigation }) => {
               onChangeText={(text) => setFormData({ ...formData, detail_jabatan: text })}
               style={styles.input}
             />
-            <TextInput
-              placeholder="Detail Pimpinan"
-              value={formData.detail_pimpinan}
-              onChangeText={(text) => setFormData({ ...formData, detail_pimpinan: text })}
+            
+            <Picker
+              selectedValue={formData.detail_pimpinan}
               style={styles.input}
+              onValueChange={(itemValue) => setFormData({ ...formData, detail_pimpinan: itemValue })}
+            >
+              <Picker.Item label="Pimpinan 1" value="pimpinan_1" />
+              <Picker.Item label="Pimpinan 2" value="pimpinan_2" />
+            </Picker>
+
+            <DatePicker
+              date={formData.periode}
+              onDateChange={handleDateChange}
             />
-            <TextInput
-              placeholder="Periode"
-              value={formData.periode}
-              onChangeText={(text) => setFormData({ ...formData, periode: text })}
-              style={styles.input}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity onPress={handleSave} style={styles.addButton}>
-                <Text style={styles.buttonText}>{isEditMode ? 'Update' : 'Simpan'}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={closeModal} style={styles.deleteButton}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-            </View>
+
+            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+              <Text style={styles.saveButtonText}>Simpan</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.cancelButton} onPress={closeModal}>
+              <Text style={styles.cancelButtonText}>Batal</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -414,5 +424,6 @@ const styles = StyleSheet.create({
 
 });
 
+
+
 export default SettingJabatan;
-    

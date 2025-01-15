@@ -76,7 +76,7 @@ export default function HomeScreen({ navigation }) {
 
             <TouchableOpacity
               style={[styles.card,]}
-              onPress={() => navigation.navigate('PersetujuanR')}
+              onPress={() => navigation.navigate('PersetujuanRealisasi')}
             >
                 <LinearGradient colors={['#F57F17', '#FBC02D']} style={styles.gradient}>
                 <Oliv name="file-document" size={60} color="#FFFFFF" />

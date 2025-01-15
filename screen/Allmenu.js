@@ -22,7 +22,7 @@ const Allmenu = ({ navigation }) => { // Menambahkan navigation sebagai prop
           {renderIcon('Setting Jabatan', 'settings', () => navigation.navigate('SettingJabatan'))}
           {renderIcon('Realisasi Kinerja', 'add-circle-outline', () => navigation.navigate('RealisasiKinerja'))}
           {renderIcon('Persetujuan Kontrak Kinerja', 'shield-checkmark', () => navigation.navigate('Persetujuan'))}
-          {renderIcon('Persetujuan Realisasi', 'documents-outline', () => navigation.navigate('PersetujuanR'))}
+          {renderIcon('Persetujuan Realisasi', 'documents-outline', () => navigation.navigate('PersetujuanRealisasi'))}
         </View>
 
         {/* Menu Lainnya */}
