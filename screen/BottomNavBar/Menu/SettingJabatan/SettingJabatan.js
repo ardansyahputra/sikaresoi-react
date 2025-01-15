@@ -1,311 +1,649 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  StyleSheet,
   View,
   Text,
-  TouchableOpacity,
+  StyleSheet,
   FlatList,
-  Switch,
+  TouchableOpacity,
+  ActivityIndicator,
   Image,
+  Modal,
   TextInput,
-  ImageBackground,
+  Alert,
+  Switch,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { Dropdown } from 'react-native-element-dropdown';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import axios from 'axios';
 
 const SettingJabatan = ({ navigation }) => {
-  const [search, setSearch] = useState('');
-  const [data, setData] = useState([
-    {
-      id: '1',
-      jabatan: 'Sub Koordinator Bidang Adm Akademik',
-      pimpinan: 'Capt. EGBERT EDWARD DJAJASASANA, M.Pd\nNIP: 19660416 199803 1 001',
-      periode: '01 Oktober 2021 s/d 28 Februari 2022',
-      aktif: false,
-    },
-    {
-      id: '2',
-      jabatan: 'Sub Koordinator Bidang Adm Akademik',
-      pimpinan: 'SAMSUDDIN, M.T., M.Mar.E.\nNIP: 19720117 200212 1 001',
-      periode: '01 Maret 2022 s/d 31 Desember 2022',
-      aktif: false,
-    },
-    {
-      id: '3',
-      jabatan: 'Pengembang teknologi pembelajaran',
-      pimpinan: 'Dr. Ir. RUKMINI, S.T., M.T.\nNIP: 19740311 199803 2 001',
-      periode: '02 Januari 2023 s/d 31 Desember 2023',
-      aktif: false,
-    },
-    {
-      id: '4',
-      jabatan: 'Analis PTP (Ketua TIM Administrasi Akademik)',
-      pimpinan: 'Dr. Ir. SUPARDIM, M.Si., M.Mar.E., IPM\nNIP: 19730825 200212 1 002',
-      periode: '02 Januari 2024 s/d 31 Desember 2024',
-      aktif: true,
-    },
-    {
-      id: '5',
-      jabatan: 'Analis PTP (Ketua TIM Administrasi Akademik)',
-      pimpinan: 'Dr. Ir. SUPARDIM, M.Si., M.Mar.E., IPM\nNIP: 19730825 200212 1 002',
-      periode: '02 Januari 2024 s/d 31 Desember 2024',
-      aktif: true,
-    },
-    {
-      id: '6',
-      jabatan: 'Analis PTP (Ketua TIM Administrasi Akademik)',
-      pimpinan: 'Dr. Ir. SUPARDIM, M.Si., M.Mar.E., IPM\nNIP: 19730825 200212 1 002',
-      periode: '02 Januari 2024 s/d 31 Desember 2024',
-      aktif: true,
-    },
-    {
-      id: '7',
-      jabatan: 'Analis PTP (Ketua TIM Administrasi Akademik)',
-      pimpinan: 'Dr. Ir. SUPARDIM, M.Si., M.Mar.E., IPM\nNIP: 19730825 200212 1 002',
-      periode: '02 Januari 2024 s/d 31 Desember 2024',
-      aktif: true,
-    },
-    {
-      id: '8',
-      jabatan: 'Analis PTP (Ketua TIM Administrasi Akademik)',
-      pimpinan: 'Dr. Ir. SUPARDIM, M.Si., M.Mar.E., IPM\nNIP: 19730825 200212 1 002',
-      periode: '02 Januari 2024 s/d 31 Desember 2024',
-      aktif: true,
-    },
-    
-  ]);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [selectedDisplay, setSelectedDisplay] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const toggleSwitch = (id) => {
-    setData((prevData) =>
-      prevData.map((item) =>
-        item.id === id ? { ...item, aktif: !item.aktif } : item
-      )
+  const baseURL = 'http://192.168.60.230:8000/api/v1';
+  const token = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjIzMDo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2ODIxMzMyLCJleHAiOjE3MzY4MzIxMDgsIm5iZiI6MTczNjgyODUwOCwianRpIjoiR05leGF5a2FEemY0MDJLTCIsInN1YiI6MzAsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.UKZmY2qspjU_uSwttNjt1I1j5obnYUrkZjnRVEx_Nzc';
+
+  useEffect(() => {
+    fetchData(currentPage, selectedDisplay);
+  }, [currentPage, selectedDisplay]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        `${baseURL}/user/jabatan/index`,
+        {},
+        { headers: { Authorization: token } }
+      );
+      setData(response.data.data || []);
+      setCurrentPage(response.data.current_page || []);
+      setLastPage(response.data.last_page || []);
+    } catch (error) {
+      console.error('Error fetching data', error.response?.data || error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAdd = () => {
+    navigation.navigate('FormJabatan', { type: 'create' });
+  };
+
+  const handleEdit = (item) => {
+    navigation.navigate('FormJabatan', { type: 'edit', uuid: item.uuid });
+  };
+  
+  const changeAktif = async (uuid , status) => {
+    try {
+      const response = await axios.put(
+        `${baseURL}/user/jabatan/${uuid}/change-aktif`,
+        { aktif: status },
+        { headers: { Authorization: token } }
+      );
+      Alert.alert('Sukses', 'Status berhasil diubah');
+      fetchData();
+    } catch (error) {
+      console.error('Error merubah status', error.response?.data || error.message);
+      Alert.alert('Gagal', 'Terjadi kesalahan saat mengubah status')
+    }
+  }
+
+  const handleDelete = async (id) => {
+    setModalVisible(false);
+    try {
+      await axios.delete(`${baseURL}/user/jabatan/${id}/delete`, {
+        headers: { Authorization: token },
+      });
+      Alert.alert('Sukses', 'Data berhasil dihapus.');
+      fetchData(); // Refresh data setelah penghapusan
+    } catch (error) {
+      console.error('Error deleting data', error.response?.data || error.message);
+      Alert.alert('Gagal', 'Terjadi kesalahan saat menghapus data.');
+    }
+  };
+
+  const confirmDelete = (item) => {
+    setSelectedItem(item);
+    setModalVisible(true);
+  };
+
+  const display = [
+    {label: '5', value: 1},
+    {label: '10', value: 2},
+    {label: '25', value: 3},
+    {label: '50', value: 4},
+    {label: '100', value: 5},
+  ];
+
+  const toggleExpand = id => {
+    setExpandedId(expandedId === id ? null : id);
+  };
+
+  const TableHeader = () => (
+    <View>
+      <View style={styles.headerContainer}>
+      <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
+            <FontAwesome name="plus" size={20} color="#fff" />
+            <Text style={styles.addButtonText}>TAMBAH</Text>
+          </TouchableOpacity>
+      </View>
+      <View style={styles.filterContainer}>
+        <View style={styles.displayContainer}>
+          <Text style={styles.displayText}>Display</Text>
+          <Dropdown
+            style={styles.dropdown}
+            data={display}
+            labelField="label"
+            valueField="value"
+            placeholder="10"
+            value={selectedDisplay}
+            onChange={item => setSelectedDisplay(item.value)}
+            renderItem={item => (
+              <Text style={[styles.dropdownItem, styles.customFont]}>
+                {item.label}
+              </Text>
+              )}
+            />
+          </View>
+          <View style={styles.searchContainer}>
+            <TextInput
+              style={styles.searchBar}
+              placeholder="Search"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            <Ionicons name='search' size={20} color='#888' style={styles.searchIcon} />
+          </View>
+      </View> 
+          
+        {/* Table Header */}
+        <View style={styles.tableHeader}>
+          <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
+          <Text style={[styles.headerCell, styles.nameCell]}>Pimpinan</Text>
+          <Text style={[styles.headerCell, styles.detailCell]}>Detail</Text>
+          <View style={styles.expandIconCell} />
+        </View>
+    </View>
+  );
+  
+  const renderItem = ({ item, index }) => {
+    const isExpanded = expandedId === item.id;
+  
+    return (
+      <View style={styles.tableRow}>
+        <TouchableOpacity
+          style={styles.rowHeader}
+          onPress={() => toggleExpand(item.id)}
+        >
+          <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
+          <Text
+            style={[styles.tableCell, styles.nameCell]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {item.detail_pimpinan || '-'}
+          </Text>
+          <View style={styles.expandIconCell}>
+            <Ionicons
+              name={isExpanded ? 'chevron-up' : 'chevron-down'}
+              size={20}
+              color="#333"
+            />
+          </View>
+        </TouchableOpacity>
+        {isExpanded && (
+          <View style={styles.expandedContent}>
+            <Text style={styles.expandedText}>
+              Detail Jabatan: <Text style={styles.expandedTextDetail}> {item.detail_jabatan || '-'}</Text>
+            </Text>
+            <Text style={styles.expandedText}>
+              Pimpinan: <Text style={styles.expandedTextDetail}> {item.detail_pimpinan || '-'}</Text>
+            </Text>
+            <Text style={styles.expandedText}>
+              Periode: <Text style={styles.expandedTextDetail}>{item.periode || '-'}</Text>
+            </Text>
+            <View style={styles.actionContainer}>
+              <Switch
+                value={item.aktif}
+                onValueChange={(value) => changeAktif(item.id, value)}
+              />
+              <TouchableOpacity 
+                style={styles.editButton}
+                onPress={() => handleEdit(item)}>
+                <Ionicons name="create" size={20} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => confirmDelete(item)}>
+                <Ionicons name="trash" size={20} color="white" />
+              </TouchableOpacity>              
+            </View>
+          </View>
+        )}
+      </View>
     );
   };
   
-  const renderItem = ({ item }) => (
-    <View
-      style={[
-        styles.card,
-        item.aktif && styles.cardActive, // Add active style if applicable
-      ]}
-    >
-      <View style={styles.rowBetween}>
-        <View style={styles.textContainer}>
-          <Text
-            style={[styles.jabatan, item.aktif && styles.textActive]}
-            numberOfLines={2} // Allow the jabatan text to wrap if it's too long
-          >
-            {item.jabatan}
-          </Text>
-          <Text
-            style={[styles.pimpinan, item.aktif && styles.textActive]}
-            numberOfLines={2}
-          >
-            {item.pimpinan}
-          </Text>
-          <Text style={[styles.periode, item.aktif && styles.textActive]}>
-            {item.periode}
-          </Text>
-        </View>
-        <View style={styles.switchContainer}>
-          <Switch
-            trackColor={{ false: '#BDBDBD', true: '#A1887F' }}
-            thumbColor={item.aktif ? '#FFD600' : '#FAFAFA'}
-            ios_backgroundColor="#BDBDBD"
-            onValueChange={() => toggleSwitch(item.id)}
-            value={item.aktif}
-          />
-        </View>
-      </View>
-      <View style={[styles.rowBetween, styles.buttonRow]}>
-        <TouchableOpacity style={styles.editButton}>
-          <Icon name="edit" size={20} color="#FFFFFF" />
-          <Text style={styles.buttonText}>Edit</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteButton}>
-          <Icon name="delete" size={20} color="#FFFFFF" />
-          <Text style={styles.buttonText}>Hapus</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-  
-  
-
   return (
     <View style={styles.container}>
-      {/* Header dengan Tombol Back */}
-      
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color="#FAFAFA" />
-        </TouchableOpacity>
-
-         {/* Image and Title */}
-      <View style={styles.headerContent}>
-        <Image
-          source={require('../../../assets/images/sikaresoi.png')}
-          // Path gambar sesuai
-          style={styles.headerImage}
+        <View style={styles.headerLeft}>
+          <Image
+            source={require('../../../assets/images/sikaresoi.png')}
+            style={styles.logo}
+          />
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#ddd" />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
+          <TouchableOpacity style={styles.iconWrapper}>
+            <Ionicons name="person-circle-outline" size={24} color="#333" />
+          </TouchableOpacity>
+        </View>
+      </View>
+  
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}> Peringatan </Text>
+            <Text style={styles.modalText}>Apakah Anda yakin ingin menghapus data ini?</Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonCancel]}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>Batal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonDelete]}
+                onPress={() => handleDelete(selectedItem.id)}
+              >
+                <Text style={styles.modalButtonText}>Hapus</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+  
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <FlatList
+          data={data}
+          keyExtractor={(item, index) => index.toString()}
+          ListHeaderComponent={TableHeader}
+          renderItem={renderItem}
+          contentContainerStyle={styles.card}
+          ListFooterComponent={
+            <View>
+              <Text style={styles.pageInfo}>
+                Showing page {currentPage} of {lastPage}
+              </Text>
+              <View style={styles.paginationContainer}>
+                <View style={styles.paginationButtons}>
+                  <TouchableOpacity
+                    style={[
+                      styles.pageButton,
+                      currentPage === 1 && styles.disabledButton,
+                    ]}
+                    disabled={currentPage === 1}
+                    onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  >
+                    <Text style={styles.pageButtonText}>Previous</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.pageButton,
+                      currentPage === lastPage && styles.disabledButton,
+                    ]}
+                    disabled={currentPage === lastPage}
+                    onPress={() =>
+                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
+                    }
+                  >
+                    <Text style={styles.pageButtonText}>Next</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          }
         />
-        <Text style={styles.headerTitle}>Jabatan</Text>
-        <Text style={styles.headerSubtitle}>User • Jabatan </Text>
-      </View>
-      </View>
-
-      {/* Search dan Tombol Tambah */}
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Cari jabatan..."
-          placeholderTextColor="#BDBDBD"
-          value={search}
-          onChangeText={setSearch}
-        />
-        <TouchableOpacity style={styles.addButton}>
-          <Icon name="add" size={24} color="#FAFAFA" />
-          <Text style={styles.buttonText}>Tambah</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* List */}
-      <FlatList
-        data={data}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={styles.listContainer}
-      />
+      )}
     </View>
   );
-};
+}
+
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EFEFEF',
-    padding: 16,
-  },
-  header: { flexDirection: "row", alignItems: "center", backgroundColor: "#2563EB", paddingHorizontal: 16, paddingVertical: 18, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, shadowColor: "#000", shadowOpacity: 0.1, elevation: 5, marginBottom: 20, width: '100%',  },
-  backButton: {
-    marginRight: 16,
-  },
-
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    borderColor: '#BDBDBD',
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    backgroundColor: '#FFFFFF',
-    marginRight: 8,
-    color: '#424242',
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFD600',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 20,
+    padding: 10,
+    backgroundColor: '#F7F8FB', // Tetap sesuai dengan warna default Anda
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 12,
-    shadowColor: '#000000',
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    borderRadius: 10,
+    padding: 15,
+    margin: 10,
     elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
-  rowBetween: {
+  headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start', // Align items at the top to prevent overlap
-    flexWrap: 'wrap', // Allows wrapping if space is needed
+    alignItems: 'center',
+    marginBottom: 10,
   },
-  
-  textContainer: {
-    flex: 1, // Ensures that the text container takes up available space
+  header: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: 2,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
-  
-  jabatan: {
-    fontSize: 16,
+  headerLeft: {
+    flex: 1,
+  },
+  logo: {
+    width: 140,
+    height: 40,
+    resizeMode: 'contain',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    flex: 1,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  searchContainer: {
+    width: 150,
+    height: 40,
+    backgroundColor: '#FFFFFF',
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  searchBar: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingRight: 40, 
+    color: '#000',
+  },
+  searchIcon: {
+    position: 'absolute',
+    right: 10, 
+    top: '50%',
+    transform: [{ translateY: -10 }],
+  },
+  displayContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  displayText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 13,
+    marginRight: 8,
+    textAlign: 'center',
+    color: '#3f4254',
+  },
+  dropdown: {
+    width: 120,
+    height: 40,
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 8,
+  },
+  addContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  addButton: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    padding: 10, 
+    backgroundColor: '#007bff', 
+    borderRadius: 5,
+    marginRight: 20,
+  },
+  addButtonText: { 
     fontWeight: 'bold',
-    color: '#424242',
-    flexWrap: 'wrap', // Allow text to wrap if it's too long
-    flex: 1, // Ensures it takes up available space without pushing the switch button out of view
+    color: 'white', 
+    marginLeft: 8, 
   },
-  
-  switchContainer: {
-    justifyContent: 'center', // Ensure the switch is centered vertically
+  tableHeader: {
+    flexDirection: 'row',
+    borderColor: '#ddd',
+    paddingVertical: 10,
+    paddingHorizontal: 5,
+    backgroundColor: '#E0E0E0',
+    borderTopRightRadius: 5,
+    borderTopLeftRadius: 5,
   },
-
-  pimpinan: {
+  tableRow: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 5,
+    borderBottomWidth: 0,
+    borderColor: '#ddd',
+    bottomRightRadius: 5,
+    bottomLeftRadius: 5,
+  },
+  rowHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#F0F0F0', // Memberi warna netral untuk header baris
+  },
+  headerCell: {
+    fontWeight: 'bold',
     fontSize: 14,
-    color: '#757575',
-    marginTop: 4,
+    color: '#333', // Warna teks header
   },
-  periode: {
+  tableCell: {
     fontSize: 14,
-    color: '#9E9E9E',
-    marginTop: 4,
+    color: '#333',
+    flexWrap: 'wrap',
+  },
+  numberCell: {
+    flex: 1,
+    textAlign: 'center',
+  },
+  nameCell: {
+    flex: 3,
+    overflow: 'hidden', // Untuk menjaga tampilan saat teks panjang
+  },
+  detailCell: {
+    flex: 1,
+    textAlign: 'right',
+  },
+  dateCell: {
+    flex: 2,
+    textAlign: 'center',
+  },
+  expandIconCell: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  expandedContent: {
+    padding: 10,
+    backgroundColor: '#FAFAFA',
+    borderTopWidth: 1,
+    borderColor: '#ddd',
+  },
+  expandedText: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 5,
+  },
+  expandedTextDetail: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#555', // Warna teks detail
+    marginBottom: 5,
+  },
+  expandedLinkText: {
+    color: 'blue', // Teks berwarna biru untuk link
+    fontSize: 14,
+    marginBottom: 5,
+  },
+  actionContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  actionButton: {
+    padding: 8,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  paginationButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginVertical: 10,
+  },
+  pageButton: {
+    padding: 10,
+    backgroundColor: '#007bff',
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  pageButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
   editButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#00ACC1',
+    backgroundColor: '#3699ff',
+    margin: 5,
     paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   deleteButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#D32F2F',
+    backgroundColor: '#f64e60',
+    margin: 5,
     paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    marginLeft: 8,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    marginLeft: 8,
+  paginationButtons: {
+    flexDirection: 'row',
   },
-  listContainer: {
-    paddingBottom: 16,
+  pageButton: {
+    padding: 10,
+    backgroundColor: '#007bff',
+    borderRadius: 5,
+    marginHorizontal: 5,
   },
-
-  headerImage: {
-    size: 10,
-    width: 200,
-    marginTop: 10,
-    marginBottom: 10,
-    height: 40,
-  },
-  
-  headerContent: {
-    flex:1,
-  },
-
-  headerTitle: {
-    fontSize: 24,
+  pageButtonText: {
+    color: '#fff',
     fontWeight: 'bold',
-    color: '#FAFAFA', // Warna teks
-    marginTop: 10,
-    marginBottom: 5,
   },
-
-  headerSubtitle: { color: "#D1D5DB", marginTop: 4 },
-
+  disabledButton: {
+    backgroundColor: '#CCCCCC',
+  },
+  paginationText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  pageInfo: {
+    fontSize: 13,
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 10,
+  },
+  loadingIndicator: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textAlign: 'center',
+    color: '#333',
+  },
+  modalText: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#555',
+    marginBottom: 20,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  modalButton: {
+    width: 230,
+    paddingVertical: 12,
+    marginBottom: 5, // Beri jarak antar tombol
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalButtonCancel: {
+    backgroundColor: '#3699ff',
+  },
+  modalButtonDelete: {
+    backgroundColor: '#f64e60',
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
 });
 
 export default SettingJabatan;
-    

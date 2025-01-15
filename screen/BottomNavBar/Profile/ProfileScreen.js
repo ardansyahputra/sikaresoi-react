@@ -1,197 +1,176 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
-import { launchImageLibrary } from 'react-native-image-picker';
 
-const ProfileScreen = () => {
-  const [formRequest, setFormRequest] = useState({
-    nip: '',
-    name: '',
-    pangkat_id: '',
-    photo_url: '',
-  });
-  const [pangkats, setPangkats] = useState([]);
-  const [imageUri, setImageUri] = useState(null);
-
-  const Token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjExMC4xMzU6ODAwMFwvYXBpXC92MVwvYXV0aFwvcmVmcmVzaCIsImlhdCI6MTczNDQ5NTg5NCwiZXhwIjoxNzM0NDk5Njc3LCJuYmYiOjE3MzQ0OTYwNzcsImp0aSI6ImdnTEM3cE9jTVJmYXJYUVIiLCJzdWIiOjcsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.O0Po5g4--lBhNSDFGWhccE0D49numi8bOSvqvqPjBZ0'; // Replace with your token
+const ProfileScreen = ({ navigation }) => {
+  const [profileData, setProfileData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getPangkat();
-    getUser();
+    // Fetch profile data from the API
+    fetchProfileData();
   }, []);
 
-  const getUser = () => {
-    // Simulate fetching user data from Laravel API
-    axios
-      .get('http://192.168.110.135:8000/api/v1/auth/user', {
+  const fetchProfileData = async () => {
+    try {
+      const response = await axios.get('http://192.168.60.176:8000/api/v1/auth/user', {
         headers: {
-          Authorization: `Bearer ${Token}`,
+          Authorization: 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE3Njo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2ODIwMjUyLCJleHAiOjE3MzY4MjM4NzEsIm5iZiI6MTczNjgyMDI3MSwianRpIjoiTllIMHV0VnU4Y0lEVHBXYyIsInN1YiI6OCwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.KMMxNxXiz3yLYFfNzh0BGh7sXqlFeQJsb4k5jF4Ssw0',
         },
-      })
-      .then((response) => {
-        setFormRequest(response.data.data);
-      })
-      .catch((error) => {
-        console.error('Error fetching user data:', error);
       });
-  };
-
-  const getPangkat = () => {
-    axios
-      .get('http://192.168.110.135:8000/api/v1/pangkat/show', {
-        headers: {
-          Authorization: `Bearer ${Token}`,
-        },
-      })
-      .then((response) => {
-        setPangkats(response.data.data);
-      })
-      .catch((error) => {
-        console.error('Error fetching pangkat:', error);
-      });
-  };
-
-  const handleImagePick = () => {
-    launchImageLibrary({ mediaType: 'photo', includeBase64: false    }, (response) => {
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.errorCode) {
-        console.log('Image Picker Error: ', response.errorCode);
-      } else if (response.assets) {
-        setImageUri(response.assets[0].uri);
-        console.log('Image URI:', response.assets[0].uri); // Debug log
-      }
-    });
-  };
-  
-
-  const handleSubmit = () => {
-    const formData = new FormData();
-    formData.append('nip', formRequest.nip);
-    formData.append('name', formRequest.name);
-    formData.append('pangkat_id', formRequest.pangkat_id);
-    if (imageUri) {
-      formData.append('photo', {
-        uri: imageUri,
-        type: 'image/jpeg', // Adjust based on image type
-        name: 'profile.jpg',
-      });
+      setProfileData(response.data); // Assuming the response data contains the profile info
+    } catch (error) {
+      console.error('Error fetching profile data', error);
+    } finally {
+      setLoading(false);
     }
-
-    axios
-      .post('http://192.168.110.135:8000/api/v1/user/update_profile', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${Token}`,
-        },
-      })
-      .then((response) => {
-        alert('Profile updated successfully');
-      })
-      .catch((error) => {
-        console.error('Error updating profile:', error);
-      });
   };
+
 
   return (
-    <View style={styles.container}>
-      <View style={styles.profileImageContainer}>
-        <TouchableOpacity onPress={handleImagePick}>
-          <View style={styles.profileImageWrapper}>
-            {imageUri || formRequest.photo_url ? (
-              <Image
-                source={{ uri: imageUri || formRequest.photo_url }}
-                style={styles.profileImage}
-              />
-            ) : (
-              <Text style={styles.profileImageText}>No Image</Text>
-            )}
-            <View style={styles.editIconContainer}>
-              <Text style={styles.editIcon}>✏️</Text>
-            </View>
-          </View>
-        </TouchableOpacity>
+    <ImageBackground
+      source={require('../../assets/background.jpg')} // Replace with your desired background image
+      style={[styles.container, styles.backgroundStyle]}
+    >
+      {/* App Bar */}
+      <View style={styles.header}>
+        <Image
+          source={require('../../assets/images/sikaresoi.png')}
+          style={styles.headerImage}
+        />
       </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="NIP"
-        value={formRequest.nip}
-        editable={false}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Name"
-        value={formRequest.name}
-        onChangeText={(text) => setFormRequest({ ...formRequest, name: text })}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Pangkat/Gol. Ruang"
-        value={formRequest.pangkat_id}
-        onChangeText={(text) => setFormRequest({ ...formRequest, pangkat_id: text })}
-      />
+      <View>
+        {/* Card Wrapper */}
+        <View style={styles.cardWrapper}>
+          {/* Profile Section */}
+          <View style={styles.profileSection}>
+            <Image
+              source={require('../../assets/kemenhub.png')}
+              style={styles.profileImage}
+            />
+            <Text style={styles.profileName}>{profileData ? profileData.data.name : 'Loading...'}</Text>
+            <Text style={styles.profileHandle}>{profileData ? profileData.data.nip : 'Loading...'}</Text>
+          </View>
 
-      <Button title="Save" onPress={handleSubmit} />
-    </View>
+          <View style={styles.menuSection}>
+            {menuItems.map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.menuItem}
+                onPress={() => {
+                  if (item.navigateTo) {
+                    navigation.navigate(item.navigateTo);
+                  } else if (item.label === 'Log out') {
+                    // Add logout logic here
+                    console.log('Logging out...');
+                  }
+                }}
+              >
+                <View style={styles.menuItemLeft}>
+                  <Icon name={item.icon} size={40} color="#000" />
+                  <Text style={styles.menuItemText}>{item.label}</Text>
+                </View>
+                <Icon name="chevron-right" size={24} color="#000" />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </View>
+    </ImageBackground>
   );
 };
+
+const menuItems = [
+  { label: 'Edit Profile', icon: 'person', navigateTo: 'ProfileEdit' },
+  { label: 'Password', icon: 'lock', navigateTo: 'Password' },
+  { label: 'Log out', icon: 'logout' },
+];
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    padding: 20,
+    resizeMode: 'cover',
+    backgroundColor: '#fff',
   },
-  profileImageContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
+  backgroundStyle: {
+    marginBottom: 500,
   },
-  profileImageWrapper: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#e0e0e0',
-    justifyContent: 'center',
+  headerImage: {
+    width: '50%',
+    height: undefined,
+    aspectRatio: 5,
+    marginRight: 190,
+    resizeMode: 'contain',
+    alignSelf: 'center',
+  },
+  header: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
-    borderWidth: 3,
-    borderColor: '#4a90e2',
-    position: 'relative',
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    elevation: 5,
+  },
+  cardWrapper: {
+    marginTop: 180,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    paddingTop: 20,
+    paddingBottom: 300,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    elevation: 5,
+  },
+  profileSection: {
+    alignItems: 'center',
+    marginVertical: 20,
+    paddingHorizontal: 16,
   },
   profileImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 60,
+    width: 120, // Increased size
+    height: 120,
+    borderRadius: 60, // Ensure it's a perfect circle
+    borderWidth: 2,
+    borderColor: '#000',
+    marginBottom: 16, // Add spacing below the image
   },
-  profileImageText: {
-    color: '#fff',
-    fontSize: 30,
-  },
-  editIconContainer: {
-    position: 'absolute',
-    bottom: 5,
-    right: 5,
-    backgroundColor: '#fff',
-    borderRadius: 50,
-    padding: 5,
-  },
-  editIcon: {
+  profileName: {
     fontSize: 18,
-    color: '#4a90e2',
+    fontWeight: 'bold',
   },
-  input: {
-    width: '100%',
-    height: 45,
-    borderColor: '#4a90e2',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingLeft: 15,
-    fontSize: 16,
-    backgroundColor: '#fff',
-    marginBottom: 15,
+  profileHandle: {
+    fontSize: 14,
+    color: '#888',
+    marginTop: 4,
+  },
+  menuSection: {
+    marginTop: 10,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  menuItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuItemText: {
+    marginLeft: 15,
+    fontSize: 19,
+    fontFamily: 'Poppins-SemiBold',
   },
 });
 

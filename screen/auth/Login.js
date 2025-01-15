@@ -1,91 +1,189 @@
-import React, { useState } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
-  StyleSheet,
   View,
   Text,
   TextInput,
   TouchableOpacity,
+  StyleSheet,
   Alert,
   Image,
-  ActivityIndicator,
+  ImageBackground,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Keychain from 'react-native-keychain';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import {useAuth} from '../AuthContext';
 import axios from 'axios';
+import useApiClient from '../../../src/api/apiClient';
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = ({navigation}) => {
   const [nip, setNip] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const {login, token, refreshToken} = useAuth();
+  const apiClient = useApiClient();
 
-  const login = async () => {
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const credentials = await Keychain.getGenericPassword();
+        if (credentials) {
+          const storedToken = credentials.password;
+
+          if (storedToken) {
+            const userData = await fetchUser(storedToken);
+
+            // Jika token tidak valid, logout pengguna
+            if (!userData) {
+              await Keychain.resetGenericPassword();
+              navigation.replace('Login');
+            } else {
+              login(userData, storedToken);
+              navigation.replace('Home');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error checking login status:', error);
+      }
+    };
+    checkLoginStatus();
+  }, []);
+
+  useEffect(() => {
+    // Axios interceptor untuk menambahkan header Authorization
+    const requestInterceptor = axios.interceptors.request.use(
+      async config => {
+        if (!config.headers.Authorization && token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      error => Promise.reject(error),
+    );
+
+    const responseInterceptor = axios.interceptors.response.use(
+      response => response,
+      async error => {
+        // Jika token expired, refresh token
+        if (error.response?.status === 401) {
+          const newToken = await refreshToken();
+          if (newToken) {
+            error.config.headers.Authorization = `Bearer ${newToken}`;
+            return axios(error.config); // Retry request dengan token baru
+          } else {
+            navigation.replace('Login'); // Logout jika refresh gagal
+          }
+        }
+        return Promise.reject(error);
+      },
+    );
+
+    return () => {
+      axios.interceptors.request.eject(requestInterceptor);
+      axios.interceptors.response.eject(responseInterceptor);
+    };
+  }, [token, refreshToken]);
+
+  const loginHandler = async () => {
     if (!nip || !password) {
-      Alert.alert('Error', 'NIP dan Password harus diisi.');
+      Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
 
-    setLoading(true);
-
     try {
-      const response = await axios.post('https://192.168.110.135/api/v1/auth/login', {
+      const response = await apiClient.post('/auth/login', {
         nip,
         password,
       });
 
-      const { token, user } = response.data;
+      console.log('Login response:', response); // Log untuk melihat respon login
 
-      // Simpan token dan data pengguna ke AsyncStorage
-      await AsyncStorage.setItem('authToken', token);
-      await AsyncStorage.setItem('userData', JSON.stringify(user));
+      if (response.status === 200 && response.headers.authorization) {
+        const token = response.headers.authorization;
+        await Keychain.setGenericPassword('token', token);
 
-      Alert.alert('Berhasil', 'Selamat datang!');
-      navigation.replace('Home'); // Arahkan ke halaman beranda setelah login
+        const userData = await fetchUser(token);
+        if (userData) {
+          login(userData, token);
+          navigation.replace('Home');
+        }
+      } else {
+        Alert.alert('Error', 'Token not found in response.');
+      }
     } catch (error) {
-      const errorMessage =
-        error.response?.data?.message || 'Terjadi kesalahan. Silakan coba lagi.';
-      Alert.alert('Login Gagal', errorMessage);
-    } finally {
-      setLoading(false);
+      console.error('Login error:', error);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'An error occurred during login.',
+      );
+    }
+  };
+
+  const fetchUser = async token => {
+    try {
+      console.log('Fetching user data with token:', token); // Log token yang dikirim ke API
+      const response = await apiClient.get('/auth/user', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log('Fetch user response:', response); // Log response dari API
+
+      if (response.status === 200) {
+        return response.data.data;
+      } else {
+        Alert.alert('Error', 'Failed to fetch user data.');
+        return null;
+      }
+    } catch (error) {
+      console.error('Fetch user error:', error); // Log error yang terjadi saat fetch user
+      if (error.response) {
+        console.error('Error response:', error.response); // Log untuk melihat response error jika ada
+      } else if (error.request) {
+        console.error('Error request:', error.request); // Log untuk melihat request yang dikirim
+      } else {
+        console.error('Error message:', error.message); // Log pesan error jika tidak ada response atau request
+      }
+      Alert.alert('Error', 'An error occurred while fetching user data.');
+      return null;
     }
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.logoContainer}>
-        {/* Logo */}
+      <ImageBackground
+        source={require('../../admin/assets/images/poltekpol-barombong-bg.jpg')}
+        style={styles.background}
+      />
+      <View style={styles.formContainer}>
         <Image
-          source={require('../BottomNavBar/images/sikaresoi.png')}
+          source={require('../../admin/assets/images/logo-default.png')}
           style={styles.logo}
         />
-      </View>
-      <View style={styles.formContainer}>
-        <Text style={styles.title}>MASUK</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="NIP"
-          value={nip}
-          onChangeText={setNip}
-          keyboardType="default"
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        <TouchableOpacity
-          style={styles.button}
-          onPress={login}
-          disabled={loading}>
-          {loading ? (
-            <ActivityIndicator size="small" color="#FFF" />
-          ) : (
-            <Text style={styles.buttonText}>Masuk</Text>
-          )}
+        <Text style={styles.title}>Masuk</Text>
+        <View style={styles.inputContainer}>
+          <Icon name="user" size={20} color="#7f8c8d" style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="NIP"
+            placeholderTextColor="#BCC7CA"
+            value={nip}
+            onChangeText={setNip}
+          />
+        </View>
+        <View style={styles.inputContainer}>
+          <Icon name="lock" size={20} color="#7f8c8d" style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor="#BCC7CA"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+        </View>
+        <TouchableOpacity style={styles.button} onPress={loginHandler}>
+          <Text style={styles.buttonText}>Masuk</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -95,59 +193,77 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F0F8FF',
+    justifyContent: 'flex-end',
   },
-  logoContainer: {
-    marginBottom: 20,
-  },
-  logo: {
-    width: 120,
-    height: 80,
-    resizeMode: 'contain',
+  background: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '70%',
   },
   formContainer: {
-    width: '85%',
-    backgroundColor: 'rgba(240, 248, 255, 0.7)',
-    borderRadius: 8,
-    padding: 20,
+    width: '100%',
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 30,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: -4},
     shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowRadius: 5,
+    elevation: 6,
+  },
+  logo: {
+    width: 200,
+    height: 100,
+    resizeMode: 'contain',
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 20,
+    fontWeight: '700',
     marginBottom: 20,
-    color: '#333',
+    color: '#34495e',
+    textAlign: 'center',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    height: 48,
+    backgroundColor: '#f2f3f5',
+    borderRadius: 10,
+    marginBottom: 20,
+    fontSize: 16,
+    color: '#34495e',
+    borderWidth: 1,
+    borderColor: '#dcdcdc',
+  },
+  icon: {
+    marginLeft: 15,
   },
   input: {
-    width: '100%',
-    height: 50,
-    backgroundColor: '#FFF',
-    borderRadius: 8,
+    flex: 1,
+    height: 48,
     paddingHorizontal: 15,
-    marginBottom: 15,
     fontSize: 16,
-    borderColor: '#CCC',
-    borderWidth: 1,
+    color: '#34495e',
   },
   button: {
     width: '100%',
-    height: 50,
-    backgroundColor: '#007BFF',
-    borderRadius: 8,
+    height: 48,
+    backgroundColor: '#3498db',
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 20,
   },
   buttonText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
