@@ -15,13 +15,17 @@ import PresensiScreen from './screen/PresensiScreen';
 import Allmenu from './screen/Allmenu';
 import Persetujuan from './screen/Persetujuan';
 import PersetujuanR from './screen/PersetujuanRealisasi';
-import HistoryPresensi from './screen/HistoryPresensi';
 import DataTable from './screen/DataTable';
 import DataTable2 from './screen/DataTable2';
 import RemunerasiScreen from './screen/BottomNavBar/Home/Persetujuan/Renumerasi.js';
 import PencapaianKerja from './screen/PencapaianKerja.js';
 import Remunerasi from './screen/Remunerasi.js';
 import KontrakKerja from './screen/KontrakKerja.js';
+import HistoryPresensi from './screen/HistoryPresensi';
+import ProfileEdit from './screen/BottomNavBar/Profile/ProfileEdit';
+import Password from './screen/BottomNavBar/Profile/Password';
+import PersetujuanRealisasi from './screen/PersetujuanRealisasi';
+
 
 // Bottom Tab Navigator
 const Tab = createBottomTabNavigator();
@@ -52,6 +56,16 @@ function HomeNavigator() {
   );
 }
 
+function ProfileNavigator() {
+  return(
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+      <Stack.Screen name="ProfileEdit" component={ProfileEdit}/>
+      <Stack.Screen name="Password" component={Password}/>
+    </Stack.Navigator>
+  );
+}
+
 // Aplikasi Utama
 
 export default function App() {
@@ -69,10 +83,16 @@ export default function App() {
       routeName === 'Remunerasi' ||
       routeName === 'KontrakKerja' ||
       routeName === 'PencapaianKerja' ||
+      routeName === 'HistoryPresensi' ||  
+      routeName === 'PersetujuanRealisasi' ||
+      routeName === 'ProfileEdit' ||
+      routeName === 'Password' ||
+      routeName === 'DataTable' ||
       routeName === 'HistoryPresensi'
-        ) {
+    ) {
       return false;
     }
+    
     return true;
   };
 
@@ -108,7 +128,7 @@ export default function App() {
       >
         <Tab.Screen name="Home" component={HomeNavigator} />
         <Tab.Screen name="Kontrak Kinerja" component={KontrakKinerjaScreen} />
-        <Tab.Screen name="Profil" component={ProfileScreen} />
+        <Tab.Screen name="Profil" component={ProfileNavigator} />
       </Tab.Navigator>
     </NavigationContainer>
   );

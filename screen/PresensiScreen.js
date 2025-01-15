@@ -2,169 +2,147 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
-  FlatList,
+  StyleSheet,
+  Animated,
+  ScrollView,
+  Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import Svg, { Circle, Text as SvgText } from 'react-native-svg';
+import LinearGradient from 'react-native-linear-gradient';
+import { useFocusEffect } from '@react-navigation/native';
 
-// Komponen Speedometer
-const Speedometer = ({ value = 50, max = 100, time }) => {
-  const size = 200; // Diameter speedometer
-  const strokeWidth = 10;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-
-  // Hitung progres
-  const progress = Math.min(Math.max(value / max, 0), 1); // 0 hingga 1
-  const strokeDashoffset = circumference * (1 - progress);
-
-  return (
-    <View style={styles.speedometerContainer}>
-      <Svg width={size} height={size}>
-        {/* Background Circle */}
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="#333"
-          strokeWidth={strokeWidth}
-          fill="none"
-        />
-        {/* Progress Circle */}
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="#28a745"
-          strokeWidth={strokeWidth}
-          fill="none"
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
-          strokeLinecap="round"
-        />
-        {/* Center Value */}
-        <SvgText
-          x="50%"
-          y="40%"
-          textAnchor="middle"
-          fontSize="24"
-          fontWeight="bold"
-          fill="#fff"
-        >
-          {Math.round(value)}
-        </SvgText>
-        {/* Display Time */}
-        <SvgText
-          x="50%"
-          y="60%"
-          textAnchor="middle"
-          fontSize="14"
-          fill="#fff"
-        >
-          {time}
-        </SvgText>
-      </Svg>
-    </View>
-  );
-};
-
-// Komponen PresensiScreen
 const PresensiScreen = ({ navigation }) => {
-  const [currentDate, setCurrentDate] = useState('');
-  const [currentTime, setCurrentTime] = useState('');
+  const [presenceStatus, setPresenceStatus] = useState(null); // Status kehadiran
+  const [keluarTime, setKeluarTime] = useState(null); // Waktu keluar
+  const [animatedValue] = useState(new Animated.Value(0)); // Animasi lingkaran
+  const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString()); // Waktu saat ini
 
+  // Simpan data ketika halaman ini aktif (focus)
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log("Halaman Presensi Dipanggil Kembali");
+      return () => {
+        console.log("Halaman Presensi Ditinggalkan");
+      };
+    }, [])
+  );
+
+  // Animasi lingkaran saat status berubah
+  const handlePresence = (status) => {
+    setPresenceStatus(status);
+    Animated.timing(animatedValue, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start(() => animatedValue.setValue(0));
+  };
+
+  // Menangani waktu keluar
+  const handleKeluar = () => {
+    const keluarTime = new Date().toLocaleTimeString();
+    setKeluarTime(keluarTime);
+  };
+
+  // Update waktu setiap detik
   useEffect(() => {
     const interval = setInterval(() => {
-      const date = new Date();
-      const options = { timeZone: 'Asia/Jakarta', hour12: false };
-      const formattedDate = new Intl.DateTimeFormat('id-ID', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-      }).format(date);
-
-      const formattedTime = date.toLocaleTimeString('id-ID', options);
-
-      setCurrentDate(formattedDate);
-      setCurrentTime(formattedTime);
+      setCurrentTime(new Date().toLocaleTimeString());
     }, 1000);
-
     return () => clearInterval(interval);
   }, []);
 
-  const handleCheckIn = () => {
-    alert('Check-in berhasil!');
-  };
+  // Animasi scale untuk lingkaran
+  const animatedScale = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.2],
+  });
 
-  const handleCheckOut = () => {
-    alert('Check-out berhasil!');
-  };
-
-  const handleHistoryPresensi = () => {
-    navigation.navigate('HistoryPresensi'); // Pastikan rute sudah diatur di navigator
-  };
+  const progressInterpolation = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        
-          <Icon name="arrow-back" size={24} color="#fff" />
+      <LinearGradient
+      colors={['#fff', '#fff']} // Adjust colors to your preference
+      style={styles.header}
+    >
+        <View style={styles.headerContent}>
+          <Image
+            source={require('./assets/images/sikaresoi.png')} // Path gambar sesuai
+            style={styles.headerImage}
+          />
+          <Text style={styles.title}>Presensi Kehadiran</Text>
+        </View>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Icon name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.title}>Presensi</Text>
-      </View>
+      </LinearGradient>
 
-      {/* Date Section */}
-      <View style={styles.dateContainer}>
-        <Icon name="calendar" size={20} color="#fff" style={{ marginRight: 8 }} />
-        <Text style={styles.dateText}>{currentDate}</Text>
-      </View>
+      {/* Konten scrollable */}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.dateContainer}>
+          <Icon name="calendar" size={20} color="#" style={{ marginRight: 8 }} />
+          <Text style={styles.detailText}>Tanggal: {new Date().toLocaleDateString()}</Text>
+        </View>
 
-      {/* Time Section */}
-      <View style={styles.timeContainer}>
-        <Text style={styles.timeLabel}>Waktu Saat Ini</Text>
-        <Text style={styles.time}>{currentTime}</Text>
-      </View>
+        {/* Lingkaran dengan animasi progress */}
+        <View style={styles.circleContainer}>
+          <Animated.View
+            style={[styles.progressCircle, { transform: [{ rotate: progressInterpolation }] }]}
+          />
+          <Animated.View
+            style={[styles.circle, { transform: [{ scale: animatedScale }] }]}>
+            <Text style={styles.temperature}>{presenceStatus}</Text>
+            <Text style={styles.timeText}>{currentTime}</Text>
+          </Animated.View>
+        </View>
 
-      {/* Speedometer */}
-      <Speedometer value={50} max={100} time={currentTime} />
+        {/* Tombol untuk status kehadiran */}
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: '#178003' }]}
+            onPress={() => handlePresence('Hadir')}
+          >
+            <Icon name="checkmark-circle" size={32} color="#fff" />
+            <Text style={styles.buttonText}>Hadir</Text>
+          </TouchableOpacity>
 
-      {/* Action Section */}
-      <View style={styles.actionContainer}>
-        <TouchableOpacity style={styles.actionButton} onPress={handleCheckIn}>
-          <Text style={styles.actionText}>Hadir</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: '#f44336' }]}
+            onPress={handleKeluar}
+          >
+            <Icon name="exit" size={32} color="#fff" />
+            <Text style={styles.buttonText}>Keluar</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Summary Section */}
-      <View style={styles.summaryContainer}>
-        <Text style={styles.summaryTitle}>Ringkasan Presensi</Text>
-        <FlatList
-          data={[
-            { key: '1', label: 'Total Kehadiran', value: '20 Hari' },
-            { key: '2', label: 'Hadir', value: '08:00 WIB' },
-          ]}
-          renderItem={({ item }) => (
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>{item.label}</Text>
-              <Text style={styles.summaryValue}>{item.value}</Text>
-            </View>
+        {/* Status dengan Waktu */}
+        <View style={styles.detailContainer}>
+          <Text style={styles.detailText}>Status: {presenceStatus}</Text>
+          {presenceStatus && (
+            <Text style={styles.statusText}>
+              Hadir pada jam: {currentTime}
+            </Text>
           )}
-          keyExtractor={(item) => item.key}
-        />
-        {/* History Button */}
-      <TouchableOpacity
-        style={styles.historyButton}
-        onPress={handleHistoryPresensi}
-      >
-        <Text style={styles.historyButtonText}>Lihat History Presensi</Text>
-      </TouchableOpacity>
-      </View>
+          {keluarTime && (
+            <Text style={styles.statusText}>
+              Keluar pada jam: {keluarTime}
+            </Text>
+          )}
+        </View>
 
-      
+        {/* Tombol History */}
+        <TouchableOpacity
+          style={styles.historyButton}
+          onPress={() => navigation.navigate('HistoryPresensi')}
+        >
+          <Text style={styles.historyButtonText}>Lihat History Presensi</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 };
@@ -172,98 +150,132 @@ const PresensiScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
-    padding: 16,
+    backgroundColor: '#fcfafa',
+
   },
   header: {
-    flexDirection: 'row',
+    height: 100,
+    backgroundColor: '#4caf50',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 40,
+    paddingHorizontal: 15,
+    paddingTop: 10,
+    position: 'relative',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    shadowOffset: 30,
+  },
+  headerContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'column', // Susunan vertikal
+  },
+  headerImage: {
+    width: '45%',
+    height: undefined,
+    aspectRatio: 5,
+    marginRight: 190,
+    resizeMode: 'contain',
+    alignSelf: 'center',
+    marginBottom: 10,
+    marginRight: 160,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 10,
+    top: 40,
   },
   title: {
-    color: '#fff',
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    textAlign: 'center',
+    color: '#000',
+    marginBottom: 20,
+  },
+  scrollContainer: {
+    padding: 20,
+    paddingBottom: 100,
   },
   dateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1c1c1c',
+    backgroundColor: '#fff',
     padding: 10,
     borderRadius: 10,
     marginBottom: 40,
   },
-  dateText: {
-    color: '#fff',
+  detailText: {
     fontSize: 16,
+    color: '#000',
   },
-  timeContainer: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  timeLabel: {
-    color: '#aaa',
-    fontSize: 14,
-  },
-  time: {
-    color: '#fff',
-    fontSize: 40,
-    fontWeight: 'bold',
-  },
-  speedometerContainer: {
+  circleContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 30,
   },
-  actionContainer: {
+  circle: {
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: '#e0f7fa',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+  },
+  progressCircle: {
+    position: 'absolute',
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    borderWidth: 10,
+    borderColor: '#4caf50',
+    opacity: 0.5,
+  },
+  temperature: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#00796b',
+  },
+  timeText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#00796b',
+    marginTop: 10,
+  },
+  buttonRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    width: '100%',
     marginBottom: 20,
+    marginTop: 20,
   },
-  actionButton: {
+  button: {
     flex: 1,
     backgroundColor: '#28a745',
-    padding: 15,
+    padding: 5,
     borderRadius: 10,
     alignItems: 'center',
     marginHorizontal: 5,
   },
-  checkOutButton: {
-    backgroundColor: '#dc3545',
-  },
-  actionText: {
-    color: '#fff',
+  buttonText: {
+    marginTop: 5,
     fontSize: 16,
+    color: '#fff',
     fontWeight: 'bold',
   },
-  summaryContainer: {
-    backgroundColor: '#1c1c1c',
-    padding: 16,
+  detailContainer: {
+    alignItems: 'flex-start',
+    width: '100%',
+    padding: 15,
+    backgroundColor: '#ffffff',
     borderRadius: 10,
+    elevation: 5,
   },
-  summaryTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
+  statusText: {
+    fontSize: 16,
+    color: '#555',
+    marginTop: 10,
   },
-  summaryItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  summaryLabel: {
-    color: '#aaa',
-    fontSize: 14,
-  },
-  summaryValue: {
-    color: '#fff',
-    fontSize: 14,
-  },
-  
-   historyButton: {
+  historyButton: {
     backgroundColor: '#007bff',
     padding: 15,
     borderRadius: 10,
@@ -274,11 +286,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  backButton: {
-    position: 'absolute', // Posisikan di pojok kiri
-    left: 0,
-    padding: 8,
   },
 });
 

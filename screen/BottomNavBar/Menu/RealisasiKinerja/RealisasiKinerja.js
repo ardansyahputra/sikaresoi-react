@@ -151,15 +151,22 @@ const RealisasiKinerja = () => {
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#FFF" />
+        {/* Back Button */}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={26} color="#000" />
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <Image source={require('../../../assets/images/sikaresoi.png')} style={styles.headerImage} />
-          <View>
-            <Text style={styles.headerTitle}>Realisasi Kinerja</Text>
-            <Text style={styles.headerSubtitle}>User • Kinerja • Realisasi</Text>
-          </View>
+        <Image
+          source={require('../../../assets/images/sikaresoi.png')} // Path gambar sesuai
+          style={styles.headerImage}
+        />
+        <View>
+          <Text style={styles.headerTitle}>Realisasi Kinerja</Text>
+          <Text style={styles.headerSubtitle}>User • Kinerja • Realisasi</Text>
+        </View>
         </View>
       </View>
 
@@ -234,11 +241,11 @@ const RealisasiKinerja = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F9FAFB", paddingBottom: 20 },
-  header: { flexDirection: "row", alignItems: "center", backgroundColor: "#ff0000", paddingHorizontal: 16, paddingVertical: 18, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, shadowColor: "#000", shadowOpacity: 0.1, elevation: 5 },
+  header: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", paddingHorizontal: 16, paddingVertical: 18, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, shadowColor: "#000", shadowOpacity: 0.1, elevation: 5 },
   backButton: { marginRight: 12 },
   headerContent: { flex: 1 },
-  headerTitle: { fontSize: 24, fontWeight: "bold", color: "#FFF" },
-  headerSubtitle: { color: "#D1D5DB", marginTop: 4 },
+  headerTitle: { fontSize: 24, fontWeight: "bold", color: "#000" },
+  headerSubtitle: { color: "#000", marginTop: 4 },
   notification: { backgroundColor: "#FEF3C7", padding: 16, margin: 16, borderRadius: 8, borderLeftWidth: 4, borderColor: "#F59E0B" },
   notificationText: { color: "#92400E", fontSize: 14 },
   card: { backgroundColor: "#FFF", margin: 16, borderRadius: 12, padding: 16, shadowColor: "#000", shadowOpacity: 0.1, elevation: 4 },
