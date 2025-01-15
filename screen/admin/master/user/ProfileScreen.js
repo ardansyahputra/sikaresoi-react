@@ -12,7 +12,7 @@ import {useAuth} from '../../../auth/AuthContext';
 import useApiClient from '../../../../src/api/apiClient';
 
 const ProfileScreen = ({navigation}) => {
-  const {user, pangkatItems} = useAuth();
+  const {user, pangkatItems, logout} = useAuth();
   const [pangkat, setPangkat] = useState(null);
   const apiClient = useApiClient();
   const [profileImage, setProfileImage] = useState(null);
@@ -31,10 +31,10 @@ const ProfileScreen = ({navigation}) => {
     }
   }, [user, pangkatItems]); // Re-run when user or pangkatItems change
 
-  console.log('User data di ProfileScreen:', user);
+  // console.log('User data di ProfileScreen:', user);
 
-  // Menambahkan console log untuk memverifikasi data user
-  console.log('User data:', user);
+  // // Menambahkan console log untuk memverifikasi data user
+  // console.log('User data:', user);
 
   return (
     <ImageBackground
@@ -73,8 +73,8 @@ const ProfileScreen = ({navigation}) => {
                   if (item.navigateTo) {
                     navigation.navigate(item.navigateTo);
                   } else if (item.label === 'Log out') {
-                    // Add logout logic here
-                    console.log('Logging out...');
+                    logout(); // Fungsi logout
+                    navigation.replace('Login'); // Navigasi ke layar login
                   }
                 }}>
                 <View style={styles.menuItemLeft}>

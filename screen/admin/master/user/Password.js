@@ -11,13 +11,15 @@ import {
 import Toast from 'react-native-toast-message';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Ion from 'react-native-vector-icons/Ionicons';
+import useApiClient from '../../../../src/api/apiClient';
 
 const Password = ({navigation}) => {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const apiClient = useApiClient(); // Gunakan apiClient dari useApiClient
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
       Toast.show({
         type: 'error',
@@ -33,11 +35,34 @@ const Password = ({navigation}) => {
         text1: 'Error',
         text2: 'Password Baru dan Konfirmasi Password tidak cocok.',
       });
-    } else {
+      return;
+    }
+
+    try {
+      // Lakukan permintaan API untuk mengganti password
+      const response = await apiClient.post('/user/change_password', {
+        old_password: oldPassword,
+        password: newPassword,
+        password_confirmation: confirmPassword,
+      });
+
+      // Cek apakah respon berhasil
+      if (response.status === 200) {
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Password berhasil diubah.',
+        });
+        // Reset form setelah berhasil
+        setOldPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      }
+    } catch (error) {
       Toast.show({
-        type: 'success',
-        text1: 'Success',
-        text2: 'Password berhasil diubah.',
+        type: 'error',
+        text1: 'Error',
+        text2: error.response?.data?.message || 'Gagal mengubah password.',
       });
     }
   };
@@ -48,22 +73,22 @@ const Password = ({navigation}) => {
 
   return (
     <ImageBackground
-      source={require('../../assets/images/poltekpol-barombong-bg.jpg')} // Replace with your desired background image
+      source={require('../../assets/images/poltekpol-barombong-bg.jpg')} // Ganti dengan gambar latar belakang yang diinginkan
       style={[styles.container, styles.backgroundStyle]}>
       <ScrollView contentContainerStyle={styles.formWrapper}>
         <Text style={styles.label}>Password Lama</Text>
         <TextInput
-          style={[styles.input, {color: 'black'}]} // Warna teks diatur menjadi hitam
+          style={[styles.input, {color: 'black'}]}
           secureTextEntry
           placeholder="Masukkan Password Lama"
-          placeholderTextColor="#888" // Opsional: Menentukan warna placeholder
+          placeholderTextColor="#888"
           value={oldPassword}
           onChangeText={setOldPassword}
         />
 
         <Text style={styles.label}>Password Baru</Text>
         <TextInput
-          style={[styles.input, {color: 'black'}]} // Warna teks diatur menjadi hitam
+          style={[styles.input, {color: 'black'}]}
           secureTextEntry
           placeholder="Masukkan Password Baru"
           placeholderTextColor="#888"
@@ -73,7 +98,7 @@ const Password = ({navigation}) => {
 
         <Text style={styles.label}>Konfirmasi Password Baru</Text>
         <TextInput
-          style={[styles.input, {color: 'black'}]} // Warna teks diatur menjadi hitam
+          style={[styles.input, {color: 'black'}]}
           secureTextEntry
           placeholder="Konfirmasi Password Baru"
           placeholderTextColor="#888"
@@ -81,7 +106,6 @@ const Password = ({navigation}) => {
           onChangeText={setConfirmPassword}
         />
 
-        {/* Container for Buttons */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
             <View style={styles.buttonContent}>
@@ -103,6 +127,7 @@ const Password = ({navigation}) => {
     </ImageBackground>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

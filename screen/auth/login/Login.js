@@ -37,7 +37,7 @@ const LoginScreen = ({navigation}) => {
               navigation.replace('Login');
             } else {
               login(userData, storedToken);
-              navigation.replace('Home');
+              navigation.replace('AppTabs');
             }
           }
         }
@@ -104,7 +104,7 @@ const LoginScreen = ({navigation}) => {
         const userData = await fetchUser(token);
         if (userData) {
           login(userData, token);
-          navigation.replace('Home');
+          navigation.replace('AppTabs');
         }
       } else {
         Alert.alert('Error', 'Token not found in response.');

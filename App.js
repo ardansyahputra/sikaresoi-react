@@ -3,7 +3,6 @@ import {AuthProvider} from './screen/auth/AuthContext';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import SplashScreen from './screen/components/splashscreen/SplashScreen';
 import {
   NavigationProvider,
   useNavigationContext,
@@ -87,6 +86,15 @@ import SettingPersentaseCapaianScreen from './screen/admin/setting_persentase_ca
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
+function RootStack() {
+  return (
+    <Stack.Navigator screenOptions={{headerShown: false}}>
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="AppTabs" component={AppTabs} />
+    </Stack.Navigator>
+  );
+}
+
 function HomeStack() {
   const {setCurrentScreen} = useNavigationContext();
   return (
@@ -97,11 +105,6 @@ function HomeStack() {
           setCurrentScreen(currentRoute); // Update layar aktif di context
         },
       }}>
-      <Stack.Screen
-        name="Login"
-        component={LoginScreen}
-        options={{headerShown: false}}
-      />
       <Stack.Screen
         name="Home"
         component={Home}
@@ -416,7 +419,7 @@ export default function App() {
     <AuthProvider>
       <NavigationProvider>
         <NavigationContainer>
-          <AppTabs />
+          <RootStack />
         </NavigationContainer>
       </NavigationProvider>
     </AuthProvider>
