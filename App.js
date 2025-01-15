@@ -17,6 +17,8 @@ import Persetujuan from './screen/Persetujuan';
 import PersetujuanR from './screen/PersetujuanR';
 import HistoryPresensi from './screen/HistoryPresensi';
 import DataTable from './screen/DataTable';
+import ProfileEdit from './screen/BottomNavBar/Profile/ProfileEdit';
+import Password from './screen/BottomNavBar/Profile/Password';
 
 // Bottom Tab Navigator
 const Tab = createBottomTabNavigator();
@@ -40,6 +42,16 @@ function HomeNavigator() {
   );
 }
 
+function ProfileNavigator() {
+  return(
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+      <Stack.Screen name="ProfileEdit" component={ProfileEdit}/>
+      <Stack.Screen name="Password" component={Password}/>
+    </Stack.Navigator>
+  );
+}
+
 // Aplikasi Utama
 
 export default function App() {
@@ -54,6 +66,9 @@ export default function App() {
       routeName === 'RealisasiKinerja' ||
       routeName === 'Persetujuan' ||
       routeName === 'PersetujuanR' ||
+      routeName === 'ProfileEdit' ||
+      routeName === 'Password' ||
+      routeName === 'DataTable' ||
       routeName === 'HistoryPresensi'
     ) {
       return false;
@@ -93,7 +108,7 @@ export default function App() {
       >
         <Tab.Screen name="Home" component={HomeNavigator} />
         <Tab.Screen name="Kontrak Kinerja" component={KontrakKinerjaScreen} />
-        <Tab.Screen name="Profil" component={ProfileScreen} />
+        <Tab.Screen name="Profil" component={ProfileNavigator} />
       </Tab.Navigator>
     </NavigationContainer>
   );

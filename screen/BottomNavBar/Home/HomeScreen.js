@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
@@ -7,16 +7,26 @@ import Gusti from 'react-native-vector-icons/MaterialCommunityIcons';
 import Oliv from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default function HomeScreen({ navigation }) {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Toggle the dark/light mode
+  const toggleTheme = () => {
+    setIsDarkMode(prevMode => !prevMode);
+  };
+
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1 }}> {/* Membuat halaman scrollable */}
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: isDarkMode ? '#333' : '#F5F5F5' }]}>
         {/* Header */}
-        <LinearGradient colors={['#FFFFFF', '#FFFFFF']} style={styles.header}>
+        <LinearGradient colors={isDarkMode ? ['#333', '#333'] : ['#FFFFFF', '#FFFFFF']} style={styles.header}>
           <Image
             source={require('../../assets/images/sikaresoi.png')}
             style={styles.logo}
             resizeMode="cover"
           />
+          <TouchableOpacity onPress={toggleTheme} style={styles.themeToggle}>
+            <Icon name={isDarkMode ? 'moon' : 'sunny'} size={30} color={isDarkMode ? '#fff' : '#000'} />
+          </TouchableOpacity>
         </LinearGradient>
 
         {/* Banner */}
@@ -104,8 +114,8 @@ const renderMenuIcon = (label, iconName, onPress) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5', borderRadius: 40 },
-  header: { padding: 16, borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
+  container: { flex: 1,},
+  header: { padding: 16, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   banner: { margin: 10 },
   bannerImage: { width: '100%', height: 150, borderRadius: 8 },
   menuRow: {
@@ -182,4 +192,10 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginRight: 30,
   },
+  themeToggle: {
+    position: 'absolute',
+    top: 14,
+    right: 20,
+    padding: 8,
+  }  
 });

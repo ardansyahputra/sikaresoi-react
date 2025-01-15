@@ -1,251 +1,229 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   Image,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  ScrollView,
 } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import Feather from 'react-native-vector-icons/Feather';
 import DropDownPicker from 'react-native-dropdown-picker';
+import axios from 'axios';
 import { launchImageLibrary } from 'react-native-image-picker';
-import Toast from 'react-native-toast-message';
-import AwesomeAlert from 'react-native-awesome-alerts';
 
-const ProfileEdit = () => {
-  const [open, setOpen] = useState(false);
-  const [selectedValue, setSelectedValue] = useState('Pembina (IV/a)');
-  const [items, setItems] = useState([
-    { label: 'PPPK (X/-)', value: 'PPPK (X/-)' },
-    { label: 'PPPK (VII/-)', value: 'PPPK (VII/-)' },
-    { label: 'PPPK (XI/-)', value: 'PPPK (XI/-)' },
-    { label: 'Pembina (VI/a)', value: 'Pembina (VI/a)' },
-    { label: 'Pembina Tingkat 1 (IV/b)', value: 'Pembina Tingkat 1 (IV/b)' },
-    { label: 'Pembina Utama Muda (IV/c)', value: 'Pembina Utama Muda (IV/c)' },
-    { label: 'Pembina Utama Madya (IV/d)', value: 'Pembina Utama Madya (IV/d)' },
-    { label: 'Pembina Utama (IV/e)', value: 'Pembina Utama (IV/e)' },
-    { label: 'Penata Muda (III/a)', value: 'Penata Muda (III/a)' },
-    { label: 'Pembina Muda (III/a)', value: 'Pembina Muda (III/a)' },
-    { label: 'Pembina Muda Tingkat 1 (III/b)', value: 'Pembina Muda Tingkat 1 (III/b)' },
-    { label: 'Penata (III/c)', value: 'Penata (III/c)' },
-    { label: 'Penata Tingkat 1 (III/d)', value: 'Penata Tingkat 1 (III/d)' },
-    { label: 'Pengatur Muda (II/a)', value: 'Pengatur Muda (II/a)' },
-    { label: 'Pengatur Muda Tingkat 1 (II/b)', value: 'Pengatur Muda Tingkat 1 (II/b)' },
-    { label: 'Pengatur (II/c)', value: 'Pengatur (II/c)' },
-    { label: 'Pengatur Tingkat 1 (II/d)', value: 'Pengatur Tingkat 1 (II/d)' },
-    { label: 'Juru Muda (I/a)', value: 'Juru Muda (I/a)' },
-    { label: 'Juru Muda Tingkat 1 (I/b)', value: 'Juru Muda Tingkat 1 (I/b)' },
-    { label: 'Juru (I/c)', value: 'Juru (I/c)' },
-    { label: 'Juru Tingkat (I/d)', value: 'Juru Tingkat (I/d)' },
-  ]);
-  const [nip, setNip] = useState('19740714 200502 1 007');
-  const [name, setName] = useState('OBET LUMALAN BIJANG, S.Si.T.M.Ap,M.Mar');
-  const [imageUri, setImageUri] = useState(require('../../assets/300-14.jpg'));
-  const [isEditing, setIsEditing] = useState(false);
-  const [showAlert, setShowAlert] = useState(false);
+const ProfileEdit = ({ navigation }) => {
+  const [name, setName] = useState('19750615 199808 1 001');
+  const [email, setEmail] = useState('BUDIAWAN, S.Si.T, MT');
+  const [profileImage, setProfileImage] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownValue, setDropdownValue] = useState(null);
+  const [dropdownItems, setDropdownItems] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleSave = () => {
-    setIsEditing(false);
-    if (!selectedValue) {
-      Toast.show({
-        type: 'error',
-        text1: 'Gagal Menyimpan',
-        text2: 'Pangkat/Gol. Ruang belum dipilih.',
+  useEffect(() => {
+    fetchPangkatData();
+  }, []);
+
+  const fetchPangkatData = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get('http://192.168.60.176:8000/api/v1/pangkat/show', {
+        headers: {
+          Authorization:
+            'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE3Njo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2ODIwMjUyLCJleHAiOjE3MzY4MjYyMDMsIm5iZiI6MTczNjgyMjYwMywianRpIjoiY1NoUDZhclZtVlY1elZhayIsInN1YiI6OCwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.esERNPZQFUFe-9yllVw3BnPPx4kIBULo-Ehqfv_vABw',
+        },
       });
-      return;
-    }
-    Toast.show({
-      type: 'success',
-      text1: 'Data Disimpan!',
-      text2: `NIP: ${nip}\nNama: ${name}\nPangkat/Gol. Ruang: ${selectedValue}`,
-    });
-  };
 
-  const confirmSave = () => {
-    setShowAlert(true);
-  };
+      console.log('API Response:', response.data); // Debugging log
 
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
+      if (response.data && Array.isArray(response.data.data)) {
+        const formattedData = response.data.data.map((item) => ({
+          label: `${item.nm_pangkat} - ${item.golongan}/${item.ruang}`,
+          value: item.id,
+        }));
+        setDropdownItems(formattedData);
 
-  const selectImage = () => {
-    const options = {
-      mediaType: 'photo',
-      quality: 1,
-    };
-    launchImageLibrary(options, (response) => {
-      if (response.didCancel) {
-        Toast.show({
-          type: 'info',
-          text1: 'Pemilihan Dibatalkan',
-        });
-      } else if (response.errorMessage) {
-        Toast.show({
-          type: 'error',
-          text1: 'Terjadi Kesalahan',
-          text2: response.errorMessage,
-        });
-      } else if (response.assets && response.assets.length > 0) {
-        const uri = response.assets[0].uri;
-        setImageUri({ uri });
+        // Set default value (optional)
+        if (formattedData.length > 0) {
+          setDropdownValue(formattedData[0].value);
+        }
       } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Terjadi Kesalahan',
-          text2: 'Gagal memilih gambar.',
-        });
+        console.error('Unexpected response format:', response.data);
       }
-    });
+    } catch (error) {
+      console.error('Error fetching pangkat data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const pickImage = () => {
+    launchImageLibrary(
+      {
+        mediaType: 'photo',
+        quality: 0.5,
+        includeBase64: false,
+      },
+      (response) => {
+        if (response.didCancel) {
+          console.log('User cancelled image picker');
+        } else if (response.errorCode) {
+          console.log('ImagePicker Error: ', response.errorMessage);
+        } else if (response.assets && response.assets.length > 0) {
+          setProfileImage(response.assets[0].uri);
+        }
+      }
+    );
   };
 
   return (
-    <View style={styles.container}>
-      {/* Foto Profil */}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={26} color="#000" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Edit Profile</Text>
+      </View>
 
-      {/* Form Input */}
-      <View style={styles.formWrapper}>
-        <Text style={styles.label}>Nama</Text>
-        <TextInput
-          value={name}
-          onChangeText={setName}
-          style={styles.input}
-          editable={isEditing}
-        />
-
-        <Text style={styles.label}>NIP / NRP</Text>
-        <TextInput
-          value={nip}
-          onChangeText={setNip}
-          style={styles.input}
-          editable={isEditing}
-        />
-
-        <Text style={styles.label}>Pangkat/Gol. Ruang</Text>
-        <DropDownPicker
-          open={open}
-          value={selectedValue}
-          items={items}
-          setOpen={setOpen}
-          setValue={setSelectedValue}
-          setItems={setItems}
-          style={styles.select}
-          dropDownContainerStyle={styles.dropDownContainer}
-          disabled={!isEditing}
-          scrollViewProps={{
-            showsVerticalScrollIndicator: true, // Menampilkan indikator scroll
-            nestedScrollEnabled: true, // Memungkinkan scroll dalam scroll
-          }}
-        />
-
-        <TouchableOpacity
-          style={[styles.saveButton, isEditing ? styles.saveActive : styles.saveInactive]}
-          onPress={isEditing ? confirmSave : handleEdit}
-        >
-          <Text style={styles.saveButtonText}>{isEditing ? 'SIMPAN' : 'UBAH'}</Text>
+      <View style={styles.profileImageContainer}>
+        <TouchableOpacity onPress={pickImage}>
+          <Image
+            source={profileImage ? { uri: profileImage } : require('../../assets/sikaresoi.png')}
+            style={styles.profileImage}
+          />
+          <View style={styles.cameraIconContainer}>
+            <Feather name="camera" size={20} color="white" />
+          </View>
         </TouchableOpacity>
       </View>
 
-      <AwesomeAlert
-        show={showAlert}
-        showProgress={false}
-        title="Konfirmasi Simpan"
-        message="Apakah Anda yakin ingin menyimpan perubahan ini?"
-        closeOnTouchOutside={true}
-        closeOnHardwareBackPress={false}
-        showCancelButton={true}
-        showConfirmButton={true}
-        cancelText="Batal"
-        confirmText="Ya"
-        confirmButtonColor="#007bff"
-        onCancelPressed={() => setShowAlert(false)}
-        onConfirmPressed={() => {
-          setShowAlert(false);
-          handleSave();
-        }}
-      />
+      <View style={styles.formContainer}>
+        <Text style={styles.label}>NIP / NRP</Text>
+        <TextInput
+          style={styles.input}
+          value={name}
+          onChangeText={setName}
+        />
 
-      <Toast />
-    </View>
+        <Text style={styles.label}>Nama</Text>
+        <TextInput
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+        />
+
+        <Text style={styles.label}>Pangkat / Gol.Ruang</Text>
+        {loading ? (
+          <ActivityIndicator size="small" color="#FF3D00" />
+        ) : (
+          <DropDownPicker
+            open={dropdownOpen}
+            value={dropdownValue}
+            items={dropdownItems}
+            setOpen={setDropdownOpen}
+            setValue={setDropdownValue}
+            setItems={setDropdownItems}
+            placeholder="Pilih Pangkat"
+            style={styles.dropdown}
+            dropDownContainerStyle={styles.dropdownContainer}
+            nestedScrollEnabled
+          />
+        )}
+
+        <TouchableOpacity style={styles.updateButton}>
+          <Text style={styles.updateButtonText}>Kirim / Update</Text>
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'transparent', // Set to transparent background
-    padding: 20,
+    backgroundColor: 'white',
+    padding: 16,
   },
-  imageWrapper: {
+  header: {
+    flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
   },
-  editIcon: {
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'black',
+    marginLeft: 120,
+  },
+  profileImageContainer: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  profileImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+  },
+  cameraIconContainer: {
     position: 'absolute',
-    bottom: 0,
-    right: 10,
-    backgroundColor: '#007bff',
+    bottom: 5,
+    right: 5,
+    backgroundColor: 'black',
     borderRadius: 15,
     padding: 5,
   },
-  editIconText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  formWrapper: {
-    width: '90%',
-    backgroundColor: '#fff', // You can also make this transparent if needed by changing to transparent
-    padding: 20,
-    borderRadius: 5,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+  formContainer: {
+    marginTop: 20,
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
     marginBottom: 5,
-    color: '#333',
+    fontWeight: 'bold',
   },
   input: {
-    height: 40,
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
     paddingHorizontal: 10,
-    marginBottom: 15,
+    paddingVertical: 12,
+    fontSize: 14,
+    marginBottom: 20,
     backgroundColor: '#f9f9f9',
   },
-  select: {
-    marginBottom: 15,
+  updateButton: {
+    backgroundColor: '#FF3D00',
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 25,
+    alignItems: 'center',
+  },
+  updateButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  dropdown: {
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    backgroundColor: '#f9f9f9',
+    marginBottom: 20,
   },
-  dropDownContainer: {
+  dropdownContainer: {
+    borderWidth: 1,
     borderColor: '#ddd',
-    maxHeight: 200, // Batasan tinggi dropdown
-  },
-  saveButton: {
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  saveActive: {
-    backgroundColor: '#007bff',
-  },
-  saveInactive: {
-    backgroundColor: '#ccc',
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 });
 
