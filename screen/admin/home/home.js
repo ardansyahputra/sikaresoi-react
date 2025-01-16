@@ -102,7 +102,7 @@ const Home = () => {
       icon: 'person',
       color: ['#4A90E2', '#1D56C0'],
       subtitle: 'Management user',
-      navigateTo: 'User', // Nama layar navigasi
+      navigateTo: 'UserScreen', // Nama layar navigasi
     },
     {
       title: 'Teguran',
