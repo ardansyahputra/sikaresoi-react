@@ -121,7 +121,12 @@ const ProfileEdit = ({navigation}) => {
 
       <View style={styles.formContainer}>
         <Text style={styles.label}>NIP / NRP</Text>
-        <TextInput style={styles.input} value={nip} onChangeText={setNip} />
+        <TextInput
+          style={styles.input}
+          value={nip}
+          editable={false}
+          onChangeText={setNip}
+        />
 
         <Text style={styles.label}>Nama</Text>
         <TextInput

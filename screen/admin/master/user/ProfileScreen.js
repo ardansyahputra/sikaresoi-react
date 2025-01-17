@@ -33,8 +33,8 @@ const ProfileScreen = ({navigation}) => {
 
   // console.log('User data di ProfileScreen:', user);
 
-  // // Menambahkan console log untuk memverifikasi data user
-  // console.log('User data:', user);
+  // Menambahkan console log untuk memverifikasi data user
+  console.log('User data:', user);
 
   return (
     <ImageBackground

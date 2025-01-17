@@ -28,17 +28,11 @@ const LoginScreen = ({navigation}) => {
         if (credentials) {
           const storedToken = credentials.password;
 
-          if (storedToken) {
-            const userData = await fetchUser(storedToken);
-
-            // Jika token tidak valid, logout pengguna
-            if (!userData) {
-              await Keychain.resetGenericPassword();
-              navigation.replace('Login');
-            } else {
-              login(userData, storedToken);
-              navigation.replace('AppTabs');
-            }
+          // Verifikasi token dengan endpoint user
+          const userData = await fetchUser(storedToken);
+          if (userData) {
+            login(userData, storedToken);
+            navigation.replace('Home');
           }
         }
       } catch (error) {
@@ -95,7 +89,7 @@ const LoginScreen = ({navigation}) => {
         password,
       });
 
-      console.log('Login response:', response); // Log untuk melihat respon login
+      console.log('Login response:', response); // Cek response untuk debugging
 
       if (response.status === 200 && response.headers.authorization) {
         const token = response.headers.authorization;
@@ -104,7 +98,7 @@ const LoginScreen = ({navigation}) => {
         const userData = await fetchUser(token);
         if (userData) {
           login(userData, token);
-          navigation.replace('AppTabs');
+          navigation.replace('Home');
         }
       } else {
         Alert.alert('Error', 'Token not found in response.');
@@ -120,14 +114,11 @@ const LoginScreen = ({navigation}) => {
 
   const fetchUser = async token => {
     try {
-      console.log('Fetching user data with token:', token); // Log token yang dikirim ke API
       const response = await apiClient.get('/auth/user', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
-      console.log('Fetch user response:', response); // Log response dari API
 
       if (response.status === 200) {
         return response.data.data;
@@ -136,14 +127,7 @@ const LoginScreen = ({navigation}) => {
         return null;
       }
     } catch (error) {
-      console.error('Fetch user error:', error); // Log error yang terjadi saat fetch user
-      if (error.response) {
-        console.error('Error response:', error.response); // Log untuk melihat response error jika ada
-      } else if (error.request) {
-        console.error('Error request:', error.request); // Log untuk melihat request yang dikirim
-      } else {
-        console.error('Error message:', error.message); // Log pesan error jika tidak ada response atau request
-      }
+      console.error('Fetch user error:', error);
       Alert.alert('Error', 'An error occurred while fetching user data.');
       return null;
     }
