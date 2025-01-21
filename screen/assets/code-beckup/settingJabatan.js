@@ -26,7 +26,7 @@ const SettingJabatan = ({ navigation }) => {
   });
   const [loading, setLoading] = useState(false);
 
-  const baseURL = 'http://192.168.61.230:8000/api/v1';
+  const baseURL = 'http://192.168.60.230:8000/api/v1';
   const token = 'Bearer token';
 
   useEffect(() => {

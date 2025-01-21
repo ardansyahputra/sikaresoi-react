@@ -1,105 +1,121 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
+  Picker,
+  Button,
+  Alert,
   StyleSheet,
   ActivityIndicator,
-  Alert
-} from 'react-native';
-import { WebView } from 'react-native-webview';
-import { Picker } from '@react-native-picker/picker';
-import axios from 'axios';
+} from "react-native";
+import RNFS from "react-native-fs";
+import { PermissionsAndroid, Platform } from "react-native";
 
 const KontrakKerja = () => {
   const [jabatanAktif, setJabatanAktif] = useState(false);
-  const [jabatan, setJabatan] = useState(null);
-  const [url, setUrl] = useState("");
+  const [jabatan, setJabatan] = useState({});
   const [tahunId, setTahunId] = useState("");
   const [listTahun, setListTahun] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const baseURL = 'http://192.168.60.230:8000/api/v1';
-  const token = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjIzMDo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjExMzYwLCJleHAiOjE3MzU2MjMzNDMsIm5iZiI6MTczNTYxOTc0MywianRpIjoiT0g0R3hTNEdoYUsxQVd0bSIsInN1YiI6NywicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.B1lsJgwrvwoSxuJBbCVO7UfdayRxKnx0q9F60aDKkCM';
+  const [loading, setLoading] = useState(false);
 
   const getAktif = async () => {
     try {
-      const response = await axios.post(`${baseURL}/user/jabatan/aktif`, 
-        {},
-        { headers: { Authorization: token } }
-      );
+      const response = await axios.post("/user/jabatan/aktif");
       setJabatan(response.data.data);
       setJabatanAktif(true);
     } catch (error) {
-      Alert.alert('Error', 'Silakan pilih jabatan terlebih dahulu.', [
-        { text: 'OK', onPress: () => navigation.goBack()},
-      ]);
+      Alert.alert("Error", "Silakan pilih jabatan terlebih dahulu.");
       setJabatanAktif(false);
     }
   };
 
   const getTahun = async () => {
     try {
-      const response = await axios.get(`${baseURL}/tahun/show`, 
-        {},
-        { headers: { Authorization: token } }
-      );
+      const response = await axios.get("/tahun/show");
       setListTahun(response.data.data);
     } catch (error) {
-      console.error('Error fetching tahun:', error);
+      console.error("Error fetching tahun list:", error);
     }
   };
 
-  const refresh = () => {
-    if (jabatan && tahunId) {
-      setUrl(`${baseURL}/report/kontrak_kinerja/${jabatan.uuid}?type=stream&keuangan=0&tahun_id=${tahunId}`,
-        {},
-        { headers: { Authorization: token } }
-      );
+  const downloadPDF = async () => {
+    if (!tahunId) {
+      Alert.alert("Error", "Silakan pilih tahun terlebih dahulu.");
+      return;
+    }
+
+    const downloadUrl = `/report/kontrak_kinerja/${jabatan.uuid}?type=stream&keuangan=0&tahun_id=${tahunId}`;
+    const fileName = `Kontrak_Kinerja_${tahunId}.pdf`;
+    const filePath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
+
+    try {
+      setLoading(true);
+
+      if (Platform.OS === "android") {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
+        );
+
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          Alert.alert("Permission Denied", "Storage permission is required.");
+          setLoading(false);
+          return;
+        }
+      }
+
+      const response = await RNFS.downloadFile({
+        fromUrl: downloadUrl,
+        toFile: filePath,
+      }).promise;
+
+      setLoading(false);
+
+      if (response.statusCode === 200) {
+        Alert.alert("Download Successful", `File saved to ${filePath}`);
+      } else {
+        Alert.alert("Download Failed", "Unable to download the file.");
+      }
+    } catch (error) {
+      setLoading(false);
+      console.error("Error downloading PDF:", error);
+      Alert.alert("Error", "Something went wrong while downloading the file.");
     }
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      await getTahun();
-      await getAktif();
-      setLoading(false);
-    };
-
-    fetchData();
+    getTahun();
+    getAktif();
   }, []);
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Pilih Tahun <Text style={{ color: 'red' }}>*</Text> :</Text>
-      <Picker
-        selectedValue={tahunId}
-        onValueChange={(value) => {
-          setTahunId(value);
-          refresh();
-        }}
-        style={styles.picker}
-      >
-        <Picker.Item label="-- PILIH --" value="" />
-        {listTahun.map((tahun) => (
-          <Picker.Item key={tahun.id} label={tahun.tahun.toString()} value={tahun.id} />
-        ))}
-      </Picker>
+      <View style={styles.card}>
+        <Text style={styles.label}>
+          Pilih Tahun <Text style={styles.required}>*</Text>:
+        </Text>
+        <Picker
+          selectedValue={tahunId}
+          onValueChange={(itemValue) => setTahunId(itemValue)}
+          style={styles.picker}
+        >
+          <Picker.Item label="-- PILIH --" value="" />
+          {listTahun.map((tahun) => (
+            <Picker.Item key={tahun.id} label={tahun.tahun} value={tahun.id} />
+          ))}
+        </Picker>
+      </View>
 
-      {tahunId && jabatanAktif ? (
-        <WebView
-          source={{ uri: url }}
-          style={styles.webview}
-          onLoad={() => console.log('WebView loaded')}
-        />
-      ) : null}
+      {tahunId && jabatanAktif && (
+        <View style={styles.buttonContainer}>
+          <Button
+            title="Download PDF"
+            onPress={downloadPDF}
+            disabled={loading}
+          />
+        </View>
+      )}
+
+      {loading && <ActivityIndicator size="large" color="#0000ff" />}
     </View>
   );
 };
@@ -108,30 +124,32 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
+  },
+  card: {
+    marginBottom: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    backgroundColor: "#f9f9f9",
   },
   label: {
-    marginBottom: 8,
     fontSize: 16,
-    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  required: {
+    color: "red",
   },
   picker: {
     height: 50,
-    marginBottom: 16,
+    width: "100%",
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 4,
+    borderColor: "#ddd",
+    backgroundColor: "#fff",
   },
-  webview: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ccc',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+  buttonContainer: {
+    marginTop: 16,
   },
 });
 

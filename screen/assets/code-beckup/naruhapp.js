@@ -165,8 +165,8 @@ function AppTabs() {
         options={{headerShown: false}}
       />
       <Tab.Screen
-        name="KontrakKinerja"
-        component={KontrakKinerjaScreen} // Pastikan Presensi sudah ada
+        name="KontrakKin"
+        component={Presensi} // Pastikan Presensi sudah ada
         options={{headerShown: false}}
       />
       <Tab.Screen
