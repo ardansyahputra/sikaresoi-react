@@ -16,7 +16,8 @@ import {Pressable} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
-import axios from 'axios';
+import useApiClient from '../../../../src/api/apiClient';
+import {useNavigation} from '@react-navigation/native';
 
 export default function BulanTahun() {
   const [data, setData] = useState([]);
@@ -32,6 +33,8 @@ export default function BulanTahun() {
   const [activeButton, setActiveButton] = useState('bulan');
   const [selectedNamaSatuan, setSelectedNamaSatuan] = useState('');
   const [isHapusModalVisible, setHapusModalVisible] = useState(false);
+  const apiClient = useApiClient();
+  const navigation = useNavigation();
 
   useEffect(() => {
     if (activeButton === 'bulan') {
@@ -41,155 +44,29 @@ export default function BulanTahun() {
     }
   }, [currentPage, activeButton, selectedDisplay]);
 
-  const token = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2NDczMjIzLCJleHAiOjE3NDAwNzU1MzIsIm5iZiI6MTczNjQ3NTUzMiwianRpIjoiQ0tBSGpCMWtQSklQQmVqaiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.qydXAhdK7rnRdB8Pe5tuOcIlMbTr6Axe0M90J0DmGtM';
-
-  const fetchEditData = async uuid => {
-    try {
-      const endpoint =
-        activeButton === 'bulan'
-          ? `http://192.168.60.123:8000/api/v1/bulan/${uuid}/edit`
-          : `http://192.168.60.123:8000/api/v1/tahun/${uuid}/edit`;
-
-      const response = await axios.get(endpoint, {
-        headers: {
-          Authorization:
-            token,
-        },
-      });
-
-      console.log('Respons data yang diterima:', response.data); // Cetak semua respons data
-      console.log('Data yang akan disimpan ke state:', response.data.data); // Cetak bagian data untuk state
-
-      setEditData(response.data.data); // Simpan data edit di state
-      setEditModalVisible(true); // Tampilkan modal edit
-    } catch (error) {
-      console.error('Error fetching edit data:', error);
-      Alert.alert('Error', 'Gagal mengambil data untuk diedit.');
-    }
-  };
-
-  const submitEdit = async () => {
-    try {
-      const endpoint =
-        activeButton === 'bulan'
-          ? `http://192.168.60.123:8000/api/v1/bulan/${editData.uuid}/update`
-          : `http://192.168.60.123:8000/api/v1/tahun/${editData.uuid}/update`;
-
-      const response = await axios.post(
-        endpoint,
-        {
-          bulan: editData.bulan,
-        },
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
-
-      if (response.status === 200 || response.status === 204) {
-        Alert.alert('Berhasil', 'Data berhasil diperbarui.');
-        setEditModalVisible(false);
-        activeButton === 'bulan'
-          ? fetchBulanData(currentPage)
-          : fetchTahunData(currentPage);
-      } else {
-        Alert.alert(
-          'Peringatan',
-          'Respons tidak sesuai, tetapi data mungkin berhasil diperbarui.',
-        );
-      }
-    } catch (error) {
-      console.error(
-        'Error saat menghapus:',
-        error.response?.data || error.message,
-      );
-      Alert.alert('Error', 'Gagal memperbarui data.');
-    }
-  };
-
-  const fetchTahunData = async page => {
+  const fetchBulanData = async () => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.60.123:8000/api/v1/tahun/index',
-        {page, per: selectedDisplay},
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
-      setData(response.data.data);
-      setCurrentPage(response.data.current_page);
-      setLastPage(response.data.last_page);
+      const response = await apiClient.get('/bulan/show');
+      setData(response.data.data); // Asumsi data langsung berupa array bulan
+      setLoading(false);
     } catch (error) {
-      console.error('Error fetching data', error);
-    } finally {
+      console.error('Error fetching bulan:', error);
+      Alert.alert('Error', 'Gagal memuat data bulan.');
       setLoading(false);
     }
   };
-
-  const fetchBulanData = async page => {
+  
+  const fetchTahunData = async () => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.60.123:8000/api/v1/bulan/index',
-        {page, per: selectedDisplay},
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
-      setData(response.data.data);
-      setCurrentPage(response.data.current_page);
-      setLastPage(response.data.last_page);
-    } catch (error) {
-      console.error('Error fetching data', error);
-    } finally {
+      const response = await apiClient.get('/tahun/show');
+      setData(response.data.data); // Asumsi data langsung berupa array tahun
       setLoading(false);
-    }
-  };
-
-  const submitTambah = async () => {
-    try {
-      const endpoint =
-        activeButton === 'bulan'
-          ? `http://192.168.60.123:8000/api/v1/bulan/create`
-          : `http://192.168.60.123:8000/api/v1/tahun/create`;
-  
-      // Sesuaikan payload berdasarkan activeButton
-      const payload =
-        activeButton === 'bulan'
-          ? {bulan: selectedNamaSatuan}
-          : {tahun: selectedNamaSatuan};
-  
-      const response = await axios.post(endpoint, payload, {
-        headers: { // Perbaikan penulisan "headers" (bukan "Headers")
-          Authorization:
-            token,
-        },
-      });
-  
-      if (response.status === 200 || response.status === 204) {
-        Alert.alert('Berhasil', 'Data berhasil ditambah.');
-        setTambahModalVisible(false);
-        activeButton === 'bulan'
-          ? fetchBulanData(currentPage)
-          : fetchTahunData(currentPage); // Refresh data sesuai tombol aktif
-      } else {
-        Alert.alert(
-          'Peringatan',
-          'Data mungkin sudah ditambah, tetapi respons tidak sesuai.',
-        );
-      }
     } catch (error) {
-      console.error('Error saat menambah:', error.response?.data || error.message);
-      Alert.alert('Error', 'Gagal menambah data.');
+      console.error('Error fetching tahun:', error);
+      Alert.alert('Error', 'Gagal memuat data tahun.');
+      setLoading(false);
     }
   };
   
@@ -198,14 +75,10 @@ export default function BulanTahun() {
     try {
       const endpoint =
         activeButton === 'bulan'
-          ? `http://192.168.60.123:8000/api/v1/bulan/${selectedUuid}/delete`
-          : `http://192.168.60.123:8000/api/v1/tahun/${selectedUuid}/delete`;
+          ? `/bulan/${selectedUuid}/delete`
+          : `/tahun/${selectedUuid}/delete`;
 
-      const response = await axios.delete(endpoint, {
-        headers: {
-          Authorization:
-            token,
-        },
+      const response = await apiClient.delete(endpoint, {
       });
 
       if (response.status === 200 || response.status === 204) {
@@ -233,7 +106,8 @@ export default function BulanTahun() {
   };
 
   const handleTambah = () => {
-    setTambahModalVisible(true);
+    const screenName = activeButton === 'bulan' ? 'TambahBulan' : 'TambahTahun';
+    navigation.navigate(screenName);
   };
 
   const handlePreviousPage = () => {
@@ -254,11 +128,6 @@ export default function BulanTahun() {
     }
   };
 
-  const handleCloseTambahModal = () => {
-    setSelectedNamaSatuan('');
-    setTambahModalVisible(false);
-  };
-
   const display = [
     {label: '5', value: 5},
     {label: '10', value: 10},
@@ -267,8 +136,9 @@ export default function BulanTahun() {
     {label: '100', value: 100},
   ];
 
-  const handleEdit = uuid => {
-    fetchEditData(uuid);
+  const handleEdit = (uuid, item) => {
+    const screenName = activeButton === 'bulan' ? 'EditBulan' : 'EditTahun';
+    navigation.navigate(screenName, {uuid});
   };
 
   const handlePress = buttonName => {
@@ -499,96 +369,6 @@ export default function BulanTahun() {
                 style={[styles.submitButton, styles.approveButton]}
                 onPress={submitHapus}>
                 <Text style={styles.buttonText}>Setujui</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Edit Pangkat Modal */}
-      <Modal
-        visible={isEditModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setEditModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Data</Text>
-            <Text style={styles.modalLabel}>Nama Satuan</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder={
-                activeButton === 'bulan' ? 'Nama Bulan' : 'Nama Tahun'
-              }
-              value={
-                activeButton === 'bulan'
-                  ? editData.bulan || ''
-                  : editData.tahun || ''
-              }
-              onChangeText={text =>
-                setEditData(prev => ({
-                  ...prev,
-                  [activeButton === 'bulan' ? 'bulan' : 'tahun']: text,
-                }))
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setEditModalVisible(false)}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={submitEdit} // Fungsi untuk menyimpan perubahan
-              >
-                <Text style={styles.buttonText}>Simpan</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Tambah Bulan/tahun Modal */}
-      <Modal
-        visible={isTambahModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setTambahModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
-              Tambah Data {activeButton === 'bulan' ? 'Bulan' : 'Tahun'}
-            </Text>
-            <Text style={styles.modalLabel}>
-              {activeButton === 'bulan' ? 'Bulan' : 'Tahun'}
-            </Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder={
-                activeButton === 'bulan' ? 'Nama Bulan' : 'Nama Tahun'
-              }
-              multiline
-              value={selectedNamaSatuan}
-              onChangeText={setSelectedNamaSatuan}
-              placeholderTextColor={'#B6B9CA'}
-            />
-
-            {/* Tombol Modal */}
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => handleCloseTambahModal()}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={() => {
-                  submitTambah(); // Tutup modal setelah menyimpan
-                }}>
-                <Text style={styles.buttonText}>Simpan</Text>
               </TouchableOpacity>
             </View>
           </View>

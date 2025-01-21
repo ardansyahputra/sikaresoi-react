@@ -6,9 +6,14 @@ const NavigationContext = createContext();
 // Provider
 export const NavigationProvider = ({children}) => {
   const [currentScreen, setCurrentScreen] = useState('');
-  const screensWithoutTab = ['Login', 'PerubahanPresensi']; // Tambahkan layar selain Login
 
-  const shouldShowTabNavigator = !screensWithoutTab.includes(currentScreen);
+  // Hanya layar yang ingin ditampilkan Tab Navigator
+  const screensWithTab = ['Home', 'Presensi', 'User'];
+
+  console.log('Current Screen in Context:', currentScreen);
+
+  // Logika untuk menentukan apakah Tab Navigator ditampilkan
+  const shouldShowTabNavigator = screensWithTab.includes(currentScreen);
 
   return (
     <NavigationContext.Provider

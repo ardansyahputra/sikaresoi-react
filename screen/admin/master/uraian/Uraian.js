@@ -16,7 +16,8 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
-import axios from 'axios';
+import useApiClient from '../../../../src/api/apiClient';
+import { useNavigation } from '@react-navigation/native';
 
 export default function Uraian() {
   const [data, setData] = useState([]);
@@ -26,7 +27,6 @@ export default function Uraian() {
   const [lastPage, setLastPage] = useState(1);
   const [isTambahModalVisible, setTambahModalVisible] = useState(false);
   const [isHapusModalVisible, setHapusModalVisible] = useState(false);
-  const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);
@@ -34,79 +34,21 @@ export default function Uraian() {
   const [selectedAngkaCredit, setSelectedAngkaCredit] = useState(null);
   const [selectedWpt, setSelectedWpt] = useState(null);
   const [selectedBiaya, setSelectedBiaya] = useState(null);
-  const [editData, setEditData] = useState({});
   const [pickJabatanOptions, setPickJabatanOptions] = useState(null);
   const [jabatanOptions, setJabatanOptions] = useState([]);
   const [pickSatuanOptions, setPickSatuanOptions] = useState(null);
   const [satuanOptions, setSatuanOptions] = useState([]);
+  const navigation = useNavigation();
+  const apiClient = useApiClient();
 
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
-    fetchJabatanOptions();
-    fetchSatuanOptions();
   }, [currentPage, selectedDisplay]);
-
-  const token = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2NDczMjIzLCJleHAiOjE3NDAwNzU1MzIsIm5iZiI6MTczNjQ3NTUzMiwianRpIjoiQ0tBSGpCMWtQSklQQmVqaiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.qydXAhdK7rnRdB8Pe5tuOcIlMbTr6Axe0M90J0DmGtM';
-
-  const fetchSatuanOptions = async () => {
-    try {
-      const response = await axios.get(
-        'http://192.168.60.123:8000/api/v1/satuan/show',
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
-      setSatuanOptions(
-        response.data.data.map(item => ({
-          label: item.nm_satuan,
-          value: item.nm_satuan,
-        })),
-      );
-    } catch (error) {
-      console.error('Error fetching satuan options:', error);
-      Alert.alert('Error', 'Gagal memuat data satuan.');
-    }
-  };
-
-  const fetchJabatanOptions = async () => {
-    try {
-      const response = await axios.get(
-        'http://192.168.60.123:8000/api/v1/jabatan/show',
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
-      setJabatanOptions(
-        response.data.data.map(item => ({
-          label: `${item.kd_jabatan} - ${item.nm_jabatan}`,
-          value: item.id,
-        })),
-      );
-    } catch (error) {
-      console.error('Error fetching jabatan options:', error);
-      Alert.alert('Error', 'Gagal memuat data jabatan.');
-    }
-  };
 
   const fetchData = async page => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.60.123:8000/api/v1/uraian/index',
-        {page},
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
+      const response = await apiClient.post('/uraian/index', {page});
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -117,59 +59,8 @@ export default function Uraian() {
     }
   };
 
-  const submitEdit = async () => {
-    try {
-      await axios.post(
-        `http://192.168.60.123:8000/api/v1/uraian/${editData.uuid}/update`,
-        {
-          nm_uraian: editData.nm_uraian,
-          angka_kredit: editData.angka_kredit,
-          wpt: editData.wpt,
-          biaya: editData.biaya,
-          jabatan_id: editData.jabatan_id,
-          satuan: editData.satuan,
-        },
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
-      Alert.alert('Berhasil', 'Data berhasil diperbarui.');
-      setEditModalVisible(false);
-      fetchData(currentPage); // Refresh data
-    } catch (error) {
-      Alert.alert('Error', 'Gagal memperbarui data.');
-    }
-  };
-
-  const fetchEditData = async uuid => {
-    try {
-      const response = await axios.get(
-        `http://192.168.60.123:8000/api/v1/uraian/${uuid}/edit`,
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
-
-      console.log('Respons data yang diterima:', response.data); // Cetak semua respons data
-      console.log('Data yang akan disimpan ke state:', response.data.data); // Cetak bagian data untuk state
-
-      setEditData(response.data.data); // Simpan data edit di state
-      setEditModalVisible(true); // Tampilkan modal edit
-    } catch (error) {
-      console.error('Error fetching edit data:', error);
-      Alert.alert('Error', 'Gagal mengambil data untuk diedit.');
-    }
-  };
-
   const handleEdit = uuid => {
-    fetchEditData(uuid);
-    setEditModalVisible(true);
+    navigation.navigate("EditUraian", {uuid});
   };
 
   const handleHapus = uuid => {
@@ -179,15 +70,7 @@ export default function Uraian() {
 
   const submitHapus = async () => {
     try {
-      await axios.delete(
-        `http://192.168.60.123:8000/api/v1/uraian/${selectedUuid}/delete`,
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
+      await apiClient.delete(`/uang_makan/${selectedUuid}/delete`);
       Alert.alert('Berhasil', 'Penolakan berhasil.');
       setHapusModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -197,46 +80,7 @@ export default function Uraian() {
   };
 
   const handleTambah = () => {
-    setTambahModalVisible(true);
-  };
-
-  const submitTambah = async () => {
-    try {
-      await axios.post(
-        'http://192.168.60.123:8000/api/v1/uraian/create',
-        {
-          angka_kredit: selectedAngkaCredit,
-          biaya: selectedBiaya,
-          jabatan_id: pickJabatanOptions,
-          nm_uraian: selectedNamaUraian,
-          satuan: pickSatuanOptions,
-          wpt: selectedWpt,
-        },
-        {
-          headers: {
-            Authorization:
-              token,
-            Accept: 'application/json',
-          },
-        },
-      );
-      Alert.alert('Berhasil', 'Data berhasil ditambahkan.');
-      setTambahModalVisible(false);
-      fetchData(currentPage); // Refresh data
-    } catch (error) {
-      console.error('Error saat mengirim data:', error);
-      Alert.alert('Error', 'Gagal menambahkan data.');
-    }
-  };
-
-  const handleCloseTambahModal = () => {
-    setSelectedNamaUraian(null);
-    setSelectedAngkaCredit(null);
-    setSelectedWpt(null);
-    setSelectedBiaya(null);
-    setPickJabatanOptions(null);
-    setPickSatuanOptions(null);
-    setTambahModalVisible(false);
+    navigation.navigate("TambahUraian");
   };
 
   const display = [
@@ -417,129 +261,6 @@ export default function Uraian() {
           }
         />
       )}
-
-      {/* Edit Uraian Modal */}
-      <Modal
-        visible={isEditModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setEditModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Data</Text>
-            <Text style={styles.modalLabel}>Nama Uraian</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Nama Uraian"
-              value={editData.nm_uraian || ''} // Pastikan menggunakan default kosong jika null
-              onChangeText={text =>
-                setEditData(prev => ({...prev, nm_uraian: text}))
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <Text style={styles.modalLabel}>Jabatan</Text>
-            <Dropdown
-              style={styles.modalInput}
-              data={jabatanOptions}
-              labelField="label"
-              valueField="value"
-              placeholder="Pilih Jabatan"
-              placeholderStyle={{color: '#B6B9CA'}}
-              value={editData.nm_jabatan} // Gunakan nilai dari `editData`
-              onChange={
-                item => setEditData(prev => ({...prev, nm_jabatan: item.value})) // Update `editData.jabatan`
-              }
-              renderItem={item => (
-                <Text
-                  style={[
-                    styles.dropdownItem,
-                    styles.customFont,
-                    {color: '#333'},
-                  ]}>
-                  {item.label}
-                </Text>
-              )}
-            />
-            <Text style={styles.modalLabel}>Angka Kredit</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Angka Kredit"
-              value={
-                editData.angka_kredit !== null &&
-                editData.angka_kredit !== undefined
-                  ? String(editData.angka_kredit)
-                  : ''
-              } // Konversi angka ke string
-              onChangeText={
-                text => setEditData(prev => ({...prev, angka_kredit: text})) // Tetap simpan sebagai string
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <Text style={styles.modalLabel}>WPT</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="WPT"
-              value={
-                editData.wpt !== null && editData.wpt !== undefined
-                  ? String(editData.wpt)
-                  : ''
-              } // Konversi angka ke string
-              onChangeText={
-                text => setEditData(prev => ({...prev, wpt: text})) // Tetap simpan sebagai string
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <Text style={styles.modalLabel}>Biaya</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Biaya"
-              value={
-                editData.wpt !== null && editData.biaya !== undefined
-                  ? String(editData.biaya)
-                  : ''
-              } // Konversi angka ke string
-              onChangeText={
-                text => setEditData(prev => ({...prev, biaya: text})) // Tetap simpan sebagai string
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <Text style={styles.modalLabel}>Output</Text>
-            <Dropdown
-              style={styles.modalInput}
-              data={satuanOptions}
-              labelField="label"
-              valueField="value"
-              placeholder="Output"
-              placeholderStyle={{color: '#B6B9CA'}}
-              value={pickSatuanOptions}
-              onChange={item => setPickSatuanOptions(item.value)}
-              renderItem={item => (
-                <Text
-                  style={[
-                    styles.dropdownItem,
-                    styles.customFont,
-                    {color: '#333'},
-                  ]}>
-                  {item.label}
-                </Text>
-              )}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setEditModalVisible(false)}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={submitEdit} // Fungsi untuk menyimpan perubahan
-              >
-                <Text style={styles.buttonText}>Simpan</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       {/* Tambah Uraian Modal */}
       <Modal

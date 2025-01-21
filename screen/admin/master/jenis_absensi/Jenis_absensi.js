@@ -16,7 +16,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
-import axios from 'axios';
+import useApiClient from '../../../../src/api/apiClient';
 
 export default function JenisAbsensi() {
   const [data, setData] = useState([]);
@@ -27,25 +27,18 @@ export default function JenisAbsensi() {
   const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);
   const [switchStates, setSwitchStates] = useState({});
+  const apiClient = useApiClient();
 
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
   }, [currentPage, selectedDisplay]);
 
-  const token =
-    'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2NDczMjIzLCJleHAiOjE3NDAwNzU1MzIsIm5iZiI6MTczNjQ3NTUzMiwianRpIjoiQ0tBSGpCMWtQSklQQmVqaiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.qydXAhdK7rnRdB8Pe5tuOcIlMbTr6Axe0M90J0DmGtM';
-
   const fetchData = async page => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.60.123:8000/api/v1/jenis_absensi/index',
+      const response = await apiClient.post(
+        '/jenis_absensi/index',
         {page},
-        {
-          headers: {
-            Authorization: token,
-          },
-        },
       );
 
       // Update data while preserving existing switch states
@@ -90,14 +83,9 @@ export default function JenisAbsensi() {
     );
   
     try {
-      const response = await axios.post(
-        `http://192.168.60.123:8000/api/v1/jenis_absensi/${uuid}/change_aktif`,
+      const response = await apiClient.post(
+        `/jenis_absensi/${uuid}/change_aktif`,
         {},
-        {
-          headers: {
-            Authorization: token,
-          },
-        },
       );
   
       if (response.data.status === true) {

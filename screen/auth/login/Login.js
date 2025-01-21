@@ -12,24 +12,27 @@ import {
 import * as Keychain from 'react-native-keychain';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {useAuth} from '../AuthContext';
+import axios from 'axios';
 import useApiClient from '../../../src/api/apiClient';
 
 const LoginScreen = ({navigation}) => {
   const [nip, setNip] = useState('');
   const [password, setPassword] = useState('');
-  const {login} = useAuth(); // Gunakan fungsi login dari context
-  const apiClient = useApiClient(); // Gunakan API client
+  const {login, token, refreshToken} = useAuth();
+  const apiClient = useApiClient();
 
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
         const credentials = await Keychain.getGenericPassword();
         if (credentials) {
-          const token = credentials.password;
-          const userData = await fetchUser(token); // Ambil data user
+          const storedToken = credentials.password;
+
+          // Verifikasi token dengan endpoint user
+          const userData = await fetchUser(storedToken);
           if (userData) {
-            login(userData, token); // Simpan data ke context
-            navigation.replace('Home'); // Navigasi ke Home
+            login(userData, storedToken);
+            navigation.replace('Home');
           }
         }
       } catch (error) {
@@ -39,55 +42,108 @@ const LoginScreen = ({navigation}) => {
     checkLoginStatus();
   }, []);
 
+  useEffect(() => {
+    // Axios interceptor untuk menambahkan header Authorization
+    const requestInterceptor = axios.interceptors.request.use(
+      async config => {
+        if (!config.headers.Authorization && token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      error => Promise.reject(error),
+    );
+
+    const responseInterceptor = axios.interceptors.response.use(
+      response => response,
+      async error => {
+        // Jika token expired, refresh token
+        if (error.response?.status === 401) {
+          const newToken = await refreshToken();
+          if (newToken) {
+            error.config.headers.Authorization = `Bearer ${newToken}`;
+            return axios(error.config); // Retry request dengan token baru
+          } else {
+            navigation.replace('Login'); // Logout jika refresh gagal
+          }
+        }
+        return Promise.reject(error);
+      },
+    );
+
+    return () => {
+      axios.interceptors.request.eject(requestInterceptor);
+      axios.interceptors.response.eject(responseInterceptor);
+    };
+  }, [token, refreshToken]);
+
   const loginHandler = async () => {
+    console.log('Login handler triggered.');
+  
     if (!nip || !password) {
+      console.warn('Validation failed: Missing nip or password.');
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
-
+  
+    // Log baseURL dan endpoint lengkap
+    const baseURL = apiClient.defaults.baseURL || 'Base URL not set';
+    const endpoint = '/auth/login';
+    const fullURL = `${baseURL}${endpoint}`;
+    console.log('Full API URL:', fullURL); // Log endpoint lengkap
+  
+    console.log('Attempting login with:', { nip, password });
+  
     try {
-      const loginResponse = await apiClient.post('/auth/login', {
+      const response = await apiClient.post(endpoint, {
         nip,
         password,
       });
-
-      if (loginResponse.status === 200 && loginResponse.data.status === true) {
-        const token = loginResponse.headers['authorization'];
-        if (token) {
-          await saveTokenToKeychain(token);
-          const userData = await fetchUser(token);
-          if (userData) {
-            login(userData, token); // Simpan data ke context
-            navigation.replace('Home'); // Navigasi ke Home
-          }
-        } else {
-          Alert.alert('Error', 'Token not found in response.');
+  
+      console.log('Login response:', response);
+  
+      if (response.status === 200 && response.headers.authorization) {
+        const token = response.headers.authorization;
+        console.log('Token received:', token);
+        await Keychain.setGenericPassword('token', token);
+  
+        console.log('Fetching user data with token.');
+        const userData = await fetchUser(token);
+        console.log('User data fetched:', userData);
+  
+        if (userData) {
+          console.log('Login successful. Navigating to Home.');
+          login(userData, token);
+          navigation.replace('Home');
         }
       } else {
-        Alert.alert(
-          'Error',
-          loginResponse.data.message || 'Invalid credentials',
-        );
+        console.warn('Response does not contain a token:', response);
+        Alert.alert('Error', 'Token not found in response.');
       }
     } catch (error) {
       console.error('Login error:', error);
+      console.error(
+        'Detailed error response:',
+        error.response?.data || 'No response data.',
+      );
       Alert.alert(
         'Error',
         error.response?.data?.message || 'An error occurred during login.',
       );
     }
   };
+  
 
   const fetchUser = async token => {
     try {
-      const userResponse = await apiClient.get('/auth/user', {
+      const response = await apiClient.get('/auth/user', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      if (userResponse.status === 200) {
-        return userResponse.data.data; // Kembalikan data user
+      if (response.status === 200) {
+        return response.data.data;
       } else {
         Alert.alert('Error', 'Failed to fetch user data.');
         return null;
@@ -96,14 +152,6 @@ const LoginScreen = ({navigation}) => {
       console.error('Fetch user error:', error);
       Alert.alert('Error', 'An error occurred while fetching user data.');
       return null;
-    }
-  };
-
-  const saveTokenToKeychain = async token => {
-    try {
-      await Keychain.setGenericPassword('token', token);
-    } catch (error) {
-      console.error('Failed to save token to Keychain:', error);
     }
   };
 

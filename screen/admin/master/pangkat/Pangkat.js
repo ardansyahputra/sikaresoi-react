@@ -16,7 +16,8 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
-import axios from 'axios';
+import {useNavigation} from '@react-navigation/native';
+import useApiClient from '../../../../src/api/apiClient';
 
 export default function Pangkat() {
   const [data, setData] = useState([]);
@@ -26,34 +27,23 @@ export default function Pangkat() {
   const [lastPage, setLastPage] = useState(1);
   const [isTambahModalVisible, setTambahModalVisible] = useState(false);
   const [isHapusModalVisible, setHapusModalVisible] = useState(false);
-  const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);
   const [selectedNamaPangkat, setSelectedNamaPangkat] = useState(null);
   const [selectedGolongan, setSelectedGolongan] = useState(null);
-  const [editData, setEditData] = useState({});
   const [selectedRuang, setSelectedRuang] = useState(null);
+  const navigation = useNavigation();
+  const apiClient = useApiClient();
 
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
   }, [currentPage, selectedDisplay]);
 
-  const token = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2NDczMjIzLCJleHAiOjE3NDAwNzU1MzIsIm5iZiI6MTczNjQ3NTUzMiwianRpIjoiQ0tBSGpCMWtQSklQQmVqaiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.qydXAhdK7rnRdB8Pe5tuOcIlMbTr6Axe0M90J0DmGtM';
-
   const fetchData = async page => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.60.123:8000/api/v1/pangkat/index',
-        {page},
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
+      const response = await apiClient.post('/pangkat/index', {page});
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -64,55 +54,8 @@ export default function Pangkat() {
     }
   };
 
-  const submitEdit = async () => {
-    try {
-      await axios.post(
-        `http://192.168.60.123:8000/api/v1/pangkat/${editData.uuid}/update`,
-        {
-          nm_pangkat: editData.nm_pangkat,
-          golongan: editData.golongan,
-          ruang: editData.ruang,
-        },
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
-      Alert.alert('Berhasil', 'Data berhasil diperbarui.');
-      setEditModalVisible(false);
-      fetchData(currentPage); // Refresh data
-    } catch (error) {
-      Alert.alert('Error', 'Gagal memperbarui data.');
-    }
-  };
-
-  const fetchEditData = async uuid => {
-    try {
-      const response = await axios.get(
-        `http://192.168.60.123:8000/api/v1/pangkat/${uuid}/edit`,
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
-
-      console.log('Respons data yang diterima:', response.data); // Cetak semua respons data
-      console.log('Data yang akan disimpan ke state:', response.data.data); // Cetak bagian data untuk state
-
-      setEditData(response.data.data); // Simpan data edit di state
-      setEditModalVisible(true); // Tampilkan modal edit
-    } catch (error) {
-      console.error('Error fetching edit data:', error);
-      Alert.alert('Error', 'Gagal mengambil data untuk diedit.');
-    }
-  };
-
   const handleEdit = uuid => {
-    fetchEditData(uuid);
+    navigation.navigate("EditPangkat", {uuid})
   };
 
   const handleHapus = uuid => {
@@ -122,15 +65,7 @@ export default function Pangkat() {
 
   const submitHapus = async () => {
     try {
-      await axios.delete(
-        `http://192.168.60.123:8000/api/v1/uang_makan/${selectedUuid}/delete`,
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
+      await apiClient.delete(`/uang_makan/${selectedUuid}/delete`);
       Alert.alert('Berhasil', 'Penolakan berhasil.');
       setHapusModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -140,25 +75,16 @@ export default function Pangkat() {
   };
 
   const handleTambah = () => {
-    setTambahModalVisible(true);
+    navigation.navigate("TambahPangkat");
   };
 
   const submitTambah = async () => {
     try {
-      await axios.post(
-        'http://192.168.60.123:8000/api/v1/pangkat/create',
-        {
-          nm_pangkat: selectedNamaPangkat,
-          golongan: selectedGolongan,
-          ruang: selectedRuang,
-        },
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
+      await apiClient.post('/pangkat/create', {
+        nm_pangkat: selectedNamaPangkat,
+        golongan: selectedGolongan,
+        ruang: selectedRuang,
+      });
       Alert.alert('Berhasil', 'Data berhasil ditambahkan.');
       setTambahModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -167,8 +93,7 @@ export default function Pangkat() {
       setSelectedNamaPangkat('');
       setSelectedGolongan('');
       setSelectedRuang('');
-
-      } catch (error) {
+    } catch (error) {
       console.error('Error saat mengirim data:', error);
       Alert.alert('Error', 'Gagal menambahkan data.');
     }
@@ -176,8 +101,8 @@ export default function Pangkat() {
 
   const handleCloseTambahModal = () => {
     setSelectedNamaPangkat('');
-      setSelectedGolongan('');
-      setSelectedRuang('');
+    setSelectedGolongan('');
+    setSelectedRuang('');
     setTambahModalVisible(false);
   };
 
@@ -356,62 +281,6 @@ export default function Pangkat() {
         />
       )}
 
-      {/* Edit Pangkat Modal */}
-      <Modal
-        visible={isEditModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setEditModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Data</Text>
-            <Text style={styles.modalLabel}>Pangkat</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Pangkat"
-              value={editData.nm_pangkat || ''} // Pastikan menggunakan default kosong jika null
-              onChangeText={text =>
-                setEditData(prev => ({...prev, nm_pangkat: text}))
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <Text style={styles.modalLabel}>Golongan</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Golongan"
-              value={editData.golongan || ''} // Pastikan menggunakan default kosong jika null
-              onChangeText={text =>
-                setEditData(prev => ({...prev, golongan: text}))
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <Text style={styles.modalLabel}>Ruang</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Ruang"
-              value={editData.ruang || ''} // Pastikan menggunakan default kosong jika null
-              onChangeText={text =>
-                setEditData(prev => ({...prev, ruang: text}))
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setEditModalVisible(false)}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={submitEdit} // Fungsi untuk menyimpan perubahan
-              >
-                <Text style={styles.buttonText}>Simpan</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
       {/* Tambah Pangkat Modal */}
       <Modal
         visible={isTambahModalVisible}
@@ -430,7 +299,7 @@ export default function Pangkat() {
               onChangeText={setSelectedNamaPangkat}
               placeholderTextColor={'#B6B9CA'}
             />
-            <Text style={styles.modalLabel}>Golongan</Text>            
+            <Text style={styles.modalLabel}>Golongan</Text>
             <TextInput
               style={styles.modalInput}
               placeholder="Golongan"

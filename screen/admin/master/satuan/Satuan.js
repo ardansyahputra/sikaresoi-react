@@ -16,7 +16,8 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
-import axios from 'axios';
+import {useNavigation} from '@react-navigation/native';
+import useApiClient from '../../../../src/api/apiClient';
 
 export default function Satuan() {
   const [data, setData] = useState([]);
@@ -24,34 +25,21 @@ export default function Satuan() {
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [isTambahModalVisible, setTambahModalVisible] = useState(false);
   const [isHapusModalVisible, setHapusModalVisible] = useState(false);
-  const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);
-  const [selectedNamaSatuan, setSelectedNamaSatuan] = useState('');
-  const [editData, setEditData] = useState({});
+  const navigation = useNavigation();
+  const apiClient = useApiClient();
 
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
   }, [currentPage, selectedDisplay]);
 
-  const token = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2NDczMjIzLCJleHAiOjE3NDAwNzU1MzIsIm5iZiI6MTczNjQ3NTUzMiwianRpIjoiQ0tBSGpCMWtQSklQQmVqaiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.qydXAhdK7rnRdB8Pe5tuOcIlMbTr6Axe0M90J0DmGtM';
-
   const fetchData = async page => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.60.123:8000/api/v1/satuan/index',
-        {page},
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
+      const response = await apiClient.post('/satuan/index', {page});
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -62,53 +50,8 @@ export default function Satuan() {
     }
   };
 
-  const submitEdit = async () => {
-    try {
-      await axios.post(
-        `http://192.168.60.123:8000/api/v1/satuan/${editData.uuid}/update`,
-        {
-          nm_satuan: editData.nm_satuan,
-        },
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
-      Alert.alert('Berhasil', 'Data berhasil diperbarui.');
-      setEditModalVisible(false);
-      fetchData(currentPage); // Refresh data
-    } catch (error) {
-      Alert.alert('Error', 'Gagal memperbarui data.');
-    }
-  };
-
-  const fetchEditData = async uuid => {
-    try {
-      const response = await axios.get(
-        `http://192.168.60.123:8000/api/v1/satuan/${uuid}/edit`,
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
-
-      console.log('Respons data yang diterima:', response.data); // Cetak semua respons data
-      console.log('Data yang akan disimpan ke state:', response.data.data); // Cetak bagian data untuk state
-
-      setEditData(response.data.data); // Simpan data edit di state
-      setEditModalVisible(true); // Tampilkan modal edit
-    } catch (error) {
-      console.error('Error fetching edit data:', error);
-      Alert.alert('Error', 'Gagal mengambil data untuk diedit.');
-    }
-  };
-
   const handleEdit = uuid => {
-    fetchEditData(uuid);
+    navigation.navigate("EditSatuan", {uuid})
   };
 
   const handleHapus = uuid => {
@@ -118,15 +61,7 @@ export default function Satuan() {
 
   const submitHapus = async () => {
     try {
-      await axios.delete(
-        `http://192.168.60.123:8000/api/v1/satuan/${selectedUuid}/delete`,
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
+      await apiClient.delete(`/satuan/${selectedUuid}/delete`);
       Alert.alert('Berhasil', 'Penolakan berhasil.');
       setHapusModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -136,34 +71,7 @@ export default function Satuan() {
   };
 
   const handleTambah = () => {
-    setTambahModalVisible(true);
-  };
-
-  const submitTambah = async () => {
-    try {
-      await axios.post(
-        'http://192.168.60.123:8000/api/v1/satuan/create',
-        {
-          nm_satuan: selectedNamaSatuan,
-        },
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
-      Alert.alert('Berhasil', 'Data berhasil ditambahkan.');
-      setTambahModalVisible(false);
-      fetchData(currentPage); // Refresh data
-
-      // Reset form setelah berhasil
-      setSelectedNamaSatuan('');
-
-      } catch (error) {
-      console.error('Error saat mengirim data:', error);
-      Alert.alert('Error', 'Gagal menambahkan data.');
-    }
+    navigation.navigate("TambahSatuan");
   };
 
   const handleCloseTambahModal = () => {
@@ -221,10 +129,8 @@ export default function Satuan() {
       </View>
       <View style={styles.tableHeader}>
         <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
-        <Text style={[styles.headerCell, styles.nameCell]}>Nama Pangkat</Text>
-        <Text style={[styles.headerCell, styles.tableStatusCell]}>
-          Aksi
-        </Text>
+        <Text style={[styles.headerCell, styles.nameCell]}>Nama Satuan</Text>
+        <Text style={[styles.headerCell, styles.tableStatusCell]}>Aksi</Text>
         <View style={styles.expandIconCell} />
       </View>
     </View>
@@ -235,9 +141,7 @@ export default function Satuan() {
 
     return (
       <View style={styles.tableRow}>
-        <View 
-          style={styles.rowHeader}
-          onPress={() => toggleExpand(item.id)}>
+        <View style={styles.rowHeader} onPress={() => toggleExpand(item.id)}>
           <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
           <Text
             style={[styles.tableCell, styles.nameCell]}
@@ -258,7 +162,7 @@ export default function Satuan() {
               <FontAwesome name="trash" size={16} color="#fff" />
               <Text style={styles.customFont}>Hapus</Text>
             </TouchableOpacity>
-          </View>  
+          </View>
         </View>
       </View>
     );
@@ -321,80 +225,6 @@ export default function Satuan() {
           }
         />
       )}
-
-      {/* Edit Pangkat Modal */}
-      <Modal
-        visible={isEditModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setEditModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Data</Text>
-            <Text style={styles.modalLabel}>Nama Satuan</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Nama Satuan"
-              value={editData.nm_satuan || ''} // Pastikan menggunakan default kosong jika null
-              onChangeText={text =>
-                setEditData(prev => ({...prev, nm_satuan: text}))
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setEditModalVisible(false)}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={submitEdit} // Fungsi untuk menyimpan perubahan
-              >
-                <Text style={styles.buttonText}>Simpan</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Tambah Pangkat Modal */}
-      <Modal
-        visible={isTambahModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setTambahModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Tambah Satuan Data</Text>
-            <Text style={styles.modalLabel}>Nama Satuan</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Nama Satuan"
-              multiline
-              value={selectedNamaSatuan}
-              onChangeText={setSelectedNamaSatuan}
-              placeholderTextColor={'#B6B9CA'}
-            />
-
-            {/* Tombol Modal */}
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => handleCloseTambahModal()}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={() => {
-                  submitTambah(); // Tutup modal setelah menyimpan
-                }}>
-                <Text style={styles.buttonText}>Simpan</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       {/* Hapus Pangkat Modal */}
       <Modal
@@ -489,7 +319,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   expandIconCell: {
-    width: 80, 
+    width: 80,
     alignItems: 'flex-end',
   },
   approvedStatus: {

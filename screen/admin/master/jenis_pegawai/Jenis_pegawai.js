@@ -16,7 +16,8 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
-import axios from 'axios';
+import {useNavigation} from '@react-navigation/native';
+import useApiClient from '../../../../src/api/apiClient';
 
 export default function JenisPegawai() {
   const [data, setData] = useState([]);
@@ -26,32 +27,24 @@ export default function JenisPegawai() {
   const [lastPage, setLastPage] = useState(1);
   const [isTambahModalVisible, setTambahModalVisible] = useState(false);
   const [isHapusModalVisible, setHapusModalVisible] = useState(false);
-  const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);
-  const [editData, setEditData] = useState({});
   const [selectedJenis, setSelectedJenis] = useState('');
   const [selectedPersenBayar, setSelectedPersenBayar] = useState('');
+  const apiClient = useApiClient();
+  const navigation = useNavigation();
 
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
   }, [currentPage, selectedDisplay]);
 
-  const token =
-    'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2NDczMjIzLCJleHAiOjE3NDAwNzU1MzIsIm5iZiI6MTczNjQ3NTUzMiwianRpIjoiQ0tBSGpCMWtQSklQQmVqaiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.qydXAhdK7rnRdB8Pe5tuOcIlMbTr6Axe0M90J0DmGtM';
-
   const fetchData = async page => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.60.123:8000/api/v1/jenis_pegawai/index',
+      const response = await apiClient.post(
+        '/jenis_pegawai/index',
         {page},
-        {
-          headers: {
-            Authorization: token,
-          },
-        },
       );
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
@@ -63,52 +56,8 @@ export default function JenisPegawai() {
     }
   };
 
-  const submitEdit = async () => {
-    try {
-      await axios.post(
-        `http://192.168.60.123:8000/api/v1/jenis_pegawai/${editData.uuid}/update`,
-        {
-          jenis: editData.jenis,
-          persen_bayar: editData.persen_bayar,
-        },
-        {
-          headers: {
-            Authorization: token,
-          },
-        },
-      );
-      Alert.alert('Berhasil', 'Data berhasil diperbarui.');
-      setEditModalVisible(false);
-      fetchData(currentPage); // Refresh data
-    } catch (error) {
-      Alert.alert('Error', 'Gagal memperbarui data.');
-    }
-  };
-
-  const fetchEditData = async uuid => {
-    try {
-      const response = await axios.get(
-        `http://192.168.60.123:8000/api/v1/jenis_pegawai/${uuid}/edit`,
-        {
-          headers: {
-            Authorization: token,
-          },
-        },
-      );
-
-      console.log('Respons data yang diterima:', response.data); // Cetak semua respons data
-      console.log('Data yang akan disimpan ke state:', response.data.data); // Cetak bagian data untuk state
-
-      setEditData(response.data.data); // Simpan data edit di state
-      setEditModalVisible(true); // Tampilkan modal edit
-    } catch (error) {
-      console.error('Error fetching edit data:', error);
-      Alert.alert('Error', 'Gagal mengambil data untuk diedit.');
-    }
-  };
-
   const handleEdit = uuid => {
-    fetchEditData(uuid);
+    navigation.navigate("EditJenisPegawai", {uuid})
   };
 
   const handleHapus = uuid => {
@@ -118,13 +67,8 @@ export default function JenisPegawai() {
 
   const submitHapus = async () => {
     try {
-      await axios.delete(
-        `http://192.168.60.123:8000/api/v1/jenis_pegawai/${selectedUuid}/delete`,
-        {
-          headers: {
-            Authorization: token,
-          },
-        },
+      await apiClient.delete(
+        `/jenis_pegawai/${selectedUuid}/delete`,
       );
       Alert.alert('Berhasil', 'Penolakan berhasil.');
       setHapusModalVisible(false);
@@ -135,40 +79,7 @@ export default function JenisPegawai() {
   };
 
   const handleTambah = () => {
-    setTambahModalVisible(true);
-  };
-
-  const submitTambah = async () => {
-    try {
-      await axios.post(
-        'http://192.168.60.123:8000/api/v1/jenis_pegawai/create',
-        {
-          jenis: selectedJenis,
-          persen_bayar: selectedPersenBayar,
-        },
-        {
-          headers: {
-            Authorization: token,
-          },
-        },
-      );
-      Alert.alert('Berhasil', 'Data berhasil ditambahkan.');
-      setTambahModalVisible(false);
-      fetchData(currentPage); // Refresh data
-
-      // Reset form setelah berhasil
-      setSelectedJenis('');
-      setSelectedPersenBayar('');
-    } catch (error) {
-      console.error('Error saat mengirim data:', error);
-      Alert.alert('Error', 'Gagal menambahkan data.');
-    }
-  };
-
-  const handleCloseTambahModal = () => {
-    setSelectedJenis('');
-    setSelectedPersenBayar('');
-    setTambahModalVisible(false);
+    navigation.navigate("TambahJenisPegawai");
   };
 
   const display = [
@@ -321,56 +232,6 @@ export default function JenisPegawai() {
           }
         />
       )}
-
-      {/* Edit Pangkat Modal */}
-      <Modal
-        visible={isEditModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setEditModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Data</Text>
-            <Text style={styles.modalLabel}>Jenis</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Jenis"
-              value={editData.jenis || ''} // Pastikan menggunakan default kosong jika null
-              onChangeText={text =>
-                setEditData(prev => ({...prev, jenis: text}))
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <Text style={styles.modalLabel}>Persentase</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Persentase Bayar"
-              value={
-                editData.point !== null && editData.persen_bayar !== undefined
-                  ? String(editData.persen_bayar)
-                  : ''
-              } // Konversi angka ke string
-              onChangeText={
-                text => setEditData(prev => ({...prev, persen_bayar: text})) // Tetap simpan sebagai string
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setEditModalVisible(false)}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={submitEdit} // Fungsi untuk menyimpan perubahan
-              >
-                <Text style={styles.buttonText}>Simpan</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       {/* Tambah Pangkat Modal */}
       <Modal
