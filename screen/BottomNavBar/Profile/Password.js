@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ImageBackground } from 'react-native';
 import Toast from 'react-native-toast-message';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import Ion from 'react-native-vector-icons/Ionicons';
 
-const Password = () => {
+const Password = ({ navigation }) => {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -32,88 +34,94 @@ const Password = () => {
     }
   };
 
+  const handleBack = () => {
+    navigation.goBack();
+  };
+
   return (
-    <View style={styles.container}>
-      {/* ScrollView to allow content to scroll if needed */}
+    <ImageBackground
+      source={require('../../assets/bfg.jpeg')} // Replace with your desired background image
+      style={[styles.container, styles.backgroundStyle]} 
+    >
       <ScrollView contentContainerStyle={styles.formWrapper}>
-        {/* Old Password Input */}
         <Text style={styles.label}>Password Lama</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { color: 'black' }]} // Warna teks diatur menjadi hitam
           secureTextEntry
           placeholder="Masukkan Password Lama"
+          placeholderTextColor="#888" // Opsional: Menentukan warna placeholder
           value={oldPassword}
           onChangeText={setOldPassword}
         />
 
-        {/* New Password Input */}
         <Text style={styles.label}>Password Baru</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { color: 'black' }]} // Warna teks diatur menjadi hitam
           secureTextEntry
           placeholder="Masukkan Password Baru"
+          placeholderTextColor="#888"
           value={newPassword}
           onChangeText={setNewPassword}
         />
 
-        {/* Confirm New Password Input */}
         <Text style={styles.label}>Konfirmasi Password Baru</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { color: 'black' }]} // Warna teks diatur menjadi hitam
           secureTextEntry
           placeholder="Konfirmasi Password Baru"
+          placeholderTextColor="#888"
           value={confirmPassword}
           onChangeText={setConfirmPassword}
         />
 
-        {/* Save Button */}
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>SIMPAN</Text>
-        </TouchableOpacity>
+        {/* Container for Buttons */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+            <View style={styles.buttonContent}>
+              <FontAwesome name="check-square" size={20} color="white" />
+              <Text style={styles.saveButtonText}>SIMPAN</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+            <View style={styles.buttonContent}>
+              <Ion name="arrow-back-circle" size={20} color="white" />
+              <Text style={styles.backButtonText}>KEMBALI</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
-      {/* Toast Message */}
       <Toast />
-    </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#000',
   },
-  header: {
-    height: 200,
-    width: '100%',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    paddingTop: 300,
-    paddingBottom: 20,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    overflow: 'hidden', // Ensure content inside header stays within the bounds
+  backgroundStyle: {
+    alignItems: 'center',
   },
-  headerText: {
-    fontSize: 24,
-    color: '#fff',
-    fontWeight: 'bold',
+  formWrapper: {
+    width: '85%',
+    padding: 30,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    marginTop: 220,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
-formWrapper: {
-  width: '90%',
-  padding: 30,
-  backgroundColor: '#fff',
-  borderRadius: 5,
-  elevation: 5,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.1,
-  shadowRadius: 6,
-  marginTop: 210,  // Adjusted to move the form upward closer to the header
-  marginLeft: 20,
-  marginBottom: 60,  // Reduced the bottom margin to keep it within the screen
-},
-
-  label: {
+  label: {   
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
@@ -129,17 +137,44 @@ formWrapper: {
     backgroundColor: '#fafafa',
     fontSize: 16,
   },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
   saveButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#07ed13',
     borderRadius: 12,
-    paddingVertical: 15,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    flex: 1,
+    marginRight: 10, // Add spacing between buttons
     alignItems: 'center',
-    justifyContent: 'center',
   },
   saveButtonText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
+    marginLeft: 10,
+  },
+  backButton: {
+    backgroundColor: '#d9270f',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    flex: 1,
+    marginLeft: 10, // Add spacing between buttons
+    alignItems: 'center',
+  },
+  backButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 10,
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });
 

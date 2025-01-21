@@ -1,14 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  FlatList,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { Card } from 'react-native-paper';
 
-const Persetujuan = ({ navigation }) => {
+const PersetujuanR = ({ navigation }) => {
   const data = [
     {
       id: 1,
@@ -69,9 +72,9 @@ const Persetujuan = ({ navigation }) => {
 
           {/* Action Button */}
           <TouchableOpacity
-            style={[styles.actionButton,]}
-             onPress={() => navigation.navigate('DataTable')}
-           >
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('DataTable')}
+          >
             <Icon name="eye" size={20} color="#fff" />
             <Text style={styles.actionText}>Lihat Detail</Text>
           </TouchableOpacity>
@@ -150,4 +153,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Persetujuan;
+export default PersetujuanR;

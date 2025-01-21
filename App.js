@@ -15,12 +15,20 @@ import HomeScreen from './screen/BottomNavBar/Home/HomeScreen';
 import KontrakKinerjaScreen from './screen/BottomNavBar/KontrakKinerja/KontrakKinerjaScreen';
 import ProfileScreen from './screen/BottomNavBar/Profile/ProfileScreen';
 import SettingJabatan from './screen/BottomNavBar/Menu/SettingJabatan/SettingJabatan';
-import FormJabatan from './screen/BottomNavBar/Menu/SettingJabatan/Form';
 import RealisasiKinerja from './screen/BottomNavBar/Menu/RealisasiKinerja/RealisasiKinerja';
 import PresensiScreen from './screen/PresensiScreen';
-import TeguranScreen from './screen/TeguranScreen'
 import Allmenu from './screen/Allmenu';
 import Persetujuan from './screen/Persetujuan';
+import PersetujuanR from './screen/PersetujuanRealisasi';
+import DataTable from './screen/DataTable';
+import DataTable2 from './screen/DataTable2';
+import RemunerasiScreen from './screen/BottomNavBar/Home/Persetujuan/Renumerasi.js';
+import PencapaianKerja from './screen/PencapaianKerja.js';
+import Remunerasi from './screen/Remunerasi.js';
+import KontrakKerja from './screen/KontrakKerja.js';
+import HistoryPresensi from './screen/HistoryPresensi';
+import ProfileEdit from './screen/BottomNavBar/Profile/ProfileEdit';
+import Password from './screen/BottomNavBar/Profile/Password';
 import PersetujuanRealisasi from './screen/PersetujuanRealisasi';
 import HistoryPresensi from './screen/HistoryPresensi';
 import DataTable from './screen/DataTable';
@@ -28,6 +36,8 @@ import KontrakKerja from './screen/BottomNavBar/Menu/Laporan/KontrakKerja';
 
 // Bottom Tab Navigator
 const Tab = createBottomTabNavigator();
+
+// Stack Navigator untuk Menu
 const Stack = createNativeStackNavigator();
 
 function RootStack() {
