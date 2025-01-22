@@ -8,12 +8,93 @@ import {
   ActivityIndicator,
   TextInput,
   Alert,
+  Modal,
+  Animated,
+  TouchableWithoutFeedback,
+  Dimensions,
+  Platform,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../src/api/apiClient';
+import DatePicker from 'react-native-modern-datepicker';
+
+const SCREEN_HEIGHT = Dimensions.get('window').height;
+const BOTTOM_SHEET_HEIGHT = SCREEN_HEIGHT * 0.7;
+
+const CustomDatePicker = ({isVisible, onClose, onDateChange, currentDate}) => {
+  const slideAnim = React.useRef(
+    new Animated.Value(BOTTOM_SHEET_HEIGHT),
+  ).current;
+
+  React.useEffect(() => {
+    if (isVisible) {
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        bounciness: 4,
+      }).start();
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: BOTTOM_SHEET_HEIGHT,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [isVisible]);
+
+  if (!isVisible) return null;
+
+  return (
+    <Modal transparent visible={isVisible} animationType="fade">
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View style={styles.modalOverlay}>
+          <TouchableWithoutFeedback>
+            <Animated.View
+              style={[
+                styles.bottomSheet,
+                {
+                  transform: [
+                    {
+                      translateY: slideAnim,
+                    },
+                  ],
+                },
+              ]}>
+              <View style={styles.bottomSheetHeader}>
+                <Text style={styles.bottomSheetTitle}>Select Date</Text>
+                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                  <Ionicons name="close" size={24} color="#333" />
+                </TouchableOpacity>
+              </View>
+              <DatePicker
+                mode="calendar"
+                onDateChange={onDateChange}
+                current={currentDate}
+                options={{
+                  textHeaderColor: '#007BFF',
+                  textDefaultColor: '#333',
+                  selectedTextColor: '#FFF',
+                  mainColor: '#007BFF',
+                  textSecondaryColor: '#B0B0B0',
+                  borderColor: 'rgba(122, 146, 165, 0.1)',
+                }}
+                style={styles.datePicker}
+              />
+              <TouchableOpacity
+                style={styles.confirmDateButton}
+                onPress={onClose}>
+                <Text style={styles.confirmDateButtonText}>Pilih Tanggal</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </TouchableWithoutFeedback>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
+  );
+};
 
 export default function Jabatan() {
   const navigation = useNavigation();
@@ -24,7 +105,9 @@ export default function Jabatan() {
   const [lastPage, setLastPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDisplay, setSelectedDisplay] = useState(null);
-  const [tambahModalVisible, setTambahModalVisible] = useState(false); // Tambahkan state ini
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [Tanggal, setTanggal] = useState('');
+  const [tambahModalVisible, setTambahModalVisible] = useState(false);
   const apiClient = useApiClient();
 
   useEffect(() => {
@@ -34,7 +117,9 @@ export default function Jabatan() {
   const fetchData = async page => {
     try {
       setLoading(true);
-      const response = await apiClient.post('/admin/absensi/indexandro', {page});
+      const response = await apiClient.post('/admin/absensi/indexandro', {
+        page,
+      });
       if (response?.data?.data) {
         setData(response.data.data);
         setCurrentPage(response.data.current_page);
@@ -51,14 +136,16 @@ export default function Jabatan() {
     }
   };
 
-  const handleTambah = () => {
-    setTambahModalVisible(true); // Ubah sesuai state yang didefinisikan
-    navigation.navigate('presensiexcel');
-  };
-
   const handleEdit = (id, name) => {
-    navigation.navigate('Presensiedit', { userId: id, userName: name });
-  };  
+    console.log('Navigating to Presensiedit with:', {
+      userId: id,
+      userName: name,
+      selectedDate: Tanggal, // Pastikan ini berisi nilai tanggal
+    });
+    
+    navigation.navigate('Presensiedit', { userId: id, userName: name, selectedDate: Tanggal });
+  };
+  
 
   const display = [
     {label: '5', value: 1},
@@ -72,17 +159,44 @@ export default function Jabatan() {
     setExpandedId(expandedId === id ? null : id);
   };
 
+  const handleDateChange = date => {
+    const [year, month, day] = date.split('/');
+    const formattedDate = `${year}-${month}-${day}`;
+    setTanggal(formattedDate);
+  };
+
   const TableHeader = () => (
     <View>
       <View style={styles.tambahContainer}>
+        <View style={styles.datePickerContainer}>
+          <TouchableOpacity
+            style={styles.dateInput}
+            onPress={() => setShowDatePicker(true)}>
+            <Text style={styles.dateText}>{Tanggal || 'Pilih Tanggal'}</Text>
+            <Ionicons name="calendar-outline" size={20} color="#666" />
+          </TouchableOpacity>
+
+          <CustomDatePicker
+            isVisible={showDatePicker}
+            onClose={() => setShowDatePicker(false)}
+            onDateChange={handleDateChange}
+            currentDate={Tanggal || new Date().toISOString().split('T')[0].replace(/-/g, '/')}
+          />
+        </View>
+
         <TouchableOpacity
           style={styles.downloadButton}
-          onPress={() => navigation.navigate('Presensiexcel')} // Navigasi ke halaman Excel
-        >
-          <FontAwesome size={20} color="#fff" style={styles.icon} />
+          onPress={() => navigation.navigate('Presensiexcel')}>
+          <FontAwesome
+            name="file-excel-o"
+            size={20}
+            color="#fff"
+            style={styles.icon}
+          />
           <Text style={styles.downloadText}>Download Excel</Text>
         </TouchableOpacity>
       </View>
+
       <View style={styles.filterContainer}>
         <View style={styles.displayContainer}>
           <Text style={styles.displayText}>Display</Text>
@@ -151,9 +265,7 @@ export default function Jabatan() {
         </TouchableOpacity>
         {isExpanded && (
           <View style={styles.expandedContent}>
-            <Text style={styles.expandedText}>
-              Jenis Teguran: {item.aaaa}
-            </Text>
+            <Text style={styles.expandedText}>Jenis Teguran: {item.aaaa}</Text>
             <Text style={styles.expandedText}>Potongan: {item.aaa}</Text>
             <Text style={styles.expandedText}>
               Tanggal Pelanggaran: {item.aaaa}
@@ -175,7 +287,6 @@ export default function Jabatan() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}></View>
         <View style={styles.headerRight}>
@@ -185,7 +296,6 @@ export default function Jabatan() {
           </TouchableOpacity>
         </View>
       </View>
-      {/* Loading Indicator */}
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
@@ -550,7 +660,16 @@ const styles = StyleSheet.create({
   tambahContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center', // Agar elemen dalam satu baris rata tengah secara vertikal
     marginBottom: 10,
+    padding: 10, // Tambahkan padding agar terlihat lebih rapi
+    backgroundColor: '#F9F9F9', // Warna latar belakang untuk elemen container
+    borderRadius: 8, // Tambahkan border radius untuk gaya lebih modern
+    elevation: 2, // Bayangan untuk tampilan lebih menarik di Android
+    shadowColor: '#000', // Bayangan untuk iOS
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   tambahButton: {
     flexDirection: 'row',
@@ -579,11 +698,12 @@ const styles = StyleSheet.create({
   },
   downloadButton: {
     flexDirection: 'row',
-    backgroundColor: '#28c4ac', // Sama dengan warna tombol tambah
-    padding: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#007BFF',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 5,
-    marginBottom: 5,
-    marginLeft: 200,
   },
   icon: {
     marginRight: 5,
@@ -619,5 +739,79 @@ const styles = StyleSheet.create({
   switchLabel: {
     fontSize: 16,
     color: '#333',
+  },
+  input: {
+    flex: 1, // Agar input mengambil ruang yang tersedia
+    borderWidth: 1,
+    borderColor: '#CCC',
+    padding: 10,
+    borderRadius: 5,
+    backgroundColor: '#FFF', // Tambahkan latar belakang putih untuk input
+    marginRight: 10, // Beri jarak antar elemen di sebelah kanan
+  },
+  datePickerContainer: {
+    marginBottom: 10,
+  },
+
+  dateInput: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#CCC',
+    borderRadius: 5,
+    padding: 10,
+    backgroundColor: '#FFF',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  bottomSheet: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    height: BOTTOM_SHEET_HEIGHT,
+    // Add shadow for iOS
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -3,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    // Add elevation for Android
+    elevation: 5,
+  },
+  bottomSheetHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  bottomSheetTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  closeButton: {
+    padding: 5,
+  },
+  datePicker: {
+    borderRadius: 10,
+  },
+  confirmDateButton: {
+    backgroundColor: '#007BFF',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  confirmDateButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
