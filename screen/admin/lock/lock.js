@@ -37,6 +37,8 @@ export default function Lock() {
   const [selectedStartDate, setSelectedStartDate] = useState(null);
   const [selectedEndDate, setSelectedEndDate] = useState(null);
 
+  const token = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2NDczMjIzLCJleHAiOjE3NDAwNzU1MzIsIm5iZiI6MTczNjQ3NTUzMiwianRpIjoiQ0tBSGpCMWtQSklQQmVqaiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.qydXAhdK7rnRdB8Pe5tuOcIlMbTr6Axe0M90J0DmGtM'
+
   useEffect(() => {
     if (activeButton === 'kontrak') {
       fetchKontrakData(1); // Reset to page 1 when display changes
@@ -54,7 +56,7 @@ export default function Lock() {
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
+              token,
           },
         },
       );
@@ -77,7 +79,7 @@ export default function Lock() {
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
+              token,
           },
         },
       );
@@ -98,7 +100,7 @@ export default function Lock() {
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
+              token,
           },
         },
       );

@@ -14,6 +14,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../../../src/api/apiClient'; // Import useApiClient
+import useApiClient from '../../../src/api/apiClient'; // Import useApiClient
 
 export default function PerubahanPresensi() {
   const [data, setData] = useState([]);
@@ -26,7 +27,10 @@ export default function PerubahanPresensi() {
   const [declineReason, setDeclineReason] = useState('');
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedDisplay, setSelectedDisplay] = useState(null);
+
+  const apiClient = useApiClient(); // Using useApiClient hook
 
   const apiClient = useApiClient(); // Using useApiClient hook
 
@@ -34,6 +38,7 @@ export default function PerubahanPresensi() {
     fetchData(currentPage, selectedDisplay);
   }, [currentPage, selectedDisplay]);
 
+  const fetchData = async (page, per) => {
   const fetchData = async (page, per) => {
     try {
       setLoading(true);
@@ -71,14 +76,20 @@ export default function PerubahanPresensi() {
         status: '2',
         revisi: declineReason,
       });
+      await apiClient.post(`/perubahan_absensi/${selectedUuid}/change`, {
+        status: '2',
+        revisi: declineReason,
+      });
       Alert.alert('Berhasil', 'Penolakan berhasil.');
       setModalVisible(false);
       setDeclineReason('');
+      fetchData(currentPage, selectedDisplay); // Refresh data
       fetchData(currentPage, selectedDisplay); // Refresh data
     } catch (error) {
       Alert.alert('Error', 'Gagal menolak data.');
     }
   };
+
 
   const submitApprove = async () => {
     try {
@@ -86,10 +97,17 @@ export default function PerubahanPresensi() {
         status: '1',
         revisi: null,
       });
+      await apiClient.post(`/perubahan_absensi/${selectedUuid}/change`, {
+        status: '1',
+        revisi: null,
+      });
       Alert.alert('Berhasil', 'Persetujuan Berhasil.');
       setApproveModalVisible(false);
       fetchData(currentPage, selectedDisplay); // Refresh data
+      setApproveModalVisible(false);
+      fetchData(currentPage, selectedDisplay); // Refresh data
     } catch (error) {
+      Alert.alert('Error', 'Gagal menyetujui data.');
       Alert.alert('Error', 'Gagal menyetujui data.');
     }
   };

@@ -16,6 +16,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
+import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../../src/api/apiClient';
 
 export default function Pangkat() {
@@ -26,14 +27,13 @@ export default function Pangkat() {
   const [lastPage, setLastPage] = useState(1);
   const [isTambahModalVisible, setTambahModalVisible] = useState(false);
   const [isHapusModalVisible, setHapusModalVisible] = useState(false);
-  const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);
   const [selectedNamaPangkat, setSelectedNamaPangkat] = useState(null);
   const [selectedGolongan, setSelectedGolongan] = useState(null);
-  const [editData, setEditData] = useState({});
   const [selectedRuang, setSelectedRuang] = useState(null);
+  const navigation = useNavigation();
   const apiClient = useApiClient();
 
   useEffect(() => {
@@ -54,38 +54,8 @@ export default function Pangkat() {
     }
   };
 
-  const submitEdit = async () => {
-    try {
-      await apiClient.post(`/pangkat/${editData.uuid}/update`, {
-        nm_pangkat: editData.nm_pangkat,
-        golongan: editData.golongan,
-        ruang: editData.ruang,
-      });
-      Alert.alert('Berhasil', 'Data berhasil diperbarui.');
-      setEditModalVisible(false);
-      fetchData(currentPage); // Refresh data
-    } catch (error) {
-      Alert.alert('Error', 'Gagal memperbarui data.');
-    }
-  };
-
-  const fetchEditData = async uuid => {
-    try {
-      const response = await apiClient.get(`/pangkat/${uuid}/edit`);
-
-      console.log('Respons data yang diterima:', response.data); // Cetak semua respons data
-      console.log('Data yang akan disimpan ke state:', response.data.data); // Cetak bagian data untuk state
-
-      setEditData(response.data.data); // Simpan data edit di state
-      setEditModalVisible(true); // Tampilkan modal edit
-    } catch (error) {
-      console.error('Error fetching edit data:', error);
-      Alert.alert('Error', 'Gagal mengambil data untuk diedit.');
-    }
-  };
-
   const handleEdit = uuid => {
-    fetchEditData(uuid);
+    navigation.navigate("EditPangkat", {uuid})
   };
 
   const handleHapus = uuid => {
@@ -105,7 +75,7 @@ export default function Pangkat() {
   };
 
   const handleTambah = () => {
-    setTambahModalVisible(true);
+    navigation.navigate("TambahPangkat");
   };
 
   const submitTambah = async () => {
@@ -310,62 +280,6 @@ export default function Pangkat() {
           }
         />
       )}
-
-      {/* Edit Pangkat Modal */}
-      <Modal
-        visible={isEditModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setEditModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Data</Text>
-            <Text style={styles.modalLabel}>Pangkat</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Pangkat"
-              value={editData.nm_pangkat || ''} // Pastikan menggunakan default kosong jika null
-              onChangeText={text =>
-                setEditData(prev => ({...prev, nm_pangkat: text}))
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <Text style={styles.modalLabel}>Golongan</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Golongan"
-              value={editData.golongan || ''} // Pastikan menggunakan default kosong jika null
-              onChangeText={text =>
-                setEditData(prev => ({...prev, golongan: text}))
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <Text style={styles.modalLabel}>Ruang</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Ruang"
-              value={editData.ruang || ''} // Pastikan menggunakan default kosong jika null
-              onChangeText={text =>
-                setEditData(prev => ({...prev, ruang: text}))
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setEditModalVisible(false)}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={submitEdit} // Fungsi untuk menyimpan perubahan
-              >
-                <Text style={styles.buttonText}>Simpan</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       {/* Tambah Pangkat Modal */}
       <Modal

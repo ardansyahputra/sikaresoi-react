@@ -8,8 +8,14 @@ import {
   ActivityIndicator,
   TextInput,
   Alert,
+  Modal,
+  Animated,
+  TouchableWithoutFeedback,
+  Dimensions,
+  Platform,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
@@ -22,6 +28,7 @@ export default function Jabatan() {
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDisplay, setSelectedDisplay] = useState(null);
   const [tambahModalVisible, setTambahModalVisible] = useState(false); // Tambahkan state ini
@@ -44,6 +51,8 @@ export default function Jabatan() {
         setData([]);
       }
     } catch (error) {
+      console.error('Error fetching data:', error);
+      Alert.alert('Error', 'Gagal memuat data.');
       console.error('Error fetching data:', error);
       Alert.alert('Error', 'Gagal memuat data.');
     } finally {
@@ -93,6 +102,7 @@ export default function Jabatan() {
             valueField="value"
             placeholder="10"
             value={selectedDisplay}
+            onChange={item => setSelectedDisplay(item.value)}
             onChange={item => setSelectedDisplay(item.value)}
             renderItem={item => (
               <Text style={[styles.dropdownItem, styles.customFont]}>
@@ -165,6 +175,8 @@ export default function Jabatan() {
         </TouchableOpacity>
         {isExpanded && (
           <View style={styles.expandedContent}>
+            <Text style={styles.expandedText}>Jenis Teguran: {item.aaaa}</Text>
+            <Text style={styles.expandedText}>Potongan: {item.aaa}</Text>
             <Text style={styles.expandedText}>
               Jenis Teguran: {jenisTeguran}
             </Text>
@@ -201,8 +213,8 @@ export default function Jabatan() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
+        <View style={styles.headerLeft}></View>
         <View style={styles.headerLeft}></View>
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
@@ -211,7 +223,6 @@ export default function Jabatan() {
           </TouchableOpacity>
         </View>
       </View>
-      {/* Loading Indicator */}
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
@@ -316,6 +327,7 @@ const styles = StyleSheet.create({
     },
   nameCell: {
     flex: 2,
+    flex: 2,
     overflow: 'hidden',
     marginright: 100,
     },
@@ -325,6 +337,7 @@ const styles = StyleSheet.create({
   statusCell: {
     textAlign: 'center',
     fontWeight: 'bold',
+    marginRight: 35,
     marginRight: 35,
   },
   expandIconCell: {
@@ -350,6 +363,27 @@ const styles = StyleSheet.create({
   expandedText: {
     marginBottom: 5,
     fontSize: 14,
+    marginright: 10,
+  },
+  dibacaWrapper: {
+    flexDirection: 'row', // Menyusun "Dibaca:" dan nilai dibaca dalam satu baris
+    alignItems: 'center', // Menyusun konten secara vertikal agar berada sejajar
+    marginBottom: 5, // Memberikan jarak bawah setelah wrapper
+    flexWrap: 'wrap', // Memungkinkan elemen untuk membungkus jika terlalu panjang
+  },
+  dibacaValueWrapper: {
+    backgroundColor: '#4CAF50', // Warna latar belakang default
+    borderRadius: 8, // Membuat sudut rounded
+    paddingVertical: 5, // Menambahkan padding vertikal di dalam wrapper
+    paddingHorizontal: 10, // Menambahkan padding horizontal di dalam wrapper
+    marginright: 20,
+    marginBottom: 20, // Memberikan jarak antara "Dibaca:" dan nilai
+    maxWidth: '100%', // Membatasi lebar nilai agar tidak melampaui layar
+    overflow: 'hidden', // Menyembunyikan konten yang melampaui batas
+  },
+  DibacaText: {
+    fontSize: 14,
+    color: '#fff', // Warna teks putih agar kontras dengan background
     marginright: 10,
   },
   dibacaWrapper: {
@@ -504,6 +538,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     minHeight: 10,
+    minHeight: 10,
     marginBottom: 15,
     textAlignVertical: 'top',
   },
@@ -567,6 +602,7 @@ const styles = StyleSheet.create({
   },
   dropdownItem: {
     padding: 10,
+    fontSize: 12,
     fontSize: 12,
     color: '#333',
   },

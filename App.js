@@ -3,7 +3,6 @@ import {AuthProvider} from './screen/auth/AuthContext';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import SplashScreen from './screen/components/splashscreen/SplashScreen';
 import {
   NavigationProvider,
   useNavigationContext,
@@ -25,11 +24,14 @@ import Laporan from './screen/admin/laporan/Laporan';
 import Presensi from './screen/admin/presensi/Presensi';
 import Presensiedit from './screen/admin/presensi/Presensiedit';
 import Presensiexcel from './screen/admin/presensi/Presensiexcel';
+import UserScreen from './screen/admin/user/User';
+import Presensiedit from './screen/admin/presensi/Presensiedit';
+import Presensiexcel from './screen/admin/presensi/Presensiexcel';
 
 //Menu Button Screens
 import SuratTugasScreen from './screen/admin/surattugas/Surat_tugas';
 import PotonganLainScreen from './screen/admin/potongan_lain/Potongan_lain';
-import LockScreen from './screen/admin/lock/Lock';
+import LockScreen from './screen/admin/lock/lock';
 import LainnyaScreen from './screen/admin/lainnya/Lainnya';
 
 //ciruclar Screens
@@ -45,31 +47,67 @@ import RemunerasiScreen from './screen/admin/laporan/remunerasi/Remunerasi';
 import TunjanganTambahanScreen from './screen/admin/laporan/tunjangan_tambahan/Tunjangan_tambahan';
 
 //User
-import User from './screen/admin/master/user/User';
 import UserGroupScreen from './screen/admin/master/user_group/User_group';
 import PersentaseKegiatanScreen from './screen/admin/master/persentase_kegiatan/Persentase_kegiatan';
+
+//profile
+import ProfileEdit from './screen/admin/master/user/ProfileEdit';
+import Password from './screen/admin/master/user/Password';
+import User from './screen/admin/master/user/ProfileScreen';
 
 //Master
 import PemotonganScreen from './screen/admin/master/pemotongan/Pemotongan';
 import EditPA from './screen/admin/master/pemotongan/EditPA/EditPA';
 import TambahPA from './screen/admin/master/pemotongan/TambahPA/TambahPA';
 import UangMakanScreen from './screen/admin/master/uang_makan/Uang_makan';
+import TambahUangMakan from './screen/admin/master/uang_makan/Tambah';
+import EditUangMakan from './screen/admin/master/uang_makan/Edit';
 import JabatanScreen from './screen/admin/master/jabatan/Jabatan';
+import TambahJabatan from './screen/admin/master/jabatan/Tambah';
+import EditJabatan from './screen/admin/master/jabatan/Edit';
 import UnitKerjaScreen from './screen/admin/master/unit_kerja/Unit_kerja';
+import TambahUnitKerja from './screen/admin/master/unit_kerja/Tambah';
+import EditUnitKerja from './screen/admin/master/unit_kerja/Edit';
 import PangkatScreen from './screen/admin/master/pangkat/Pangkat';
+import EditPangkat from './screen/admin/master/pangkat/Edit';
+import TambahPangkat from './screen/admin/master/pangkat/Tambah';
 import SatuanScreen from './screen/admin/master/satuan/Satuan';
+import TambahSatuan from './screen/admin/master/satuan/Tambah';
+import EditSatuan from './screen/admin/master/satuan/Edit';
 import UraianScreen from './screen/admin/master/uraian/Uraian';
+import EditUraian from './screen/admin/master/uraian/Edit';
+import TambahUraian from './screen/admin/master/uraian/Tambah';
 import BulanTahunScreen from './screen/admin/master/bulan_tahun/Bulan_tahun';
+import TambahTahun from './screen/admin/master/bulan_tahun/TambahTahun';
+import EditTahun from './screen/admin/master/bulan_tahun/EditTahun';
+import TambahBulan from './screen/admin/master/bulan_tahun/TambahBulan';
+import EditBulan from './screen/admin/master/bulan_tahun/EditBulan';
 import DewanPengawasScreen from './screen/admin/master/dewas/Dewas';
+import TambahDewas from './screen/admin/master/dewas/Tambah';
+import EditDewas from './screen/admin/master/dewas/Edit';
 import PIRScreen from './screen/admin/master/pir/Pir';
 import KegiatanScreen from './screen/admin/master/kegiatan/Kegiatan';
+import EditKegiatan from './screen/admin/master/kegiatan/Edit';
+import TambahKegiatan from './screen/admin/master/kegiatan/Tambah';
 import JenisPegawaiScreen from './screen/admin/master/jenis_pegawai/Jenis_pegawai';
+import EditJenisPegawai from './screen/admin/master/jenis_pegawai/Edit';
+import TambahJenisPegawai from './screen/admin/master/jenis_pegawai/Tambah';
 import LokasiAbsensiScreen from './screen/admin/master/lokasi_absensi/Lokasi_absensi';
 import NoWaScreen from './screen/admin/master/nowa/Nowa';
+import EditNoWhatsapp from './screen/admin/master/nowa/Edit';
 import JenisAbsensiScreen from './screen/admin/master/jenis_absensi/Jenis_absensi';
 import RewardPunishmentScreen from './screen/admin/master/reward_punishment/Reward_punishment';
+import EditRewardPunishment from './screen/admin/master/reward_punishment/Edit';
+import TambahRewardPunishment from './screen/admin/master/reward_punishment/Tambah';
+import Reward from './screen/admin/master/reward_punishment/reward/Reward';
+import TambahReward from './screen/admin/master/reward_punishment/reward/TambahReward';
+import EditReward from './screen/admin/master/reward_punishment/reward/EditReward';
+import TambahPunishment from './screen/admin/master/reward_punishment/reward/TambahPunishment';
+import EditPunishment from './screen/admin/master/reward_punishment/reward/EditPunishment';
 import DeadlineKinerjaScreen from './screen/admin/master/deadline_kinerja/Deadline_kinerja';
 import MasterPTKPScreen from './screen/admin/master/pajak_ptkp/Pajak_ptkp';
+import EditPajakPtkp from './screen/admin/master/pajak_ptkp/Edit';
+import TambahPajakPtkp from './screen/admin/master/pajak_ptkp/Tambah';
 import JamKerjaScreen from './screen/admin/master/jam_kerja/Jam_kerja';
 
 //Fingerprint
@@ -85,9 +123,20 @@ import PetaJabatanScreen from './screen/admin/master/jabatan/Peta';
 import SettingScreen from './screen/admin/setting/setting';
 import VerifikasiSuratTugas from './screen/admin/surattugas/Persetujuan';
 import SettingPersentaseCapaianScreen from './screen/admin/setting_persentase_capaian/Setting_persentase_capaian';
+import EditLokasiAbsensi from './screen/admin/master/lokasi_absensi/Edit';
+import TambahLokasiAbsensi from './screen/admin/master/lokasi_absensi/Tambah';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+
+function RootStack() {
+  return (
+    <Stack.Navigator screenOptions={{headerShown: false}}>
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="AppTabs" component={AppTabs} />
+    </Stack.Navigator>
+  );
+}
 
 function HomeStack() {
   const {setCurrentScreen} = useNavigationContext();
@@ -101,19 +150,9 @@ function HomeStack() {
         },
       }}>
       <Stack.Screen
-        name="Login"
-        component={LoginScreen}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
         name="Home"
         component={Home}
         options={{headerShown: false}}
-      />
-      <Stack.Screen
-        options={{headerShown: false}}
-        name="User"
-        component={User}
       />
       <Stack.Screen
         options={{headerShown: false}}
@@ -391,9 +430,17 @@ function HomeStack() {
         name="Tambahmesin"
         component={Tambahmesin}
       />
-      </Stack.Navigator>
-    </AuthProvider>
-    
+    </Stack.Navigator>
+</AuthProvider>
+  );
+}
+function ProfileStack() {
+  return (
+    <Stack.Navigator screenOptions={{headerShown: false}}>
+      <Stack.Screen name="ProfileScreen" component={User} />
+      <Stack.Screen name="ProfileEdit" component={ProfileEdit} />
+      <Stack.Screen name="Password" component={Password} />
+    </Stack.Navigator>
   );
 }
 
@@ -435,7 +482,7 @@ function AppTabs() {
       />
       <Tab.Screen
         name="Profile"
-        component={User}
+        component={ProfileStack}
         options={{headerShown: false}}
       />
     </Tab.Navigator>
@@ -447,7 +494,7 @@ export default function App() {
     <AuthProvider>
       <NavigationProvider>
         <NavigationContainer>
-          <AppTabs />
+          <RootStack />
         </NavigationContainer>
       </NavigationProvider>
     </AuthProvider>

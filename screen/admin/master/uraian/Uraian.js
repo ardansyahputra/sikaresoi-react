@@ -17,6 +17,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../../../../src/api/apiClient';
+import { useNavigation } from '@react-navigation/native';
 
 export default function Uraian() {
   const [data, setData] = useState([]);
@@ -26,7 +27,6 @@ export default function Uraian() {
   const [lastPage, setLastPage] = useState(1);
   const [isTambahModalVisible, setTambahModalVisible] = useState(false);
   const [isHapusModalVisible, setHapusModalVisible] = useState(false);
-  const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);
@@ -34,49 +34,16 @@ export default function Uraian() {
   const [selectedAngkaCredit, setSelectedAngkaCredit] = useState(null);
   const [selectedWpt, setSelectedWpt] = useState(null);
   const [selectedBiaya, setSelectedBiaya] = useState(null);
-  const [editData, setEditData] = useState({});
-  const [selectedRuang, setSelectedRuang] = useState(null);
   const [pickJabatanOptions, setPickJabatanOptions] = useState(null);
   const [jabatanOptions, setJabatanOptions] = useState([]);
   const [pickSatuanOptions, setPickSatuanOptions] = useState(null);
   const [satuanOptions, setSatuanOptions] = useState([]);
+  const navigation = useNavigation();
   const apiClient = useApiClient();
 
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
-    fetchJabatanOptions();
-    fetchSatuanOptions();
   }, [currentPage, selectedDisplay]);
-
-  const fetchSatuanOptions = async () => {
-    try {
-      const response = await apiClient.get('/satuan/show');
-      setSatuanOptions(
-        response.data.data.map(item => ({
-          label: item.nm_satuan,
-          value: item.nm_satuan,
-        })),
-      );
-    } catch (error) {
-      console.error('Error fetching satuan options:', error);
-      Alert.alert('Error', 'Gagal memuat data satuan.');
-    }
-  };
-
-  const fetchJabatanOptions = async () => {
-    try {
-      const response = await apiClient.get('/jabatan/show');
-      setJabatanOptions(
-        response.data.data.map(item => ({
-          label: `${item.kd_jabatan} - ${item.nm_jabatan}`,
-          value: item.id,
-        })),
-      );
-    } catch (error) {
-      console.error('Error fetching jabatan options:', error);
-      Alert.alert('Error', 'Gagal memuat data jabatan.');
-    }
-  };
 
   const fetchData = async page => {
     try {
@@ -92,38 +59,8 @@ export default function Uraian() {
     }
   };
 
-  const submitEdit = async () => {
-    try {
-      await apiClient.post(`/pangkat/${editData.uuid}/update`, {
-        nm_pangkat: editData.nm_pangkat,
-        golongan: editData.golongan,
-        ruang: editData.ruang,
-      });
-      Alert.alert('Berhasil', 'Data berhasil diperbarui.');
-      setEditModalVisible(false);
-      fetchData(currentPage); // Refresh data
-    } catch (error) {
-      Alert.alert('Error', 'Gagal memperbarui data.');
-    }
-  };
-
-  const fetchEditData = async uuid => {
-    try {
-      const response = await apiClient.get(`/pangkat/${uuid}/edit`);
-
-      console.log('Respons data yang diterima:', response.data); // Cetak semua respons data
-      console.log('Data yang akan disimpan ke state:', response.data.data); // Cetak bagian data untuk state
-
-      setEditData(response.data.data); // Simpan data edit di state
-      setEditModalVisible(true); // Tampilkan modal edit
-    } catch (error) {
-      console.error('Error fetching edit data:', error);
-      Alert.alert('Error', 'Gagal mengambil data untuk diedit.');
-    }
-  };
-
   const handleEdit = uuid => {
-    fetchEditData(uuid);
+    navigation.navigate("EditUraian", {uuid});
   };
 
   const handleHapus = uuid => {
@@ -143,36 +80,7 @@ export default function Uraian() {
   };
 
   const handleTambah = () => {
-    setTambahModalVisible(true);
-  };
-
-  const submitTambah = async () => {
-    try {
-      await apiClient.post('/uraian/create', {
-        angka_kredit: selectedAngkaCredit,
-        biaya: selectedBiaya,
-        jabatan_id: pickJabatanOptions,
-        nm_uraian: selectedNamaUraian,
-        satuan: pickSatuanOptions,
-        wpt: selectedWpt,
-      });
-      Alert.alert('Berhasil', 'Data berhasil ditambahkan.');
-      setTambahModalVisible(false);
-      fetchData(currentPage); // Refresh data
-    } catch (error) {
-      console.error('Error saat mengirim data:', error);
-      Alert.alert('Error', 'Gagal menambahkan data.');
-    }
-  };
-
-  const handleCloseTambahModal = () => {
-    setSelectedNamaUraian(null);
-    setSelectedAngkaCredit(null);
-    setSelectedWpt(null);
-    setSelectedBiaya(null);
-    setPickJabatanOptions(null);
-    setPickSatuanOptions(null);
-    setTambahModalVisible(false);
+    navigation.navigate("TambahUraian");
   };
 
   const display = [
@@ -353,62 +261,6 @@ export default function Uraian() {
           }
         />
       )}
-
-      {/* Edit Pangkat Modal */}
-      <Modal
-        visible={isEditModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setEditModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Data</Text>
-            <Text style={styles.modalLabel}>Pangkat</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Pangkat"
-              value={editData.nm_pangkat || ''} // Pastikan menggunakan default kosong jika null
-              onChangeText={text =>
-                setEditData(prev => ({...prev, nm_pangkat: text}))
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <Text style={styles.modalLabel}>Golongan</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Golongan"
-              value={editData.golongan || ''} // Pastikan menggunakan default kosong jika null
-              onChangeText={text =>
-                setEditData(prev => ({...prev, golongan: text}))
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <Text style={styles.modalLabel}>Ruang</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Ruang"
-              value={editData.ruang || ''} // Pastikan menggunakan default kosong jika null
-              onChangeText={text =>
-                setEditData(prev => ({...prev, ruang: text}))
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setEditModalVisible(false)}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={submitEdit} // Fungsi untuk menyimpan perubahan
-              >
-                <Text style={styles.buttonText}>Simpan</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       {/* Tambah Uraian Modal */}
       <Modal
