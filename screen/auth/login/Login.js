@@ -32,7 +32,7 @@ const LoginScreen = ({navigation}) => {
           const userData = await fetchUser(storedToken);
           if (userData) {
             login(userData, storedToken);
-            navigation.replace('Home');
+            navigation.replace('AppTabs');
           }
         }
       } catch (error) {
@@ -114,7 +114,7 @@ const LoginScreen = ({navigation}) => {
         if (userData) {
           console.log('Login successful. Navigating to Home.');
           login(userData, token);
-          navigation.replace('Home');
+          navigation.replace('AppTabs');
         }
       } else {
         console.warn('Response does not contain a token:', response);
