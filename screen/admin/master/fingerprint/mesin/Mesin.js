@@ -16,6 +16,7 @@ import {Dropdown} from 'react-native-element-dropdown';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
+import useApiClient from '../../../../../src/api/apiClient';
 
 
 export default function Mesin() {
@@ -29,6 +30,8 @@ export default function Mesin() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDisplay, setSelectedDisplay] = useState(null);
   const navigation = useNavigation();
+  const apiClient = useApiClient();
+
 
 
   useFocusEffect(
@@ -40,13 +43,13 @@ export default function Mesin() {
   const fetchData = async (page, display) => {
     try {
       setLoading(true); // Set loading state
-      const response = await axios.post(
-        'http://192.168.60.163:8000/api/v1/fingerprint_machine/indexandro', // API URL
+      const response = await apiClient.post(
+        '/fingerprint_machine/indexandro', // API URL
         {page, display},
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2Mzg1MzE0LCJleHAiOjE3MzYzOTg0NTgsIm5iZiI6MTczNjM5NDg1OCwianRpIjoiZVdzTWpWQ1F1WGY3SDVwcyIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.bhFOHbPIjAKT9U17r2YYRZXoxhT8H-oMXvu-vvzu2R0', // Token
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjE4Ljk0OjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzY5MDgwNDUsImV4cCI6MTczNjkzMTIzNCwibmJmIjoxNzM2OTI3NjM0LCJqdGkiOiJVVENITmt4MUN1eEY5M1NhIiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.LocW4Sk32906K41W9PoCrcHoRx1Za-aonestc-IJhng', // Token
           },
         },
       );

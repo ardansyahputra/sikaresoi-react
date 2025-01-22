@@ -3,11 +3,13 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import { Linking } from 'react-native';
 
+
 export default function TugasTambahan({ navigation }) {
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [selectedYear, setSelectedYear] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+
 
   const monthData = [
     { label: 'Januari', value: 1 },
@@ -40,7 +42,7 @@ export default function TugasTambahan({ navigation }) {
       return;
     }
 
-    const downloadUrl = `http://192.168.61.163:8000/report/admin/tugas_tambahan/${selectedMonth}/${selectedYear}`;
+    const downloadUrl = `http://192.168.60.163:8000/report/admin/tugas_tambahan/${selectedMonth}/${selectedYear}`;
     Linking.openURL(downloadUrl).catch(() => {
       setModalMessage('Gagal membuka URL!');
       setIsModalVisible(true);
@@ -51,11 +53,15 @@ export default function TugasTambahan({ navigation }) {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.headerTitle}>Laporan Tugas Tambahan</Text>
+          <Text style={styles.headerTitle}></Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.cardContainer}>
+                    <View style={styles.cardHeader}>
+                      <Text style={styles.cardTitle}> Report Rekapitulasi Tugas Tambahan </Text>
+                    </View>
+                    <View style={styles.cardDivider}></View>
         <Text style={styles.label}>Pilih Bulan *</Text>
         <Dropdown
           style={styles.dropdown}
@@ -130,7 +136,7 @@ const styles = StyleSheet.create({
     elevation: 4,
     marginVertical: 20,
     marginHorizontal: 10,
-    marginTop: 70,
+    marginTop: 60,
     width: 387,
   },
   label: { fontSize: 16, marginBottom: 5, color: '#333' },
@@ -168,6 +174,18 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     marginTop: 10,
+  },
+  cardDivider: {
+    height: 1,
+    backgroundColor: '#ddd',
+    marginVertical: 10,
+  },
+  cardHeader: { marginBottom: 15 },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 5,
+    marginBottom: -5,
   },
   closeButtonText: { color: '#FFF', fontWeight: 'bold' },
 });

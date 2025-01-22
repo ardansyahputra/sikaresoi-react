@@ -6,27 +6,26 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  Image,
-  Linking,
-  Modal,
   TextInput,
   Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
-import axios from 'axios';
+import {useNavigation} from '@react-navigation/native';
+import useApiClient from '../../../src/api/apiClient';
 
-export default function Presensi() {
+export default function Jabatan() {
+  const navigation = useNavigation();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [isModalVisible, setModalVisible] = useState(false);
-  const [declineReason, setDeclineReason] = useState('');
-  const [selectedUuid, setSelectedUuid] = useState(null);
-  const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedDisplay, setSelectedDisplay] = useState(null);
+  const [tambahModalVisible, setTambahModalVisible] = useState(false); // Tambahkan state ini
+  const apiClient = useApiClient();
 
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
@@ -35,72 +34,30 @@ export default function Presensi() {
   const fetchData = async page => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.60.85:8000/api/v1/perubahan_absensi/indexandro',
-        {page},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYxLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM0NTg0MjY2LCJleHAiOjE3MzQ1OTc5OTQsIm5iZiI6MTczNDU5NDM5NCwianRpIjoiMXZQT3lNMFVhdzdiak1CdCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.Jj3yyLl1vCqszKDQxSuqVXAdp8O8sjdgS6Y_u2g5g1o',
-          },
-        },
-      );
-      setData(response.data.data);
-      setCurrentPage(response.data.current_page);
-      setLastPage(response.data.last_page);
+      const response = await apiClient.post('/teguran/indexandro', {page});
+      if (response?.data?.data) {
+        setData(response.data.data);
+        setCurrentPage(response.data.current_page);
+        setLastPage(response.data.last_page);
+      } else {
+        console.error('Data tidak valid:', response);
+        setData([]);
+      }
     } catch (error) {
-      console.error('Error fetching data', error);
+      console.error('Error fetching data:', error);
+      Alert.alert('Error', 'Gagal memuat data.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleApprove = async uuid => {
-    try {
-      Alert.alert('Konfirmasi', 'Apakah Anda yakin ingin mengonfirmasi?', [
-        {text: 'Batal', style: 'cancel'},
-        {
-          text: 'Ya',
-          onPress: async () => {
-            await axios.post(
-              `http://192.168.60.85:8000/perubahan_absensi/${uuid}/change`,
-              {status: '1', revisi: null},
-            );
-            Alert.alert('Berhasil', 'Konfirmasi berhasil.');
-            fetchData(currentPage);
-          },
-        },
-      ]);
-    } catch (error) {
-      Alert.alert('Error', 'Gagal mengonfirmasi.');
-    }
+  const handleTambah = () => {
+    setTambahModalVisible(true); // Ubah sesuai state yang didefinisikan
+    navigation.navigate('presensiexcel');
   };
 
-  const handleDecline = uuid => {
-    setSelectedUuid(uuid);
-    setModalVisible(true);
-  };
-
-  const submitDecline = async () => {
-    try {
-      await axios.post(
-        `http://192.168.60.85:8000/api/v1/perubahan_absensi/${selectedUuid}/change`,
-        {status: '2', revisi: declineReason},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIuMTUzOjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzQzOTk0NDQsImV4cCI6MTczNDQxNDc0MiwibmJmIjoxNzM0NDExMTQyLCJqdGkiOiJhS0xXR2w5Y3pkN0pVM1NMIiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.BXVqz9M9HJ18YZOo7-3uqMpTXHTS5MXTWNH9uu63NcQ',
-            Accept: 'application/json',
-          },
-        },
-      );
-      Alert.alert('Berhasil', 'Penolakan berhasil.');
-      setModalVisible(false);
-      setDeclineReason('');
-      fetchData(currentPage); // Refresh data
-    } catch (error) {
-      Alert.alert('Error', 'Gagal menolak data.');
-    }
+  const handleEdit = uuid => {
+    navigation.navigate('Presensiedit', {uuid});
   };
 
   const display = [
@@ -115,21 +72,17 @@ export default function Presensi() {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const getStatusStyle = status => {
-    switch (status?.toUpperCase()) {
-      case 'DISETUJUI':
-        return styles.approvedStatus;
-      case 'DITOLAK':
-        return styles.rejectedStatus;
-      case 'MENUNGGU':
-        return styles.pendingStatus;
-      default:
-        return styles.defaultStatus;
-    }
-  };
-
   const TableHeader = () => (
     <View>
+      <View style={styles.tambahContainer}>
+        <TouchableOpacity
+          style={styles.downloadButton}
+          onPress={() => navigation.navigate('Presensiexcel')} // Navigasi ke halaman Excel
+        >
+          <FontAwesome size={20} color="#fff" style={styles.icon} />
+          <Text style={styles.downloadText}>Download Excel</Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.filterContainer}>
         <View style={styles.displayContainer}>
           <Text style={styles.displayText}>Display</Text>
@@ -140,28 +93,14 @@ export default function Presensi() {
             valueField="value"
             placeholder="10"
             value={selectedDisplay}
-            onChange={item => {
-              setSelectedDisplay(item.value);
-              fetchData(currentPage); // Panggil fetchData setelah nilai dropdown diperbarui
-            }}
+            onChange={item => setSelectedDisplay(item.value)}
             renderItem={item => (
               <Text style={[styles.dropdownItem, styles.customFont]}>
                 {item.label}
               </Text>
             )}
-            placeholderStyle={styles.customFont}
           />
         </View>
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchBar}
-            placeholder="Search"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-        {/* Search Bar */}
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchBar}
@@ -173,15 +112,27 @@ export default function Presensi() {
       </View>
       <View style={styles.tableHeader}>
         <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
-        <Text style={[styles.headerCell, styles.nameCell]}>Name</Text>
-        <Text style={[styles.headerCell, styles.tableStatusCell]}>Status</Text>
+        <Text style={[styles.headerCell, styles.nameCell]}>User</Text>
+        <Text style={[styles.headerCell, styles.tableStatusCell]}>
+          Dibaca
+        </Text>
         <View style={styles.expandIconCell} />
       </View>
     </View>
   );
+  
 
   const renderItem = ({item, index}) => {
+    if (!item) return null;
+
+    const userName = item.user ? item.user.name : '-';
+    const jenisTeguran = item.jenis || '-';
+    const potongan = item.potongan || '-';
+    const tanggalPelanggaran = item.tgl_pelanggaran || '-';
+    const dibaca = item.dibaca || '-';
+
     const isExpanded = expandedId === item.id;
+    const isDibacaEmpty = dibaca === '-';
 
     return (
       <View style={styles.tableRow}>
@@ -193,19 +144,18 @@ export default function Presensi() {
             style={[styles.tableCell, styles.nameCell]}
             numberOfLines={1}
             ellipsizeMode="tail">
-            {item.user?.name || '-'}
+            {userName}
           </Text>
-          <View style={styles.statusCellContainer}>
-            <Text
+            <View
               style={[
-                styles.tableCell,
-                styles.statusCell,
-                getStatusStyle(item.status),
+                styles.dibacaValueWrapper,
+                isDibacaEmpty && {backgroundColor: 'red'},
               ]}>
-              {item.status || '-'}
-            </Text>
+              <Text style={styles.DibacaText}>{dibaca}</Text>
+            </View>
+          <View style={[styles.dibacaWrapper, {marginLeft: 20}]}>
           </View>
-          <View style={styles.expandIconCell}>
+          <View style={styles.actionCell}>
             <Ionicons
               name={isExpanded ? 'chevron-up' : 'chevron-down'}
               size={20}
@@ -216,42 +166,31 @@ export default function Presensi() {
         {isExpanded && (
           <View style={styles.expandedContent}>
             <Text style={styles.expandedText}>
-              Tanggal: {item.tanggal || '-'}
+              Jenis Teguran: {jenisTeguran}
             </Text>
+            <Text style={styles.expandedText}>Potongan: {potongan}</Text>
             <Text style={styles.expandedText}>
-              Jam Masuk: {item.jam_masuk || '-'}
+              Tanggal Pelanggaran: {tanggalPelanggaran}
             </Text>
-            <Text style={styles.expandedText}>
-              Jam Keluar: {item.jam_keluar || '-'}
-            </Text>
-            <Text style={styles.expandedText}>
-              Keterangan: {item.revisi || '-'}
-            </Text>
-            <View style={styles.filetext}>
-              <Text>File:</Text>
-              <Text
-                style={styles.expandedLinkText}
-                onPress={() => Linking.openURL(item.file)}>
-                Lihat File
-              </Text>
+
+            <View style={[styles.dibacaWrapper, {marginLeft: 20}]}>
+              <View
+                style={[
+                  styles.dibacaValueWrapper,
+                  isDibacaEmpty && {backgroundColor: 'red'},
+                ]}>
+                <Text style={styles.DibacaText}>{dibaca}</Text>
+              </View>
             </View>
+
+            <Text style={styles.expandedText}>User: {userName}</Text>
             <View style={styles.actionContainer}>
-              {item.status !== 'DISETUJUI' && item.status !== 'DITOLAK' ? (
-                <>
-                  <TouchableOpacity
-                    style={styles.approveButton}
-                    onPress={() => handleApprove(item.uuid)}>
-                    <Ionicons name="checkmark" size={20} color="white" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.declineButton}
-                    onPress={() => handleDecline(item.uuid)}>
-                    <Ionicons name="close" size={20} color="white" />
-                  </TouchableOpacity>
-                </>
-              ) : (
-                <Text style={styles.statusText}>{item.status}</Text>
-              )}
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => handleEdit(item.uuid)}>
+                <FontAwesome name="cogs" size={30} color="white" />
+                <Text style={styles.customFont}></Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -259,16 +198,12 @@ export default function Presensi() {
     );
   };
 
+
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Image
-            source={require('../assets/images/logo.png')}
-            style={styles.logo}
-          />
-        </View>
+        <View style={styles.headerLeft}></View>
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
           <TouchableOpacity style={styles.iconWrapper}>
@@ -321,62 +256,6 @@ export default function Presensi() {
           }
         />
       )}
-      <Modal
-        visible={isApproveModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setApproveModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Setujui Data</Text>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setApproveModalVisible(false)}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.submitButton, styles.approveButton]}
-                onPress={submitApprove}>
-                <Text style={styles.buttonText}>Setujui</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Modal Input Alasan Penolakan */}
-      <Modal
-        visible={isModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Tolak Data</Text>
-            <Text style={styles.modalLabel}>Alasan Penolakan:</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Masukkan alasan"
-              multiline
-              value={declineReason}
-              onChangeText={setDeclineReason}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setModalVisible(false)}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={submitDecline}>
-                <Text style={styles.buttonText}>Tolak</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -433,17 +312,20 @@ const styles = StyleSheet.create({
   },
   numberCell: {
     width: 50,
-  },
+    marginLeft: 10,
+    },
   nameCell: {
-    flex: 1,
+    flex: 2,
     overflow: 'hidden',
-  },
+    marginright: 100,
+    },
   statusCellContainer: {
     width: 100,
   },
   statusCell: {
     textAlign: 'center',
     fontWeight: 'bold',
+    marginRight: 35,
   },
   expandIconCell: {
     width: 40,
@@ -468,6 +350,27 @@ const styles = StyleSheet.create({
   expandedText: {
     marginBottom: 5,
     fontSize: 14,
+    marginright: 10,
+  },
+  dibacaWrapper: {
+    flexDirection: 'row', // Menyusun "Dibaca:" dan nilai dibaca dalam satu baris
+    alignItems: 'center', // Menyusun konten secara vertikal agar berada sejajar
+    marginBottom: 5, // Memberikan jarak bawah setelah wrapper
+    flexWrap: 'wrap', // Memungkinkan elemen untuk membungkus jika terlalu panjang
+  },
+  dibacaValueWrapper: {
+    backgroundColor: '#4CAF50', // Warna latar belakang default
+    borderRadius: 8, // Membuat sudut rounded
+    paddingVertical: 5, // Menambahkan padding vertikal di dalam wrapper
+    paddingHorizontal: 10, // Menambahkan padding horizontal di dalam wrapper
+    marginright: 20,
+    marginBottom: 20, // Memberikan jarak antara "Dibaca:" dan nilai
+    maxWidth: '100%', // Membatasi lebar nilai agar tidak melampaui layar
+    overflow: 'hidden', // Menyembunyikan konten yang melampaui batas
+  },
+  DibacaText: {
+    fontSize: 14,
+    color: '#fff', // Warna teks putih agar kontras dengan background
   },
   expandedLinkText: {
     color: 'blue',
@@ -600,7 +503,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 5,
     padding: 10,
-    minHeight: 80,
+    minHeight: 10,
     marginBottom: 15,
     textAlignVertical: 'top',
   },
@@ -664,10 +567,83 @@ const styles = StyleSheet.create({
   },
   dropdownItem: {
     padding: 10,
-    fontSize: 16,
+    fontSize: 12,
     color: '#333',
   },
   customFont: {
     fontFamily: 'Poppins-Regular',
+  },
+  tambahContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  tambahButton: {
+    flexDirection: 'row',
+    backgroundColor: '#333',
+    width: 90,
+    height: 40,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tambahText: {
+    fontFamily: 'Poppins-Regular',
+    color: 'white', // Warna teks putih agar kontras dengan latar belakang gelap
+    lineHeight: 10,
+    fontSize: 10,
+    textAlignVertical: 'center',
+    marginRight: 10,
+  },
+  downloadText: {
+    fontFamily: 'Poppins-Regular',
+    color: 'white', // Warna teks putih agar kontras dengan latar belakang gelap
+    lineHeight: 20,
+    fontSize: 14,
+    textAlignVertical: 'center',
+    marginRight: 10,
+  },
+  downloadButton: {
+    flexDirection: 'row',
+    backgroundColor: '#28c4ac', // Sama dengan warna tombol tambah
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 5,
+    marginLeft: 200,
+  },
+  icon: {
+    marginRight: 5,
+  },
+  tambahText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  editButton: {
+    gap: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#3699FF',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  customFont: {
+    color: 'white',
+    fontFamily: 'Poppins-Regular',
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: 10,
+  },
+  switchLabel: {
+    fontSize: 16,
+    color: '#333',
   },
 });

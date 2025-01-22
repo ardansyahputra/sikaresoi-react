@@ -4,3 +4,6 @@ extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autoli
 rootProject.name = 'Sikaresoi'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
+include ':react-native-file-access'
+project(':react-native-file-access').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-file-access/android')
+

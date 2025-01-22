@@ -16,11 +16,15 @@ import LoginScreen from './screen/auth/login/Login';
 // Import screens
 import Home from './screen/admin/home/home';
 import TeguranScreen from './screen/admin/user/teguran/Teguran';
+import Tegurantambah from './screen/admin/user/teguran/Tambahtegur';
+import Teguranedit from './screen/admin/user/teguran/Edittegur';
 import KontrakScreen from './screen/admin/kontrak/konfirm/Konfirm';
 import RealisasiScreen from './screen/admin/realisasi/konfirm/Konfirm';
 import PerubahanPresensiScreen from './screen/admin/absensi/Perubahan';
 import Laporan from './screen/admin/laporan/Laporan';
 import Presensi from './screen/admin/presensi/Presensi';
+import Presensiedit from './screen/admin/presensi/Presensiedit';
+import Presensiexcel from './screen/admin/presensi/Presensiexcel';
 
 //Menu Button Screens
 import SuratTugasScreen from './screen/admin/surattugas/Surat_tugas';
@@ -88,6 +92,7 @@ const Stack = createNativeStackNavigator();
 function HomeStack() {
   const {setCurrentScreen} = useNavigationContext();
   return (
+    <AuthProvider>
     <Stack.Navigator
       screenListeners={{
         state: e => {
@@ -119,6 +124,16 @@ function HomeStack() {
         options={{headerShown: false}}
         name="Teguran"
         component={TeguranScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="Edittegur"
+        component={Teguranedit}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="Tambahtegur"
+        component={Tegurantambah}
       />
       <Stack.Screen
         options={{headerShown: false}}
@@ -347,6 +362,17 @@ function HomeStack() {
       />
       <Stack.Screen
         options={{headerShown: false}}
+        name="Presensiedit"
+        component={Presensiedit}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="Presensiexcel"
+        component={Presensiexcel}
+      />
+
+      <Stack.Screen
+        options={{headerShown: false}}
         name="EditPa"
         component={EditPA}
       />
@@ -367,8 +393,10 @@ function HomeStack() {
       />
       </Stack.Navigator>
     </AuthProvider>
+    
   );
 }
+
 function AppTabs() {
   const {shouldShowTabNavigator} = useNavigationContext();
 
