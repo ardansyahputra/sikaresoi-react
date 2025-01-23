@@ -27,6 +27,7 @@ import Password from './screen/BottomNavBar/Profile/Password';
 import PersetujuanRealisasi from './screen/PersetujuanRealisasi';
 import AttendanceForm from './screen/Bacascreen.js';
 import Teguranscreen from './screen/TeguranScreen.js';
+import Bacakontrak from './screen/Bacakontrak.js'
 
 // Bottom Tab Navigator
 const Tab = createBottomTabNavigator();
@@ -53,6 +54,7 @@ function HomeNavigator() {
       <Stack.Screen name="KontrakKerja" component={KontrakKerja} />
       <Stack.Screen name="Bacascreen" component={AttendanceForm} />
       <Stack.Screen name="Teguran" component={Teguranscreen} />
+      <Stack.Screen name="Bacakontrak" component={Bacakontrak} />
     </Stack.Navigator>
   );
 }

@@ -1,156 +1,703 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
+  TextInput,
   Text,
   StyleSheet,
-  TouchableOpacity,
-  ScrollView,
   FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  Image,
   Alert,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import { Card } from 'react-native-paper';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import axios from 'axios';
+import {Dropdown} from 'react-native-element-dropdown';
 
-const PersetujuanR = ({ navigation }) => {
-  const data = [
-    {
-      id: 1,
-      nama: 'Hastuty Bachtiar',
-      jabatan: 'Penyelenggara Program Pendidikan',
-      periode: '03 Januari 2022 s/d 30 Desember 2022',
-      status: 'Disetujui',
-      statusRevisi: 'Tidak Ada Revisi',
-    },
-    {
-      id: 2,
-      nama: 'Ardiansyah, S.A.P., M.Mar.E',
-      jabatan: 'Penyelenggara Program Pendidikan',
-      periode: '01 Januari 2022 s/d 31 Desember 2022',
-      status: 'Disetujui',
-      statusRevisi: 'Tidak Ada Revisi',
-    },
-    {
-      id: 3,
-      nama: 'Khafifah, S.Pd.I.,M.Pd',
-      jabatan: 'Analis Program Diklat',
-      periode: '01 Januari 2022 s/d 31 Desember 2022',
-      status: 'Disetujui',
-      statusRevisi: 'Tidak Ada Revisi',
-    },
+export default function Persetujuan({navigation}) {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDisplay, setSelectedDisplay] = useState(null);
+  const [selectedTahun, setSelectedTahun] = useState(null);
+  const [tahunOptions, setTahunOptions] = useState([]);
+  const [pickUraianOptions, setPickUraianOptions] = useState([]);
+
+  useEffect(() => {
+    fetchData(currentPage);
+    fetchTahun();
+  }, [currentPage]);
+
+  const fetchTahun = async () => {
+    try {
+      const response = await axios.get(
+        'http://192.168.60.91:8000/api/v1/tahun/show',
+        {
+          headers: {
+            Authorization: `Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEzNzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM3NTI3Njk1LCJleHAiOjE3Mzc1Mzk1MjMsIm5iZiI6MTczNzUzNTkyMywianRpIjoib3RocEUxZWtwcnpGU0pxYiIsInN1YiI6OSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.mJ_OiFjcGdh19cRKaa4uRP4SxSz732OdS403nqyzMW0`,
+          },
+        },
+      );
+
+      // Pastikan response.data.data adalah array
+      if (Array.isArray(response.data.data)) {
+        setTahunOptions(
+          response.data.data.map(item => ({
+            label: item.tahun ? item.tahun : 'Unknown', // Pastikan item.tahun ada
+            value: item.id ? item.id : 'Unknown', // Pastikan item.id ada
+          })),
+        );
+      } else {
+        console.error('Data yang diterima bukan array:', response.data.data);
+        Alert.alert('Error', 'Format data tidak valid.');
+      }
+    } catch (error) {
+      console.error('Error fetching tahun options:', error);
+      Alert.alert('Error', 'Gagal memuat data tahun.');
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        'http://192.168.60.91:8000/api/v1/user/kinerja/azril',
+        {
+          page: currentPage,
+          tahun_id: pickUraianOptions,
+        },
+        {
+          headers: {
+            Authorization:
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEzNzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM3NTI3Njk1LCJleHAiOjE3Mzc1Mzk1MjMsIm5iZiI6MTczNzUzNTkyMywianRpIjoib3RocEUxZWtwcnpGU0pxYiIsInN1YiI6OSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.mJ_OiFjcGdh19cRKaa4uRP4SxSz732OdS403nqyzMW0',
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+        },
+      );
+      console.log(response.data);
+      setData(response.data.data);
+      setCurrentPage(response.data.current_page);
+      setLastPage(response.data.last_page);
+    } catch (error) {
+      console.error('Error fetching data', error.response.data);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleExpand = id => {
+    setExpandedId(expandedId === id ? null : id);
+  };
+
+  const handleApprove = uuid => {
+    navigation.navigate('Bacakontrak', {uuid});
+  };
+
+  const getStatusStyle = status => {
+    // switch (status?.toUpperCase()) {
+    //   case 'DISETUJUI':
+    //     return styles.approvedStatus;
+    //   case 'BELUM DIBACA':
+    //     return styles.rejectedStatus;
+    //   case 'MENUNGGU':
+    //     return styles.pendingStatus;
+    //   default:
+    //     return styles.defaultStatus;
+    // }
+  };
+
+  const display = [
+    {label: '5', value: 1},
+    {label: '10', value: 2},
+    {label: '25', value: 3},
+    {label: '50', value: 4},
+    {label: '100', value: 5},
   ];
 
-  return (
-    <ScrollView style={styles.container}>
-      {/* Header Section */}
+  const TableHeader = () => (
+    <View>
       <View style={styles.headerContainer}>
-        <Text style={styles.title}>Persetujuan Kontrak Kinerja</Text>
+        <View style={styles.filtersContainer}>
+          <View style={styles.filterGroup}>
+            <Text style={styles.tahun}>Tahun</Text>
+            <Dropdown
+              style={styles.dropdownTahun}
+              data={tahunOptions}
+              labelField="label"
+              valueField="value"
+              placeholder="Pilih Tahun"
+              placeholderStyle={{color: '#B6B9CA'}}
+              value={pickUraianOptions}
+              onChange={item => {
+                setPickUraianOptions(item.value);
+                fetchData();
+              }}
+              renderItem={item => (
+                <Text
+                  style={[
+                    styles.dropdownItem,
+                    styles.customFont,
+                    {color: '#333'},
+                  ]}>
+                  {item.label}
+                </Text>
+              )}
+            />
+          </View>
+
+          <View style={styles.filterGroup}>
+            <Text style={styles.displayText}>Display</Text>
+            <Dropdown
+              style={styles.dropdown}
+              data={display}
+              labelField="label"
+              valueField="value"
+              placeholder="10"
+              value={selectedDisplay}
+              onChange={item => setSelectedDisplay(item.value)}
+              renderItem={item => (
+                <Text style={[styles.dropdownItem, styles.customFont]}>
+                  {item.label}
+                </Text>
+              )}
+            />
+          </View>
+        </View>
+
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchBar}
+            placeholder="Search"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+        </View>
       </View>
 
-      {/* List Section */}
-      {data.map((item) => (
-        <View key={item.id} style={styles.cardContainer}>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Nama:</Text>
-            <Text style={styles.detailValue}>{item.nama}</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Jabatan:</Text>
-            <Text style={styles.detailValue}>{item.jabatan}</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Periode:</Text>
-            <Text style={styles.detailValue}>{item.periode}</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Status:</Text>
-            <Text style={styles.statusApproved}>{item.status}</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Status Revisi:</Text>
-            <Text style={styles.statusRevisi}>{item.statusRevisi}</Text>
-          </View>
+      {/* Table Header */}
+      <View style={styles.tableHeader}>
+        <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
+        <Text style={[styles.headerCell, styles.nameCell]}>
+          Detail Pengirim
+        </Text>
+        <Text style={[styles.headerCell, styles.detailCell]}>Status</Text>
+        <View style={styles.expandIconCell} />
+      </View>
+    </View>
+  );
 
-          {/* Action Button */}
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('DataTable')}
-          >
-            <Icon name="eye" size={20} color="#fff" />
-            <Text style={styles.actionText}>Lihat Detail</Text>
+  const renderItem = ({item, index}) => {
+    const isExpanded = expandedId === item.id;
+
+    return (
+      <View style={styles.tableRow}>
+        <TouchableOpacity
+          style={styles.rowHeader}
+          onPress={() => toggleExpand(item.id)}>
+          <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
+          <Text
+            style={[styles.tableCell, styles.nameCell]}
+            numberOfLines={1}
+            ellipsizeMode="tail">
+            {item.user_jabatan?.user?.name || '-'}
+          </Text>
+          <View style={styles.statusCellContainer}>
+            <Text
+              style={[
+                styles.tableCell,
+                styles.statusCell,
+                getStatusStyle(item.status),
+              ]}>
+              {item.status_class || '-'}
+            </Text>
+          </View>
+          <View style={styles.expandIconCell}>
+            <Ionicons
+              name={isExpanded ? 'chevron-up' : 'chevron-down'}
+              size={20}
+              color="#333"
+            />
+          </View>
+        </TouchableOpacity>
+        {isExpanded && (
+          <View style={styles.expandedContent}>
+            <Text style={styles.expandedText}>
+              Detail pengirim: {item.user_jabatan?.user?.name_nip || '-'}
+            </Text>
+            <Text style={styles.expandedText}>
+              Jabatan: {item.user_jabatan?.jab_unit || '-'}
+            </Text>
+            <Text style={styles.expandedText}>
+              Periode: {item.user_jabatan?.periode || '-'}
+            </Text>
+            <Text
+              style={[
+                styles.expandedText,
+                item.status_class === 'DISETUJUI'
+                  ? styles.approved
+                  : styles.notApproved,
+              ]}
+            >
+              Status: {item.status_class || '-'}
+            </Text>
+
+            <Text style={styles.expandedText}>
+              Status revisi: {item.revisi_class || '-'}
+            </Text>
+            <View style={styles.actionContainer}>
+              <TouchableOpacity
+                style={styles.approveButton}
+                onPress={() => handleApprove(item.uuid)}>
+                <Ionicons name="eye" size={20} color="white" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <Image
+            source={require('./assets/images/sikaresoi.png')}
+            style={styles.logo}
+          />
+        </View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
+          <TouchableOpacity style={styles.iconWrapper}>
+            <Ionicons name="person-circle-outline" size={24} color="#333" />
           </TouchableOpacity>
         </View>
-      ))}
-    </ScrollView>
+      </View>
+
+      {/* Loading Indicator */}
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <FlatList
+          ListHeaderComponent={TableHeader}
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={item => item.id.toString()}
+          contentContainerStyle={styles.card}
+          ListFooterComponent={
+            <View>
+              <Text style={styles.pageInfo}>
+                Showing page {currentPage} of {lastPage}
+              </Text>
+              <View style={styles.paginationContainer}>
+                <View style={styles.paginationButtons}>
+                  <TouchableOpacity
+                    style={[
+                      styles.pageButton,
+                      currentPage === 1 && styles.disabledButton,
+                    ]}
+                    disabled={currentPage === 1}
+                    onPress={() =>
+                      setCurrentPage(prev => Math.max(prev - 1, 1))
+                    }>
+                    <Text style={styles.pageButtonText}>Previous</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.pageButton,
+                      currentPage === lastPage && styles.disabledButton,
+                    ]}
+                    disabled={currentPage === lastPage}
+                    onPress={() =>
+                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
+                    }>
+                    <Text style={styles.pageButtonText}>Next</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          }
+        />
+      )}
+    </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
-    padding: 20,
+    padding: 10,
+    backgroundColor: '#F7F8FB', // Tetap sesuai dengan warna default Anda
   },
-  headerContainer: {
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  cardContainer: {
-    backgroundColor: '#fff',
+  card: {
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
     padding: 15,
-    marginBottom: 15,
+    margin: 10,
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
     shadowRadius: 4,
-    elevation: 2,
   },
-  detailRow: {
+  headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    alignItems: 'center',
+    marginBottom: 10,
   },
-  detailLabel: {
-    fontSize: 14,
-    color: '#666',
+  filtersContainer: {
+    flexDirection: 'column',
+    marginRight: 20,
+  },
+  filterGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  header: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    elevation: 2,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  headerLeft: {
     flex: 1,
   },
-  detailValue: {
-    fontSize: 14,
-    fontWeight: 'bold',
+  logo: {
+    width: 140,
+    height: 40,
+    resizeMode: 'contain',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    flex: 1,
+  },
+  searchContainer: {
+    width: 150,
+    height: 40,
+    backgroundColor: '#FFFFFF',
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  searchBar: {
+    width: 150,
+    height: 40,
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  searchIcon: {
+    position: 'absolute',
+    right: 10, 
+    top: '50%',
+    transform: [{ translateY: -10 }],
+  },
+  displayContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 20,
+  },
+  tahunContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 20,
+  },
+  displayText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 13,
+    marginRight: 8,
+    textAlign: 'center',
+    color: '#3f4254',
+    width: 50, // Fixed width for alignment
+  },
+  tahun: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 13,
+    marginRight: 8,
+    textAlign: 'center',
+    color: '#3f4254',
+    width: 50, // Fixed width for alignment
+  },
+  dropdown: {
+    width: 60,
+    height: 40,
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 8,
+  },
+  dropdownTahun: {
+    width: 85,
+    height: 40,
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 8,
+  },
+  dropdownItem: {
+    padding: 10,
+    fontSize: 13,
     color: '#333',
-    flex: 2,
-    textAlign: 'right',
   },
-  statusApproved: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#4CAF50',
+  addContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
-  statusRevisi: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#007BFF',
-  },
-  actionButton: {
+  addButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#007BFF',
     padding: 10,
-    borderRadius: 8,
-    marginTop: 10,
+    backgroundColor: '#007bff',
+    borderRadius: 5,
+    marginRight: 20,
   },
-  actionText: {
-    color: '#fff',
+  addButtonText: {
+    fontWeight: 'bold',
+    color: 'white',
+    marginLeft: 8,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    borderColor: '#ddd',
+    paddingVertical: 10,
+    paddingHorizontal: 5,
+    backgroundColor: '#E0E0E0',
+    borderTopRightRadius: 5,
+    borderTopLeftRadius: 5,
+  },
+  tableRow: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 5,
+    borderBottomWidth: 0,
+    borderColor: '#ddd',
+    bottomRightRadius: 5,
+    bottomLeftRadius: 5,
+  },
+  rowHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#F0F0F0', // Memberi warna netral untuk header baris
+  },
+  headerCell: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    color: '#333', // Warna teks header
+  },
+  tableCell: {
+    fontSize: 14,
+    color: '#333',
+    flexWrap: 'wrap',
+  },
+  numberCell: {
+    flex: 1,
+    textAlign: 'center',
+  },
+  nameCell: {
+    flex: 3,
+    overflow: 'hidden', // Untuk menjaga tampilan saat teks panjang
+  },
+  detailCell: {
+    flex: 1,
+    textAlign: 'right',
+  },
+  dateCell: {
+    flex: 2,
+    textAlign: 'center',
+  },
+  expandIconCell: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  expandedContent: {
+    padding: 10,
+    backgroundColor: '#FAFAFA',
+    borderTopWidth: 1,
+    borderColor: '#ddd',
+  },
+  expandedText: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 5,
+  },
+  expandedTextDetail: {
     fontSize: 14,
     fontWeight: 'bold',
-    marginLeft: 5,
+    color: '#555', // Warna teks detail
+    marginBottom: 5,
   },
+  expandedLinkText: {
+    color: 'blue', // Teks berwarna biru untuk link
+    fontSize: 14,
+    marginBottom: 5,
+  },
+  actionContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  actionButton: {
+    padding: 8,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  paginationButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginVertical: 10,
+  },
+  pageButton: {
+    padding: 10,
+    backgroundColor: '#007bff',
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  pageButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#3699ff',
+    margin: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f64e60',
+    margin: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  paginationButtons: {
+    flexDirection: 'row',
+  },
+  pageButton: {
+    padding: 10,
+    backgroundColor: '#007bff',
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  pageButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  disabledButton: {
+    backgroundColor: '#CCCCCC',
+  },
+  paginationText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  pageInfo: {
+    fontSize: 13,
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 10,
+  },
+  loadingIndicator: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textAlign: 'center',
+    color: '#333',
+  },
+  modalText: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#555',
+    marginBottom: 20,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  approved: {
+    backgroundColor: 'green',
+    color: 'white',
+  },
+  notApproved: {
+    backgroundColor: 'red',
+    color: 'white',
+  },
+  approveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#11aff2',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+ 
 });
-
-export default PersetujuanR;

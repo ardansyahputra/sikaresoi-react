@@ -1,5 +1,5 @@
 export const BASE_URL = 'https://192.168.3.113:8000/api/v1';
-
+export const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE0Njo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM3MDc3ODM5LCJleHAiOjE3MzcxMDcxMTQsIm5iZiI6MTczNzEwMzUxNCwianRpIjoiNTkwM1dFWWlLQW9QVGlSbyIsInN1YiI6OSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.w64s1uzAQ5A1ad-DPmODSALhfhiUgVzoIVUPNZ2Gi7s';
 export const API_ENDPOINTS = {
   user: {
     profile: `${BASE_URL}/user/update_profile`,

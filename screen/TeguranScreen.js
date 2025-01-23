@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {
   View,
+  TextInput,
   Text,
   StyleSheet,
   FlatList,
@@ -11,6 +12,7 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
+import { Dropdown } from 'react-native-element-dropdown';
 
 export default function Teguranscreen({navigation}) {
   const [data, setData] = useState([]);
@@ -18,6 +20,9 @@ export default function Teguranscreen({navigation}) {
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDisplay, setSelectedDisplay] = useState(null);
 
   useEffect(() => {
     fetchData(currentPage);
@@ -27,12 +32,12 @@ export default function Teguranscreen({navigation}) {
     try {
       setLoading(true);
       const response = await axios.post(
-        'http://192.168.1.12:8000/api/v1/teguran/index_user',
+        'http://192.168.60.146:8000/api/v1/teguran/index_user',
         {page},
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjEuMTI6ODAwMFwvYXBpXC92MVwvYXV0aFwvcmVmcmVzaCIsImlhdCI6MTczNjk1Mjc2NywiZXhwIjoxNzM2OTYzNzE0LCJuYmYiOjE3MzY5NjAxMTQsImp0aSI6IksxRTh2QVFRZ2xrQnNyTXMiLCJzdWIiOjksInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.Z8mwqLzKDu-TznCwlZiWzzl1ASTVz-U5PYVwO6hNgyA',
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjEuMjA6ODAwMFwvYXBpXC92MVwvYXV0aFwvcmVmcmVzaCIsImlhdCI6MTczNzI5NDM4NiwiZXhwIjoxNzM3Mjk5NDMyLCJuYmYiOjE3MzcyOTU4MzIsImp0aSI6ImFtd3VXTlN5Mmt0c1hPcGQiLCJzdWIiOjksInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.KpvjtB0PJ7bHJANFCDQYEgxYasFJS-lnkbDaUwaaAk8',
           },
         },
       );
@@ -67,12 +72,50 @@ export default function Teguranscreen({navigation}) {
     }
   };
 
+  const display = [
+    {label: '5', value: 1},
+    {label: '10', value: 2},
+    {label: '25', value: 3},
+    {label: '50', value: 4},
+    {label: '100', value: 5},
+  ];
+
   const TableHeader = () => (
-    <View style={styles.tableHeader}>
-      <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
-      <Text style={[styles.headerCell, styles.nameCell]}>Name</Text>
-      <Text style={[styles.headerCell, styles.tableStatusCell]}>Status</Text>
-      <View style={styles.expandIconCell} />
+    <View style={styles.headerContainer}>
+      <View style={styles.filterContainer}>
+        <View style={styles.displayContainer}>
+          <Text style={styles.displayText}>Display</Text>
+          <Dropdown
+            style={styles.dropdown}
+            data={display}
+            labelField="label"
+            valueField="value"
+            placeholder="10"
+            value={selectedDisplay}
+            onChange={item => setSelectedDisplay(item.value)}
+            renderItem={item => (
+              <Text style={[styles.dropdownItem, styles.customFont]}>
+                {item.label}
+              </Text>
+            )}
+          />
+        </View>
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchBar}
+            placeholder="Search"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+        </View>
+      </View>
+      <View style={styles.tableHeader}>
+        <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
+        <Text style={[styles.headerCell, styles.nameCell]}>Name</Text>
+        <Text style={[styles.headerCell, styles.tableStatusCell]}>Status</Text>
+        <View style={styles.expandIconCell} />
+      </View>
     </View>
   );
 
@@ -439,5 +482,58 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  headerContainer: {
+    flexDirection: 'column',
+     // Tambahkan marginBottom untuk memberi ruang
+  },
+
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  searchContainer: {
+    width: 150,
+    height: 40,
+    backgroundColor: '#FFFFFF',
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  searchBar: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingRight: 40, 
+    color: '#000',
+  },
+  searchIcon: {
+    position: 'absolute',
+    right: 10, 
+    top: '50%',
+    transform: [{ translateY: -10 }],
+  },
+  displayContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  displayText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 13,
+    marginRight: 8,
+    textAlign: 'center',
+    color: '#3f4254',
+  },
+  dropdown: {
+    width: 120,
+    height: 40,
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 8,
   },
 });
