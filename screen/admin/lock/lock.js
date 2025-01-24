@@ -17,7 +17,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import CalendarPicker from 'react-native-calendar-picker';
-import axios from 'axios';
+import useApiClient from '../../../src/api/apiClient';
 
 export default function Lock() {
   const [data, setData] = useState([]);
@@ -36,8 +36,7 @@ export default function Lock() {
   const [isHapusModalVisible, setHapusModalVisible] = useState(false);
   const [selectedStartDate, setSelectedStartDate] = useState(null);
   const [selectedEndDate, setSelectedEndDate] = useState(null);
-
-  const token = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2NDczMjIzLCJleHAiOjE3NDAwNzU1MzIsIm5iZiI6MTczNjQ3NTUzMiwianRpIjoiQ0tBSGpCMWtQSklQQmVqaiIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.qydXAhdK7rnRdB8Pe5tuOcIlMbTr6Axe0M90J0DmGtM'
+  const apiClient = useApiClient();
 
   useEffect(() => {
     if (activeButton === 'kontrak') {
@@ -50,16 +49,10 @@ export default function Lock() {
   const fetchRealisasiData = async page => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.60.123:8000/api/v1/lock/indexRealisasiAndro',
-        {page, per: selectedDisplay},
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
+      const response = await apiClient.post('/lock/indexRealisasiAndro', {
+        page,
+        per: selectedDisplay,
+      });
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -73,16 +66,10 @@ export default function Lock() {
   const fetchKontrakData = async page => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.60.123:8000/api/v1/lock/indexKontrakAndro',
-        {page, per: selectedDisplay},
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
-      );
+      const response = await apiClient.post('/lock/indexKontrakAndro', {
+        page,
+        per: selectedDisplay,
+      });
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -95,14 +82,8 @@ export default function Lock() {
 
   const submitHapus = async () => {
     try {
-      const response = await axios.delete(
-        `http://192.168.60.123:8000/api/v1/lock/${selectedUuid}/delete`,
-        {
-          headers: {
-            Authorization:
-              token,
-          },
-        },
+      const response = await apiClient.delete(
+        `/lock/${selectedUuid}/delete`,
       );
 
       if (response.status === 200 || response.status === 204) {

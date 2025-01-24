@@ -89,6 +89,8 @@ import JenisPegawaiScreen from './screen/admin/master/jenis_pegawai/Jenis_pegawa
 import EditJenisPegawai from './screen/admin/master/jenis_pegawai/Edit';
 import TambahJenisPegawai from './screen/admin/master/jenis_pegawai/Tambah';
 import LokasiAbsensiScreen from './screen/admin/master/lokasi_absensi/Lokasi_absensi';
+import EditLokasiAbsensi from './screen/admin/master/lokasi_absensi/Edit';
+import TambahLokasiAbsensi from './screen/admin/master/lokasi_absensi/Tambah';
 import NoWaScreen from './screen/admin/master/nowa/Nowa';
 import EditNoWhatsapp from './screen/admin/master/nowa/Edit';
 import JenisAbsensiScreen from './screen/admin/master/jenis_absensi/Jenis_absensi';
@@ -119,8 +121,8 @@ import PetaJabatanScreen from './screen/admin/master/jabatan/Peta';
 import SettingScreen from './screen/admin/setting/setting';
 import VerifikasiSuratTugas from './screen/admin/surattugas/Persetujuan';
 import SettingPersentaseCapaianScreen from './screen/admin/setting_persentase_capaian/Setting_persentase_capaian';
-import EditLokasiAbsensi from './screen/admin/master/lokasi_absensi/Edit';
-import TambahLokasiAbsensi from './screen/admin/master/lokasi_absensi/Tambah';
+import EditPersentaseCapaian from './screen/admin/setting_persentase_capaian/Edit';
+import TambahPersentaseCapaian from './screen/admin/setting_persentase_capaian/Tambah';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -554,6 +556,16 @@ function HomeStack() {
         options={{headerShown: false}}
         name="SettingPersentaseCapaian"
         component={SettingPersentaseCapaianScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditPersentaseCapaian"
+        component={EditPersentaseCapaian}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="TambahPersentaseCapaian"
+        component={TambahPersentaseCapaian}
       />
       <Stack.Screen
         options={{headerShown: false}}

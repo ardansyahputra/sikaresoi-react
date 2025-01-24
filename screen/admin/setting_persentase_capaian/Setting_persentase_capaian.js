@@ -21,7 +21,7 @@ import useApiClient from '../../../src/api/apiClient';
 
 export default function SettingPersentaseCapaian() {
   const [tahunOptions, setTahunOptions] = useState([]);
-  const [pangkatOptions, setPangkatOptions] = useState([]);
+  const [pickTahunOptions, setPickTahunOptions] = useState(2024);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
@@ -35,17 +35,20 @@ export default function SettingPersentaseCapaian() {
   const navigation = useNavigation();
 
   useEffect(() => {
-    fetchData(currentPage, selectedDisplay);
-    fetchTahunOptions();
-  }, [currentPage, selectedDisplay]);
+    if (pickTahunOptions) {
+      fetchData(currentPage, pickTahunOptions);
+      fetchTahunOptions();
+    }
+  }, [pickTahunOptions, currentPage]);  
 
-  const fetchData = async page => {
+  const fetchData = async (page, tahun) => {
     try {
-      setLoading(true);
-      const response = await apiClient.post(
-        '/setting_persentase_capaian/index',
-        {page},
-      );
+      setLoading(true);  
+      const response = await apiClient.post(`/setting_persentase_capaian/index`, {
+        page,
+        tahun,
+      });
+  
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -55,6 +58,7 @@ export default function SettingPersentaseCapaian() {
       setLoading(false);
     }
   };
+  
 
   const fetchTahunOptions = async () => {
     try {
@@ -62,7 +66,7 @@ export default function SettingPersentaseCapaian() {
       setTahunOptions(
         response.data.data.map(item => ({
           label: item.tahun,
-          value: item.id,
+          value: parseInt(item.tahun, 10),
         })),
       );
     } catch (error) {
@@ -72,7 +76,7 @@ export default function SettingPersentaseCapaian() {
   };
 
   const handleEdit = uuid => {
-    navigation.navigate('EditKegiatan', {uuid});
+    navigation.navigate('EditPersentaseCapaian', {uuid});
   };
 
   const handleHapus = uuid => {
@@ -92,8 +96,12 @@ export default function SettingPersentaseCapaian() {
   };
 
   const handleTambah = () => {
-    navigation.navigate('TambahKegiatan');
+    navigation.navigate('TambahPersentaseCapaian');
   };
+
+  const filteredData = data.filter(item => 
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );  
 
   const display = [
     {label: '5', value: 1},
@@ -116,14 +124,17 @@ export default function SettingPersentaseCapaian() {
         </TouchableOpacity>
         <View style={styles.displayContainer}>
           <Dropdown
-            style={styles.modalInput}
+            style={styles.dropdowntahun}
             data={tahunOptions}
             labelField="label"
             valueField="value"
-            placeholder="Pilih Jabatan"
+            placeholder="Tahun"
             placeholderStyle={{color: '#B6B9CA'}}
             value={pickTahunOptions}
-            onChange={item => setPickTahunOptions(item.value)}
+            onChange={item => {
+              console.log('Tahun yang dipilih:', item.value); // Log tahun yang dipilih
+              setPickTahunOptions(item.value); // Atur nilai tahun
+            }}
             renderItem={item => (
               <Text
                 style={[
@@ -189,13 +200,13 @@ export default function SettingPersentaseCapaian() {
             style={[styles.tableCell, styles.nameCell]}
             numberOfLines={1}
             ellipsizeMode="tail">
-            {item.nm_kegiatan || '-'}
+            {item.bulan?.bulan || '-'}
           </Text>
           <Text
             style={[styles.tableCell, styles.nameCell]}
             numberOfLines={1}
             ellipsizeMode="tail">
-            {item.point || '-'}
+            {item.max_persen || '-'}
           </Text>
           <View style={styles.expandIconCell}>
             <Ionicons
@@ -208,11 +219,14 @@ export default function SettingPersentaseCapaian() {
         {isExpanded && (
           <View style={styles.expandedContent}>
             <Text style={styles.expandedText}>
-              Nama Kegiatan: {item.nm_kegiatan || '-'}
+              Bulan: {item.bulan?.bulan || '-'}
             </Text>
-            <Text style={styles.expandedText}>Point: {item.point || '-'}</Text>
+            <Text style={styles.expandedText}>Tahun: {item.tahun?.tahun || '-'}</Text>
             <Text style={styles.expandedText}>
-              Uraian: {item.uraian?.nm_uraian || '-'}
+              Nama Jabatan: {item.name || '-'}
+            </Text>
+            <Text style={styles.expandedText}>
+              Max Persentase: {item.max_persen || '-'}
             </Text>
             <View style={styles.actionContainer}>
               <TouchableOpacity
@@ -659,5 +673,15 @@ const styles = StyleSheet.create({
   switchLabel: {
     fontSize: 16,
     color: '#333',
+  },
+  dropdowntahun: {
+    height: 40,
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    width: 95,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
