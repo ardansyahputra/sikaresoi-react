@@ -123,6 +123,9 @@ import VerifikasiSuratTugas from './screen/admin/surattugas/Persetujuan';
 import SettingPersentaseCapaianScreen from './screen/admin/setting_persentase_capaian/Setting_persentase_capaian';
 import EditPersentaseCapaian from './screen/admin/setting_persentase_capaian/Edit';
 import TambahPersentaseCapaian from './screen/admin/setting_persentase_capaian/Tambah';
+import SettingTugasTambahan from './screen/admin/setting_tugas_tambahan/Setting_tugas_tambahan';
+import EditSettingTugas from './screen/admin/setting_tugas_tambahan/Edit';
+import TambahSettingTugas from './screen/admin/setting_tugas_tambahan/Tambah';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -601,6 +604,21 @@ function HomeStack() {
         options={{headerShown: false}}
         name="Tambahmesin"
         component={Tambahmesin}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="SettingTugasTambahan"
+        component={SettingTugasTambahan}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditSettingTugas"
+        component={EditSettingTugas}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="TambahSettingTugas"
+        component={TambahSettingTugas}
       />
     </Stack.Navigator>
   );
