@@ -10,21 +10,22 @@ import {
 import axios from 'axios';
 import { Dropdown } from 'react-native-element-dropdown';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from "@react-navigation/native";
+import useApiClient from "../src/api/apiClient";
 
 const Remunerasi = () => {
   const [postData, setPostData] = useState({ bulan_id: new Date().getMonth() + 1, tahun_id: 2025 });
   const [listBulan, setListBulan] = useState([]);
   const [listTahun, setListTahun] = useState([]);
   const [data, setData] = useState({});
+  const navigation = useNavigation();
+  const apiClient = useApiClient();
   
 
   // Fetch Bulan data
   useEffect(() => {
-    axios.get('http://192.168.60.216:8000/api/v1/bulan/show', {
-      headers: {
-        Authorization: `
-Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjIxNjo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM4MjAzNTAyLCJleHAiOjE3MzgyMjg3MDUsIm5iZiI6MTczODIyNTEwNSwianRpIjoiTGE0R2cxRjhqcU5ZWXJMciIsInN1YiI6MjAsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.UMp2j3fcuel10KD2L8i8cod6BfS3X4HRGI4uO0mnOLY` // Ganti dengan token Anda
-      }
+    apiClient.get('/bulan/show', {
     })
     .then(response => {
       console.log("Data Bulan:", response.data);
@@ -59,11 +60,7 @@ Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYw
       tahun: postData.tahun_id.toString(),
     };
 
-    axios.post('http://192.168.60.216:8000/api/v1/laporan/remunerasi', formRequest, {
-      headers: {
-        Authorization: `
-Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjIxNjo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM4MjAzNTAyLCJleHAiOjE3MzgyMjg3MDUsIm5iZiI6MTczODIyNTEwNSwianRpIjoiTGE0R2cxRjhqcU5ZWXJMciIsInN1YiI6MjAsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.UMp2j3fcuel10KD2L8i8cod6BfS3X4HRGI4uO0mnOLY` // Ganti dengan token Anda
-      },
+    apiClient.post('/laporan/remunerasi', formRequest, {
     })
     .then(response => {
       setData(response.data.data);
@@ -99,6 +96,9 @@ Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYw
     <ScrollView contentContainerStyle={styles.container}>
       {/* App Bar */}
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={26} color="#000" />
+        </TouchableOpacity>
         <Image
           source={require('./assets/images/sikaresoi.png')}
           style={styles.headerImage}

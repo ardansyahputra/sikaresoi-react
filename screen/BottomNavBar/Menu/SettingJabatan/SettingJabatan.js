@@ -12,10 +12,11 @@ import {
   Alert,
   Switch,
 } from 'react-native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { Dropdown } from 'react-native-element-dropdown';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import axios from 'axios';
+import useApiClient from '../../../../src/api/apiClient';
 
 const SettingJabatan = ({ navigation }) => {
   const [data, setData] = useState([]);
@@ -27,21 +28,43 @@ const SettingJabatan = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filteredData, setFilteredData] = useState([]);
+  const apiClient = useApiClient();
 
-  const baseURL = 'http://192.168.60.230:8000/api/v1';
-  const token = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjIzMDo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2ODIxMzMyLCJleHAiOjE3MzY4MzIxMDgsIm5iZiI6MTczNjgyODUwOCwianRpIjoiR05leGF5a2FEemY0MDJLTCIsInN1YiI6MzAsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.UKZmY2qspjU_uSwttNjt1I1j5obnYUrkZjnRVEx_Nzc';
-
+  
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
   }, [currentPage, selectedDisplay]);
 
+  const route = useRoute();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // Check if 'refresh' is passed as a param
+      if (route.params?.refresh) {
+        fetchData();
+        navigation.setParams({ refresh: false }); // Reset the refresh flag
+      }
+    }, [route.params])
+  );
+
+  useEffect(() => {
+    const lowerCaseQuery = searchQuery.toLowerCase();
+    const filtered = data.filter(
+      (item) =>
+        item.detail_pimpinan?.toLowerCase().includes(lowerCaseQuery) ||
+        item.detail_jabatan?.toLowerCase().includes(lowerCaseQuery) ||
+        item.periode?.toLowerCase().includes(lowerCaseQuery)
+    );
+    setFilteredData(filtered);
+  }, [searchQuery, data]);
+
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await axios.post(
-        `${baseURL}/user/jabatan/index`,
+      const response = await apiClient.post(
+        `/user/jabatan/index`,
         {},
-        { headers: { Authorization: token } }
       );
       setData(response.data.data || []);
       setCurrentPage(response.data.current_page || []);
@@ -53,34 +76,45 @@ const SettingJabatan = ({ navigation }) => {
     }
   };
 
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    fetchData(query, currentPage, selectedDisplay);
+  };
+
   const handleAdd = () => {
     navigation.navigate('FormJabatan', { type: 'create' });
   };
 
   const handleEdit = (item) => {
-    navigation.navigate('FormJabatan', { type: 'edit', uuid: item.uuid });
+    navigation.navigate('FormJabatan', { type: 'edit', item });
   };
   
-  const changeAktif = async (uuid , status) => {
+  const handleChangeAktif = async (item) => {
     try {
-      const response = await axios.put(
-        `${baseURL}/user/jabatan/${uuid}/change-aktif`,
-        { aktif: status },
-        { headers: { Authorization: token } }
+      console.log(item)
+      
+      const response = await apiClient.get(
+        `/user/jabatan/${item.uuid}/changeAktif`,
+        {
+        },
       );
-      Alert.alert('Sukses', 'Status berhasil diubah');
       fetchData();
+      Alert.alert('Sukses', 'Status berhasil diubah');
     } catch (error) {
-      console.error('Error merubah status', error.response?.data || error.message);
-      Alert.alert('Gagal', 'Terjadi kesalahan saat mengubah status')
+      console.log(item);
+      console.error(
+        'Error merubah status',
+        error.response?.data || error.message,
+      );
+      Alert.alert('Gagal', 'Terjadi kesalahan saat mengubah status');
     }
-  }
+  };
+  
 
   const handleDelete = async (id) => {
     setModalVisible(false);
     try {
-      await axios.delete(`${baseURL}/user/jabatan/${id}/delete`, {
-        headers: { Authorization: token },
+      await apiClient.delete(`/user/jabatan/${id}/delete`, {
       });
       Alert.alert('Sukses', 'Data berhasil dihapus.');
       fetchData(); // Refresh data setelah penghapusan
@@ -138,7 +172,7 @@ const SettingJabatan = ({ navigation }) => {
               style={styles.searchBar}
               placeholder="Search"
               value={searchQuery}
-              onChangeText={setSearchQuery}
+              onChangeText={handleSearch}
             />
             <Ionicons name='search' size={20} color='#888' style={styles.searchIcon} />
           </View>
@@ -192,8 +226,8 @@ const SettingJabatan = ({ navigation }) => {
             </Text>
             <View style={styles.actionContainer}>
               <Switch
-                value={item.aktif}
-                onValueChange={(value) => changeAktif(item.id, value)}
+                value={item.aktif === 1}
+                onValueChange={() => handleChangeAktif(item)}
               />
               <TouchableOpacity 
                 style={styles.editButton}
@@ -264,7 +298,7 @@ const SettingJabatan = ({ navigation }) => {
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <FlatList
-          data={data}
+          data={filteredData}
           keyExtractor={(item, index) => index.toString()}
           ListHeaderComponent={TableHeader}
           renderItem={renderItem}

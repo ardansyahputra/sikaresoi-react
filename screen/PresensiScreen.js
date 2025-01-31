@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import moment from 'moment-timezone';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const PresensiScreen = ({ navigation }) => {
   const [currentTime, setCurrentTime] = useState(moment().tz("Asia/Jakarta").format('HH:mm:ss'));
@@ -62,7 +63,7 @@ const PresensiScreen = ({ navigation }) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color="#000" />
+            <Ionicons name="arrow-back" size={26} color="#000" />
         </TouchableOpacity>
         <Image source={require('./assets/images/sikaresoi.png')} style={styles.headerImage} />
       </View>
@@ -133,13 +134,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#f7f8fa',
   },
   header: {
-    height: 100,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 15,
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 18,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    elevation: 5,
   },
   backButton: {
     position: 'absolute',
@@ -147,10 +151,15 @@ const styles = StyleSheet.create({
     top: 40,
   },
   headerImage: {
-    width: '45%',
+    width: '50%',
     height: undefined,
     aspectRatio: 5,
+    marginRight: 190,
     resizeMode: 'contain',
+    alignSelf: 'center',
+  },
+  backButton: {
+    marginTop:1,
   },
   scrollContainer: {
     padding: 20,
