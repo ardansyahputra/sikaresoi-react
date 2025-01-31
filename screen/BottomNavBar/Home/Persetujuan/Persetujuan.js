@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Button, FlatList, ActivityIndicator } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';
 
 const API_URL = 'http://192.168.2.102:8000/api/v1'; // Ganti dengan URL API Anda
 const MANUAL_TOKEN = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIuMTAyOjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzQzMjk1OTYsImV4cCI6MTczNDM0MDAxOSwibmJmIjoxNzM0MzM2NDE5LCJqdGkiOiJnUzlLV0pCdFhiR2Z3bGR2Iiwic3ViIjo3LCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.crA4yz6YvnEn07_QBoPM_GEuu75J7S8vxc93m4jPJ94'; // Ganti dengan token yang ingin digunakan
 
-const Persetujuan = () => {
+const Persetujuan = ({navigation}) => {
   const [listTahun, setListTahun] = useState([]);
   const [postData, setPostData] = useState({ tahun_id: 2 });
   const [showReview, setShowReview] = useState(false);

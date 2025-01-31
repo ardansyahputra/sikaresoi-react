@@ -31,13 +31,11 @@ import ProfileEdit from './screen/BottomNavBar/Profile/ProfileEdit';
 import Password from './screen/BottomNavBar/Profile/Password';
 import PersetujuanRealisasi from './screen/PersetujuanRealisasi';
 import Persetujuan from './screen/Persetujuan.js';
-import KontrakKerja from './screen/BottomNavBar/Menu/Laporan/KontrakKerja';
-// import Bacascreen from './screen/Bacascreen.js';
-// import Bacakontrak from './screen/Bacakontrak.js';
-import LaporanKontrakKerja from './screen/BottomNavBar/Menu/Laporan/KontrakKerja';
+import Bacascreen from './screen/Bacascreen.js';
+import Bacakontrak from './screen/Bacakontrak.js';
+import KontrakKerja from './screen/BottomNavBar/Menu/Laporan/KontrakKerja.js';
 import RealisasiNext from './screen/RealisasiNext.js';
 
-// Bottom Tab Navigator
 const Tab = createBottomTabNavigator();
 
 // Stack Navigator untuk Menu
@@ -133,7 +131,7 @@ function HomeStack() {
         component={KontrakKerja}
         options={{headerShown: false}}
       />
-      {/* <Stack.Screen
+      <Stack.Screen
         name="Bacascreen"
         component={Bacascreen}
         options={{headerShown: false}}
@@ -142,7 +140,8 @@ function HomeStack() {
         name="Bacakontrak"
         component={Bacakontrak}
         options={{headerShown: false}}
-      /> */}
+      />
+
       <Stack.Screen
         name="Remunerasi"
         component={Remunerasi}

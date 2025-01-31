@@ -1,65 +1,64 @@
-import React, {useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
+  TextInput,
   Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
+  ActivityIndicator,
   Image,
-  Linking,
-  Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import axios from 'axios';
+import { Dropdown } from 'react-native-element-dropdown';
+import useApiClient from '../src/api/apiClient';
 
-export default function User() {
-  const staticData = [
-    {
-      id: 1,
-      uuid: 'abc123',
-      user: {
-        name: 'John Doe'
-      },
-      status: 'Sudah',
-      tanggal: '2024-01-15',
-      jenis_teguran: 'tidak apel',
-      potongan: '1%',
-      file: 'https://example.com/file1.pdf'
-    },
-  ];
-
-  const [data, setData] = useState(staticData);
+export default function Teguranscreen({ navigation }) {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [lastPage, setLastPage] = useState(2);
+  const [lastPage, setLastPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDisplay, setSelectedDisplay] = useState(10); // Default display per page
+  const apiClient = useApiClient();
 
-  const handleApprove = (uuid) => {
-    Alert.alert('Konfirmasi', 'Apakah Anda yakin ingin mengonfirmasi?', [
-      {text: 'Batal', style: 'cancel'},
-      {
-        text: 'Ya',
-        onPress: () => {
-          const newData = data.map(item => {
-            if (item.uuid === uuid) {
-              return {...item, status: 'DISETUJUI'};
-            }
-            return item;
-          });
-          setData(newData);
-          Alert.alert('Berhasil', 'Konfirmasi berhasil.');
-        },
-      },
-    ]);
+  useEffect(() => {
+    fetchData(currentPage);
+  }, [currentPage, searchQuery, selectedDisplay]);
+
+  const fetchData = async (page) => {
+    try {
+      setLoading(true);
+      const response = await apiClient.post('teguran/index_user1', {
+        page,
+        per: selectedDisplay,
+        search: searchQuery,
+      });
+      setData(response.data.data);
+      setCurrentPage(response.data.current_page);
+      setLastPage(response.data.last_page);
+    } catch (error) {
+      console.error('Error fetching data', error.response?.data || error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const toggleExpand = id => {
+  const toggleExpand = (id) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const getStatusStyle = status => {
+  const handleApprove = (uuid) => {
+    navigation.navigate('Bacascreen', { uuid });
+  };
+
+  const getStatusStyle = (status) => {
     switch (status?.toUpperCase()) {
-      case 'DISETUJUI':
+      case 'DIBACA':
         return styles.approvedStatus;
-      case 'DITOLAK':
+      case 'BELUM DIBACA':
         return styles.rejectedStatus;
       case 'MENUNGGU':
         return styles.pendingStatus;
@@ -68,16 +67,54 @@ export default function User() {
     }
   };
 
+  const display = [
+    { label: '5', value: 5 },
+    { label: '10', value: 10 },
+    { label: '25', value: 25 },
+    { label: '50', value: 50 },
+    { label: '100', value: 100 },
+  ];
+
   const TableHeader = () => (
-    <View style={styles.tableHeader}>
-      <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
-      <Text style={[styles.headerCell, styles.nameCell]}>Name</Text>
-      <Text style={[styles.headerCell, styles.tableStatusCell]}>Dibaca</Text>
-      <View style={styles.expandIconCell} />
+    <View style={styles.headerContainer}>
+      <View style={styles.filterContainer}>
+        <View style={styles.displayContainer}>
+          <Text style={styles.displayText}>Display</Text>
+          <Dropdown
+            style={styles.dropdown}
+            data={display}
+            labelField="label"
+            valueField="value"
+            placeholder="10"
+            value={selectedDisplay}
+            onChange={(item) => setSelectedDisplay(item.value)}
+            renderItem={(item) => (
+              <Text style={[styles.dropdownItem, styles.customFont]}>
+                {item.label}
+              </Text>
+            )}
+          />
+        </View>
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchBar}
+            placeholder="Search"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+        </View>
+      </View>
+      <View style={styles.tableHeader}>
+        <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
+        <Text style={[styles.headerCell, styles.nameCell]}>Name</Text>
+        <Text style={[styles.headerCell, styles.tableStatusCell]}>Status</Text>
+        <View style={styles.expandIconCell} />
+      </View>
     </View>
   );
 
-  const renderItem = ({item, index}) => {
+  const renderItem = ({ item, index }) => {
     const isExpanded = expandedId === item.id;
 
     return (
@@ -97,9 +134,9 @@ export default function User() {
               style={[
                 styles.tableCell,
                 styles.statusCell,
-                getStatusStyle(item.status),
+                getStatusStyle(item.dibaca),
               ]}>
-              {item.status || '-'}
+              {item.dibaca || '-'}
             </Text>
           </View>
           <View style={styles.expandIconCell}>
@@ -113,27 +150,22 @@ export default function User() {
         {isExpanded && (
           <View style={styles.expandedContent}>
             <Text style={styles.expandedText}>
-              Tanggal: {item.tanggal || '-'}
+              Nama: {item.user?.name || '-'}
             </Text>
             <Text style={styles.expandedText}>
-              Jenis teguran: {item.jenis_teguran || '-'}
+              Jenis teguran: {item.jenis || '-'}
             </Text>
             <Text style={styles.expandedText}>
               Potongan: {item.potongan || '-'}
             </Text>
-            <View style={styles.filetext}>
-              <Text>File:</Text>
-              <Text
-                style={styles.expandedLinkText}
-                onPress={() => Linking.openURL(item.file)}>
-                File Absensi
-              </Text>
-            </View>
+            <Text style={styles.expandedText}>
+              Tanggal pelanggaran: {item.tgl_pelanggaran || '-'}
+            </Text>
             <View style={styles.actionContainer}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.approveButton}
                 onPress={() => handleApprove(item.uuid)}>
-                <Ionicons name="checkmark" size={20} color="white" />
+                <Ionicons name="eye" size={20} color="white" />
               </TouchableOpacity>
             </View>
           </View>
@@ -144,10 +176,11 @@ export default function User() {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Image
-            source={require('../screen/assets/images/sikaresoi.png')}
+            source={require('./assets/images/sikaresoi.png')}
             style={styles.logo}
           />
         </View>
@@ -159,44 +192,51 @@ export default function User() {
         </View>
       </View>
 
-      <FlatList
-        ListHeaderComponent={TableHeader}
-        data={data}
-        renderItem={renderItem}
-        keyExtractor={item => item.id.toString()}
-        contentContainerStyle={styles.card}
-        ListFooterComponent={
-          <View>
-            <Text style={styles.pageInfo}>
-              Showing page {currentPage} of {lastPage}
-            </Text>
-            <View style={styles.paginationContainer}>
-              <View style={styles.paginationButtons}>
-                <TouchableOpacity
-                  style={[
-                    styles.pageButton,
-                    currentPage === 1 && styles.disabledButton,
-                  ]}
-                  disabled={currentPage === 1}
-                  onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
-                  <Text style={styles.pageButtonText}>Previous</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.pageButton,
-                    currentPage === lastPage && styles.disabledButton,
-                  ]}
-                  disabled={currentPage === lastPage}
-                  onPress={() =>
-                    setCurrentPage(prev => Math.min(prev + 1, lastPage))
-                  }>
-                  <Text style={styles.pageButtonText}>Next</Text>
-                </TouchableOpacity>
+      {/* Loading Indicator */}
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <FlatList
+          ListHeaderComponent={TableHeader}
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.card}
+          ListFooterComponent={
+            <View>
+              <Text style={styles.pageInfo}>
+                Showing page {currentPage} of {lastPage}
+              </Text>
+              <View style={styles.paginationContainer}>
+                <View style={styles.paginationButtons}>
+                  <TouchableOpacity
+                    style={[
+                      styles.pageButton,
+                      currentPage === 1 && styles.disabledButton,
+                    ]}
+                    disabled={currentPage === 1}
+                    onPress={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }>
+                    <Text style={styles.pageButtonText}>Previous</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.pageButton,
+                      currentPage === lastPage && styles.disabledButton,
+                    ]}
+                    disabled={currentPage === lastPage}
+                    onPress={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, lastPage))
+                    }>
+                    <Text style={styles.pageButtonText}>Next</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
-        }
-      />
+          }
+        />
+      )}
     </View>
   );
 }
@@ -309,7 +349,20 @@ const styles = StyleSheet.create({
   approveButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#11aff2',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  declineButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F44336',
     paddingVertical: 10,
     paddingHorizontal: 10,
     borderRadius: 10,
@@ -374,5 +427,115 @@ const styles = StyleSheet.create({
   },
   iconWrapper: {
     marginLeft: 12,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modalLabel: {
+    fontSize: 14,
+    marginBottom: 5,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    minHeight: 80,
+    marginBottom: 15,
+    textAlignVertical: 'top',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  cancelButton: {
+    backgroundColor: '#ccc',
+    padding: 10,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  submitButton: {
+    backgroundColor: '#F44336',
+    padding: 10,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  headerContainer: {
+    flexDirection: 'column',
+     // Tambahkan marginBottom untuk memberi ruang
+  },
+
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  searchContainer: {
+    width: 150,
+    height: 40,
+    backgroundColor: '#FFFFFF',
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  searchBar: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingRight: 40, 
+    color: '#000',
+  },
+  searchIcon: {
+    position: 'absolute',
+    right: 10, 
+    top: '50%',
+    transform: [{ translateY: -10 }],
+  },
+  displayContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  displayText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 13,
+    marginRight: 8,
+    textAlign: 'center',
+    color: '#3f4254',
+  },
+  dropdown: {
+    height: 40,
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    width: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dropdownItem: {
+    padding: 10,
+    fontSize: 12,
+    color: '#333',
   },
 });

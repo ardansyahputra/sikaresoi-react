@@ -8,6 +8,18 @@ import Oliv from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const { width } = Dimensions.get('window'); // Mendapatkan lebar layar
 
+// Fungsi renderMenuIcon dipindahkan ke sini
+const renderMenuIcon = (label, iconName, onPress) => {
+  return (
+    <TouchableOpacity onPress={onPress} style={styles.iconContainer}>
+      <View style={styles.iconCircle}>
+        <Icon name={iconName} size={30} color="#213376" />
+      </View>
+      <Text style={styles.menuText}>{label}</Text>
+    </TouchableOpacity>
+  );
+};
+
 export default function HomeScreen({ navigation }) {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -20,14 +32,20 @@ export default function HomeScreen({ navigation }) {
     <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <View style={[styles.container, { backgroundColor: isDarkMode ? '#333' : '#F5F5F5' }]}>
         {/* Header */}
-        <LinearGradient colors={isDarkMode ? ['#333', '#333'] : ['#FFFFFF', '#FFFFFF']} style={styles.header}>
+        <LinearGradient
+          colors={isDarkMode ? ['#333', '#333'] : ['#FFFFFF', '#FFFFFF']}
+          style={styles.header}>
           <Image
             source={require('../../assets/images/sikaresoi.png')}
             style={styles.logo}
             resizeMode="cover"
           />
           <TouchableOpacity onPress={toggleTheme} style={styles.themeToggle}>
-            <Icon name={isDarkMode ? 'moon' : 'sunny'} size={30} color={isDarkMode ? '#fff' : '#000'} />
+            <Icon
+              name={isDarkMode ? 'moon' : 'sunny'}
+              size={30}
+              color={isDarkMode ? '#fff' : '#000'}
+            />
           </TouchableOpacity>
         </LinearGradient>
 
@@ -49,13 +67,11 @@ export default function HomeScreen({ navigation }) {
           {renderMenuIcon('Persetujuan Kontrak Kinerja', 'shield-checkmark', () => navigation.navigate('Persetujuan'))}
           {renderMenuIcon('Lainnya', 'apps', () => navigation.navigate('Allmenu'))}
         </View>
+
+        {/* Dashboard */}
         <View style={styles.dashboardNav}>
-          {/* Baris 1: Dua tombol pertama */}
           <View style={styles.row}>
-            <TouchableOpacity
-              style={[styles.card]}
-              onPress={() => navigation.navigate('Presensi')}
-            >
+            <TouchableOpacity style={[styles.card]} onPress={() => navigation.navigate('Presensi')}>
               <LinearGradient colors={['#4A90E2', '#1D56C0']} style={styles.gradient}>
                 <Ardhan name="perm-contact-calendar" size={60} color="#FFFFFF" />
                 <Text style={styles.cardTitle}>Presensi</Text>
@@ -63,10 +79,7 @@ export default function HomeScreen({ navigation }) {
               </LinearGradient>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.card]}
-              onPress={() => navigation.navigate('Teguran')}
-            >
+            <TouchableOpacity style={[styles.card]} onPress={() => navigation.navigate('Teguran')}>
               <LinearGradient colors={['#FF6F61', '#E53935', '#B71C1C']} style={styles.gradient}>
                 <Gusti name="email-newsletter" size={60} color="#FFFFFF" />
                 <Text style={styles.cardTitle}>Teguran</Text>
@@ -75,12 +88,8 @@ export default function HomeScreen({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* Baris 2: Dua tombol berikutnya */}
           <View style={styles.row}>
-            <TouchableOpacity
-              style={[styles.card]}
-              onPress={() => navigation.navigate('Persetujuan')}
-            >
+            <TouchableOpacity style={[styles.card]} onPress={() => navigation.navigate('Persetujuan')}>
               <LinearGradient colors={['#D32F2F', '#F44336']} style={styles.gradient}>
                 <Oliv name="file-document" size={60} color="#FFFFFF" />
                 <Text style={styles.cardTitle}>1 Kontrak Bawahan</Text>
@@ -88,10 +97,7 @@ export default function HomeScreen({ navigation }) {
               </LinearGradient>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.card]}
-              onPress={() => navigation.navigate('PersetujuanRealisasi')}
-            >
+            <TouchableOpacity style={[styles.card]} onPress={() => navigation.navigate('PersetujuanRealisasi')}>
               <LinearGradient colors={['#F57F17', '#FBC02D']} style={styles.gradient}>
                 <Oliv name="file-document" size={60} color="#FFFFFF" />
                 <Text style={styles.cardTitle}>0 Realisasi Bawahan</Text>
@@ -99,23 +105,11 @@ export default function HomeScreen({ navigation }) {
               </LinearGradient>
             </TouchableOpacity>
           </View>
-
         </View>
       </View>
     </ScrollView>
   );
 }
-
-const renderMenuIcon = (label, iconName, onPress) => {
-  return (
-    <TouchableOpacity onPress={onPress} style={styles.iconContainer}>
-      <View style={styles.iconCircle}>
-        <Icon name={iconName} size={30} color="#213376" />
-      </View>
-      <Text style={styles.menuText}>{label}</Text>
-    </TouchableOpacity>
-  );
-};
 
 const styles = StyleSheet.create({
   container: {
