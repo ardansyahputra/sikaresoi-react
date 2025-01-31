@@ -1,38 +1,45 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground } from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ImageBackground,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import axios from 'axios';
+import {useAuth} from '../../../screen/auth/AuthContext';
+import useApiClient from '../../../src/api/apiClient';
 
-const ProfileScreen = ({ navigation }) => {
-  const [profileData, setProfileData] = useState(null);
-  const [loading, setLoading] = useState(true);
+const ProfileScreen = ({navigation}) => {
+  const {user, pangkatItems, logout} = useAuth();
+  const [pangkat, setPangkat] = useState(null);
+  const apiClient = useApiClient();
+  const [profileImage, setProfileImage] = useState(null);
 
   useEffect(() => {
-    // Fetch profile data from the API
-    fetchProfileData();
-  }, []);
+    if (user && pangkatItems.length > 0) {
+      const foundPangkat = pangkatItems.find(
+        item => item.value === user.pangkat_id,
+      );
 
-  const fetchProfileData = async () => {
-    try {
-      const response = await axios.get('http://192.168.60.176:8000/api/v1/auth/user', {
-        headers: {
-          Authorization: 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE3Njo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2ODIwMjUyLCJleHAiOjE3MzY4MjM4NzEsIm5iZiI6MTczNjgyMDI3MSwianRpIjoiTllIMHV0VnU4Y0lEVHBXYyIsInN1YiI6OCwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.KMMxNxXiz3yLYFfNzh0BGh7sXqlFeQJsb4k5jF4Ssw0',
-        },
-      });
-      setProfileData(response.data); // Assuming the response data contains the profile info
-    } catch (error) {
-      console.error('Error fetching profile data', error);
-    } finally {
-      setLoading(false);
+      if (foundPangkat) {
+        setPangkat(foundPangkat.label); // Set the user's pangkat if found
+      } else {
+        setPangkat('Pangkat Tidak Ditemukan'); // Fallback message
+      }
     }
-  };
+  }, [user, pangkatItems]); // Re-run when user or pangkatItems change
 
+  // console.log('User data di ProfileScreen:', user);
+
+  // Menambahkan console log untuk memverifikasi data user
+  console.log('User data:', user);
 
   return (
     <ImageBackground
       source={require('../../assets/background.jpg')} // Replace with your desired background image
-      style={[styles.container, styles.backgroundStyle]}
-    >
+      style={[styles.container, styles.backgroundStyle]}>
       {/* App Bar */}
       <View style={styles.header}>
         <Image
@@ -47,11 +54,14 @@ const ProfileScreen = ({ navigation }) => {
           {/* Profile Section */}
           <View style={styles.profileSection}>
             <Image
-              source={require('../../assets/kemenhub.png')}
+              source={{uri: user?.photo_url}}
               style={styles.profileImage}
             />
-            <Text style={styles.profileName}>{profileData ? profileData.data.name : 'Loading...'}</Text>
-            <Text style={styles.profileHandle}>{profileData ? profileData.data.nip : 'Loading...'}</Text>
+            <Text style={styles.profileName}>{user?.name || 'User Name'}</Text>
+            <Text style={styles.profileHandle}>
+              {pangkat || 'Loading Pangkat'}
+            </Text>
+            <Text style={styles.profileHandle}>{user?.nip || 'User Nip'}</Text>
           </View>
 
           <View style={styles.menuSection}>
@@ -63,11 +73,10 @@ const ProfileScreen = ({ navigation }) => {
                   if (item.navigateTo) {
                     navigation.navigate(item.navigateTo);
                   } else if (item.label === 'Log out') {
-                    // Add logout logic here
-                    console.log('Logging out...');
+                    logout(); // Fungsi logout
+                    navigation.replace('Login'); // Navigasi ke layar login
                   }
-                }}
-              >
+                }}>
                 <View style={styles.menuItemLeft}>
                   <Icon name={item.icon} size={40} color="#000" />
                   <Text style={styles.menuItemText}>{item.label}</Text>
@@ -83,9 +92,9 @@ const ProfileScreen = ({ navigation }) => {
 };
 
 const menuItems = [
-  { label: 'Edit Profile', icon: 'person', navigateTo: 'ProfileEdit' },
-  { label: 'Password', icon: 'lock', navigateTo: 'Password' },
-  { label: 'Log out', icon: 'logout' },
+  {label: 'Edit Profile', icon: 'person', navigateTo: 'ProfileEdit'},
+  {label: 'Password', icon: 'lock', navigateTo: 'Password'},
+  {label: 'Log out', icon: 'logout'},
 ];
 
 const styles = StyleSheet.create({
@@ -139,7 +148,7 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60, // Ensure it's a perfect circle
     borderWidth: 2,
-    borderColor: '#000',
+    borderColor: '#ddd',
     marginBottom: 16, // Add spacing below the image
   },
   profileName: {

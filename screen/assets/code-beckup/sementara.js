@@ -28,7 +28,7 @@ const SettingJabatan = ({ navigation }) => {
   });
   const [loading, setLoading] = useState(false);
 
-  const baseURL = 'http://192.168.61.230:8000/api/v1'
+  const baseURL = 'http://192.168.60.230:8000/api/v1'
   const token = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjIzMDo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NTIyNDkzLCJleHAiOjE3MzU1MzE0MzEsIm5iZiI6MTczNTUyNzgzMSwianRpIjoiV1RiRzNzNWlSaHJJWHBRSSIsInN1YiI6NywicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.XPEEriuqfPX_L_SCgcJfJMTgYbgKVWmk2-_VKfE3aBY';
 
   useEffect(() => {

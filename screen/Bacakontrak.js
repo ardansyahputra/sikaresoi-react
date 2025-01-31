@@ -178,13 +178,7 @@ const PerformanceTable = ({ data = [], onSaveKinerja, onDelete }) => {
             <Text style={styles.buttonText}>Edit</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.actionButton, styles.deleteButton]}
-            onPress={() => onDelete && onDelete(item.uuid)}
-          >
-            <Icon name="delete" size={20} color="white" />
-            <Text style={styles.buttonText}>Hapus</Text>
-          </TouchableOpacity>
+          
         </View>
       </View>
     </Card>

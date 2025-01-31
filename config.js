@@ -1,75 +1,77 @@
-export const BASE_URL = 'https://192.168.3.113:8000/api/v1';
-export const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE0Njo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM3MDc3ODM5LCJleHAiOjE3MzcxMDcxMTQsIm5iZiI6MTczNzEwMzUxNCwianRpIjoiNTkwM1dFWWlLQW9QVGlSbyIsInN1YiI6OSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.w64s1uzAQ5A1ad-DPmODSALhfhiUgVzoIVUPNZ2Gi7s';
-export const API_ENDPOINTS = {
-  user: {
-    profile: `${BASE_URL}/user/update_profile`,
-    changePassword: `${BASE_URL}/user/change_password`,
-    dewas: {
-      show: `${BASE_URL}/user/dewas/show`,
-      index: `${BASE_URL}/user/dewas/index`,
-      create: `${BASE_URL}/user/dewas/create`,
-      edit: (uuid) => `${BASE_URL}/user/dewas/${uuid}/edit`,
-      update: (uuid) => `${BASE_URL}/user/dewas/${uuid}/update`,
-      delete: (uuid) => `${BASE_URL}/user/dewas/${uuid}/delete`,
-    },
-    absensi: {
-      index: `${BASE_URL}/user/absensi/index`,
-      fetch: `${BASE_URL}/user/absensi/fetch`,
-      now: `${BASE_URL}/user/absensi/now`,
-      in: `${BASE_URL}/user/absensi/in`,
-      out: `${BASE_URL}/user/absensi/out`,
-    },
-    jabatan: {
-      show: `${BASE_URL}/user/jabatan/show`,
-      aktif: `${BASE_URL}/user/jabatan/aktif`,
-      index: `${BASE_URL}/user/jabatan/index`,
-      create: `${BASE_URL}/user/jabatan/create`,
-      edit: (uuid) => `${BASE_URL}/user/jabatan/${uuid}/edit`,
-      update: (uuid) => `${BASE_URL}/user/jabatan/${uuid}/update`,
-      delete: (uuid) => `${BASE_URL}/user/jabatan/${uuid}/delete`,
-      changeAktif: (uuid) => `${BASE_URL}/user/jabatan/${uuid}/changeAktif`,
-    },
-    kinerja: {
-      index: `${BASE_URL}/user/kinerja/index`,
-      salin: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/salin`,
-      persetujuan: `${BASE_URL}/user/kinerja/persetujuan`,
-      resend: `${BASE_URL}/user/kinerja/resend`,
-      revisi: `${BASE_URL}/user/kinerja/revisi`,
-      batal: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/batal`,
-      send: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/send`,
-      konfirmasi: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/konfirmasi`,
-      realisasi: {
-        resend: `${BASE_URL}/user/kinerja/resend_realisasi`,
-        send: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/send_realisasi`,
-        revisi: `${BASE_URL}/user/kinerja/revisi_realisasi`,
-        konfirmasi: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/konfirmasi_realisasi`,
-        batal: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/batal_realisasi`,
-      },
-      list: {
-        index: `${BASE_URL}/user/kinerja/list/index`,
-        save: `${BASE_URL}/user/kinerja/list/save`,
-        edit: (uuid) => `${BASE_URL}/user/kinerja/list/${uuid}/edit`,
-        update: (uuid) => `${BASE_URL}/user/kinerja/list/${uuid}/update`,
-        delete: (uuid) => `${BASE_URL}/user/kinerja/list/${uuid}/delete`,
-        totalTarget: (uuid) => `${BASE_URL}/user/kinerja/list/${uuid}/total-target`,
-        autoSum: (uuid) => `${BASE_URL}/user/kinerja/list/${uuid}/auto-sum`,
-        target: {
-          save: (list_uuid) => `${BASE_URL}/user/kinerja/list/target/${list_uuid}/save`,
-          update: (uuid) => `${BASE_URL}/user/kinerja/list/target/${uuid}/update`,
-          otomatis: (list_uuid) => `${BASE_URL}/user/kinerja/list/target/${list_uuid}/otomatis`,
-          kumulatif: (list_uuid) => `${BASE_URL}/user/kinerja/list/target/${list_uuid}/kumulatif`,
-        },
-        realisasi: {
-          index: `${BASE_URL}/user/kinerja/list/target/realisasi/index`,
-          update: (uuid) => `${BASE_URL}/user/kinerja/list/target/realisasi/${uuid}/update`,
-          updateJabatan: (uuid) => `${BASE_URL}/user/kinerja/list/target/realisasi/${uuid}/updateJabatan`,
-          reset: (uuid) => `${BASE_URL}/user/kinerja/list/target/realisasi/${uuid}/reset`,
-          deleteTambahan: (uuid) => `${BASE_URL}/user/kinerja/list/target/realisasi/${uuid}/delete_tambahan`,
-          file: {
-            delete: (uuid) => `${BASE_URL}/user/kinerja/list/target/realisasi/file/${uuid}/delete`,
-          },
-        },
-      },
-    },
-  },
-};
+const baseURL = 'http://192.168.60.230:8000/api/v1';
+const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjIzMDo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM3MzM5NjIyLCJleHAiOjE3MzczNDUwMTAsIm5iZiI6MTczNzM0MTQxMCwianRpIjoiR2VhMkdFdElhM3JnazJEWCIsInN1YiI6MzAsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.pLHSajlylagBHdKZHE2EyhpLkY0kW3zG9P8PSsDLato';
+
+
+// export const API_ENDPOINTS = {
+//   user: {
+//     profile: `${BASE_URL}/user/update_profile`,
+//     changePassword: `${BASE_URL}/user/change_password`,
+//     dewas: {
+//       show: `${BASE_URL}/user/dewas/show`,
+//       index: `${BASE_URL}/user/dewas/index`,
+//       create: `${BASE_URL}/user/dewas/create`,
+//       edit: (uuid) => `${BASE_URL}/user/dewas/${uuid}/edit`,
+//       update: (uuid) => `${BASE_URL}/user/dewas/${uuid}/update`,
+//       delete: (uuid) => `${BASE_URL}/user/dewas/${uuid}/delete`,
+//     },
+//     absensi: {
+//       index: `${BASE_URL}/user/absensi/index`,
+//       fetch: `${BASE_URL}/user/absensi/fetch`,
+//       now: `${BASE_URL}/user/absensi/now`,
+//       in: `${BASE_URL}/user/absensi/in`,
+//       out: `${BASE_URL}/user/absensi/out`,
+//     },
+//     jabatan: {
+//       show: `${BASE_URL}/user/jabatan/show`,
+//       aktif: `${BASE_URL}/user/jabatan/aktif`,
+//       index: `${BASE_URL}/user/jabatan/index`,
+//       create: `${BASE_URL}/user/jabatan/create`,
+//       edit: (uuid) => `${BASE_URL}/user/jabatan/${uuid}/edit`,
+//       update: (uuid) => `${BASE_URL}/user/jabatan/${uuid}/update`,
+//       delete: (uuid) => `${BASE_URL}/user/jabatan/${uuid}/delete`,
+//       changeAktif: (uuid) => `${BASE_URL}/user/jabatan/${uuid}/changeAktif`,
+//     },
+//     kinerja: {
+//       index: `${BASE_URL}/user/kinerja/index`,
+//       salin: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/salin`,
+//       persetujuan: `${BASE_URL}/user/kinerja/persetujuan`,
+//       resend: `${BASE_URL}/user/kinerja/resend`,
+//       revisi: `${BASE_URL}/user/kinerja/revisi`,
+//       batal: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/batal`,
+//       send: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/send`,
+//       konfirmasi: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/konfirmasi`,
+//       realisasi: {
+//         resend: `${BASE_URL}/user/kinerja/resend_realisasi`,
+//         send: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/send_realisasi`,
+//         revisi: `${BASE_URL}/user/kinerja/revisi_realisasi`,
+//         konfirmasi: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/konfirmasi_realisasi`,
+//         batal: (uuid) => `${BASE_URL}/user/kinerja/${uuid}/batal_realisasi`,
+//       },
+//       list: {
+//         index: `${BASE_URL}/user/kinerja/list/index`,
+//         save: `${BASE_URL}/user/kinerja/list/save`,
+//         edit: (uuid) => `${BASE_URL}/user/kinerja/list/${uuid}/edit`,
+//         update: (uuid) => `${BASE_URL}/user/kinerja/list/${uuid}/update`,
+//         delete: (uuid) => `${BASE_URL}/user/kinerja/list/${uuid}/delete`,
+//         totalTarget: (uuid) => `${BASE_URL}/user/kinerja/list/${uuid}/total-target`,
+//         autoSum: (uuid) => `${BASE_URL}/user/kinerja/list/${uuid}/auto-sum`,
+//         target: {
+//           save: (list_uuid) => `${BASE_URL}/user/kinerja/list/target/${list_uuid}/save`,
+//           update: (uuid) => `${BASE_URL}/user/kinerja/list/target/${uuid}/update`,
+//           otomatis: (list_uuid) => `${BASE_URL}/user/kinerja/list/target/${list_uuid}/otomatis`,
+//           kumulatif: (list_uuid) => `${BASE_URL}/user/kinerja/list/target/${list_uuid}/kumulatif`,
+//         },
+//         realisasi: {
+//           index: `${BASE_URL}/user/kinerja/list/target/realisasi/index`,
+//           update: (uuid) => `${BASE_URL}/user/kinerja/list/target/realisasi/${uuid}/update`,
+//           updateJabatan: (uuid) => `${BASE_URL}/user/kinerja/list/target/realisasi/${uuid}/updateJabatan`,
+//           reset: (uuid) => `${BASE_URL}/user/kinerja/list/target/realisasi/${uuid}/reset`,
+//           deleteTambahan: (uuid) => `${BASE_URL}/user/kinerja/list/target/realisasi/${uuid}/delete_tambahan`,
+//           file: {
+//             delete: (uuid) => `${BASE_URL}/user/kinerja/list/target/realisasi/file/${uuid}/delete`,
+//           },
+//         },
+//       },
+//     },
+//   },
+// };

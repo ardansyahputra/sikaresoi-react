@@ -13,29 +13,33 @@ import {
 } from 'react-native';
 import {Dropdown} from 'react-native-element-dropdown';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import DateRangePicker from 'react-native-modern-datepicker';
-import useApiClient from '../../../../src/api/apiClient';
+import DatePicker from 'react-native-modern-datepicker';
+import axios from 'axios';
 
-const convertDateFormat = date => {
-  const year = String(date.getFullYear());
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
+const getDropdownDate = date => {
+  return {
+    year: date.getFullYear(),
+    month: date.getMonth() + 1,
+    day: date.getDate(),
+  };
 };
 
-const FormJabatan = ({navigation, route}) => {
-  const {type, item} = route.params; // 'create' or 'edit', and the item to edit if 'edit'
+const fromDropdownToDate = date => {
+  return new Date(`${date.year}-${date.month}-${date.day}`);
+};
 
+const FormJabatan = ({ navigation, route }) => {
+  const {type, item} = route.params; // 'create' or 'edit', and the item to edit if 'edit'
+  
   const [formData, setFormData] = useState({
     pimpinan_id: '',
     jabatan_pimpinan_id: '',
     unit_kerja_pimpinan_id: '',
     jabatan_id: '',
     unit_kerja_id: '',
-    batas_awal: new Date(),
-    batas_akhir: new Date(),
-    is_dosen: 0,
+    batas_awal: getDropdownDate(new Date()),
+    batas_akhir: getDropdownDate(new Date()),
+    is_dosen: false,
   });
 
   const [dropdownOptions, setDropdownOptions] = useState({
@@ -49,11 +53,10 @@ const FormJabatan = ({navigation, route}) => {
   const [loading, setLoading] = useState(false);
   const [dropdownLoading, setDropdownLoading] = useState(true);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
-  const [selectedStartDate, setSelectedStartDate] = useState(new Date());
-  const [selectedEndDate, setSelectedEndDate] = useState(new Date());
-  const apiClient = useApiClient();
 
-  
+  const baseURL = 'http://192.168.60.230:8000/api/v1';
+  const token = 'Bearer ';
+
   useEffect(() => {
     fetchDropdownOptions();
     if (type === 'edit' && item?.uuid) {
@@ -65,7 +68,12 @@ const FormJabatan = ({navigation, route}) => {
     try {
       setLoading(true);
 
-      const response = await apiClient.get(`/user/jabatan/${uuid}/edit`, {
+      const response = await axios.get(`${baseURL}/user/jabatan/${uuid}/edit`, {
+        headers: {
+          Authorization: token,
+          Accept: 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
       });
 
       const data = response.data?.data;
@@ -98,7 +106,8 @@ const FormJabatan = ({navigation, route}) => {
       ];
 
       const requests = endpoints.map(endpoint =>
-        apiClient.get(`${endpoint.url}`, {
+        axios.get(`${baseURL}${endpoint.url}`, {
+          headers: {Authorization: token},
         }),
       );
 
@@ -127,55 +136,54 @@ const FormJabatan = ({navigation, route}) => {
   };
 
   const populateFormData = data => {
-    console.log("populate with data:", data);
     setFormData({
       pimpinan_id: data?.pimpinan_id || '',
       jabatan_pimpinan_id: data?.jabatan_pimpinan_id || '',
       unit_kerja_pimpinan_id: data?.unit_kerja_pimpinan_id || '',
       jabatan_id: data?.jabatan_id || '',
       unit_kerja_id: data?.unit_kerja_id || '',
-      batas_awal: data?.batas_awal ? new Date(data.batas_awal) : new Date(),
-      batas_akhir: data?.batas_akhir ? new Date(data.batas_akhir) : new Date(),
-      is_dosen: data?.is_dosen == 1,
+      batas_awal: data?.batas_awal
+        ? getDropdownDate(new Date(data.batas_awal))
+        : getDropdownDate(new Date()),
+      batas_akhir: data?.batas_akhir
+        ? getDropdownDate(new Date(data.batas_akhir))
+        : getDropdownDate(new Date()),  
+      is_dosen: data?.is_dosen || false,
     });
   };
 
-
-  const toggleDatePicker = () => {
+  const toggleDataPicker = () => {
     setDatePickerVisible(!datePickerVisible);
   };
 
-  const handleDateChange = (field, date) => {
-    const updatedDate = date.replace(/\//g, '-');
-    if (field === 'batas_awal') {
-      setSelectedStartDate(updatedDate);
-    } else {
-      setSelectedEndDate(updatedDate);
-    }
-  };
-
-  const handleAcceptDateRange = () => {
-    setFormData(prevFormData => ({
-      ...prevFormData,
-      batas_awal: new Date(selectedStartDate),
-      batas_akhir: new Date(selectedEndDate),
-    }));
-    setDatePickerVisible(false);
-  };
-
-  const handleCancelDateRange = () => {
-    setDatePickerVisible(false);
-  };
+  const onDateChange = (fieldName, selectedDate) => {
+    const formattedDate = getDropdownDate(new Date(selectedDate));
+    setField(fieldName, formattedDate);
+  };  
 
   const setField = (fieldName, value) => {
     setFormData(prev => ({...prev, [fieldName]: value}));
   };
 
-  const handleChangeAktif = async state => {
-    setFormData(prevFormData => ({
-      ...prevFormData,
-      is_dosen: state,
-    }));
+  const handleChangeAktif = async () => {
+    try {
+      const response = await axios.get(
+        `${baseURL}/user/jabatan/${item.uuid}/changeAktif`,
+        {headers: {Authorization: token,
+          Accept: 'application/json',
+
+        }},
+      );
+      console.log('Response:', response.data); // Menggunakan respons untuk debug/logging
+      Alert.alert('Sukses', 'Status berhasil diubah');
+      fetchDataForEdit(item.uuid);
+    } catch (error) {
+      console.error(
+        'Error merubah status',
+        error.response?.data || error.message,
+      );
+      Alert.alert('Gagal', 'Terjadi kesalahan saat mengubah status');
+    }
   };
 
   const handleSave = async () => {
@@ -190,13 +198,6 @@ const FormJabatan = ({navigation, route}) => {
       return;
     }
 
-    console.log('payload:', {
-      ...formData,
-      is_dosen: formData.is_dosen == 1,
-      batas_awal: convertDateFormat(formData.batas_awal),
-      batas_akhir: convertDateFormat(formData.batas_akhir),
-    });
-
     setLoading(true);
     try {
       const url =
@@ -205,17 +206,18 @@ const FormJabatan = ({navigation, route}) => {
           : `/user/jabatan/${item.uuid}/update`;
       const method = type === 'create' ? 'post' : 'post';
 
-      await apiClient({
+      await axios({
         method,
-        url: `${url}`,
+        url: `${baseURL}${url}`,
         headers: {
+          Authorization: token,
+          Accept: 'application/json',
           'X-Requested-With': 'XMLHttpRequest',
         },
         data: {
           ...formData,
-          is_dosen: formData.is_dosen == 1,
-          batas_awal: convertDateFormat(formData.batas_awal),
-          batas_akhir: convertDateFormat(formData.batas_akhir),
+          batas_awal: fromDropdownToDate(formData.batas_awal),
+          batas_akhir: fromDropdownToDate(formData.batas_akhir),
         },
       });
 
@@ -223,8 +225,7 @@ const FormJabatan = ({navigation, route}) => {
         'Sukses',
         `Data berhasil ${type === 'create' ? 'ditambahkan' : 'diperbarui'}.`,
       );
-
-      navigation.goBack();
+      navigation.goBack({ refresh: true });
     } catch (error) {
       console.error(
         'Error saving data:',
@@ -342,65 +343,54 @@ const FormJabatan = ({navigation, route}) => {
           onChange={item => setField('unit_kerja_id', item.value)}
         />
 
-        {/* Date Picker Display */}
+        {/* Date Picker */}
         <Text style={styles.label}>
           Periode <Text style={styles.required}>*</Text>
         </Text>
-        <TouchableOpacity onPress={toggleDatePicker} style={styles.datePicker}>
+        <TouchableOpacity onPress={toggleDataPicker} style={styles.datePicker}>
           <Text style={styles.dateText}>
             {formData.batas_awal
-              ? `${formData.batas_awal?.toLocaleDateString()} / ${formData.batas_akhir?.toLocaleDateString()}`
+              ? `${formData.batas_awal.day} - ${formData.batas_awal.month} - ${formData.batas_awal.year}`
               : 'Pilih Tanggal'}
           </Text>
           <Ionicons name="calendar-outline" size={20} color="#000" />
         </TouchableOpacity>
-
-        {/* Date Picker Modal */}
         {datePickerVisible && (
-          <View style={styles.datePickerModal}>
-            <DateRangePicker
-              selected={
-                formData.batas_awal
-                  ? formData.batas_awal.toLocaleDateString()
-                  : new Date().toLocaleDateString()
-              }
-              mode="calendar"
-              display="default"
-              onSelectedChange={date => {
-                handleDateChange('batas_awal', date);
-              }}
-            />
-            <DateRangePicker
-              selected={
-                formData.batas_akhir
-                  ? formData.batas_akhir.toLocaleDateString()
-                  : new Date().toLocaleDateString()
-              }
-              mode="calendar"
-              display="default"
-              onSelectedChange={date => {
-                handleDateChange('batas_akhir', date);
-              }}
-            />
-            <View style={styles.datePickerButtons}>
-              <TouchableOpacity
-                onPress={handleAcceptDateRange}
-                style={styles.saveButton}>
-                <Text style={styles.saveButtonText}>Accept</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleCancelDateRange}
-                style={styles.cancelButton}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          <DatePicker
+            value={formData.batas_awal || getDropdownDate(new Date())}
+            mode="date"
+            display="default"
+            onChange={(event, selectedDate) => {
+              onDateChange('batas_awal', selectedDate); // Pass fieldName and selectedDate
+            }}
+          />
+        )}
+        <TouchableOpacity onPress={toggleDataPicker} style={styles.datePicker}>
+          <Text style={styles.dateText}>
+            {formData.batas_akhir
+              ? `${formData.batas_akhir.day} - ${formData.batas_akhir.month} - ${formData.batas_akhir.year}`
+              : 'Pilih Tanggal'}
+          </Text>
+          <Ionicons name="calendar-outline" size={20} color="#000" />
+        </TouchableOpacity>
+        {datePickerVisible && (
+          <DatePicker
+            value={formData.batas_akhir || getDropdownDate(new Date())}
+            mode="date"
+            display="default"
+            onChange={(event, selectedDate) => {
+              onDateChange('batas_akhir', selectedDate); // Pass fieldName and selectedDate
+            }}
+          />
         )}
 
         {/* Switch Dosen */}
         <View style={styles.switchContainer}>
           <Text style={styles.label}>Dosen</Text>
-          <Switch value={formData.is_dosen} onValueChange={handleChangeAktif} />
+          <Switch
+            value={formData.aktif == 1}
+            onValueChange={value => handleChangeAktif()}
+          />
         </View>
 
         {/* Button Save dan Cancel */}
@@ -414,7 +404,7 @@ const FormJabatan = ({navigation, route}) => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.cancelButton}
-            onPress={() => navigation.goBack({refresh: true})}>
+            onPress={() => navigation.goBack()}>
             <Text style={styles.cancelButtonText}>Batal</Text>
           </TouchableOpacity>
         </View>
@@ -422,6 +412,7 @@ const FormJabatan = ({navigation, route}) => {
     </ScrollView>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -524,7 +515,7 @@ const styles = StyleSheet.create({
   },
   datePickerContainer: {
     backgroundColor: '#fff',
-    padding: 20,
+    padding: 20,  
     borderRadius: 10,
     elevation: 5,
     shadowColor: '#000',

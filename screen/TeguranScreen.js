@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   TextInput,
@@ -8,58 +8,53 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
-  Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import { Dropdown } from 'react-native-element-dropdown';
+import useApiClient from '../src/api/apiClient';
 
-export default function Teguranscreen({navigation}) {
+export default function Teguranscreen({ navigation }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [selectedItem, setSelectedItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDisplay, setSelectedDisplay] = useState(null);
+  const [selectedDisplay, setSelectedDisplay] = useState(10); // Default display per page
+  const apiClient = useApiClient();
 
   useEffect(() => {
     fetchData(currentPage);
-  }, [currentPage]);
+  }, [currentPage, searchQuery, selectedDisplay]);
 
-  const fetchData = async page => {
+  const fetchData = async (page) => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.60.146:8000/api/v1/teguran/index_user',
-        {page},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjEuMjA6ODAwMFwvYXBpXC92MVwvYXV0aFwvcmVmcmVzaCIsImlhdCI6MTczNzI5NDM4NiwiZXhwIjoxNzM3Mjk5NDMyLCJuYmYiOjE3MzcyOTU4MzIsImp0aSI6ImFtd3VXTlN5Mmt0c1hPcGQiLCJzdWIiOjksInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.KpvjtB0PJ7bHJANFCDQYEgxYasFJS-lnkbDaUwaaAk8',
-          },
-        },
-      );
+      const response = await apiClient.post('teguran/index_user1', {
+        page,
+        per: selectedDisplay,
+        search: searchQuery,
+      });
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
     } catch (error) {
-      console.error('Error fetching data', error.response.data);
+      console.error('Error fetching data', error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleExpand = id => {
+  const toggleExpand = (id) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const handleApprove = uuid => {
-    navigation.navigate('Bacascreen', {uuid});
+  const handleApprove = (uuid) => {
+    navigation.navigate('Bacascreen', { uuid });
   };
 
-  const getStatusStyle = status => {
+  const getStatusStyle = (status) => {
     switch (status?.toUpperCase()) {
       case 'DIBACA':
         return styles.approvedStatus;
@@ -73,11 +68,11 @@ export default function Teguranscreen({navigation}) {
   };
 
   const display = [
-    {label: '5', value: 1},
-    {label: '10', value: 2},
-    {label: '25', value: 3},
-    {label: '50', value: 4},
-    {label: '100', value: 5},
+    { label: '5', value: 5 },
+    { label: '10', value: 10 },
+    { label: '25', value: 25 },
+    { label: '50', value: 50 },
+    { label: '100', value: 100 },
   ];
 
   const TableHeader = () => (
@@ -92,8 +87,8 @@ export default function Teguranscreen({navigation}) {
             valueField="value"
             placeholder="10"
             value={selectedDisplay}
-            onChange={item => setSelectedDisplay(item.value)}
-            renderItem={item => (
+            onChange={(item) => setSelectedDisplay(item.value)}
+            renderItem={(item) => (
               <Text style={[styles.dropdownItem, styles.customFont]}>
                 {item.label}
               </Text>
@@ -119,7 +114,7 @@ export default function Teguranscreen({navigation}) {
     </View>
   );
 
-  const renderItem = ({item, index}) => {
+  const renderItem = ({ item, index }) => {
     const isExpanded = expandedId === item.id;
 
     return (
@@ -139,9 +134,9 @@ export default function Teguranscreen({navigation}) {
               style={[
                 styles.tableCell,
                 styles.statusCell,
-                getStatusStyle(item.status),
+                getStatusStyle(item.dibaca),
               ]}>
-              {item.status || '-'}
+              {item.dibaca || '-'}
             </Text>
           </View>
           <View style={styles.expandIconCell}>
@@ -205,7 +200,7 @@ export default function Teguranscreen({navigation}) {
           ListHeaderComponent={TableHeader}
           data={data}
           renderItem={renderItem}
-          keyExtractor={item => item.id.toString()}
+          keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.card}
           ListFooterComponent={
             <View>
@@ -221,7 +216,7 @@ export default function Teguranscreen({navigation}) {
                     ]}
                     disabled={currentPage === 1}
                     onPress={() =>
-                      setCurrentPage(prev => Math.max(prev - 1, 1))
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
                     }>
                     <Text style={styles.pageButtonText}>Previous</Text>
                   </TouchableOpacity>
@@ -232,7 +227,7 @@ export default function Teguranscreen({navigation}) {
                     ]}
                     disabled={currentPage === lastPage}
                     onPress={() =>
-                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
+                      setCurrentPage((prev) => Math.min(prev + 1, lastPage))
                     }>
                     <Text style={styles.pageButtonText}>Next</Text>
                   </TouchableOpacity>
@@ -529,11 +524,18 @@ const styles = StyleSheet.create({
     color: '#3f4254',
   },
   dropdown: {
-    width: 120,
     height: 40,
     borderColor: '#CCCCCC',
     borderWidth: 1,
     borderRadius: 5,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
+    width: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dropdownItem: {
+    padding: 10,
+    fontSize: 12,
+    color: '#333',
   },
 });

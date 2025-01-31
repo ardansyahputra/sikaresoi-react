@@ -10,6 +10,8 @@ import {
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
+import useApiClient from '../src/api/apiClient';
+
 
 const AttendanceForm = () => {
   const navigation = useNavigation();
@@ -22,17 +24,15 @@ const AttendanceForm = () => {
     pesan: '',
   });
   const [loading, setLoading] = useState(false);
+  const apiClient = useApiClient();
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        'http://192.168.60.137:8000/api/v1/teguran/e96a8fba-275f-4e6c-922e-5a4ec1f01f28/baca',
+      const response = await apiClient.get(
+        'teguran/e96a8fba-275f-4e6c-922e-5a4ec1f01f28/baca',
         {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE0Njo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM3MzM2ODYwLCJleHAiOjE3MzczNTkwNzMsIm5iZiI6MTczNzM1NTQ3MywianRpIjoiUXJnSm54aWpTTUZZbU5saSIsInN1YiI6OSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.LSQ6wGmjdxY0muPLzv-ecT98A5pxm8pZiNDxAhuWwRs',
-          },
+          
         }
       );
       const data = response.data.data;

@@ -11,9 +11,8 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import {Dropdown} from 'react-native-element-dropdown'; 
+import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
-import {BASE_URL, token} from '../../../config';
 
 export default function Jabatan() {
   const navigation = useNavigation();
@@ -26,6 +25,10 @@ export default function Jabatan() {
   const [selectedDisplay, setSelectedDisplay] = useState(null);
   const [tambahModalVisible, setTambahModalVisible] = useState(false); // Tambahkan state ini
 
+  const baseURL = 'http://192.168.60.230:8000/api/v1';
+  const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjIzMDo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM3MzM5NjIyLCJleHAiOjE3MzczNDUwMTAsIm5iZiI6MTczNzM0MTQxMCwianRpIjoiR2VhMkdFdElhM3JnazJEWCIsInN1YiI6MzAsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.pLHSajlylagBHdKZHE2EyhpLkY0kW3zG9P8PSsDLato';
+
+
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
   }, [currentPage, selectedDisplay]);
@@ -33,9 +36,7 @@ export default function Jabatan() {
   const fetchData = async page => {
     try {
       setLoading(true);
-      const response = await apiClient.post(`${BASE_URL}/teguran/indexandro`, {
-        headers: {Authorization: 'Bearer ' + token},
-        page});
+      const response = await axios.post(`${baseURL}/teguran/indexandro`, {page});
       if (response?.data?.data) {
         setData(response.data.data);
         setCurrentPage(response.data.current_page);
@@ -74,53 +75,59 @@ export default function Jabatan() {
   };
 
   const TableHeader = () => (
-    <View>
-      <View style={styles.tambahContainer}>
-        <TouchableOpacity
-          style={styles.downloadButton}
-          onPress={() => navigation.navigate('Presensiexcel')} // Navigasi ke halaman Excel
-        >
-          <FontAwesome size={20} color="#fff" style={styles.icon} />
-          <Text style={styles.downloadText}>Download Excel</Text>
-        </TouchableOpacity>
+  <View>
+    <View style={styles.tambahContainer}>
+      <TouchableOpacity
+        style={styles.downloadButton}
+        onPress={() => navigation.navigate('Presensiexcel')}
+      >
+        <FontAwesome size={20} color="#fff" style={styles.icon} />
+        <Text style={styles.downloadText}>Download Excel</Text>
+      </TouchableOpacity>
+    </View>
+    <View style={styles.filterContainer}>
+      <View style={styles.displayContainer}>
+        <Text style={styles.displayText}>Display</Text>
+        <Dropdown
+          style={styles.dropdown}
+          data={display}
+          labelField="label"
+          valueField="value"
+          placeholder="10"
+          value={selectedDisplay}
+          onChange={item => setSelectedDisplay(item.value)}
+          renderItem={item => (
+            <Text style={[styles.dropdownItem, styles.customFont]}>
+              {item.label}
+            </Text>
+          )}
+        />
       </View>
-      <View style={styles.filterContainer}>
-        <View style={styles.displayContainer}>
-          <Text style={styles.displayText}>Display</Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={display}
-            labelField="label"
-            valueField="value"
-            placeholder="10"
-            value={selectedDisplay}
-            onChange={item => setSelectedDisplay(item.value)}
-            renderItem={item => (
-              <Text style={[styles.dropdownItem, styles.customFont]}>
-                {item.label}
-              </Text>
-            )}
-          />
-        </View>
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchBar}
-            placeholder="Search"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-      </View>
-      <View style={styles.tableHeader}>
-        <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
-        <Text style={[styles.headerCell, styles.nameCell]}>User</Text>
-        <Text style={[styles.headerCell, styles.tableStatusCell]}>
-          Dibaca
-        </Text>
-        <View style={styles.expandIconCell} />
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchBar}
+          placeholder="Search"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
       </View>
     </View>
-  );
+    <View style={styles.tableHeader}>
+      <Text style={[styles.headerCell, styles.numberCell]}>Nomor</Text>
+      <Text style={[styles.headerCell, styles.nameCell]}>Indikator Kinerja</Text>
+      <Text style={[styles.headerCell, styles.nameCell]}>Biaya</Text>
+      <Text style={[styles.headerCell, styles.nameCell]} align="center">AK</Text>
+      <Text style={[styles.headerCell, styles.nameCell]}>Kuantitas</Text>
+      <Text style={[styles.headerCell, styles.nameCell]}>Kualitas</Text>
+      <Text style={[styles.headerCell, styles.nameCell]}>Waktu</Text>
+      <Text style={[styles.headerCell, styles.nameCell]} align="center">WPT</Text>
+      <Text style={[styles.headerCell, styles.nameCell]} align="center">BOBOT</Text>
+      <Text style={[styles.headerCell, styles.nameCell]}>STATUS</Text>
+      <Text style={[styles.headerCell, styles.nameCell]}>Action</Text>
+    </View>
+  </View>
+);
+
   
 
   const renderItem = ({item, index}) => {
