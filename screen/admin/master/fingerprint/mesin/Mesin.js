@@ -13,14 +13,14 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
-import axios from 'axios';
-import { useNavigation } from '@react-navigation/native';
-import { useFocusEffect } from '@react-navigation/native';
-
+import useApiClient from '../../../../../src/api/apiClient';
+import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect} from '@react-navigation/native';
+import {BarIndicator} from 'react-native-indicators';
 
 export default function Mesin() {
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -29,54 +29,35 @@ export default function Mesin() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDisplay, setSelectedDisplay] = useState(null);
   const navigation = useNavigation();
-
+  const apiClient = useApiClient();
 
   useFocusEffect(
     React.useCallback(() => {
       fetchData(currentPage, selectedDisplay);
-    }, [currentPage, selectedDisplay])
+    }, [currentPage, selectedDisplay]),
   );
 
   const fetchData = async (page, display) => {
     try {
-      setLoading(true); // Set loading state
-      const response = await axios.post(
-        'http://192.168.60.163:8000/api/v1/fingerprint_machine/indexandro', // API URL
+      setIsLoading(true); // Set loading state
+      const response = await apiClient.post(
+        '/fingerprint_machine/indexadmin', // API URL
         {page, display},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2Mzg1MzE0LCJleHAiOjE3MzYzOTg0NTgsIm5iZiI6MTczNjM5NDg1OCwianRpIjoiZVdzTWpWQ1F1WGY3SDVwcyIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.bhFOHbPIjAKT9U17r2YYRZXoxhT8H-oMXvu-vvzu2R0', // Token
-          },
-        },
       );
-      console.log('Full API Response:', response.data); // Log the full response to inspect all data
-
-      // Check if the expected fields are available in response
       const {data: fetchedData, current_page, last_page} = response.data;
-      console.log('Fetched Data:', fetchedData); // Log the fetched data
-
       setData(fetchedData); // Update the state
       setCurrentPage(current_page);
       setLastPage(last_page);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
-      setLoading(false); // Reset loading state
+      setIsLoading(false); // Reset loading state
     }
   };
 
   const submitHapus = async () => {
     try {
-      await axios.delete(
-        `http://192.168.60.163:8000/api/v1/fingerprint_machine/${selectedUuid}/delete`,
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2Mzg1MzE0LCJleHAiOjE3MzYzOTY0NDQsIm5iZiI6MTczNjM5Mjg0NCwianRpIjoid0FQR2FFSHp5ZGVsS2pjaSIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.3TQM9F3eGqMQ3WWMd9z0m8KyyWiJ1Z12w3q6xmDILXg', // Token
-          },
-        },
-      );
+      await apiClient.delete(`/fingerprint_machine/${selectedUuid}/delete`);
       Alert.alert('Berhasil', 'Data berhasil dihapus.');
       setHapusModalVisible(false);
       fetchData(currentPage);
@@ -100,14 +81,12 @@ export default function Mesin() {
   };
 
   const handleCreate = (navigation, value1, value2, value3) => {
-
     navigation.navigate('Tambahmesin');
   };
 
   const handleEdit = (uuid, navigation) => {
-    navigation.navigate('Editmesin', { uuid });
+    navigation.navigate('Editmesin', {uuid});
   };
-  
 
   const display = [
     {label: '5', value: 1},
@@ -276,12 +255,12 @@ export default function Mesin() {
             </Text>
 
             <View style={styles.actionContainer}>
-            <TouchableOpacity
-  style={styles.editButton}
-  onPress={() => handleEdit(item.uuid, navigation)}>
-  <FontAwesome name="pencil" size={20} color="white" />
-  <Text style={styles.customFont}>Edit</Text>
-</TouchableOpacity>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => handleEdit(item.uuid, navigation)}>
+                <FontAwesome name="pencil" size={20} color="white" />
+                <Text style={styles.customFont}>Edit</Text>
+              </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.declineButton}
@@ -310,8 +289,11 @@ export default function Mesin() {
       </View>
 
       {/* Loading Indicator */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
+        </View>
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
@@ -736,5 +718,10 @@ const styles = StyleSheet.create({
   customFont: {
     color: 'white',
     fontFamily: 'Poppins-Regular',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

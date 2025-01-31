@@ -18,10 +18,11 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../../src/api/apiClient';
+import {BarIndicator} from 'react-native-indicators';
 
 export default function JenisPegawai() {
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -41,23 +42,20 @@ export default function JenisPegawai() {
 
   const fetchData = async page => {
     try {
-      setLoading(true);
-      const response = await apiClient.post(
-        '/jenis_pegawai/index',
-        {page},
-      );
+      setIsLoading(true);
+      const response = await apiClient.post('/jenis_pegawai/index', {page});
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
     } catch (error) {
       console.error('Error fetching data', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleEdit = uuid => {
-    navigation.navigate("EditJenisPegawai", {uuid})
+    navigation.navigate('EditJenisPegawai', {uuid});
   };
 
   const handleHapus = uuid => {
@@ -67,9 +65,7 @@ export default function JenisPegawai() {
 
   const submitHapus = async () => {
     try {
-      await apiClient.delete(
-        `/jenis_pegawai/${selectedUuid}/delete`,
-      );
+      await apiClient.delete(`/jenis_pegawai/${selectedUuid}/delete`);
       Alert.alert('Berhasil', 'Penolakan berhasil.');
       setHapusModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -79,7 +75,7 @@ export default function JenisPegawai() {
   };
 
   const handleTambah = () => {
-    navigation.navigate("TambahJenisPegawai");
+    navigation.navigate('TambahJenisPegawai');
   };
 
   const display = [
@@ -188,8 +184,11 @@ export default function JenisPegawai() {
         </View>
       </View>
       {/* Loading Indicator */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
+        </View>
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
@@ -655,5 +654,10 @@ const styles = StyleSheet.create({
   switchLabel: {
     fontSize: 16,
     color: '#333',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

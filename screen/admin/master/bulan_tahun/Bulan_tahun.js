@@ -18,20 +18,17 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../../../../src/api/apiClient';
 import {useNavigation} from '@react-navigation/native';
+import {BarIndicator} from 'react-native-indicators';
 
 export default function BulanTahun() {
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [editData, setEditData] = useState({});
-  const [isEditModalVisible, setEditModalVisible] = useState(false);
-  const [isTambahModalVisible, setTambahModalVisible] = useState(false);
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);
   const [activeButton, setActiveButton] = useState('bulan');
-  const [selectedNamaSatuan, setSelectedNamaSatuan] = useState('');
   const [isHapusModalVisible, setHapusModalVisible] = useState(false);
   const apiClient = useApiClient();
   const navigation = useNavigation();
@@ -46,30 +43,29 @@ export default function BulanTahun() {
 
   const fetchBulanData = async () => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       const response = await apiClient.get('/bulan/show');
       setData(response.data.data); // Asumsi data langsung berupa array bulan
-      setLoading(false);
+      setIsLoading(false);
     } catch (error) {
       console.error('Error fetching bulan:', error);
       Alert.alert('Error', 'Gagal memuat data bulan.');
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-  
+
   const fetchTahunData = async () => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       const response = await apiClient.get('/tahun/show');
       setData(response.data.data); // Asumsi data langsung berupa array tahun
-      setLoading(false);
+      setIsLoading(false);
     } catch (error) {
       console.error('Error fetching tahun:', error);
       Alert.alert('Error', 'Gagal memuat data tahun.');
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-  
 
   const submitHapus = async () => {
     try {
@@ -78,8 +74,7 @@ export default function BulanTahun() {
           ? `/bulan/${selectedUuid}/delete`
           : `/tahun/${selectedUuid}/delete`;
 
-      const response = await apiClient.delete(endpoint, {
-      });
+      const response = await apiClient.delete(endpoint, {});
 
       if (response.status === 200 || response.status === 204) {
         // Operasi berhasil
@@ -308,9 +303,12 @@ export default function BulanTahun() {
         </View>
       </View>
 
-      {/* Tabel */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+      {/* Loading Indicator */}
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
+        </View>
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
@@ -715,5 +713,10 @@ const styles = StyleSheet.create({
   bulanButton: {
     flexDirection: 'row',
     gap: 5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

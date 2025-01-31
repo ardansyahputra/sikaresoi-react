@@ -20,6 +20,7 @@ import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../src/api/apiClient';
 import DatePicker from 'react-native-modern-datepicker';
+import {BarIndicator} from 'react-native-indicators';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const BOTTOM_SHEET_HEIGHT = SCREEN_HEIGHT * 0.7;
@@ -99,7 +100,7 @@ const CustomDatePicker = ({isVisible, onClose, onDateChange, currentDate}) => {
 export default function Jabatan() {
   const navigation = useNavigation();
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -107,7 +108,6 @@ export default function Jabatan() {
   const [selectedDisplay, setSelectedDisplay] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [Tanggal, setTanggal] = useState('');
-  const [tambahModalVisible, setTambahModalVisible] = useState(false);
   const apiClient = useApiClient();
 
   useEffect(() => {
@@ -116,7 +116,7 @@ export default function Jabatan() {
 
   const fetchData = async page => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       const response = await apiClient.post('/admin/absensi/indexandro', {
         page,
       });
@@ -132,7 +132,7 @@ export default function Jabatan() {
       console.error('Error fetching data:', error);
       Alert.alert('Error', 'Gagal memuat data.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -142,10 +142,13 @@ export default function Jabatan() {
       userName: name,
       selectedDate: Tanggal, // Pastikan ini berisi nilai tanggal
     });
-    
-    navigation.navigate('Presensiedit', { userId: id, userName: name, selectedDate: Tanggal });
+
+    navigation.navigate('Presensiedit', {
+      userId: id,
+      userName: name,
+      selectedDate: Tanggal,
+    });
   };
-  
 
   const display = [
     {label: '5', value: 1},
@@ -180,7 +183,10 @@ export default function Jabatan() {
             isVisible={showDatePicker}
             onClose={() => setShowDatePicker(false)}
             onDateChange={handleDateChange}
-            currentDate={Tanggal || new Date().toISOString().split('T')[0].replace(/-/g, '/')}
+            currentDate={
+              Tanggal ||
+              new Date().toISOString().split('T')[0].replace(/-/g, '/')
+            }
           />
         </View>
 
@@ -296,8 +302,11 @@ export default function Jabatan() {
           </TouchableOpacity>
         </View>
       </View>
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
+        </View>
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
@@ -813,5 +822,10 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

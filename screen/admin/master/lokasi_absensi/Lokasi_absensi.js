@@ -17,22 +17,18 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../../src/api/apiClient';
+import {BarIndicator} from 'react-native-indicators';
 
 export default function LokasiAbsensi() {
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [isTambahModalVisible, setTambahModalVisible] = useState(false);
   const [isHapusModalVisible, setHapusModalVisible] = useState(false);
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);
-  const [selectedLokasi, setSelectedLokasi] = useState(null);
-  const [selectedLatitude, setSelectedLatitude] = useState(null);
-  const [selectedLongtitude, setSelectedLongtitude] = useState(null);
-  const [selectedRadius, setSelectedRadius] = useState(null);
   const apiClient = useApiClient();
   const navigation = useNavigation();
 
@@ -42,23 +38,20 @@ export default function LokasiAbsensi() {
 
   const fetchData = async page => {
     try {
-      setLoading(true);
-      const response = await apiClient.post(
-        '/lokasiabsensi/index',
-        {page},
-      );
+      setIsLoading(true);
+      const response = await apiClient.post('/lokasiabsensi/index', {page});
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
     } catch (error) {
       console.error('Error fetching data', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleEdit = uuid => {
-    navigation.navigate("EditLokasiAbsensi", {uuid})
+    navigation.navigate('EditLokasiAbsensi', {uuid});
   };
 
   const handleHapus = uuid => {
@@ -68,9 +61,7 @@ export default function LokasiAbsensi() {
 
   const submitHapus = async () => {
     try {
-      await apiClient.delete(
-        `/lokasiabsensi/${selectedUuid}/delete`,
-      );
+      await apiClient.delete(`/lokasiabsensi/${selectedUuid}/delete`);
       Alert.alert('Berhasil', 'Penolakan berhasil.');
       setHapusModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -80,7 +71,7 @@ export default function LokasiAbsensi() {
   };
 
   const handleTambah = () => {
-    navigation.navigate("TambahLokasiAbsensi")
+    navigation.navigate('TambahLokasiAbsensi');
   };
 
   const display = [
@@ -213,8 +204,11 @@ export default function LokasiAbsensi() {
         </View>
       </View>
       {/* Loading Indicator */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
+        </View>
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
@@ -615,5 +609,10 @@ const styles = StyleSheet.create({
   customFont: {
     color: 'white',
     fontFamily: 'Poppins-Regular',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

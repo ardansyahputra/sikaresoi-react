@@ -18,10 +18,11 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../../src/api/apiClient';
+import {BarIndicator} from 'react-native-indicators';
 
 export default function UnitKerja() {
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -40,7 +41,7 @@ export default function UnitKerja() {
 
   const fetchData = async page => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       const response = await apiClient.post('/unit_kerja/index', {page});
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
@@ -48,7 +49,7 @@ export default function UnitKerja() {
     } catch (error) {
       console.error('Error fetching data', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -83,7 +84,7 @@ export default function UnitKerja() {
   };
 
   const handleEdit = uuid => {
-    navigation.navigate("EditUnitKerja", {uuid})
+    navigation.navigate('EditUnitKerja', {uuid});
   };
 
   const handleHapus = uuid => {
@@ -103,7 +104,7 @@ export default function UnitKerja() {
   };
 
   const handleTambah = () => {
-    navigation.navigate("TambahUnitKerja");
+    navigation.navigate('TambahUnitKerja');
   };
 
   const display = [
@@ -237,8 +238,11 @@ export default function UnitKerja() {
         </View>
       </View>
       {/* Loading Indicator */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
+        </View>
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
@@ -684,5 +688,10 @@ const styles = StyleSheet.create({
   switchLabel: {
     fontSize: 16,
     color: '#333',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

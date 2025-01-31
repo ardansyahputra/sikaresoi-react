@@ -18,10 +18,11 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import CalendarPicker from 'react-native-calendar-picker';
 import useApiClient from '../../../src/api/apiClient';
+import {BarIndicator} from 'react-native-indicators';
 
 export default function Lock() {
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -48,7 +49,7 @@ export default function Lock() {
 
   const fetchRealisasiData = async page => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       const response = await apiClient.post('/lock/indexRealisasiAndro', {
         page,
         per: selectedDisplay,
@@ -59,13 +60,13 @@ export default function Lock() {
     } catch (error) {
       console.error('Error fetching data', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const fetchKontrakData = async page => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       const response = await apiClient.post('/lock/indexKontrakAndro', {
         page,
         per: selectedDisplay,
@@ -76,15 +77,13 @@ export default function Lock() {
     } catch (error) {
       console.error('Error fetching data', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const submitHapus = async () => {
     try {
-      const response = await apiClient.delete(
-        `/lock/${selectedUuid}/delete`,
-      );
+      const response = await apiClient.delete(`/lock/${selectedUuid}/delete`);
 
       if (response.status === 200 || response.status === 204) {
         // Operasi berhasil
@@ -405,8 +404,11 @@ export default function Lock() {
       </View>
 
       {/* Tabel */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
+        </View>
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
@@ -913,5 +915,10 @@ const styles = StyleSheet.create({
   kontrakButton: {
     flexDirection: 'row',
     gap: 5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

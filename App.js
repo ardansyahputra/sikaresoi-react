@@ -43,6 +43,7 @@ import RemunerasiScreen from './screen/admin/laporan/remunerasi/Remunerasi';
 import TunjanganTambahanScreen from './screen/admin/laporan/tunjangan_tambahan/Tunjangan_tambahan';
 
 //User
+import EditUserScreen from './screen/admin/user/Edituser';
 import UserGroupScreen from './screen/admin/master/user_group/User_group';
 import PersentaseKegiatanScreen from './screen/admin/master/persentase_kegiatan/Persentase_kegiatan';
 
@@ -168,6 +169,11 @@ function HomeStack() {
         options={{headerShown: false}}
         name="UserScreen"
         component={UserScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="Edituser"
+        component={EditUserScreen}
       />
       <Stack.Screen
         options={{headerShown: false}}

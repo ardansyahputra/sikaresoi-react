@@ -56,7 +56,7 @@ const Allmenu = ({navigation}) => {
         {/* USER */}
         <Text style={styles.sectionTitle}>User</Text>
         <View style={styles.iconGrid}>
-          {renderIcon('User', 'person', () => navigation.navigate('User'))}
+          {renderIcon('User', 'person', () => navigation.navigate('UserScreen'))}
           {renderIcon('User Group', 'people', () =>
             navigation.navigate('UserGroup'),
           )}

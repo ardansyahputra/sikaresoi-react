@@ -18,12 +18,13 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../src/api/apiClient';
+import {BarIndicator} from 'react-native-indicators';
 
 export default function SettingTugasTambahan() {
   const [tahunOptions, setTahunOptions] = useState([]);
   const [pickTahunOptions, setPickTahunOptions] = useState(2024);
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -35,31 +36,33 @@ export default function SettingTugasTambahan() {
   const navigation = useNavigation();
 
   useEffect(() => {
-  fetchData(currentPage, pickTahunOptions);
+    fetchData(currentPage, pickTahunOptions);
     if (pickTahunOptions) {
       fetchData(currentPage, pickTahunOptions);
       fetchTahunOptions();
     }
-  }, [pickTahunOptions, currentPage]);  
+  }, [pickTahunOptions, currentPage]);
 
   const fetchData = async (page, tahun) => {
     try {
-      setLoading(true);  
-      const response = await apiClient.post(`/setting_tugas_tambahan/indexandro`, {
-        page,
-        tahun,
-      });
-  
+      setIsLoading(true);
+      const response = await apiClient.post(
+        `/setting_tugas_tambahan/indexandro`,
+        {
+          page,
+          tahun,
+        },
+      );
+
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
     } catch (error) {
       console.error('Error fetching data', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-  
 
   const fetchTahunOptions = async () => {
     try {
@@ -218,7 +221,9 @@ export default function SettingTugasTambahan() {
             <Text style={styles.expandedText}>
               Bulan: {item.bulan?.bulan || '-'}
             </Text>
-            <Text style={styles.expandedText}>Tahun: {item.tahun?.tahun || '-'}</Text>
+            <Text style={styles.expandedText}>
+              Tahun: {item.tahun?.tahun || '-'}
+            </Text>
             <Text style={styles.expandedText}>
               Minimal Tugas Utama: {item.persen_utama || '-'}
             </Text>
@@ -258,8 +263,11 @@ export default function SettingTugasTambahan() {
         </View>
       </View>
       {/* Loading Indicator */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
+        </View>
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
@@ -678,6 +686,11 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingHorizontal: 10,
     width: 95,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -17,10 +17,11 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../../../../src/api/apiClient';
+import {BarIndicator} from 'react-native-indicators';
 
 export default function JenisAbsensi() {
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -35,11 +36,8 @@ export default function JenisAbsensi() {
 
   const fetchData = async page => {
     try {
-      setLoading(true);
-      const response = await apiClient.post(
-        '/jenis_absensi/index',
-        {page},
-      );
+      setIsLoading(true);
+      const response = await apiClient.post('/jenis_absensi/index', {page});
 
       // Update data while preserving existing switch states
       setData(
@@ -68,30 +66,32 @@ export default function JenisAbsensi() {
     } catch (error) {
       console.error('Error fetching data', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleSwitchChange = async (uuid, currentValue) => {
-    const newValue = currentValue === 1 ? 0 : 1;  // Toggle between 0 and 1
-    
+    const newValue = currentValue === 1 ? 0 : 1; // Toggle between 0 and 1
+
     // Optimistic update
     setData(prevData =>
       prevData.map(item =>
-        item.uuid === uuid ? {...item, aktif: newValue} : item
+        item.uuid === uuid ? {...item, aktif: newValue} : item,
       ),
     );
-  
+
     try {
       const response = await apiClient.post(
         `/jenis_absensi/${uuid}/change_aktif`,
         {},
       );
-  
+
       if (response.data.status === true) {
         Alert.alert(
           'Success',
-          `Status berhasil diubah menjadi ${newValue === 1 ? 'Aktif' : 'Tidak Aktif'}.`,
+          `Status berhasil diubah menjadi ${
+            newValue === 1 ? 'Aktif' : 'Tidak Aktif'
+          }.`,
         );
         // No need to fetch data here since we've already updated optimistically
       } else {
@@ -100,11 +100,11 @@ export default function JenisAbsensi() {
     } catch (error) {
       console.error('Error updating status:', error);
       Alert.alert('Error', 'Gagal mengubah status.');
-      
+
       // Revert the optimistic update on error
       setData(prevData =>
         prevData.map(item =>
-          item.uuid === uuid ? {...item, aktif: currentValue} : item
+          item.uuid === uuid ? {...item, aktif: currentValue} : item,
         ),
       );
     }
@@ -173,7 +173,7 @@ export default function JenisAbsensi() {
             numberOfLines={1}
             ellipsizeMode="tail">
             {item.jenis || '-'}
-          </Text> 
+          </Text>
           <View style={styles.actionContainer}>
             <Switch
               value={item.aktif === 1}
@@ -200,8 +200,11 @@ export default function JenisAbsensi() {
         </View>
       </View>
       {/* Loading Indicator */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
+        </View>
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
@@ -588,5 +591,10 @@ const styles = StyleSheet.create({
   switchLabel: {
     fontSize: 16,
     color: '#333',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
