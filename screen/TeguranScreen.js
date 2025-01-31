@@ -10,7 +10,6 @@ import {
   Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import Modal from 'react-native-modal';
 
 export default function User() {
   const staticData = [
@@ -18,13 +17,13 @@ export default function User() {
       id: 1,
       uuid: 'abc123',
       user: {
-        name: 'John Doe',
+        name: 'John Doe'
       },
       status: 'Sudah',
       tanggal: '2024-01-15',
       jenis_teguran: 'tidak apel',
       potongan: '1%',
-      file: 'https://example.com/file1.pdf',
+      file: 'https://example.com/file1.pdf'
     },
   ];
 
@@ -32,33 +31,33 @@ export default function User() {
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(2);
-  const [isModalVisible, setModalVisible] = useState(false);
-  const [modalContent, setModalContent] = useState('');
 
-  const handleApprove = (item) => {
-    setModalContent(`Apakah Anda ingin melihat detail untuk ${item.user.name}?`);
-    setModalVisible(true);
+  const handleApprove = (uuid) => {
+    Alert.alert('Konfirmasi', 'Apakah Anda yakin ingin mengonfirmasi?', [
+      {text: 'Batal', style: 'cancel'},
+      {
+        text: 'Ya',
+        onPress: () => {
+          const newData = data.map(item => {
+            if (item.uuid === uuid) {
+              return {...item, status: 'DISETUJUI'};
+            }
+            return item;
+          });
+          setData(newData);
+          Alert.alert('Berhasil', 'Konfirmasi berhasil.');
+        },
+      },
+    ]);
   };
 
-  const confirmApprove = (uuid) => {
-    const newData = data.map((item) => {
-      if (item.uuid === uuid) {
-        return {...item, status: 'DISETUJUI'};
-      }
-      return item;
-    });
-    setData(newData);
-    setModalVisible(false);
-    Alert.alert('Berhasil', 'Konfirmasi berhasil.');
-  };
-
-  const toggleExpand = (id) => {
+  const toggleExpand = id => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const getStatusStyle = (status) => {
+  const getStatusStyle = status => {
     switch (status?.toUpperCase()) {
-      case 'DIBACA':
+      case 'DISETUJUI':
         return styles.approvedStatus;
       case 'DITOLAK':
         return styles.rejectedStatus;
@@ -131,11 +130,10 @@ export default function User() {
               </Text>
             </View>
             <View style={styles.actionContainer}>
-              <TouchableOpacity
+              <TouchableOpacity 
                 style={styles.approveButton}
-                onPress={() => handleApprove(item)}>
-                <Ionicons name="eye-outline" size={16} color="white" />
-                <Text style={styles.approveButtonText}>Baca</Text>
+                onPress={() => handleApprove(item.uuid)}>
+                <Ionicons name="checkmark" size={20} color="white" />
               </TouchableOpacity>
             </View>
           </View>
@@ -146,25 +144,6 @@ export default function User() {
 
   return (
     <View style={styles.container}>
-      {/* Modal */}
-      <Modal isVisible={isModalVisible} onBackdropPress={() => setModalVisible(false)}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalText}>{modalContent}</Text>
-          <View style={styles.modalButtons}>
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={() => setModalVisible(false)}>
-              <Text style={styles.modalButtonText}>Batal</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modalButton, styles.confirmButton]}
-              onPress={() => confirmApprove('abc123')}>
-              <Text style={styles.modalButtonText}>Ya</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Image
@@ -184,7 +163,7 @@ export default function User() {
         ListHeaderComponent={TableHeader}
         data={data}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={item => item.id.toString()}
         contentContainerStyle={styles.card}
         ListFooterComponent={
           <View>
@@ -199,7 +178,7 @@ export default function User() {
                     currentPage === 1 && styles.disabledButton,
                   ]}
                   disabled={currentPage === 1}
-                  onPress={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}>
+                  onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
                   <Text style={styles.pageButtonText}>Previous</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -209,7 +188,7 @@ export default function User() {
                   ]}
                   disabled={currentPage === lastPage}
                   onPress={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, lastPage))
+                    setCurrentPage(prev => Math.min(prev + 1, lastPage))
                   }>
                   <Text style={styles.pageButtonText}>Next</Text>
                 </TouchableOpacity>
@@ -322,26 +301,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
+  actionButton: {
+    padding: 8,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 5,
+  },
   approveButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#1877F2', // Facebook blue color
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 6,
-    elevation: 2,
+    backgroundColor: '#4CAF50',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.2,
-    shadowRadius: 1.5,
-    minWidth: 80,
-  },
-  approveButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 6,
+    shadowRadius: 2,
   },
   paginationButtons: {
     flexDirection: 'row',
@@ -398,5 +374,5 @@ const styles = StyleSheet.create({
   },
   iconWrapper: {
     marginLeft: 12,
-  },
+  },
 });

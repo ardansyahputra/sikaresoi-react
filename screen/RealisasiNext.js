@@ -13,6 +13,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
+import useApiClient from '../src/api/apiClient';
 
 export default function RealisasiNext({ navigation }) {
   const [data, setData] = useState([]);
@@ -22,54 +23,48 @@ export default function RealisasiNext({ navigation }) {
   const [lastPage, setLastPage] = useState(1);
   const [showDetails, setShowDetails] = useState({});  // Track details visibility for each item
   const [isRevisiVisible, setIsRevisiVisible] = useState(false);
+  const apiClient = useApiClient();
+
 
 
 
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [currentPage]); // Tambahkan currentPage sebagai dependensi
 
   const fetchData = async () => {
     try {
       setLoading(true);
-  
+
       const payload = {
         bulan_id: 1,
         tahun_id: 3,
         user_jabatan_id: 101,
       };
-  
-      const response = await axios.post(
-        'http://192.168.60.176:8000/api/v1/user/kinerja/list/target/realisasi/index',
-        payload, // Kirim payload di sini
-        {
-          headers: {
-            Authorization: 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE3Njo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM3NTA4NDQwLCJleHAiOjE3Mzc1MTI5NDUsIm5iZiI6MTczNzUwOTM0NSwianRpIjoiWmtHaWpESUhUTFRsN3J6diIsInN1YiI6OCwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.dq5LhVdmRfwk9TmSW3zZkBKvgzI9_Too_DH_K1UKGCE',
-            Accept: 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-          },
-        }
-      );
-  
+
+      const response = await apiClient.post('user/kinerja/list/target/realisasi/index', payload);
+
       console.log('API Response:', response.data);
-  
+
       if (response.data && response.data.utama) {
         setData(response.data.utama);
       } else {
-        Alert.alert('Error', 'Data tidak valid.');
         console.error('Invalid response structure:', response.data);
+        Alert.alert('Error', 'Data tidak valid dari server.');
       }
     } catch (error) {
       if (error.response) {
         console.error('Error Response Data:', error.response.data);
         console.error('Error Response Status:', error.response.status);
+        Alert.alert('Server Error', `Error ${error.response.status}: ${JSON.stringify(error.response.data)}`);
       } else if (error.request) {
         console.error('Error Request:', error.request);
+        Alert.alert('Error', 'Tidak ada respons dari server.');
       } else {
         console.error('Error Message:', error.message);
+        Alert.alert('Error', 'Terjadi kesalahan saat mengambil data.');
       }
-      Alert.alert('Error', 'Gagal mengambil data.');
     } finally {
       setLoading(false);
     }

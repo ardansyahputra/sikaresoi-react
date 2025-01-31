@@ -14,6 +14,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
+import useApiClient from '../src/api/apiClient';
 
 export default function PersetujuanRealisasi({ navigation }) {
   const [data, setData] = useState([]);
@@ -27,6 +28,7 @@ export default function PersetujuanRealisasi({ navigation }) {
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [tahunOptions, setTahunOptions] = useState([]);
   const [bulanOptions, setBulanOptions] = useState([]);
+  const apiClient = useApiClient();
 
   useEffect(() => {
     fetchData(selectedMonth, selectedYear, selectedDisplay, searchQuery);
@@ -40,8 +42,7 @@ export default function PersetujuanRealisasi({ navigation }) {
 
   const fetchTahun = async () => {
     try {
-      const response = await axios.get('http://192.168.60.176:8000/api/v1/tahun/show', {
-        headers: { Authorization: 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE3Njo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM3NTA4NDQwLCJleHAiOjE3Mzc1MTI5NDUsIm5iZiI6MTczNzUwOTM0NSwianRpIjoiWmtHaWpESUhUTFRsN3J6diIsInN1YiI6OCwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.dq5LhVdmRfwk9TmSW3zZkBKvgzI9_Too_DH_K1UKGCE' },
+      const response = await apiClient.get('/tahun/show', {
       });
 
       console.log('API Response:', response.data); // Debugging log
@@ -61,8 +62,7 @@ export default function PersetujuanRealisasi({ navigation }) {
 
   const fetchBulan = async () => {
     try {
-      const response = await axios.get('http://192.168.60.176:8000/api/v1/bulan/show', {
-        headers: { Authorization: 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE3Njo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM3NTA4NDQwLCJleHAiOjE3Mzc1MTI5NDUsIm5iZiI6MTczNzUwOTM0NSwianRpIjoiWmtHaWpESUhUTFRsN3J6diIsInN1YiI6OCwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.dq5LhVdmRfwk9TmSW3zZkBKvgzI9_Too_DH_K1UKGCE' },
+      const response = await apiClient.get('/bulan/show', {
       });
 
       console.log('API Response:', response.data); // Debugging log
@@ -89,13 +89,10 @@ export default function PersetujuanRealisasi({ navigation }) {
         per: perPage || 10,
         search: search || '',
       };
-      const response = await axios.post(
-        'http://192.168.60.176:8000/api/v1/user/kinerja/send_realisasi/indexAndro',
+      const response = await apiClient.post(
+        '/user/kinerja/send_realisasi/indexAndro',
         payload,
         {
-          headers: {
-            Authorization: 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE3Njo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM3NTA4NDQwLCJleHAiOjE3Mzc1MTI5NDUsIm5iZiI6MTczNzUwOTM0NSwianRpIjoiWmtHaWpESUhUTFRsN3J6diIsInN1YiI6OCwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.dq5LhVdmRfwk9TmSW3zZkBKvgzI9_Too_DH_K1UKGCE',
-          },
         }
       );
 
