@@ -27,14 +27,24 @@ const HistoryPresensi = ({ navigation }) => {
         {
           headers: {
             Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE3Njo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2ODIwMjUyLCJleHAiOjE3MzY4MjcxMjAsIm5iZiI6MTczNjgyMzUyMCwianRpIjoiaHRqRURxMFlwY0d2VU5UNiIsInN1YiI6OCwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.M0HOt7U3TdM6UoYPw7ndnjONOazFC_kdiFfL0GLc-mo',
+              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE3Njo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM3NTk3ODgyLCJleHAiOjE3Mzc2MDE2NTYsIm5iZiI6MTczNzU5ODA1NiwianRpIjoiWlpaTTRhZXpudHk1QzVwdCIsInN1YiI6MiwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.pD9h0kXpFYPI7Mskz7BK5eLNyZyYEIZohnGBALDOkoc',
           },
         }
       );
 
       console.log('API Response:', response.data); // Debugging log
 
-      setData(response.data.data || []);
+
+      const apiData = response.data.data.map((item) => ({
+        id: item.id,
+        tanggal: item.tanggal || 'N/A',
+        jam_masuk: item.jam_masuk || 'N/A',
+        jam_keluar: item.jam_keluar || 'N/A',
+        type: item.type?.replace(/<[^>]+>/g, '') || 'N/A', // Remove HTML tags
+        pemotongan: item.pemotongan || 'N/A',
+      }));
+
+      setData(apiData);
     } catch (error) {
       console.error('Error fetching data:', error);
       Alert.alert('Error', 'Failed to fetch data. Please check your network or try again later.');
@@ -52,14 +62,6 @@ const HistoryPresensi = ({ navigation }) => {
       field?.toLowerCase().includes(search.toLowerCase())
     )
   );
-
-  const formatDate = (date) => {
-    return date ? date : 'N/A';
-  };
-
-  const formatJam = (jam) => {
-    return jam ? jam : 'N/A';
-  };
 
   return (
     <ScrollView style={styles.container}>
@@ -122,10 +124,10 @@ const HistoryPresensi = ({ navigation }) => {
               }
               renderItem={({ item }) => (
                 <View style={styles.tableRow}>
-                  <Text style={styles.tableCell}>{formatDate(item.tanggal)}</Text>
-                  <Text style={styles.tableCell}>{formatJam(item.jam_masuk)}</Text>
-                  <Text style={styles.tableCell}>{formatJam(item.jam_keluar)}</Text>
-                  <Text style={styles.tableCell}>{item.type || 'N/A'}</Text>
+                  <Text style={styles.tableCell}>{item.tanggal}</Text>
+                  <Text style={styles.tableCell}>{item.jam_masuk}</Text>
+                  <Text style={styles.tableCell}>{item.jam_keluar}</Text>
+                  <Text style={styles.tableCell}>{item.type}</Text>
                   <Text style={styles.tableCell}>{item.pemotongan}</Text>
                 </View>
               )}
@@ -145,7 +147,6 @@ const HistoryPresensi = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  // Styles tetap sama seperti yang Anda tulis
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',

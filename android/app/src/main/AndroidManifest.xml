@@ -11,6 +11,7 @@
       android:roundIcon="@mipmap/ic_launcher_round"
       android:allowBackup="false"
       android:theme="@style/AppTheme"
+      android:largeHeap="true"
       android:supportsRtl="true">
       <activity
         android:name=".MainActivity"
@@ -25,4 +26,11 @@
         </intent-filter>
       </activity>
     </application>
+
+    <queries>
+      <intent>
+        <action android:name="android.intent.action.VIEW" />
+        <data android:mimeType="application/pdf" />
+      </intent>
+    </queries>
 </manifest>

@@ -24,16 +24,24 @@ import DataTable2 from './screen/DataTable2';
 import RemunerasiScreen from './screen/BottomNavBar/Home/Persetujuan/Renumerasi.js';
 import PencapaianKerja from './screen/PencapaianKerja.js';
 import Remunerasi from './screen/Remunerasi.js';
-import KontrakKerja from './screen/KontrakKerja.js';
+// import KontrakKerja from './screen/KontrakKerja.js';
 import HistoryPresensi from './screen/HistoryPresensi';
 import ProfileScreen from './screen/BottomNavBar/Profile/ProfileScreen';
 import ProfileEdit from './screen/BottomNavBar/Profile/ProfileEdit';
 import Password from './screen/BottomNavBar/Profile/Password';
 import PersetujuanRealisasi from './screen/PersetujuanRealisasi';
 import Persetujuan from './screen/Persetujuan.js';
+<<<<<<< HEAD
 import Bacascreen from './screen/Bacascreen.js';
 import Bacakontrak from './screen/Bacakontrak.js';
 import LaporanKontrakKerja from './screen/BottomNavBar/Menu/Laporan/KontrakKerja';
+=======
+import KontrakKerja from './screen/BottomNavBar/Menu/Laporan/KontrakKerja';
+// import Bacascreen from './screen/Bacascreen.js';
+// import Bacakontrak from './screen/Bacakontrak.js';
+import LaporanKontrakKerja from './screen/BottomNavBar/Menu/Laporan/KontrakKerja';
+import RealisasiNext from './screen/RealisasiNext.js';
+>>>>>>> adcfbef71880a29ff62a11c5e7240d51574db534
 
 // Bottom Tab Navigator
 const Tab = createBottomTabNavigator();
@@ -131,7 +139,11 @@ function HomeStack() {
         component={KontrakKerja}
         options={{headerShown: false}}
       />
+<<<<<<< HEAD
       <Stack.Screen
+=======
+      {/* <Stack.Screen
+>>>>>>> adcfbef71880a29ff62a11c5e7240d51574db534
         name="Bacascreen"
         component={Bacascreen}
         options={{headerShown: false}}
@@ -140,12 +152,29 @@ function HomeStack() {
         name="Bacakontrak"
         component={Bacakontrak}
         options={{headerShown: false}}
+<<<<<<< HEAD
       />
+=======
+      /> */}
+>>>>>>> adcfbef71880a29ff62a11c5e7240d51574db534
       <Stack.Screen
         name="Remunerasi"
         component={Remunerasi}
         options={{headerShown: false}}
       />
+<<<<<<< HEAD
+=======
+      <Stack.Screen
+        name="PencapaianKerja"
+        component={PencapaianKerja}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="RealisasiNext"
+        component={RealisasiNext}
+        options={{headerShown: false}}
+      />
+>>>>>>> adcfbef71880a29ff62a11c5e7240d51574db534
     </Stack.Navigator>
   );
 }

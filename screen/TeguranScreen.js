@@ -10,6 +10,7 @@ import {
   Image,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+<<<<<<< HEAD
 import axios from 'axios';
 import { Dropdown } from 'react-native-element-dropdown';
 import useApiClient from '../src/api/apiClient';
@@ -59,6 +60,58 @@ export default function Teguranscreen({ navigation }) {
       case 'DIBACA':
         return styles.approvedStatus;
       case 'BELUM DIBACA':
+=======
+
+export default function User() {
+  const staticData = [
+    {
+      id: 1,
+      uuid: 'abc123',
+      user: {
+        name: 'John Doe'
+      },
+      status: 'Sudah',
+      tanggal: '2024-01-15',
+      jenis_teguran: 'tidak apel',
+      potongan: '1%',
+      file: 'https://example.com/file1.pdf'
+    },
+  ];
+
+  const [data, setData] = useState(staticData);
+  const [expandedId, setExpandedId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(2);
+
+  const handleApprove = (uuid) => {
+    Alert.alert('Konfirmasi', 'Apakah Anda yakin ingin mengonfirmasi?', [
+      {text: 'Batal', style: 'cancel'},
+      {
+        text: 'Ya',
+        onPress: () => {
+          const newData = data.map(item => {
+            if (item.uuid === uuid) {
+              return {...item, status: 'DISETUJUI'};
+            }
+            return item;
+          });
+          setData(newData);
+          Alert.alert('Berhasil', 'Konfirmasi berhasil.');
+        },
+      },
+    ]);
+  };
+
+  const toggleExpand = id => {
+    setExpandedId(expandedId === id ? null : id);
+  };
+
+  const getStatusStyle = status => {
+    switch (status?.toUpperCase()) {
+      case 'DISETUJUI':
+        return styles.approvedStatus;
+      case 'DITOLAK':
+>>>>>>> adcfbef71880a29ff62a11c5e7240d51574db534
         return styles.rejectedStatus;
       case 'MENUNGGU':
         return styles.pendingStatus;
@@ -67,6 +120,7 @@ export default function Teguranscreen({ navigation }) {
     }
   };
 
+<<<<<<< HEAD
   const display = [
     { label: '5', value: 5 },
     { label: '10', value: 10 },
@@ -115,6 +169,18 @@ export default function Teguranscreen({ navigation }) {
   );
 
   const renderItem = ({ item, index }) => {
+=======
+  const TableHeader = () => (
+    <View style={styles.tableHeader}>
+      <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
+      <Text style={[styles.headerCell, styles.nameCell]}>Name</Text>
+      <Text style={[styles.headerCell, styles.tableStatusCell]}>Dibaca</Text>
+      <View style={styles.expandIconCell} />
+    </View>
+  );
+
+  const renderItem = ({item, index}) => {
+>>>>>>> adcfbef71880a29ff62a11c5e7240d51574db534
     const isExpanded = expandedId === item.id;
 
     return (
@@ -134,9 +200,15 @@ export default function Teguranscreen({ navigation }) {
               style={[
                 styles.tableCell,
                 styles.statusCell,
+<<<<<<< HEAD
                 getStatusStyle(item.dibaca),
               ]}>
               {item.dibaca || '-'}
+=======
+                getStatusStyle(item.status),
+              ]}>
+              {item.status || '-'}
+>>>>>>> adcfbef71880a29ff62a11c5e7240d51574db534
             </Text>
           </View>
           <View style={styles.expandIconCell}>
@@ -150,19 +222,39 @@ export default function Teguranscreen({ navigation }) {
         {isExpanded && (
           <View style={styles.expandedContent}>
             <Text style={styles.expandedText}>
+<<<<<<< HEAD
               Nama: {item.user?.name || '-'}
             </Text>
             <Text style={styles.expandedText}>
               Jenis teguran: {item.jenis || '-'}
+=======
+              Tanggal: {item.tanggal || '-'}
+            </Text>
+            <Text style={styles.expandedText}>
+              Jenis teguran: {item.jenis_teguran || '-'}
+>>>>>>> adcfbef71880a29ff62a11c5e7240d51574db534
             </Text>
             <Text style={styles.expandedText}>
               Potongan: {item.potongan || '-'}
             </Text>
+<<<<<<< HEAD
             <Text style={styles.expandedText}>
               Tanggal pelanggaran: {item.tgl_pelanggaran || '-'}
             </Text>
             <View style={styles.actionContainer}>
               <TouchableOpacity
+=======
+            <View style={styles.filetext}>
+              <Text>File:</Text>
+              <Text
+                style={styles.expandedLinkText}
+                onPress={() => Linking.openURL(item.file)}>
+                File Absensi
+              </Text>
+            </View>
+            <View style={styles.actionContainer}>
+              <TouchableOpacity 
+>>>>>>> adcfbef71880a29ff62a11c5e7240d51574db534
                 style={styles.approveButton}
                 onPress={() => handleApprove(item.uuid)}>
                 <Ionicons name="eye" size={20} color="white" />
