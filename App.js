@@ -15,8 +15,8 @@ import LoginScreen from './screen/auth/login/Login';
 // Import screens
 import Home from './screen/admin/home/home';
 import TeguranScreen from './screen/admin/user/teguran/Teguran';
-import Tegurantambah from './screen/admin/user/teguran/Tambahtegur';
-import Teguranedit from './screen/admin/user/teguran/Edittegur';
+import Tambahtegur from './screen/admin/user/teguran/Tambahtegur';
+import Edittegur from './screen/admin/user/teguran/Edittegur';
 import KontrakScreen from './screen/admin/kontrak/konfirm/Konfirm';
 import RealisasiScreen from './screen/admin/realisasi/konfirm/Konfirm';
 import PerubahanPresensiScreen from './screen/admin/absensi/Perubahan';
@@ -25,8 +25,6 @@ import Presensi from './screen/admin/presensi/Presensi';
 import Presensiedit from './screen/admin/presensi/Presensiedit';
 import Presensiexcel from './screen/admin/presensi/Presensiexcel';
 import UserScreen from './screen/admin/user/User';
-import Presensiedit from './screen/admin/presensi/Presensiedit';
-import Presensiexcel from './screen/admin/presensi/Presensiexcel';
 
 //Menu Button Screens
 import SuratTugasScreen from './screen/admin/surattugas/Surat_tugas';
@@ -141,7 +139,6 @@ function RootStack() {
 function HomeStack() {
   const {setCurrentScreen} = useNavigationContext();
   return (
-    <AuthProvider>
     <Stack.Navigator
       screenListeners={{
         state: e => {
@@ -166,13 +163,18 @@ function HomeStack() {
       />
       <Stack.Screen
         options={{headerShown: false}}
-        name="Edittegur"
-        component={Teguranedit}
+        name="Tambahtegur"
+        component={Tambahtegur}
       />
       <Stack.Screen
         options={{headerShown: false}}
-        name="Tambahtegur"
-        component={Tegurantambah}
+        name="Edittegur"
+        component={Edittegur}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="UserScreen"
+        component={UserScreen}
       />
       <Stack.Screen
         options={{headerShown: false}}
@@ -271,8 +273,28 @@ function HomeStack() {
       />
       <Stack.Screen
         options={{headerShown: false}}
+        name="TambahUangMakan"
+        component={TambahUangMakan}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditUangMakan"
+        component={EditUangMakan}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
         name="Jabatan"
         component={JabatanScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditJabatan"
+        component={EditJabatan}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="TambahJabatan"
+        component={TambahJabatan}
       />
       <Stack.Screen
         options={{headerShown: false}}
@@ -281,8 +303,28 @@ function HomeStack() {
       />
       <Stack.Screen
         options={{headerShown: false}}
+        name="TambahUnitKerja"
+        component={TambahUnitKerja}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditUnitKerja"
+        component={EditUnitKerja}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
         name="Pangkat"
         component={PangkatScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditPangkat"
+        component={EditPangkat}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="TambahPangkat"
+        component={TambahPangkat}
       />
       <Stack.Screen
         options={{headerShown: false}}
@@ -291,8 +333,28 @@ function HomeStack() {
       />
       <Stack.Screen
         options={{headerShown: false}}
+        name="TambahSatuan"
+        component={TambahSatuan}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditSatuan"
+        component={EditSatuan}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
         name="Uraian"
         component={UraianScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="TambahUraian"
+        component={TambahUraian}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditUraian"
+        component={EditUraian}
       />
       <Stack.Screen
         options={{headerShown: false}}
@@ -301,8 +363,38 @@ function HomeStack() {
       />
       <Stack.Screen
         options={{headerShown: false}}
+        name="TambahTahun"
+        component={TambahTahun}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditTahun"
+        component={EditTahun}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="TambahBulan"
+        component={TambahBulan}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditBulan"
+        component={EditBulan}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
         name="DewanPengawas"
         component={DewanPengawasScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="TambahDewas"
+        component={TambahDewas}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditDewas"
+        component={EditDewas}
       />
       <Stack.Screen
         options={{headerShown: false}}
@@ -316,9 +408,30 @@ function HomeStack() {
       />
       <Stack.Screen
         options={{headerShown: false}}
+        name="EditKegiatan"
+        component={EditKegiatan}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="TambahKegiatan"
+        component={TambahKegiatan}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
         name="JenisPegawai"
         component={JenisPegawaiScreen}
       />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditJenisPegawai"
+        component={EditJenisPegawai}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="TambahJenisPegawai"
+        component={TambahJenisPegawai}
+      />
+
       <Stack.Screen
         options={{headerShown: false}}
         name="LokasiAbsensi"
@@ -326,8 +439,23 @@ function HomeStack() {
       />
       <Stack.Screen
         options={{headerShown: false}}
+        name="TambahLokasiAbsensi"
+        component={TambahLokasiAbsensi}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditLokasiAbsensi"
+        component={EditLokasiAbsensi}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
         name="NoWa"
         component={NoWaScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditNoWhatsapp"
+        component={EditNoWhatsapp}
       />
       <Stack.Screen
         options={{headerShown: false}}
@@ -341,6 +469,41 @@ function HomeStack() {
       />
       <Stack.Screen
         options={{headerShown: false}}
+        name="EditRewardPunishment"
+        component={EditRewardPunishment}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="TambahRewardPunishment"
+        component={TambahRewardPunishment}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="Reward"
+        component={Reward}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="TambahReward"
+        component={TambahReward}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditReward"
+        component={EditReward}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="TambahPunishment"
+        component={TambahPunishment}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditPunishment"
+        component={EditPunishment}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
         name="DeadlineKinerja"
         component={DeadlineKinerjaScreen}
       />
@@ -348,6 +511,16 @@ function HomeStack() {
         options={{headerShown: false}}
         name="MasterPTKP"
         component={MasterPTKPScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="TambahPajakPtkp"
+        component={TambahPajakPtkp}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditPajakPtkp"
+        component={EditPajakPtkp}
       />
       <Stack.Screen
         options={{headerShown: false}}
@@ -409,7 +582,6 @@ function HomeStack() {
         name="Presensiexcel"
         component={Presensiexcel}
       />
-
       <Stack.Screen
         options={{headerShown: false}}
         name="EditPa"
@@ -431,9 +603,9 @@ function HomeStack() {
         component={Tambahmesin}
       />
     </Stack.Navigator>
-</AuthProvider>
   );
 }
+
 function ProfileStack() {
   return (
     <Stack.Navigator screenOptions={{headerShown: false}}>

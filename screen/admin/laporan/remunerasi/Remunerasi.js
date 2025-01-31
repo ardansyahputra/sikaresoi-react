@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
-import { Linking } from 'react-native';
-import useApiClient from '../../../../src/api/apiClient';
+import RNFS from 'react-native-fs';
+import {APP_URL} from '@env';import useApiClient from '../../../../src/api/apiClient';
 
 export default function TugasTambahan({ navigation }) {
   const [selectedMonth, setSelectedMonth] = useState(null);
@@ -81,11 +81,31 @@ export default function TugasTambahan({ navigation }) {
       return;
     }
 
-    const downloadUrl = `http://192.168.60.163:8000/report/admin/remunerasi/${selectedMonth}/${selectedYear}?p=${taxReduction}&kiri=${leftSignature}&kanan=${rightSignature}&tipe=${selectedType}`;
-    Linking.openURL(downloadUrl).catch(() => {
-      setModalMessage('Gagal membuka URL!');
-      setIsModalVisible(true);
-    });
+    // URL API untuk file Excel
+    const downloadUrl = `${APP_URL}/report/admin/remunerasi/${selectedMonth}/${selectedYear}?p=${taxReduction}&kiri=${leftSignature}&kanan=${rightSignature}&tipe=${selectedType}`;
+
+    // Path penyimpanan file Excel pada perangkat
+    const filePath = `${RNFS.DownloadDirectoryPath}/Laporan_Remun${selectedMonth}_${selectedYear}.xlsx`;
+
+    try {
+      const download = RNFS.downloadFile({
+        fromUrl: downloadUrl,
+        toFile: filePath,
+      });
+
+      const result = await download.promise;
+
+      if (result.statusCode === 200) {
+        setModalMessage(`Laporan berhasil diunduh cuy `)
+      } else {
+        setModalMessage('Gagal mengunduh laporan. Coba lagi.');
+      }
+    } catch (error) {
+      console.error(error);
+      setModalMessage('Terjadi kesalahan saat mengunduh file.');
+    }
+
+    setIsModalVisible(true);
   };
 
   return (

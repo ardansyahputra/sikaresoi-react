@@ -4,7 +4,7 @@ import { Dropdown } from 'react-native-element-dropdown';
 import DatePicker from 'react-native-modern-datepicker';
 import useApiClient from '../../../../src/api/apiClient';
 
-const TambahPa = ({ route, navigation }) => {
+const Edittegur = ({ route, navigation }) => {
   const [user, setUser] = useState(null);  // user object is now null initially
   const [signatures, setSignatures] = useState([]);
   const [jenis, setJenis] = useState('');
@@ -275,4 +275,4 @@ const styles = StyleSheet.create({
     },
   });
 
-export default TambahPa;
+export default Edittegur;

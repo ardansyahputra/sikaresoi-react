@@ -30,29 +30,20 @@ export default function UangMakan() {
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDisplay, setSelectedDisplay] = useState(null);
-  
+
+  const [selectedGolongan, setSelectedGolongan] = useState('');
+  const [selectedNominal, setSelectedNominal] = useState('');
+
+  const apiClient = useApiClient();
+
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
   }, [currentPage, selectedDisplay]);
-  const fetchData = async (page, display, type) => {
+
+  const fetchData = async (page, display) => {
     try {
       setLoading(true);
-      let url = '';
-      switch (type) {
-        case 'pulang_awal':
-          url = '/pemotongan_pulang_awal/index';
-          break;
-        case 'terlambat':
-          url = '/pemotongan_terlambat/index';
-          break;
-        case 'tidak_hadir':
-          url = '/pemotongan_tidak_hadir/index';
-          break;
-        default:
-          url = '/pemotongan_pulang_awal/index';
-          break;
-      }
-      const response = await apiClient.post(url, {
+      const response = await apiClient.post('/pemotongan_pulang_awal/index', {
         page,
         display,
       });
@@ -207,6 +198,7 @@ export default function UangMakan() {
             )}
           />
         </View>
+        {/* Search Bar */}
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchBar}
@@ -219,7 +211,9 @@ export default function UangMakan() {
       <View style={styles.tableHeader}>
         <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
         <Text style={[styles.headerCell, styles.nameCell]}>Batas Bawah</Text>
-        <Text style={[styles.headerCell, styles.tableStatusCell]}>Batas Atas</Text>
+        <Text style={[styles.headerCell, styles.tableStatusCell]}>
+          Batas Atas
+        </Text>
         <Text style={[styles.headerCell, styles.discountCell]}>Potongan</Text>
         <View style={styles.expandIconCell} />
       </View>
@@ -228,7 +222,7 @@ export default function UangMakan() {
 
   const renderItem = ({item, index}) => {
     const isExpanded = expandedId === item.id;
-  
+
     return (
       <View style={styles.tableRow}>
         <TouchableOpacity
@@ -273,7 +267,7 @@ export default function UangMakan() {
                 <FontAwesome name="pencil" size={20} color="white" />
                 <Text style={styles.customFont}>Edit</Text>
               </TouchableOpacity>
-  
+
               <TouchableOpacity
                 style={styles.declineButton}
                 onPress={() => handleHapus(item.uuid)}>
@@ -286,63 +280,65 @@ export default function UangMakan() {
       </View>
     );
   };
-  
 
   return (
-    <View style={styles.tableRow}>
-      <TouchableOpacity
-        style={styles.rowHeader}
-        onPress={() => toggleExpand(item.id)}>
-        <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
-        <Text
-          style={[styles.tableCell, styles.nameCell]}
-          numberOfLines={1}
-          ellipsizeMode="tail">
-          {item.batas_bawah || '-'}
-        </Text>
-        <Text style={[styles.tableCell, styles.statusCell]}>
-          {item.batas_atas || '-'}
-        </Text>
-        <Text style={[styles.tableCell, styles.discountCell]}>
-          {item.potongan || '-'}
-        </Text>
-        <View style={styles.expandIconCell}>
-          <Ionicons
-            name={isExpanded ? 'chevron-up' : 'chevron-down'}
-            size={20}
-            color="#333"
-          />
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}></View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
+          <TouchableOpacity style={styles.iconWrapper}>
+            <Ionicons name="person-circle-outline" size={24} color="#333" />
+          </TouchableOpacity>
         </View>
-      </TouchableOpacity>
-      {isExpanded && (
-        <View style={styles.expandedContent}>
-          <Text style={styles.expandedText}>
-            Batas Bawah: {item.batas_bawah || '-'}
-          </Text>
-          <Text style={styles.expandedText}>
-            Batas Atas: {item.batas_atas || '-'}
-          </Text>
-          <Text style={styles.expandedText}>
-            Potongan: {item.potongan || '-'}
-          </Text>
-          <View style={styles.actionContainer}>
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => handleEdit(item.uuid, navigation)}>
-              <FontAwesome name="pencil" size={20} color="white" />
-              <Text style={styles.customFont}>Edit</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.declineButton}
-              onPress={() => handleHapus(item.uuid)}>
-              <Ionicons name="trash" size={20} color="white" />
-              <Text style={styles.customFont}>Hapus</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+      </View>
+      {/* Loading Indicator */}
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <FlatList
+          ListHeaderComponent={TableHeader}
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={item => item.id.toString()}
+          contentContainerStyle={styles.card}
+          ListFooterComponent={
+            <View>
+              <Text style={styles.pageInfo}>
+                Showing page {currentPage} of {lastPage}
+              </Text>
+              <View style={styles.paginationContainer}>
+                <View style={styles.paginationButtons}>
+                  <TouchableOpacity
+                    style={[
+                      styles.pageButton,
+                      currentPage === 1 && styles.disabledButton,
+                    ]}
+                    disabled={currentPage === 1}
+                    onPress={() =>
+                      setCurrentPage(prev => Math.max(prev - 1, 1))
+                    }>
+                    <Text style={styles.pageButtonText}>Previous</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.pageButton,
+                      currentPage === lastPage && styles.disabledButton,
+                    ]}
+                    disabled={currentPage === lastPage}
+                    onPress={() =>
+                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
+                    }>
+                    <Text style={styles.pageButtonText}>Next</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          }
+        />
       )}
-    
+
       {/* Hapus Uang Makan Modal */}
       <Modal
         visible={isHapusModalVisible}

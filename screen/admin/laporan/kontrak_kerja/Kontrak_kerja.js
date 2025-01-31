@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
-import { Linking } from 'react-native';
+import RNFS from 'react-native-fs';
+import {APP_URL} from '@env';
 import useApiClient from '../../../../src/api/apiClient'; // Custom API hook for making requests
 
 export default function KontrakKerja({ navigation }) {
@@ -73,18 +74,50 @@ const yearData = [
 
 
   // Handle downloading the report
-  const handleDownload = async () => {
-    if (!selectedUser || !selectedPosition || !selectedYear) {
-      setModalMessage('Harap lengkapi semua pilihan!');
+const handleDownload = async () => {
+    if (!selectedYear || !selectedUser || !selectedPosition) {
+      setModalMessage('Harap pilih bulan dan tahun untuk laporan!');
       setIsModalVisible(true);
       return;
     }
-
-    const reportUrl = `http://192.168.60.163:8000/report/kontrak_kinerja/${selectedPosition}?type=stream&tahun_id=${selectedYear}`;
-    Linking.openURL(reportUrl).catch(() => {
-      setModalMessage('Gagal membuka URL!');
-      setIsModalVisible(true);
-    });
+  
+    // URL API untuk file PDF
+    const downloadUrl = `${APP_URL}/report/kontrak_kinerja/${selectedPosition}?type=stream&tahun_id=${selectedYear}`;
+  
+    // Path penyimpanan file PDF pada perangkat
+    const filePath = `${RNFS.DownloadDirectoryPath}/kontrak_kerja${selectedUser}_${selectedYear}.pdf`;
+  
+    try {
+      // Fetch the file to check its content type
+      const response = await apiClient.get(downloadUrl, { responseType: 'blob' });
+  
+      // Check if the response is not a PDF
+      const contentType = response.headers['content-type'];
+      if (!contentType || !contentType.includes('application/pdf')) {
+        setModalMessage('Data kosong atau laporan tidak ditemukan.');
+        setIsModalVisible(true);
+        return;
+      }
+  
+      // Proceed with downloading if it is a PDF
+      const download = RNFS.downloadFile({
+        fromUrl: downloadUrl,
+        toFile: filePath,
+      });
+  
+      const result = await download.promise;
+  
+      if (result.statusCode === 200) {
+        setModalMessage(`Laporan berhasil diunduh`)
+      } else {
+        setModalMessage('Gagal mengunduh laporan. Coba lagi.');
+      }
+    } catch (error) {
+      console.error(error);
+      setModalMessage('Terjadi kesalahan saat mengunduh file.');
+    }
+  
+    setIsModalVisible(true);
   };
 
   return (

@@ -16,7 +16,6 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../src/api/apiClient';
@@ -28,7 +27,6 @@ export default function Jabatan() {
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDisplay, setSelectedDisplay] = useState(null);
   const [tambahModalVisible, setTambahModalVisible] = useState(false); // Tambahkan state ini
@@ -102,7 +100,6 @@ export default function Jabatan() {
             valueField="value"
             placeholder="10"
             value={selectedDisplay}
-            onChange={item => setSelectedDisplay(item.value)}
             onChange={item => setSelectedDisplay(item.value)}
             renderItem={item => (
               <Text style={[styles.dropdownItem, styles.customFont]}>

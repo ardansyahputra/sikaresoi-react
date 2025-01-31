@@ -14,7 +14,6 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../../../src/api/apiClient'; // Import useApiClient
-import useApiClient from '../../../src/api/apiClient'; // Import useApiClient
 
 export default function PerubahanPresensi() {
   const [data, setData] = useState([]);
@@ -27,18 +26,15 @@ export default function PerubahanPresensi() {
   const [declineReason, setDeclineReason] = useState('');
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedDisplay, setSelectedDisplay] = useState(null);
 
   const apiClient = useApiClient(); // Using useApiClient hook
 
-  const apiClient = useApiClient(); // Using useApiClient hook
 
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
   }, [currentPage, selectedDisplay]);
 
-  const fetchData = async (page, per) => {
   const fetchData = async (page, per) => {
     try {
       setLoading(true);

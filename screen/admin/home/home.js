@@ -183,7 +183,11 @@ const Home = () => {
             {/* Circular Buttons */}
             {[
               {
-                title: '147 User',
+                title: `${
+                  usersNotSubmittedRealization
+                    ? usersNotSubmittedRealization.total
+                    : 0
+                } User`,
                 subtitle: 'Belum Absen',
                 icon: 'person',
                 navigateTo: 'Presensi', // Menambahkan navigateTo

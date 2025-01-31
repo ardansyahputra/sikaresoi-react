@@ -1,38 +1,37 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
-import { Dropdown } from 'react-native-element-dropdown';
-import { Linking } from 'react-native';
+import React, {useState} from 'react';
+import {View, Text, TouchableOpacity, StyleSheet, Modal} from 'react-native';
+import {Dropdown} from 'react-native-element-dropdown';
+import RNFS from 'react-native-fs';
 import {APP_URL} from '@env';
 
-export default function TugasTambahan({ navigation }) {
+export default function TugasTambahan({navigation}) {
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [selectedYear, setSelectedYear] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
 
-
   const monthData = [
-    { label: 'Januari', value: 1 },
-    { label: 'Februari', value: 2 },
-    { label: 'Maret', value: 3 },
-    { label: 'April', value: 4 },
-    { label: 'Mei', value: 5 },
-    { label: 'Juni', value: 6 },
-    { label: 'Juli', value: 7 },
-    { label: 'Agustus', value: 8 },
-    { label: 'September', value: 9 },
-    { label: 'Oktober', value: 10 },
-    { label: 'November', value: 11 },
-    { label: 'Desember', value: 12 },
+    {label: 'Januari', value: 1},
+    {label: 'Februari', value: 2},
+    {label: 'Maret', value: 3},
+    {label: 'April', value: 4},
+    {label: 'Mei', value: 5},
+    {label: 'Juni', value: 6},
+    {label: 'Juli', value: 7},
+    {label: 'Agustus', value: 8},
+    {label: 'September', value: 9},
+    {label: 'Oktober', value: 10},
+    {label: 'November', value: 11},
+    {label: 'Desember', value: 12},
   ];
 
   const yearData = [
-    { label: '2020', value: '2020' },
-    { label: '2021', value: '2021' },
-    { label: '2022', value: '2022' },
-    { label: '2023', value: '2023' },
-    { label: '2024', value: '2024' },
-    { label: '2025', value: '2025' },
+    {label: '2020', value: '2020'},
+    {label: '2021', value: '2021'},
+    {label: '2022', value: '2022'},
+    {label: '2023', value: '2023'},
+    {label: '2024', value: '2024'},
+    {label: '2025', value: '2025'},
   ];
 
   const handleDownload = async () => {
@@ -42,11 +41,31 @@ export default function TugasTambahan({ navigation }) {
       return;
     }
 
+    // URL API untuk file Excel
     const downloadUrl = `${APP_URL}/report/admin/rekapitulasi/${selectedMonth}/${selectedYear}`;
-    Linking.openURL(downloadUrl).catch(() => {
-      setModalMessage('Gagal membuka URL!');
-      setIsModalVisible(true);
-    });
+
+    // Path penyimpanan file Excel pada perangkat
+    const filePath = `${RNFS.DownloadDirectoryPath}/Laporan_${selectedMonth}_${selectedYear}.xlsx`;
+
+    try {
+      const download = RNFS.downloadFile({
+        fromUrl: downloadUrl,
+        toFile: filePath,
+      });
+
+      const result = await download.promise;
+
+      if (result.statusCode === 200) {
+        setModalMessage(`Laporan berhasil diunduh!\nTersimpan di: ${filePath}`);
+      } else {
+        setModalMessage('Gagal mengunduh laporan. Coba lagi.');
+      }
+    } catch (error) {
+      console.error(error);
+      setModalMessage('Terjadi kesalahan saat mengunduh file.');
+    }
+
+    setIsModalVisible(true);
   };
 
   return (
@@ -58,11 +77,13 @@ export default function TugasTambahan({ navigation }) {
       </View>
 
       <View style={styles.cardContainer}>
-                    <View style={styles.cardHeader}>
-                      <Text style={styles.cardTitle}> Report Rekapitulasi Capaian Kinerja
-                      </Text>
-                    </View>
-                    <View style={styles.cardDivider}></View>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>
+            {' '}
+            Report Rekapitulasi Capaian Kinerja
+          </Text>
+        </View>
+        <View style={styles.cardDivider}></View>
         <Text style={styles.label}>Pilih Bulan *</Text>
         <Dropdown
           style={styles.dropdown}
@@ -85,7 +106,9 @@ export default function TugasTambahan({ navigation }) {
           onChange={item => setSelectedYear(item.value)}
         />
 
-        <TouchableOpacity style={styles.downloadButton} onPress={handleDownload}>
+        <TouchableOpacity
+          style={styles.downloadButton}
+          onPress={handleDownload}>
           <Text style={styles.buttonText}>Download Laporan</Text>
         </TouchableOpacity>
       </View>
@@ -111,7 +134,7 @@ export default function TugasTambahan({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#E7E9F1', paddingTop: 20 },
+  container: {flex: 1, backgroundColor: '#E7E9F1', paddingTop: 20},
   header: {
     backgroundColor: '#fff',
     paddingHorizontal: 16,
@@ -128,7 +151,7 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
   },
-  headerTitle: { textAlign: 'center', fontSize: 20, fontWeight: 'bold' },
+  headerTitle: {textAlign: 'center', fontSize: 20, fontWeight: 'bold'},
   cardContainer: {
     backgroundColor: '#FFFF',
     paddingVertical: 20,
@@ -140,7 +163,7 @@ const styles = StyleSheet.create({
     marginTop: 60,
     width: 387,
   },
-  label: { fontSize: 16, marginBottom: 5, color: '#333' },
+  label: {fontSize: 16, marginBottom: 5, color: '#333'},
   dropdown: {
     borderWidth: 1,
     borderColor: '#CCC',
@@ -156,7 +179,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 20,
   },
-  buttonText: { color: '#FFF', fontWeight: 'bold' },
+  buttonText: {color: '#FFF', fontWeight: 'bold'},
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
@@ -169,7 +192,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
   },
-  modalMessage: { fontSize: 16, color: '#333' },
+  modalMessage: {fontSize: 16, color: '#333'},
   closeButton: {
     backgroundColor: '#28c4ac',
     padding: 10,
@@ -181,12 +204,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#ddd',
     marginVertical: 10,
   },
-  cardHeader: { marginBottom: 15 },
+  cardHeader: {marginBottom: 15},
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginLeft: 5,
     marginBottom: -5,
   },
-  closeButtonText: { color: '#FFF', fontWeight: 'bold' },
+  closeButtonText: {color: '#FFF', fontWeight: 'bold'},
 });
