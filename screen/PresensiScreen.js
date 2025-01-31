@@ -3,143 +3,122 @@ import {
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  Animated,
   ScrollView,
   Image,
+  StyleSheet,
+  Animated,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import LinearGradient from 'react-native-linear-gradient';
-import { useFocusEffect } from '@react-navigation/native';
+import moment from 'moment-timezone';
 
 const PresensiScreen = ({ navigation }) => {
-  const [presenceStatus, setPresenceStatus] = useState(null); // Status kehadiran
-  const [keluarTime, setKeluarTime] = useState(null); // Waktu keluar
-  const [animatedValue] = useState(new Animated.Value(0)); // Animasi lingkaran
-  const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString()); // Waktu saat ini
+  const [currentTime, setCurrentTime] = useState(moment().tz("Asia/Jakarta").format('HH:mm:ss'));
+  const [presenceStatus, setPresenceStatus] = useState(null);
+  const [circleColor, setCircleColor] = useState('#d3d3d3');
+  const [textColor, setTextColor] = useState('#4caf50');
+  const [hadirTime, setHadirTime] = useState(null);
+  const [keluarTime, setKeluarTime] = useState(null);
+  const animatedValue = useState(new Animated.Value(0))[0];
 
-  // Simpan data ketika halaman ini aktif (focus)
-  useFocusEffect(
-    React.useCallback(() => {
-      console.log("Halaman Presensi Dipanggil Kembali");
-      return () => {
-        console.log("Halaman Presensi Ditinggalkan");
-      };
-    }, [])
-  );
-
-  // Animasi lingkaran saat status berubah
-  const handlePresence = (status) => {
-    setPresenceStatus(status);
-    Animated.timing(animatedValue, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start(() => animatedValue.setValue(0));
-  };
-
-  // Menangani waktu keluar
-  const handleKeluar = () => {
-    const keluarTime = new Date().toLocaleTimeString();
-    setKeluarTime(keluarTime);
-  };
-
-  // Update waktu setiap detik
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentTime(new Date().toLocaleTimeString());
+      setCurrentTime(moment().tz("Asia/Jakarta").format('HH:mm:ss'));
     }, 1000);
-    return () => clearInterval(interval);
+
+    Animated.loop(
+      Animated.timing(animatedValue, {
+        toValue: 1,
+        duration: 2000,
+        useNativeDriver: true,
+      })
+    ).start();
+
+    return () => {
+      clearInterval(interval);
+      animatedValue.stopAnimation();
+    };
   }, []);
 
-  // Animasi scale untuk lingkaran
-  const animatedScale = animatedValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 1.2],
-  });
+  const handlePresence = () => {
+    setPresenceStatus('HADIR');
+    setCircleColor('#4caf50');
+    setTextColor('#4caf50');
+    setHadirTime(moment().tz("Asia/Jakarta").format('HH:mm:ss'));
+  };
 
-  const progressInterpolation = animatedValue.interpolate({
+  const handleKeluar = () => {
+    setPresenceStatus('KELUAR');
+    setCircleColor('#f44336');
+    setTextColor('#f44336');
+    setKeluarTime(moment().tz("Asia/Jakarta").format('HH:mm:ss'));
+  };
+
+  const rotation = animatedValue.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg'],
   });
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <LinearGradient
-      colors={['#fff', '#fff']} // Adjust colors to your preference
-      style={styles.header}
-    >
-        <View style={styles.headerContent}>
-          <Image
-            source={require('./assets/images/sikaresoi.png')} // Path gambar sesuai
-            style={styles.headerImage}
-          />
-          <Text style={styles.title}>Presensi Kehadiran</Text>
-        </View>
+      <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-      </LinearGradient>
+        <Image source={require('./assets/images/sikaresoi.png')} style={styles.headerImage} />
+      </View>
 
-      {/* Konten scrollable */}
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.dateContainer}>
-          <Icon name="calendar" size={20} color="#" style={{ marginRight: 8 }} />
-          <Text style={styles.detailText}>Tanggal: {new Date().toLocaleDateString()}</Text>
+          <View style={styles.dateSection}>
+            <Icon name="calendar" size={20} color="#4caf50" />
+            <Text style={styles.dateText}>{moment().tz("Asia/Jakarta").format('dddd, D MMMM YYYY')}</Text>
+          </View>
         </View>
 
-        {/* Lingkaran dengan animasi progress */}
-        <View style={styles.circleContainer}>
-          <Animated.View
-            style={[styles.progressCircle, { transform: [{ rotate: progressInterpolation }] }]}
-          />
-          <Animated.View
-            style={[styles.circle, { transform: [{ scale: animatedScale }] }]}>
-            <Text style={styles.temperature}>{presenceStatus}</Text>
-            <Text style={styles.timeText}>{currentTime}</Text>
-          </Animated.View>
+        <View style={styles.stopwatchContainer}>
+          <Animated.View style={[styles.animatedCircle, { transform: [{ rotate: rotation }], borderColor: circleColor }]} />
+          <Text style={styles.stopwatchLabel}>Presensi Kehadiran</Text>
+          <Text style={[styles.realtimeText, { color: textColor }]}>{currentTime}</Text>
         </View>
 
-        {/* Tombol untuk status kehadiran */}
+        <View style={styles.statusContainer}>
+          <Text style={styles.statusTitle}>Status Presensi</Text>
+          <View style={styles.statusContent}>
+            <View style={styles.statusRow}>
+              <Text style={styles.statusLabel}>Status:</Text>
+              <Text style={[styles.statusValue, presenceStatus === 'HADIR' ? styles.statusHadir : styles.statusKeluar]}>
+                {presenceStatus || 'BELUM HADIR'}
+              </Text>
+            </View>
+            {hadirTime && (
+              <View style={styles.statusRow}>
+                <Text style={styles.statusLabel}>Hadir pada:</Text>
+                <Text style={styles.statusValue}>{hadirTime}</Text>
+              </View>
+            )}
+            {keluarTime && (
+              <View style={styles.statusRow}>
+                <Text style={styles.statusLabel}>Keluar pada:</Text>
+                <Text style={styles.statusValue}>{keluarTime}</Text>
+              </View>
+            )}
+          </View>
+        </View>
+
         <View style={styles.buttonRow}>
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: '#178003' }]}
-            onPress={() => handlePresence('Hadir')}
-          >
-            <Icon name="checkmark-circle" size={32} color="#fff" />
+          <TouchableOpacity style={[styles.button, styles.hadirButton]} onPress={handlePresence}>
             <Text style={styles.buttonText}>Hadir</Text>
           </TouchableOpacity>
-
           <TouchableOpacity
-            style={[styles.button, { backgroundColor: '#f44336' }]}
+            style={[styles.button, styles.keluarButton]}
             onPress={handleKeluar}
+            disabled={!presenceStatus || presenceStatus === 'KELUAR'}
           >
-            <Icon name="exit" size={32} color="#fff" />
             <Text style={styles.buttonText}>Keluar</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Status dengan Waktu */}
-        <View style={styles.detailContainer}>
-          <Text style={styles.detailText}>Status: {presenceStatus}</Text>
-          {presenceStatus && (
-            <Text style={styles.statusText}>
-              Hadir pada jam: {currentTime}
-            </Text>
-          )}
-          {keluarTime && (
-            <Text style={styles.statusText}>
-              Keluar pada jam: {keluarTime}
-            </Text>
-          )}
-        </View>
-
-        {/* Tombol History */}
-        <TouchableOpacity
-          style={styles.historyButton}
-          onPress={() => navigation.navigate('HistoryPresensi')}
-        >
+        <TouchableOpacity style={styles.historyButton} onPress={() => navigation.navigate('HistoryPresensi')}>
           <Text style={styles.historyButtonText}>Lihat History Presensi</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -147,145 +126,163 @@ const PresensiScreen = ({ navigation }) => {
   );
 };
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fcfafa',
-
+    backgroundColor: '#f7f8fa',
   },
   header: {
     height: 100,
-    backgroundColor: '#4caf50',
+    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 15,
-    paddingTop: 10,
-    position: 'relative',
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    shadowOffset: 30,
   },
-  headerContent: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'column', // Susunan vertikal
+  backButton: {
+    position: 'absolute',
+    left: 15,
+    top: 40,
   },
   headerImage: {
     width: '45%',
     height: undefined,
     aspectRatio: 5,
-    marginRight: 190,
     resizeMode: 'contain',
-    alignSelf: 'center',
-    marginBottom: 10,
-    marginRight: 160,
-  },
-  backButton: {
-    position: 'absolute',
-    left: 10,
-    top: 40,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 20,
   },
   scrollContainer: {
     padding: 20,
-    paddingBottom: 100,
   },
   dateContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    padding: 15,
     backgroundColor: '#fff',
-    padding: 10,
     borderRadius: 10,
-    marginBottom: 40,
+    elevation: 2,
   },
-  detailText: {
+  dateSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  timeSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dateText: {
+    marginLeft: 10,
     fontSize: 16,
-    color: '#000',
-  },
-  circleContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  circle: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: '#e0f7fa',
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 5,
-  },
-  progressCircle: {
-    position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    borderWidth: 10,
-    borderColor: '#4caf50',
-    opacity: 0.5,
-  },
-  temperature: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#00796b',
+    color: '#333',
+    fontFamily: 'Poppins-SemiBold',
   },
   timeText: {
+    marginLeft: 10,
+    fontSize: 16,
+    color: '#555',
+  },
+  stopwatchContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+    position: 'relative',
+  },
+  animatedCircle: {
+    position: 'absolute',
+    width: 190,
+    height: 190,
+    borderRadius: 100,
+    borderWidth: 10, // Dipertebal dari 5 menjadi 10
+    opacity: 0.5,
+    marginTop: 45,
+  },
+  realtimeText: {
+    fontSize: 35,
+    marginTop: 90,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  statusContainer: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    marginBottom: 20,
+    elevation: 3,
+    marginTop: 70,
+    fontFamily: 'Poppins-Regular',
+  },
+  statusTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#00796b',
-    marginTop: 10,
+    marginBottom: 10,
+    color: '#333',
+    fontFamily: 'Poppins-SemiBold',
+  },
+  statusContent: {
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
+    paddingTop: 10,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  statusLabel: {
+    fontSize: 16,
+    color: '#555',
+    fontFamily: 'Poppins-Regular',
+  },
+  statusValue: {
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  statusHadir: {
+    color: '#4caf50',
+  },
+  statusKeluar: {
+    color: '#f44336',
   },
   buttonRow: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    width: '100%',
+    justifyContent: 'space-between',
     marginBottom: 20,
-    marginTop: 20,
   },
   button: {
     flex: 1,
-    backgroundColor: '#28a745',
-    padding: 5,
+    padding: 15,
     borderRadius: 10,
     alignItems: 'center',
     marginHorizontal: 5,
   },
+  hadirButton: {
+    backgroundColor: '#4caf50',
+  },
+  keluarButton: {
+    backgroundColor: '#f44336',
+  },
   buttonText: {
-    marginTop: 5,
-    fontSize: 16,
     color: '#fff',
-    fontWeight: 'bold',
-  },
-  detailContainer: {
-    alignItems: 'flex-start',
-    width: '100%',
-    padding: 15,
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
-    elevation: 5,
-  },
-  statusText: {
-    fontSize: 16,
-    color: '#555',
-    marginTop: 10,
+    fontSize: 17,
+    fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
   },
   historyButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#3b82f5',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
-    marginTop: 20,
   },
   historyButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
+    
+  },
+  stopwatchLabel: {
+    fontSize: 20,
+    color: '#555',
+    fontFamily: 'Poppins-SemiBold',
   },
 });
 

@@ -1,37 +1,67 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, FlatList } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import axios from 'axios';
+import { Dropdown } from 'react-native-element-dropdown';
+import AwesomeAlert from 'react-native-awesome-alerts';
+import { WebView } from 'react-native-webview';
 
 const KontrakKerja = () => {
   const [postData, setPostData] = useState({ tahun_id: '' });
-  const [showTable, setShowTable] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [listTahun, setListTahun] = useState([]);
+  const [pdfUrl, setPdfUrl] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [alertVisible, setAlertVisible] = useState(false);
 
-  // Daftar tahun statis
-  const listTahun = [
-    { id: 2020, tahun: '2020' },
-    { id: 2021, tahun: '2021' },
-    { id: 2022, tahun: '2022' },
-    { id: 2023, tahun: '2023' },
-    { id: 2024, tahun: '2024' },
-    { id: 2025, tahun: '2025' },
-  ];
+  // Bearer token
+  const token = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjIxNjo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM3NTk1Mjc1LCJleHAiOjE3Mzc2MDEzNzEsIm5iZiI6MTczNzU5Nzc3MSwianRpIjoidFZJcWVaemNPU3poQzhWOSIsInN1YiI6MjAsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.5OWVhHXNu5_Gl47GhFzADVl2YKeeoDei1uNlGQm1LVA'; // Ganti dengan token yang sesuai
 
-  const refreshData = () => {
-    setShowTable(false);
-    setTimeout(() => {
-      setShowTable(true); // Trigger re-render for table
-    }, 10);
-  };
+  useEffect(() => {
+    // Data tahun sebagai contoh
+    const tahunData = [
+      { id: 2020, tahun: '2020' },
+      { id: 2021, tahun: '2021' },
+      { id: 2022, tahun: '2022' },
+      { id: 2023, tahun: '2023' },
+      { id: 2024, tahun: '2024' },
+      { id: 2025, tahun: '2025' },
+    ];
+    setListTahun(tahunData);
+  }, []);
 
   const handleSelectTahun = (value) => {
     setPostData((prevData) => ({ ...prevData, tahun_id: value }));
-    setModalVisible(false);
-    refreshData();
+    setPdfUrl(''); // Reset PDF URL saat memilih tahun baru
+    if (value) {
+      getDataKontrakKerja(value);
+    }
   };
 
-  const getSelectedTahun = () => {
-    const selectedTahun = listTahun.find((tahun) => tahun.id === postData.tahun_id);
-    return selectedTahun ? selectedTahun.tahun : 'Pilih Tahun';
+  const getDataKontrakKerja = async (tahunId) => {
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        'http://192.168.60.216:8000/user/laporan/kontrak_kerja', // Ganti URL jika perlu
+        {
+          params: { tahun: tahunId },
+          headers: {
+            Authorization: token,
+          },
+        }
+      );
+
+      if (response.data && response.data.pdf_url) {
+        setPdfUrl(response.data.pdf_url);
+      } else {
+        throw new Error('PDF tidak ditemukan untuk tahun ini.');
+      }
+    } catch (error) {
+      console.error('Error:', error.response?.data || error.message);
+      setErrorMessage(error.response?.data?.message || 'Terjadi kesalahan saat memuat data.');
+      setAlertVisible(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -39,54 +69,44 @@ const KontrakKerja = () => {
       <View style={styles.card}>
         <View style={styles.cardBody}>
           <View style={styles.row}>
-            <Text style={styles.label}>Pilih Tahun <Text style={styles.required}>*</Text>:</Text>
-            <TouchableOpacity
-              style={styles.yearButton}
-              onPress={() => setModalVisible(true)}
-            >
-              <Text style={styles.yearText}>{getSelectedTahun()}</Text>
-            </TouchableOpacity>
+            <Text style={styles.label}>
+              Pilih Tahun <Text style={styles.required}>*</Text>:
+            </Text>
+            <Dropdown
+              data={listTahun}
+              labelField="tahun"
+              valueField="id"
+              value={postData.tahun_id}
+              onChange={(item) => handleSelectTahun(item.id)}
+              placeholder="-- PILIH TAHUN --"
+              style={styles.dropdown}
+            />
           </View>
 
-          {postData.tahun_id !== '' && (
-            <View style={styles.tableContainer}>
-              <Text style={styles.tableTitle}>Laporan Kontrak Kerja</Text>
-              {showTable ? (
-                <View style={styles.iframeContainer}>
-                  <Text>Data for tahun ID: {postData.tahun_id}</Text>
-                </View>
-              ) : (
-                <Text>Loading...</Text>
-              )}
-            </View>
+          {loading ? (
+            <Text style={styles.loadingText}>Memuat data...</Text>
+          ) : pdfUrl ? (
+            <WebView source={{ uri: pdfUrl }} style={styles.pdfView} />
+          ) : (
+            postData.tahun_id && <Text style={styles.noDataText}>Tidak ada data untuk ditampilkan.</Text>
           )}
         </View>
       </View>
 
-      {/* Modal for year selection */}
-      <Modal
-        visible={modalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <FlatList
-              data={listTahun}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.modalItem}
-                  onPress={() => handleSelectTahun(item.id)}
-                >
-                  <Text style={styles.modalItemText}>{item.tahun}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </View>
-      </Modal>
+      {/* AwesomeAlert */}
+      <AwesomeAlert
+        show={alertVisible}
+        showProgress={false}
+        title="Pemberitahuan"
+        message={errorMessage}
+        closeOnTouchOutside={true}
+        closeOnHardwareBackPress={false}
+        showCancelButton={false}
+        showConfirmButton={true}
+        confirmText="OK"
+        confirmButtonColor="#DD6B55"
+        onConfirmPressed={() => setAlertVisible(false)}
+      />
     </View>
   );
 };
@@ -117,53 +137,30 @@ const styles = StyleSheet.create({
   required: {
     color: 'red',
   },
-  yearButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
+  dropdown: {
+    marginTop: 10,
+    height: 50,
+    borderColor: '#E5E7EB',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    backgroundColor: '#FFF',
   },
-  yearText: {
-    color: '#4B5563',
-    fontWeight: '600',
-  },
-  tableContainer: {
+  loadingText: {
     marginTop: 20,
-  },
-  tableTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  iframeContainer: {
-    height: 300,
-    backgroundColor: '#E5E7EB',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 4,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 20,
-  },
-  modalItem: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  modalItemText: {
-    fontSize: 16,
     color: '#4B5563',
+    fontStyle: 'italic',
+  },
+  noDataText: {
+    marginTop: 20,
+    color: '#4B5563',
+    fontSize: 14,
+  },
+  pdfView: {
+    marginTop: 20,
+    height: 500,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
 });
 
