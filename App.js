@@ -24,7 +24,7 @@ import Laporan from './screen/admin/laporan/Laporan';
 import Presensi from './screen/admin/presensi/Presensi';
 import Presensiedit from './screen/admin/presensi/Presensiedit';
 import Presensiexcel from './screen/admin/presensi/Presensiexcel';
-import UserScreen from './screen/admin/user/User';
+import UserScreen from './screen/admin/user/user';
 
 //Menu Button Screens
 import SuratTugasScreen from './screen/admin/surattugas/Surat_tugas';
@@ -45,6 +45,7 @@ import RemunerasiScreen from './screen/admin/laporan/remunerasi/Remunerasi';
 import TunjanganTambahanScreen from './screen/admin/laporan/tunjangan_tambahan/Tunjangan_tambahan';
 
 //User
+import EditUserScreen from './screen/admin/user/Edituser';
 import UserGroupScreen from './screen/admin/master/user_group/User_group';
 import PersentaseKegiatanScreen from './screen/admin/master/persentase_kegiatan/Persentase_kegiatan';
 
@@ -91,6 +92,8 @@ import JenisPegawaiScreen from './screen/admin/master/jenis_pegawai/Jenis_pegawa
 import EditJenisPegawai from './screen/admin/master/jenis_pegawai/Edit';
 import TambahJenisPegawai from './screen/admin/master/jenis_pegawai/Tambah';
 import LokasiAbsensiScreen from './screen/admin/master/lokasi_absensi/Lokasi_absensi';
+import EditLokasiAbsensi from './screen/admin/master/lokasi_absensi/Edit';
+import TambahLokasiAbsensi from './screen/admin/master/lokasi_absensi/Tambah';
 import NoWaScreen from './screen/admin/master/nowa/Nowa';
 import EditNoWhatsapp from './screen/admin/master/nowa/Edit';
 import JenisAbsensiScreen from './screen/admin/master/jenis_absensi/Jenis_absensi';
@@ -121,8 +124,11 @@ import PetaJabatanScreen from './screen/admin/master/jabatan/Peta';
 import SettingScreen from './screen/admin/setting/setting';
 import VerifikasiSuratTugas from './screen/admin/surattugas/Persetujuan';
 import SettingPersentaseCapaianScreen from './screen/admin/setting_persentase_capaian/Setting_persentase_capaian';
-import EditLokasiAbsensi from './screen/admin/master/lokasi_absensi/Edit';
-import TambahLokasiAbsensi from './screen/admin/master/lokasi_absensi/Tambah';
+import EditPersentaseCapaian from './screen/admin/setting_persentase_capaian/Edit';
+import TambahPersentaseCapaian from './screen/admin/setting_persentase_capaian/Tambah';
+import SettingTugasTambahan from './screen/admin/setting_tugas_tambahan/Setting_tugas_tambahan';
+import EditSettingTugas from './screen/admin/setting_tugas_tambahan/Edit';
+import TambahSettingTugas from './screen/admin/setting_tugas_tambahan/Tambah';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -175,6 +181,11 @@ function HomeStack() {
         options={{headerShown: false}}
         name="UserScreen"
         component={UserScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="Edituser"
+        component={EditUserScreen}
       />
       <Stack.Screen
         options={{headerShown: false}}
@@ -569,6 +580,16 @@ function HomeStack() {
       />
       <Stack.Screen
         options={{headerShown: false}}
+        name="EditPersentaseCapaian"
+        component={EditPersentaseCapaian}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="TambahPersentaseCapaian"
+        component={TambahPersentaseCapaian}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
         name="Presensi"
         component={Presensi}
       />
@@ -601,6 +622,21 @@ function HomeStack() {
         options={{headerShown: false}}
         name="Tambahmesin"
         component={Tambahmesin}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="SettingTugasTambahan"
+        component={SettingTugasTambahan}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditSettingTugas"
+        component={EditSettingTugas}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="TambahSettingTugas"
+        component={TambahSettingTugas}
       />
     </Stack.Navigator>
   );

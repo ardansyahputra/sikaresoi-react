@@ -42,6 +42,7 @@
     "react-native-gesture-handler": "^2.21.2",
     "react-native-image-crop-picker": "^0.41.6",
     "react-native-image-picker": "^7.2.3",
+    "react-native-indicators": "^0.17.0",
     "react-native-intent": "^1.0.1",
     "react-native-keyboard-aware-scroll-view": "^0.9.5",
     "react-native-keychain": "^9.2.2",

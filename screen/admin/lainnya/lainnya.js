@@ -56,7 +56,7 @@ const Allmenu = ({navigation}) => {
         {/* USER */}
         <Text style={styles.sectionTitle}>User</Text>
         <View style={styles.iconGrid}>
-          {renderIcon('User', 'person', () => navigation.navigate('User'))}
+          {renderIcon('User', 'person', () => navigation.navigate('UserScreen'))}
           {renderIcon('User Group', 'people', () =>
             navigation.navigate('UserGroup'),
           )}
@@ -163,6 +163,9 @@ const Allmenu = ({navigation}) => {
           )}
           {renderIcon('Persentase Capaian', 'stats-chart-outline', () =>
             navigation.navigate('SettingPersentaseCapaian'),
+          )}
+          {renderIcon('Setting Tugas Tambahan', 'settings-outline', () =>
+            navigation.navigate('SettingTugasTambahan'),
           )}
         </View>
       </ScrollView>

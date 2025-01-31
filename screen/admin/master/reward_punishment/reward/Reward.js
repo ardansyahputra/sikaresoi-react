@@ -18,10 +18,11 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../../../../../src/api/apiClient';
 import {useNavigation} from '@react-navigation/native';
+import {BarIndicator} from 'react-native-indicators';
 
 export default function Reward({route, navigation}) {
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [editData, setEditData] = useState({});
@@ -51,7 +52,7 @@ export default function Reward({route, navigation}) {
 
   const fetchRewardData = async () => {
     try {
-      setLoading(true);
+      setIsLoading(true);
 
       if (!reward_punishment_id) {
         console.error('reward_punishment_id is undefined or empty');
@@ -68,13 +69,13 @@ export default function Reward({route, navigation}) {
       console.error('Error fetching reward data:', error.message);
       Alert.alert('Error', 'Gagal memuat data reward.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const fetchPunishmentData = async () => {
     try {
-      setLoading(true);
+      setIsLoading(true);
 
       if (!reward_punishment_id) {
         console.error('reward_punishment_id is undefined or empty');
@@ -91,7 +92,7 @@ export default function Reward({route, navigation}) {
       console.error('Error fetching reward data:', error.message);
       Alert.alert('Error', 'Gagal memuat data reward.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -131,9 +132,9 @@ export default function Reward({route, navigation}) {
   const handleTambah = () => {
     const screenName =
       activeButton === 'reward' ? 'TambahReward' : 'TambahPunishment';
-    navigation.navigate(screenName, { reward_punishment_id });
+    navigation.navigate(screenName, {reward_punishment_id});
   };
-  
+
   const handlePreviousPage = () => {
     if (currentPage > 1) {
       setCurrentPage(prev => {
@@ -160,8 +161,9 @@ export default function Reward({route, navigation}) {
     {label: '100', value: 100},
   ];
 
-  const handleEdit = (uuid) => {
-    const screenName = activeButton === 'reward' ? 'EditReward' : 'EditPunishment';
+  const handleEdit = uuid => {
+    const screenName =
+      activeButton === 'reward' ? 'EditReward' : 'EditPunishment';
     navigation.navigate(screenName, {uuid, reward_punishment_id});
   };
 
@@ -324,8 +326,11 @@ export default function Reward({route, navigation}) {
       </View>
 
       {/* Tabel */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
+        </View>
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
@@ -731,5 +736,10 @@ const styles = StyleSheet.create({
   bulanButton: {
     flexDirection: 'row',
     gap: 5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

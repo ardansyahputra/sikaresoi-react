@@ -17,11 +17,12 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../../src/api/apiClient';
+import {BarIndicator} from 'react-native-indicators';
 
 export default function DewanPengawas() {
   const navigation = useNavigation();
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -40,18 +41,15 @@ export default function DewanPengawas() {
 
   const fetchData = async page => {
     try {
-      setLoading(true);
-      const response = await apiClient.post(
-        '/user/dewas/index',
-        {page},
-      );
+      setIsLoading(true);
+      const response = await apiClient.post('/user/dewas/index', {page});
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
     } catch (error) {
       console.error('Error fetching data', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -66,9 +64,7 @@ export default function DewanPengawas() {
 
   const submitHapus = async () => {
     try {
-      await apiClient.delete(
-        `/user/dewas/${selectedUuid}/delete`,
-      );
+      await apiClient.delete(`/user/dewas/${selectedUuid}/delete`);
       Alert.alert('Berhasil', 'Penolakan berhasil.');
       setHapusModalVisible(false);
       fetchData(currentPage); // Refresh data
@@ -77,7 +73,7 @@ export default function DewanPengawas() {
     }
   };
 
-  const handleTambah = (navigation) => {
+  const handleTambah = navigation => {
     navigation.navigate('TambahDewas');
   };
 
@@ -96,7 +92,9 @@ export default function DewanPengawas() {
   const TableHeader = () => (
     <View>
       <View style={styles.tambahContainer}>
-        <TouchableOpacity style={styles.tambahButton} onPress={() => handleTambah(navigation)}>
+        <TouchableOpacity
+          style={styles.tambahButton}
+          onPress={() => handleTambah(navigation)}>
           <FontAwesome name="plus" size={20} color="#fff" style={styles.icon} />
           <Text style={styles.tambahText}>TAMBAH</Text>
         </TouchableOpacity>
@@ -212,8 +210,11 @@ export default function DewanPengawas() {
         </View>
       </View>
       {/* Loading Indicator */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
+        </View>
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
@@ -661,5 +662,10 @@ const styles = StyleSheet.create({
   customFont: {
     color: 'white',
     fontFamily: 'Poppins-Regular',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

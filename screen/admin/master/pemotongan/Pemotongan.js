@@ -15,12 +15,13 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../../src/api/apiClient';
+import {BarIndicator} from 'react-native-indicators';
 
 export default function UangMakan() {
   const navigation = useNavigation();
 
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -42,7 +43,7 @@ export default function UangMakan() {
 
   const fetchData = async (page, display) => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       const response = await apiClient.post('/pemotongan_pulang_awal/index', {
         page,
         display,
@@ -53,7 +54,7 @@ export default function UangMakan() {
     } catch (error) {
       console.error('Error fetching data', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -294,8 +295,11 @@ export default function UangMakan() {
         </View>
       </View>
       {/* Loading Indicator */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
+        </View>
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
@@ -703,5 +707,10 @@ const styles = StyleSheet.create({
   customFont: {
     color: 'white',
     fontFamily: 'Poppins-Regular',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

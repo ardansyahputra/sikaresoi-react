@@ -23,7 +23,7 @@ import useApiClient from '../../../src/api/apiClient';
 export default function Jabatan() {
   const navigation = useNavigation();
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -54,7 +54,7 @@ export default function Jabatan() {
       console.error('Error fetching data:', error);
       Alert.alert('Error', 'Gagal memuat data.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -220,8 +220,11 @@ export default function Jabatan() {
           </TouchableOpacity>
         </View>
       </View>
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
+        </View>
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
