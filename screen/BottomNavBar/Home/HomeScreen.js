@@ -22,19 +22,8 @@ export default function HomeScreen({navigation}) {
   };
 
   return (
-<<<<<<< HEAD
-    <ScrollView contentContainerStyle={{flexGrow: 1}}>
-      {' '}
-      {/* Membuat halaman scrollable */}
-      <View
-        style={[
-          styles.container,
-          {backgroundColor: isDarkMode ? '#333' : '#F5F5F5'},
-        ]}>
-=======
     <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <View style={[styles.container, { backgroundColor: isDarkMode ? '#333' : '#F5F5F5' }]}>
->>>>>>> adcfbef71880a29ff62a11c5e7240d51574db534
         {/* Header */}
         <LinearGradient
           colors={isDarkMode ? ['#333', '#333'] : ['#FFFFFF', '#FFFFFF']}
@@ -149,12 +138,7 @@ const renderMenuIcon = (label, iconName, onPress) => {
       <View style={styles.iconCircle}>
         <Icon name={iconName} size={30} color="#213376" />
       </View>
-<<<<<<< HEAD
-      <Text style={styles.menuText}>{label}</Text>{' '}
-      {/* The label will wrap if too long */}
-=======
       <Text style={styles.menuText}>{label}</Text>
->>>>>>> adcfbef71880a29ff62a11c5e7240d51574db534
     </TouchableOpacity>
   );
 };

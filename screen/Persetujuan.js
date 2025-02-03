@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   TextInput,
@@ -13,10 +13,10 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
-import { Dropdown } from 'react-native-element-dropdown';
+import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../src/api/apiClient';
 
-export default function Persetujuan({ navigation }) {
+export default function Persetujuan({navigation}) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
@@ -24,27 +24,30 @@ export default function Persetujuan({ navigation }) {
   const [lastPage, setLastPage] = useState(1);
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [itemsPerPage, setItemsPerPage] = useState(10); // State untuk jumlah item per halaman
+  const [selectedDisplay, setSelectedDisplay] = useState(null);
   const [selectedTahun, setSelectedTahun] = useState(null);
   const [tahunOptions, setTahunOptions] = useState([]);
-  const [pickUraianOptions, setPickUraianOptions] = useState(null);
+  const [pickUraianOptions, setPickUraianOptions] = useState([]);
   const apiClient = useApiClient();
-  const [selectedDisplay, setSelectedDisplay] = useState(10);
 
   useEffect(() => {
-    fetchData(currentPage, itemsPerPage, searchQuery);
+    fetchData(currentPage);
     fetchTahun();
-  }, [currentPage, itemsPerPage, searchQuery]); // Tambahkan itemsPerPage dan searchQuery ke dependency array
+  }, [currentPage]);
 
   const fetchTahun = async () => {
     try {
-      const response = await apiClient.get('/tahun/show');
+      const response = await apiClient.get(
+        '/tahun/show',
+      
+      );
 
+      // Pastikan response.data.data adalah array
       if (Array.isArray(response.data.data)) {
         setTahunOptions(
           response.data.data.map(item => ({
-            label: item.tahun ? item.tahun : 'Unknown',
-            value: item.id ? item.id : 'Unknown',
+            label: item.tahun ? item.tahun : 'Unknown', // Pastikan item.tahun ada
+            value: item.id ? item.id : 'Unknown', // Pastikan item.id ada
           })),
         );
       } else {
@@ -57,21 +60,24 @@ export default function Persetujuan({ navigation }) {
     }
   };
 
-  const fetchData = async (page, perPage, query) => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.post('/user/kinerja/azril', {
-        page: page,
-        per: selectedDisplay,
-        search: searchQuery,
-        tahun_id: pickUraianOptions,
-      });
+      const response = await apiClient.post(
+        '/user/kinerja/azril',
+        {
+          page: currentPage,
+          tahun_id: pickUraianOptions,
+        },
+        {
+        },
+      );
       console.log(response.data);
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
     } catch (error) {
-      console.error('Error fetching data', error.response?.data);
+      console.error('Error fetching data', error.response.data);
     } finally {
       setLoading(false);
     }
@@ -82,15 +88,28 @@ export default function Persetujuan({ navigation }) {
   };
 
   const handleApprove = uuid => {
-    navigation.navigate('Bacakontrak', { uuid });
+    navigation.navigate('Bacakontrak', {uuid});
+  };
+
+  const getStatusStyle = status => {
+    // switch (status?.toUpperCase()) {
+    //   case 'DISETUJUI':
+    //     return styles.approvedStatus;
+    //   case 'BELUM DIBACA':
+    //     return styles.rejectedStatus;
+    //   case 'MENUNGGU':
+    //     return styles.pendingStatus;
+    //   default:
+    //     return styles.defaultStatus;
+    // }
   };
 
   const display = [
-    { label: '5', value: 5 },
-    { label: '10', value: 10 },
-    { label: '25', value: 25 },
-    { label: '50', value: 50 },
-    { label: '100', value: 100 },
+    {label: '5', value: 1},
+    {label: '10', value: 2},
+    {label: '25', value: 3},
+    {label: '50', value: 4},
+    {label: '100', value: 5},
   ];
 
   const TableHeader = () => (
@@ -105,14 +124,19 @@ export default function Persetujuan({ navigation }) {
               labelField="label"
               valueField="value"
               placeholder="Pilih Tahun"
-              placeholderStyle={{ color: '#B6B9CA' }}
+              placeholderStyle={{color: '#B6B9CA'}}
               value={pickUraianOptions}
               onChange={item => {
                 setPickUraianOptions(item.value);
-                fetchData(currentPage, itemsPerPage, searchQuery);
+                fetchData();
               }}
               renderItem={item => (
-                <Text style={[styles.dropdownItem, { color: '#333' }]}>
+                <Text
+                  style={[
+                    styles.dropdownItem,
+                    styles.customFont,
+                    {color: '#333'},
+                  ]}>
                   {item.label}
                 </Text>
               )}
@@ -120,19 +144,19 @@ export default function Persetujuan({ navigation }) {
           </View>
 
           <View style={styles.filterGroup}>
-           <Text style={styles.displayText}>Display</Text>
-                     <Dropdown
-                       style={styles.dropdown}
-                       data={display}
-                       labelField="label"
-                       valueField="value"
-                       placeholder="10"
-                       value={selectedDisplay}
-                       onChange={(item) => setSelectedDisplay(item.value)}
-                       renderItem={(item) => (
-                         <Text style={[styles.dropdownItem, styles.customFont]}>
-                           {item.label}
-                         </Text>
+            <Text style={styles.displayText}>Display</Text>
+            <Dropdown
+              style={styles.dropdown}
+              data={display}
+              labelField="label"
+              valueField="value"
+              placeholder="10"
+              value={selectedDisplay}
+              onChange={item => setSelectedDisplay(item.value)}
+              renderItem={item => (
+                <Text style={[styles.dropdownItem, styles.customFont]}>
+                  {item.label}
+                </Text>
               )}
             />
           </View>
@@ -143,10 +167,7 @@ export default function Persetujuan({ navigation }) {
             style={styles.searchBar}
             placeholder="Search"
             value={searchQuery}
-            onChangeText={text => {
-              setSearchQuery(text); // Update searchQuery
-              setCurrentPage(1); // Reset ke halaman pertama saat melakukan pencarian
-            }}
+            onChangeText={setSearchQuery}
           />
           <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
         </View>
@@ -155,14 +176,16 @@ export default function Persetujuan({ navigation }) {
       {/* Table Header */}
       <View style={styles.tableHeader}>
         <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
-        <Text style={[styles.headerCell, styles.nameCell]}>Detail Pengirim</Text>
+        <Text style={[styles.headerCell, styles.nameCell]}>
+          Detail Pengirim
+        </Text>
         <Text style={[styles.headerCell, styles.detailCell]}>Status</Text>
         <View style={styles.expandIconCell} />
       </View>
     </View>
   );
 
-  const renderItem = ({ item, index }) => {
+  const renderItem = ({item, index}) => {
     const isExpanded = expandedId === item.id;
 
     return (
@@ -178,7 +201,12 @@ export default function Persetujuan({ navigation }) {
             {item.user_jabatan?.user?.name || '-'}
           </Text>
           <View style={styles.statusCellContainer}>
-            <Text style={[styles.tableCell, styles.statusCell]}>
+            <Text
+              style={[
+                styles.tableCell,
+                styles.statusCell,
+                getStatusStyle(item.status),
+              ]}>
               {item.status_class || '-'}
             </Text>
           </View>
@@ -201,9 +229,17 @@ export default function Persetujuan({ navigation }) {
             <Text style={styles.expandedText}>
               Periode: {item.user_jabatan?.periode || '-'}
             </Text>
-            <Text style={styles.expandedText}>
+            <Text
+              style={[
+                styles.expandedText,
+                item.status_class === 'DISETUJUI'
+                  ? styles.approved
+                  : styles.notApproved,
+              ]}
+            >
               Status: {item.status_class || '-'}
             </Text>
+
             <Text style={styles.expandedText}>
               Status revisi: {item.revisi_class || '-'}
             </Text>
@@ -261,7 +297,9 @@ export default function Persetujuan({ navigation }) {
                       currentPage === 1 && styles.disabledButton,
                     ]}
                     disabled={currentPage === 1}
-                    onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
+                    onPress={() =>
+                      setCurrentPage(prev => Math.max(prev - 1, 1))
+                    }>
                     <Text style={styles.pageButtonText}>Previous</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -270,7 +308,9 @@ export default function Persetujuan({ navigation }) {
                       currentPage === lastPage && styles.disabledButton,
                     ]}
                     disabled={currentPage === lastPage}
-                    onPress={() => setCurrentPage(prev => Math.min(prev + 1, lastPage))}>
+                    onPress={() =>
+                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
+                    }>
                     <Text style={styles.pageButtonText}>Next</Text>
                   </TouchableOpacity>
                 </View>
@@ -392,14 +432,12 @@ const styles = StyleSheet.create({
     width: 50, // Fixed width for alignment
   },
   dropdown: {
+    width: 60,
     height: 40,
     borderColor: '#CCCCCC',
     borderWidth: 1,
     borderRadius: 5,
-    paddingHorizontal: 10,
-    width: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingHorizontal: 8,
   },
   dropdownTahun: {
     width: 85,
@@ -411,7 +449,7 @@ const styles = StyleSheet.create({
   },
   dropdownItem: {
     padding: 10,
-    fontSize: 12,
+    fontSize: 13,
     color: '#333',
   },
   addContainer: {
