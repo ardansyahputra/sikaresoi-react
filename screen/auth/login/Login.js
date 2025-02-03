@@ -14,19 +14,22 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import {useAuth} from '../AuthContext';
 import axios from 'axios';
 import useApiClient from '../../../src/api/apiClient';
+import {BarIndicator} from 'react-native-indicators';
 
 const LoginScreen = ({navigation}) => {
   const [nip, setNip] = useState('');
   const [password, setPassword] = useState('');
   const {login, token, refreshToken} = useAuth();
   const apiClient = useApiClient();
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
         const credentials = await Keychain.getGenericPassword();
         if (credentials) {
-          const storedToken = credentials.password;
+          const {token, refreshToken} = JSON.parse(credentials.password);
+          setToken(token);
 
           // Verifikasi token dengan endpoint user
           const userData = await fetchUser(storedToken);
@@ -82,6 +85,7 @@ const LoginScreen = ({navigation}) => {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
+    setIsLoading(true);
 
     try {
       const response = await apiClient.post('/auth/login', {
@@ -93,7 +97,10 @@ const LoginScreen = ({navigation}) => {
 
       if (response.status === 200 && response.headers.authorization) {
         const token = response.headers.authorization;
-        await Keychain.setGenericPassword('token', token);
+        await Keychain.setGenericPassword(
+          'auth',
+          JSON.stringify({token, refreshToken}),
+        );
 
         const userData = await fetchUser(token);
         if (userData) {
@@ -109,6 +116,8 @@ const LoginScreen = ({navigation}) => {
         'Error',
         error.response?.data?.message || 'An error occurred during login.',
       );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -166,10 +175,20 @@ const LoginScreen = ({navigation}) => {
             secureTextEntry
           />
         </View>
-        <TouchableOpacity style={styles.button} onPress={loginHandler}>
+        <TouchableOpacity
+          style={[styles.button, isLoading && styles.buttonDisabled]}
+          onPress={loginHandler}
+          disabled={isLoading} // Tombol dinonaktifkan saat loading
+        >
           <Text style={styles.buttonText}>Masuk</Text>
         </TouchableOpacity>
       </View>
+      {/* LOADING INDICATOR */}
+      {isLoading && (
+        <View style={styles.loadingOverlay}>
+          <BarIndicator color="white" size={24} count={5} />
+        </View>
+      )}
     </View>
   );
 };
@@ -248,6 +267,19 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  buttonDisabled: {
+    backgroundColor: '#95a5a6',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

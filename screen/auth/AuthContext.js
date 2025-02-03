@@ -84,7 +84,7 @@ export const AuthProvider = ({children, navigation}) => {
     try {
       const credentials = await Keychain.getGenericPassword();
       if (credentials) {
-        const refreshToken = credentials.password;
+        const {refreshToken} = JSON.parse(credentials.password);
 
         const response = await axios.post(`${API_URL}auth/refresh`, {
           refresh_token: refreshToken,
@@ -92,14 +92,17 @@ export const AuthProvider = ({children, navigation}) => {
 
         if (response.status === 200) {
           const newToken = response.data.token;
-          await Keychain.setGenericPassword('token', newToken);
+          await Keychain.setGenericPassword(
+            'auth',
+            JSON.stringify({token: newToken, refreshToken}),
+          );
           setToken(newToken);
           return newToken;
-        } else {
-          logout(navigation);
         }
       }
     } catch (error) {
+      console.error('Failed to refresh token:', error);
+      Alert.alert('Session Expired', 'Please login again.');
       logout(navigation);
     }
     return null;

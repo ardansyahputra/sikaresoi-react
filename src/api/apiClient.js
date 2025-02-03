@@ -47,26 +47,18 @@ const useApiClient = () => {
 
     // Optimized response interceptor
     instance.interceptors.response.use(
-      response => response, // Return successful response
+      response => response,
       async error => {
         if (error.response?.status === 401) {
           try {
             const newToken = await refreshToken();
             if (newToken) {
-              // Update token in AuthContext
-              setToken(newToken);
-
-              // Update Authorization header
               error.config.headers.Authorization = `Bearer ${newToken}`;
-
-              // Retry the original request with updated headers
-              return instance(error.config);
+              return axios(error.config); // Retry request dengan token baru
             }
           } catch (refreshError) {
             console.error('Refresh token failed:', refreshError);
-
-            // Ensure token is cleared from context or storage
-            logout(); // This will handle navigating to 'Login'
+            logout();
           }
         }
         return Promise.reject(error);

@@ -48,28 +48,17 @@ export default function User() {
   const fetchData = async page => {
     try {
       setIsLoading(true);
+      console.log('Mengambil data dari server...');
       const response = await apiClient.post('/user_master/index', {page});
 
-      // Extract data returned from API
-      const usersData = response.data.data;
+      // Data dari server
+      console.log('Data dari API:', response.data);
 
-      // Update the state with fetched users
+      const usersData = response.data.data;
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
 
-      // Now, get the status for each user from Keychain
-      const updatedUsersData = await Promise.all(
-        usersData.map(async user => {
-          const storedStatus = await getStatusFromKeychain(user.uuid);
-          return {
-            ...user,
-            aktif: storedStatus !== null ? storedStatus : user.aktif,
-          };
-        }),
-      );
-
-      // Finally, update the data state with the updated user data
-      setData(updatedUsersData);
+      setData(usersData); // Perbarui state langsung dari API
     } catch (error) {
       console.error('Error fetching data', error);
     } finally {
@@ -136,15 +125,34 @@ export default function User() {
     );
   };
 
-  const submitHapus = async () => {
-    try {
-      await apiClient.delete(`/kegiatan/${selectedUuid}/delete`);
-      Alert.alert('Berhasil', 'Penolakan berhasil.');
-      setHapusModalVisible(false);
-      fetchData(currentPage); // Refresh data
-    } catch (error) {
-      Alert.alert('Error', 'Gagal menolak data.');
-    }
+  const handleResetPassword = async uuid => {
+    Alert.alert(
+      'Konfirmasi',
+      'Apakah Anda yakin ingin mereset password pengguna ini?',
+      [
+        {
+          text: 'Batal',
+          style: 'cancel',
+        },
+        {
+          text: 'Reset',
+          onPress: async () => {
+            try {
+              const response = await apiClient.post(`/password/${uuid}/reset`);
+
+              if (response.data.status) {
+                Alert.alert('Sukses', response.data.data);
+                fetchData(currentPage); // Tambahkan ini agar otomatis refresh setelah reset
+              } else {
+                Alert.alert('Gagal', 'Reset password gagal.');
+              }
+            } catch (error) {
+              Alert.alert('Error', 'Terjadi kesalahan saat mereset password.');
+            }
+          },
+        },
+      ],
+    );
   };
 
   // Mengambil status dari Keychain saat komponen dimuat
@@ -169,39 +177,40 @@ export default function User() {
 
   // Mengubah status dan menyimpannya ke Keychain
   const handleSwitchToggle = async (uuid, currentStatus) => {
-    // Simpan status lama untuk rollback jika terjadi kegagalan
-    const previousStatus = currentStatus;
     const newStatus = currentStatus === 1 ? 0 : 1;
 
-    // Segera perbarui UI untuk pengalaman yang mulus
+    // Optimistic update: Perbarui UI secara instan
     setData(prevData =>
       prevData.map(user =>
-        user.uuid === uuid ? {...user, aktif: newStatus} : user,
+        user.uuid === uuid ? {...user, status: newStatus} : user,
       ),
     );
 
     try {
-      // Panggil API untuk memperbarui status di backend
+      // Kirim perubahan status ke API
       const response = await apiClient.get(`/user_master/${uuid}/changeAktif`);
+      console.log('Response API setelah mengubah status:', response.data);
+
       if (!response.data.status) {
-        // Jika API gagal, kembalikan status ke nilai sebelumnya
+        // Jika API gagal, kembalikan UI ke keadaan sebelumnya
+        console.error('Gagal mengubah status di API');
         setData(prevData =>
           prevData.map(user =>
-            user.uuid === uuid ? {...user, aktif: previousStatus} : user,
+            user.uuid === uuid ? {...user, status: currentStatus} : user,
           ),
         );
         Alert.alert('Gagal', 'Tidak dapat mengubah status.');
       } else {
-        // Jika API berhasil, simpan status ke Keychain
+        // Jika API berhasil, simpan status baru ke Keychain (jika diperlukan)
         await saveStatusToKeychain(uuid, newStatus);
-        console.log('Status berhasil diubah.');
+        console.log(`Setelah toggle: UUID ${uuid}, Status ${newStatus}`);
       }
     } catch (error) {
-      // Jika ada error, rollback status dan beri notifikasi
       console.error('Error updating status:', error);
+      // Jika terjadi error, kembalikan UI ke keadaan sebelumnya
       setData(prevData =>
         prevData.map(user =>
-          user.uuid === uuid ? {...user, aktif: previousStatus} : user,
+          user.uuid === uuid ? {...user, status: currentStatus} : user,
         ),
       );
       Alert.alert('Error', 'Terjadi kesalahan saat mengubah status.');
@@ -226,8 +235,26 @@ export default function User() {
       loadData();
     }
   }, []);
-  const handleTambah = () => {
-    navigation.navigate('TambahKegiatan');
+
+  const handleTambah = async () => {
+    try {
+      const groupResponse = await apiClient.get(`/user_master/get_group`);
+      if (groupResponse.data.status) {
+        const groups = groupResponse.data.data;
+
+        navigation.navigate('Tambahuser', {
+          groups: groups,
+        });
+      } else {
+        Alert.alert('Error', 'Gagal mendapatkan data grup pengguna.');
+      }
+    } catch (error) {
+      console.error('Error fetching user groups:', error);
+      Alert.alert(
+        'Error',
+        'Terjadi kesalahan saat mengambil data grup pengguna.',
+      );
+    }
   };
 
   const display = [
@@ -302,13 +329,13 @@ export default function User() {
 
           <View style={[styles.tableCell, styles.switchCell]}>
             <Switch
-              value={item.aktif === 1} // Jika status aktif = 1, maka switch ON
-              onValueChange={() => handleSwitchToggle(item.uuid, item.aktif)}
+              value={item.status === 1} // Gunakan item.status untuk mengontrol switch
+              onValueChange={() => handleSwitchToggle(item.uuid, item.status)}
               trackColor={{
                 false: '#d3d3d3', // Warna track ketika OFF (abu-abu)
                 true: '#add8e6', // Warna track ketika ON (biru muda)
               }}
-              thumbColor={item.aktif === 1 ? '#ffffff' : '#f4f4f4'} // Thumb putih
+              thumbColor={item.status === 1 ? '#ffffff' : '#f4f4f4'} // Thumb putih
               style={{transform: [{scaleX: 1.2}, {scaleY: 1.2}]}} // Opsional: Perbesar Switch
             />
           </View>
@@ -333,16 +360,26 @@ export default function User() {
             </Text>
             <View style={styles.actionContainer}>
               <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => handleEdit(item.uuid)}>
-                <FontAwesome name="pencil" size={20} color="white" />
-                <Text style={styles.customFont}>Edit</Text>
+                onPress={() => handleResetPassword(item.uuid)}
+                style={styles.iconButton} // Gunakan style khusus untuk ikon
+              >
+                <FontAwesome name="refresh" size={20} color="#808080" />
+                {/* Warna abu-abu */}
               </TouchableOpacity>
+              {/* Tombol Edit (Hanya Ikon Abu-Abu) */}
               <TouchableOpacity
-                style={styles.deleteButton}
+                onPress={() => handleEdit(item.uuid)}
+                style={styles.iconButton} // Gunakan style khusus untuk ikon
+              >
+                <FontAwesome name="pencil" size={20} color="#808080" />
+                {/* Warna abu-abu */}
+              </TouchableOpacity>
+
+              {/* Tombol Hapus (Tetap Sama) */}
+              <TouchableOpacity
+                style={styles.iconButton}
                 onPress={() => handleHapus(item.uuid)}>
-                <Ionicons name="trash" size={20} color="white" />
-                <Text style={styles.customFont}>Hapus</Text>
+                <FontAwesome name="trash" size={20} color="#808080" />
               </TouchableOpacity>
             </View>
           </View>
@@ -411,31 +448,6 @@ export default function User() {
           }
         />
       )}
-
-      {/* Hapus Uang Makan Modal */}
-      <Modal
-        visible={isHapusModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setHapusModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Hapus Data</Text>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setHapusModalVisible(false)}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.submitButton, styles.approveButton]}
-                onPress={submitHapus}>
-                <Text style={styles.buttonText}>Setujui</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -535,7 +547,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     justifyContent: 'flex-end',
     alignItems: 'center',
-    gap: 10,
   },
   actionButton: {
     padding: 8,
@@ -747,19 +758,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlignVertical: 'center',
   },
-  editButton: {
-    gap: 5,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#3699FF',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
+
+  iconButton: {
+    padding: 6, // Sesuaikan padding jika diperlukan
+    backgroundColor: 'transparent', // Hapus background
+    marginHorizontal: 5,
   },
   customFont: {
     color: 'white',
