@@ -9,19 +9,23 @@ import {
 } from "react-native";
 import axios from 'axios';
 import { Dropdown } from 'react-native-element-dropdown';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from "@react-navigation/native";
+import useApiClient from "../src/api/apiClient";
 
 const Remunerasi = () => {
   const [postData, setPostData] = useState({ bulan_id: new Date().getMonth() + 1, tahun_id: 2025 });
   const [listBulan, setListBulan] = useState([]);
   const [listTahun, setListTahun] = useState([]);
   const [data, setData] = useState({});
+  const navigation = useNavigation();
+  const apiClient = useApiClient();
+  
 
   // Fetch Bulan data
   useEffect(() => {
-    axios.get('http://192.168.60.146:8000/api/v1/bulan/show', {
-      headers: {
-        Authorization: `Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE0Njo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM3MDc3ODM5LCJleHAiOjE3MzcwODcwOTksIm5iZiI6MTczNzA4MzQ5OSwianRpIjoiV0hPT3BvVVZad2h2c1J2VCIsInN1YiI6OSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.x1n_6A0p7Df5XG2qH0VqEXAo1izxNGzm3c4Gl6l80ZY` // Ganti dengan token Anda
-      }
+    apiClient.get('/bulan/show', {
     })
     .then(response => {
       console.log("Data Bulan:", response.data);
@@ -56,10 +60,7 @@ const Remunerasi = () => {
       tahun: postData.tahun_id.toString(),
     };
 
-    axios.post('http://192.168.60.146:8000/api/v1/laporan/remunerasi', formRequest, {
-      headers: {
-        Authorization: `Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE0Njo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM3MDc3ODM5LCJleHAiOjE3MzcwODcwOTksIm5iZiI6MTczNzA4MzQ5OSwianRpIjoiV0hPT3BvVVZad2h2c1J2VCIsInN1YiI6OSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.x1n_6A0p7Df5XG2qH0VqEXAo1izxNGzm3c4Gl6l80ZY` // Ganti dengan token Anda
-      },
+    apiClient.post('/laporan/remunerasi', formRequest, {
     })
     .then(response => {
       setData(response.data.data);
@@ -95,6 +96,9 @@ const Remunerasi = () => {
     <ScrollView contentContainerStyle={styles.container}>
       {/* App Bar */}
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={26} color="#000" />
+        </TouchableOpacity>
         <Image
           source={require('./assets/images/sikaresoi.png')}
           style={styles.headerImage}
@@ -103,33 +107,48 @@ const Remunerasi = () => {
 
       {/* Card for Month and Year Selector */}
       <View style={styles.card2}>
-        <View style={styles.row}>
+      <View style={styles.row}>
+          {/* Dropdown Bulan */}
           <View style={styles.column}>
-            <Text>Pilih Bulan <Text style={styles.required}>*</Text> :</Text>
+            <Text style={styles.date}>Pilih Bulan <Text style={styles.required}>*</Text> :</Text>
             <Dropdown
-              data={listBulan}
-              labelField="bulan"
-              valueField="id"
-              value={postData.bulan_id}
-              onChange={item => handleSelectMonth(item.id)}
-              placeholder={getSelectedBulan()}
               style={styles.dropdown}
+              data={listBulan.map(bulan => ({ label: bulan.bulan, value: bulan.id }))}
+              labelField="label"
+              valueField="value"
+              placeholder="Pilih Bulan"
+              value={postData.bulan_id}
+              onChange={(item) => handleSelectMonth(item.value)}
+              renderItem={(item) => (
+                <View style={styles.dropdownItem}>
+                  <Text style={styles.dropdownText}>{item.label}</Text>
+                </View>
+              )}
             />
           </View>
+
+          {/* Dropdown Tahun */}
           <View style={styles.column}>
-            <Text>Pilih Tahun <Text style={styles.required}>*</Text> :</Text>
+            <Text style={styles.date}>Pilih Tahun <Text style={styles.required}>*</Text> :</Text>
             <Dropdown
-              data={listTahun}
-              labelField="tahun"
-              valueField="id"
-              value={postData.tahun_id}
-              onChange={item => handleSelectYear(item.id)}
-              placeholder={getSelectedTahun()}
               style={styles.dropdown}
+              data={listTahun.map(tahun => ({ label: tahun.tahun, value: tahun.id }))}
+              labelField="label"
+              valueField="value"
+              placeholder="Pilih Tahun"
+              value={postData.tahun_id}
+              onChange={(item) => handleSelectYear(item.value)}
+              renderItem={(item) => (
+                <View style={styles.dropdownItem}>
+                  <Text style={styles.dropdownText}>{item.label}</Text>
+                </View>
+              )}
             />
           </View>
         </View>
-      </View>
+        </View>
+        
+
 
       {/* Deskripsi Section */}
       <View style={styles.card}>
@@ -137,7 +156,7 @@ const Remunerasi = () => {
         <Text style={styles.sectionTitle2}>Deskripsi</Text>
         <Text style={styles.totalText}>Total</Text>
       </View>
-
+      <View style={styles.separator} />
         <View style={styles.deskripsiRow}>
           <View style={styles.deskripsiLabel}>
             <View style={[styles.indicator, { backgroundColor: "red" }]} />
@@ -157,7 +176,7 @@ const Remunerasi = () => {
         <View style={styles.deskripsiRow}>
           <View style={[styles.deskripsiLabel, { marginLeft: 15 }]}> {/* Menambahkan margin kiri */}
             <View style={[styles.indicator, { backgroundColor: "purple", height: 2 }]} />
-            <Text style={styles.text}>Tugas Utama</Text>
+            <Text style={styles.text1}>Tugas Utama</Text>
           </View>
           <Text style={styles.amountLeftAligned}>{formatRupiah(data.utama)}</Text>
         </View>
@@ -165,7 +184,7 @@ const Remunerasi = () => {
         <View style={styles.deskripsiRow}>
           <View style={[styles.deskripsiLabel, { marginLeft: 15 }]}> {/* Menambahkan margin kiri */}
             <View style={[styles.indicator, { backgroundColor: "black", height: 2 }]} />
-            <Text style={styles.text}>Tugas Tambahan</Text>
+            <Text style={styles.text1}>Tugas Tambahan</Text>
           </View>
           <Text style={styles.amountLeftAligned}>{formatRupiah(data.tambahan)}</Text>
         </View>
@@ -200,6 +219,7 @@ const Remunerasi = () => {
           <Text style={styles.totalAmount}>{formatRupiah(data.hasil_bayar)}</Text>
         </View>
       </View>
+
     </ScrollView>
   );
 };
@@ -262,7 +282,7 @@ card2: {
   alignSelf: 'center', // Agar kartu selalu di tengah
 },
   card1: {
-    padding: 5, // Kurangi padding agar elemen lebih kompak
+    padding: 2, // Kurangi padding agar elemen lebih kompak
     borderRadius: 8,
     backgroundColor: "#fff",
     elevation: 1,
@@ -291,6 +311,7 @@ card2: {
   column: {
     flex: 1,
     marginRight: 10,
+    fontFamily: 'Poppins-SemiBold',
   },
   dropdown: {
     marginTop: 8,
@@ -299,36 +320,56 @@ card2: {
     padding: 12,
     borderRadius: 8,
     backgroundColor: "#fafafa",
+    fontFamily: 'Poppins-SemiBold',
+  },
+    dropdownText: {
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 14,
+    color: "#000",
+  },
+  dropdownItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+  },
+  date: {
+    fontFamily: 'Poppins-SemiBold',
   },
   required: {
     color: "red",
+    fontFamily: 'Poppins-SemiBold',
   },
 row: {
   flexDirection: "row",
   justifyContent: "space-between", // Menjaga agar elemen tersebar antara kiri dan kanan
   alignItems: "center", // Menjaga agar teks tetap sejajar secara vertikal
-  marginBottom: 10, // Memberikan sedikit jarak antar baris
+  marginBottom: 2, // Memberikan sedikit jarak antar baris
 },
-
 totalText: {
   fontSize: 14,
-  fontWeight: "bold",
-  color: "rgba(0, 0, 0, 0.87)", // Anda bisa sesuaikan warna sesuai kebutuhan
-  marginBottom: 10, // Memberikan jarak antara teks TOTAL dan Deskripsi
+  color: "rgba(0, 0, 0, 0.34)", // Anda bisa sesuaikan warna sesuai kebutuhan
+  marginBottom: 19, // Memberikan jarak antara teks TOTAL dan Deskripsi
   textAlign: "right", // Menjaga agar teks TOTAL berada di sebelah kanan
+  fontFamily: 'Poppins-SemiBold',
 },
   sectionTitle2: {
     fontSize: 14,
-    fontWeight: "bold",
-    marginBottom: 20,
+    marginBottom: -15,
+    fontFamily: 'Poppins-Bold',
     color: "rgba(0, 0, 0, 0.34)",
   },
   sectionTitle1: {
-    fontSize: 14,
-    fontWeight: "bold",
+    fontSize: 16,
     marginBottom: 8,
     textAlign: "center",
+    fontFamily: 'Poppins-Bold',
     color: "rgba(0, 0, 0, 0.37)",
+  },
+  separator: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 0, 0, 0.13)',  // Garis hitam agak transparan
+    marginVertical: 10,  // Memberikan jarak vertikal antara elemen
+    marginTop: -10,
+    marginBottom: 19,
   },
   deskripsiRow: {
     flexDirection: "row",
@@ -348,25 +389,33 @@ totalText: {
   },
   text: {
     fontSize: 16,
-    fontWeight: "bold",
     flex: 1,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  text1: {
+    fontSize: 14,
+    flex: 1,
+    fontFamily: 'Poppins-SemiBold',
   },
   amountLeftAligned: {
     fontSize: 14,
     textAlign: "right",
     flex: 1,
+    fontFamily: 'Poppins-Regular',
   },
   amountLeftAlignedMinus: {
     fontSize: 14,
     textAlign: "right",
     flex: 1,
     color: "red",
+    fontFamily: 'Poppins-Regular',
   },
   totalAmount: {
-    fontSize: 21,
-    fontWeight: "bold",
+    fontSize: 20,
+    fontFamily: 'Poppins-SemiBold',
     color: "rgb(0, 0, 0)",
     textAlign: "center",
+    
   },
 cardLeft: {
   flex: 1, // Memungkinkan elemen mengambil ruang yang tersedia secara fleksibel

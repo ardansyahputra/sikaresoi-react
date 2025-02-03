@@ -36,7 +36,6 @@ import KontrakKerja from './screen/BottomNavBar/Menu/Laporan/KontrakKerja';
 import LaporanKontrakKerja from './screen/BottomNavBar/Menu/Laporan/KontrakKerja';
 import RealisasiNext from './screen/RealisasiNext.js';
 
-// Bottom Tab Navigator
 const Tab = createBottomTabNavigator();
 
 // Stack Navigator untuk Menu

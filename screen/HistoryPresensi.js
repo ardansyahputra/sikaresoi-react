@@ -12,23 +12,21 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
+import useApiClient from '../src/api/apiClient';
 
 const HistoryPresensi = ({ navigation }) => {
   const [search, setSearch] = useState('');
   const [data, setData] = useState([]);
   const [isLoading, setLoading] = useState(false);
+  const apiClient = useApiClient();
 
   const fetchData = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.60.176:8000/api/v1/user/absensi/index',
+      const response = await apiClient.post(
+        '/user/absensi/index',
         { page },
         {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE3Njo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM3NTk3ODgyLCJleHAiOjE3Mzc2MDE2NTYsIm5iZiI6MTczNzU5ODA1NiwianRpIjoiWlpaTTRhZXpudHk1QzVwdCIsInN1YiI6MiwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.pD9h0kXpFYPI7Mskz7BK5eLNyZyYEIZohnGBALDOkoc',
-          },
         }
       );
 
@@ -183,9 +181,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
     color: '#333',
     marginTop: 30,
+    fontFamily: 'Poppins-SemiBold',
   },
   actionButtons: {
     flexDirection: 'row',
@@ -211,8 +209,8 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#fff',
-    fontWeight: 'bold',
     fontSize: 14,
+    fontFamily: 'Poppins-SemiBold',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -225,29 +223,33 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     marginTop: 10,
+    fontFamily: 'Poppins-SemiBold',
   },
   searchInput: {
     flex: 1,
     marginRight: 8,
     color: '#333',
+    fontFamily: 'Poppins-Regular',
   },
   tableContainer: {
     backgroundColor: '#fff',
     borderRadius: 4,
     overflow: 'hidden',
     marginTop: 8,
+    fontFamily: 'Poppins-SemiBold',
   },
   tableHeader: {
     flexDirection: 'row',
     backgroundColor: '#e9ecef',
     paddingVertical: 8,
     paddingHorizontal: 16,
+    fontFamily: 'Poppins-SemiBold',
   },
   tableHeaderText: {
     flex: 1,
-    fontWeight: 'bold',
     color: '#333',
     textAlign: 'center',
+    fontFamily: 'Poppins-SemiBold',
   },
   tableRow: {
     flexDirection: 'row',
@@ -255,16 +257,19 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ddd',
     paddingVertical: 8,
     paddingHorizontal: 16,
+    fontFamily: 'Poppins-SemiBold',
   },
   tableCell: {
     flex: 1,
     color: '#333',
     textAlign: 'center',
+    fontFamily: 'Poppins-Regular',
   },
   emptyText: {
     textAlign: 'center',
     color: '#888',
     paddingVertical: 16,
+    fontFamily: 'Poppins-SemiBold',
   },
   paginationContainer: {
     marginTop: 16,
@@ -272,6 +277,7 @@ const styles = StyleSheet.create({
   paginationText: {
     textAlign: 'center',
     color: '#888',
+    fontFamily: 'Poppins-SemiBold',
   },
 });
 

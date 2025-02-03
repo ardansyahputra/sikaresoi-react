@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
   },
   editText: {
     color: '#fff',
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
     marginTop: 20,
     marginLeft: 16,
   },
@@ -82,6 +82,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginLeft: 16,
     marginBottom: 10,
+    fontFamily: 'Poppins-SemiBold',
   },
   iconGrid: {
     flexDirection: 'row',
@@ -107,6 +108,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 8,
     textAlign: 'center',
+    fontFamily: 'Poppins-SemiBold',
   },
 });
 

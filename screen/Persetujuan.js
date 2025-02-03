@@ -24,7 +24,7 @@ export default function Persetujuan({navigation}) {
   const [lastPage, setLastPage] = useState(1);
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDisplay, setSelectedDisplay] = useState(null);
+  const [selectedDisplay, setSelectedDisplay] = useState(10);
   const [selectedTahun, setSelectedTahun] = useState(null);
   const [tahunOptions, setTahunOptions] = useState([]);
   const [pickUraianOptions, setPickUraianOptions] = useState([]);
@@ -51,12 +51,12 @@ export default function Persetujuan({navigation}) {
           })),
         );
       } else {
-        console.error('Data yang diterima bukan array:', response.data.data);
-        Alert.alert('Error', 'Format data tidak valid.');
+        // console.error('Data yang diterima bukan array:', response.data.data);
+        // Alert.alert('Error', 'Format data tidak valid.');
       }
     } catch (error) {
-      console.error('Error fetching tahun options:', error);
-      Alert.alert('Error', 'Gagal memuat data tahun.');
+      // console.error('Error fetching tahun options:', error);
+      // Alert.alert('Error', 'Gagal memuat data tahun.');
     }
   };
 
@@ -68,10 +68,11 @@ export default function Persetujuan({navigation}) {
         {
           page: currentPage,
           tahun_id: pickUraianOptions,
+          per: selectedDisplay,
+          search: searchQuery,
         },
         {
-        },
-      );
+        },);
       console.log(response.data);
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
@@ -105,11 +106,11 @@ export default function Persetujuan({navigation}) {
   };
 
   const display = [
-    {label: '5', value: 1},
-    {label: '10', value: 2},
-    {label: '25', value: 3},
-    {label: '50', value: 4},
-    {label: '100', value: 5},
+    {label: '5', value: 5},
+    {label: '10', value: 10},
+    {label: '25', value: 25},
+    {label: '50', value: 50},
+    {label: '100', value: 100},
   ];
 
   const TableHeader = () => (

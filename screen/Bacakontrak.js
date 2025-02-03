@@ -421,8 +421,8 @@ const sampleData = [
     uuid: '1',
     angka: 1,
     uraian: {
-      nm_uraian: 'Meningkatkan Penjualan',
-      biaya: 15000000,
+      nm_uraian: 'Menerima dan mencatat surat masuk maupun surat keluar',
+      biaya: 0,
       angka_kredit: 3.5,
       satuan: 'Unit',
     },

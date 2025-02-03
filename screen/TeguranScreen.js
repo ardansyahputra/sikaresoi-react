@@ -108,7 +108,7 @@ export default function Teguranscreen({ navigation }) {
       <View style={styles.tableHeader}>
         <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
         <Text style={[styles.headerCell, styles.nameCell]}>Name</Text>
-        <Text style={[styles.headerCell, styles.tableStatusCell]}>Status</Text>
+        <Text style={[styles.headerCell, styles.tableStatusCell]}>Dibaca</Text>
         <View style={styles.expandIconCell} />
       </View>
     </View>
