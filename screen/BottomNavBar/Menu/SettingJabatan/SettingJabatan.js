@@ -214,7 +214,7 @@ const SettingJabatan = ({ navigation }) => {
           </View>
         </TouchableOpacity>
         {isExpanded && (
-          <View style={styles.expandedContent}>
+          <View style={styles.expandedRow}>
             <Text style={styles.expandedText}>
               Detail Jabatan: <Text style={styles.expandedTextDetail}> {item.detail_jabatan || '-'}</Text>
             </Text>
@@ -264,6 +264,10 @@ const SettingJabatan = ({ navigation }) => {
             <Ionicons name="person-circle-outline" size={24} color="#333" />
           </TouchableOpacity>
         </View>
+      </View>
+      <View>
+        <Text style={styles.headerTitle}>Setting Jabatan</Text>
+        <Text style={styles.headerSubtitle}>User • Setting Jabatan</Text>
       </View>
   
       <Modal
@@ -391,6 +395,19 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     flex: 1,
   },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000",
+    marginLeft: 20,
+    marginBottom: 4, 
+    marginTop: 10,
+  },
+  headerSubtitle: {
+    color: "#000",
+    marginLeft: 20,
+    marginBottom: 4,
+  },
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -512,7 +529,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  expandedContent: {
+  expandedRow: {
     padding: 10,
     backgroundColor: '#FAFAFA',
     borderTopWidth: 1,

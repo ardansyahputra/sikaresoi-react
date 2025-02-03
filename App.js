@@ -13,13 +13,15 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import LoginScreen from './screen/auth/login/Login';
 import HomeScreen from './screen/BottomNavBar/Home/HomeScreen';
 import KontrakKinerjaScreen from './screen/BottomNavBar/KontrakKinerja/KontrakKinerjaScreen';
-import ProfileScreen from './screen/BottomNavBar/Profile/ProfileScreen';
+import GetAktifCard from './screen/BottomNavBar/KontrakKinerja/GetAktif.js';
+import KirimKontrak from './screen/BottomNavBar/KontrakKinerja/KirimKontrak.js';
 import SettingJabatan from './screen/BottomNavBar/Menu/SettingJabatan/SettingJabatan';
+import FormJabatan from './screen/BottomNavBar/Menu/SettingJabatan/Form.js';
+import TeguranScreen from './screen/TeguranScreen.js';
 import RealisasiKinerja from './screen/BottomNavBar/Menu/RealisasiKinerja/RealisasiKinerja';
 import PresensiScreen from './screen/PresensiScreen';
 import Allmenu from './screen/Allmenu';
 import Persetujuan from './screen/Persetujuan';
-import PersetujuanR from './screen/PersetujuanRealisasi';
 import DataTable from './screen/DataTable';
 import DataTable2 from './screen/DataTable2';
 import RemunerasiScreen from './screen/BottomNavBar/Home/Persetujuan/Renumerasi.js';
@@ -27,12 +29,10 @@ import PencapaianKerja from './screen/PencapaianKerja.js';
 import Remunerasi from './screen/Remunerasi.js';
 import KontrakKerja from './screen/KontrakKerja.js';
 import HistoryPresensi from './screen/HistoryPresensi';
+import ProfileScreen from './screen/BottomNavBar/Profile/ProfileScreen';
 import ProfileEdit from './screen/BottomNavBar/Profile/ProfileEdit';
 import Password from './screen/BottomNavBar/Profile/Password';
 import PersetujuanRealisasi from './screen/PersetujuanRealisasi';
-import HistoryPresensi from './screen/HistoryPresensi';
-import DataTable from './screen/DataTable';
-import KontrakKerja from './screen/BottomNavBar/Menu/Laporan/KontrakKerja';
 
 // Bottom Tab Navigator
 const Tab = createBottomTabNavigator();
@@ -44,6 +44,7 @@ function RootStack() {
   return (
     <Stack.Navigator screenOptions={{headerShown: false}}>
     <Stack.Screen name="Login" component={LoginScreen} />
+    <Stack.Screen name="Allmenu" component={Allmenu} />
     <Stack.Screen name="AppTabs" component={AppTabs} />
     </Stack.Navigator>
   );
@@ -65,7 +66,7 @@ function HomeStack() {
         options={{headerShown: false}}
       />
       <Stack.Screen
-        name="AllMenu"
+        name="Allmenu"
         component={Allmenu}
         options={{headerShown: false}}
       />
@@ -73,6 +74,16 @@ function HomeStack() {
         name="KontrakKinerja"
         component={KontrakKinerjaScreen}
         options={{headerShown: false}}
+      />
+      <Stack.Screen
+      name="GetAktif"
+      component={GetAktifCard}
+      options={{headerShown: false}}
+      />
+      <Stack.Screen
+      name="KirimKontrak"
+      component={GetAktifCard}
+      options={{headerShown: false}}
       />
       <Stack.Screen
         name="Profile"
@@ -136,7 +147,7 @@ function HomeStack() {
 function ProfileStack() {
   return (
     <Stack.Navigator screenOptions={{headerShown: false}}>
-      <Stack.Screen name="ProfileScreen" component={User} />
+      <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
       <Stack.Screen name="ProfileEdit" component={ProfileEdit} />
       <Stack.Screen name="Password" component={Password} />
     </Stack.Navigator>

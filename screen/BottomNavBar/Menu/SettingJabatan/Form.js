@@ -251,6 +251,7 @@ const FormJabatan = ({navigation, route}) => {
           </TouchableOpacity>
         </View>
       </View>
+      
       <View style={styles.formContainer}>
         <Text style={styles.title}>
           {type === 'create' ? 'Tambah Data Jabatan' : 'Edit Data Jabatan'}

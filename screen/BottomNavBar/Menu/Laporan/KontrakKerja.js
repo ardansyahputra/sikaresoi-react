@@ -11,7 +11,7 @@ import {
 import RNFS from "react-native-fs";
 import { PermissionsAndroid, Platform } from "react-native";
 
-const KontrakKerja = () => {
+const LaporanKontrakKerja = () => {
   const [jabatanAktif, setJabatanAktif] = useState(false);
   const [jabatan, setJabatan] = useState({});
   const [tahunId, setTahunId] = useState("");
@@ -153,4 +153,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default KontrakKerja;
+export default LaporanKontrakKerja;
