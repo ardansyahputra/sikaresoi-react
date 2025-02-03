@@ -30,7 +30,7 @@ import UserScreen from './screen/admin/user/user';
 import SuratTugasScreen from './screen/admin/surattugas/Surat_tugas';
 import PotonganLainScreen from './screen/admin/potongan_lain/Potongan_lain';
 import LockScreen from './screen/admin/lock/lock';
-import LainnyaScreen from './screen/admin/lainnya/Lainnya';
+import LainnyaScreen from './screen/admin/lainnya/lainnya';
 
 //ciruclar Screens
 import BelumKirimKontrakScreen from './screen/admin/kontrak/kirim/Kirim';

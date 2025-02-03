@@ -55,7 +55,13 @@ export const AuthProvider = ({children, navigation}) => {
   };
 
   useEffect(() => {
-    loadTokenFromKeychain(); // Load token when app starts
+    const loadTokenFromKeychain = async () => {
+      const credentials = await Keychain.getGenericPassword();
+      if (credentials) {
+        setToken(credentials.password);
+      }
+    };
+    loadTokenFromKeychain();
   }, []);
 
   useEffect(() => {
@@ -64,19 +70,16 @@ export const AuthProvider = ({children, navigation}) => {
     }
   }, [token]);
 
-  const login = (userData, token) => {
+  const login = async (userData, newToken) => {
     setUser(userData);
-    setToken(token);
-    Keychain.setGenericPassword('token', token); // Store token securely
+    setToken(newToken);
+    await Keychain.setGenericPassword('token', newToken);
   };
 
-  const logout = navigation => {
+  const logout = () => {
     setUser(null);
     setToken(null);
-    Keychain.resetGenericPassword(); // Remove token from Keychain
-    if (navigation) {
-      navigation.replace('Login');
-    }
+    Keychain.resetGenericPassword();
   };
 
   // Fungsi untuk refresh token
@@ -84,7 +87,7 @@ export const AuthProvider = ({children, navigation}) => {
     try {
       const credentials = await Keychain.getGenericPassword();
       if (credentials) {
-        const {refreshToken} = JSON.parse(credentials.password);
+        const refreshToken = credentials.password;
 
         const response = await axios.post(`${API_URL}auth/refresh`, {
           refresh_token: refreshToken,
@@ -92,18 +95,14 @@ export const AuthProvider = ({children, navigation}) => {
 
         if (response.status === 200) {
           const newToken = response.data.token;
-          await Keychain.setGenericPassword(
-            'auth',
-            JSON.stringify({token: newToken, refreshToken}),
-          );
+          await Keychain.setGenericPassword('token', newToken);
           setToken(newToken);
           return newToken;
         }
       }
     } catch (error) {
-      console.error('Failed to refresh token:', error);
-      Alert.alert('Session Expired', 'Please login again.');
-      logout(navigation);
+      console.error('Error refreshing token:', error);
+      logout();
     }
     return null;
   };

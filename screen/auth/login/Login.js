@@ -22,34 +22,41 @@ const LoginScreen = ({navigation}) => {
   const {login, token, refreshToken} = useAuth();
   const apiClient = useApiClient();
   const [isLoading, setIsLoading] = useState(false);
+  const [isMounted, setIsMounted] = useState(true); // Menambahkan state isMounted
+
+  useEffect(() => {
+    setIsMounted(true); // Menandai komponen sebagai terpasang
+    return () => setIsMounted(false); // Menandai komponen sebagai tidak terpasang saat komponen dibersihkan
+  }, []);
 
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
+        // Mengambil token dari Keychain
         const credentials = await Keychain.getGenericPassword();
-        if (credentials) {
-          const {token, refreshToken} = JSON.parse(credentials.password);
-          setToken(token);
-
-          // Verifikasi token dengan endpoint user
+        if (credentials && credentials.password) {
+          // Jika token ditemukan, lakukan login otomatis
+          const storedToken = credentials.password;
+          const token = credentials.password;
           const userData = await fetchUser(storedToken);
-          if (userData) {
-            login(userData, storedToken);
-            navigation.replace('AppTabs');
-          }
+          login(userData, token); // login dengan token saja, tidak perlu user data
+          navigation.replace('AppTabs'); // Langsung ke AppTabs jika sudah login
+        } else {
+          // Jika token tidak ada, tetap di layar login
+          console.log('No token found, please login.');
         }
       } catch (error) {
         console.error('Error checking login status:', error);
       }
     };
+
     checkLoginStatus();
   }, []);
 
   useEffect(() => {
-    // Axios interceptor untuk menambahkan header Authorization
     const requestInterceptor = axios.interceptors.request.use(
       async config => {
-        if (!config.headers.Authorization && token) {
+        if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
@@ -60,14 +67,18 @@ const LoginScreen = ({navigation}) => {
     const responseInterceptor = axios.interceptors.response.use(
       response => response,
       async error => {
-        // Jika token expired, refresh token
-        if (error.response?.status === 401) {
+        if (!error.response) {
+          console.error('Network error, please check your connection.');
+          return Promise.reject(error);
+        }
+
+        if (error.response.status === 401) {
           const newToken = await refreshToken();
           if (newToken) {
             error.config.headers.Authorization = `Bearer ${newToken}`;
-            return axios(error.config); // Retry request dengan token baru
+            return axios(error.config);
           } else {
-            navigation.replace('Login'); // Logout jika refresh gagal
+            logout();
           }
         }
         return Promise.reject(error);
@@ -78,61 +89,38 @@ const LoginScreen = ({navigation}) => {
       axios.interceptors.request.eject(requestInterceptor);
       axios.interceptors.response.eject(responseInterceptor);
     };
-  }, [token, refreshToken]);
+  }, [token, refreshToken, isMounted]);
 
   const loginHandler = async () => {
-    console.log('Login handler triggered.');
-
     if (!nip || !password) {
-      console.warn('Validation failed: Missing nip or password.');
-      Alert.alert('Error', 'Please fill in all fields.');
+      console.error('Please fill in all fields.');
       return;
     }
 
-    // Log baseURL dan endpoint lengkap
-    const baseURL = apiClient.defaults.baseURL || 'Base URL not set';
-    const endpoint = '/auth/login';
-    const fullURL = `${baseURL}${endpoint}`;
-    console.log('Full API URL:', fullURL); // Log endpoint lengkap
-
-    console.log('Attempting login with:', {nip, password});
+    setIsLoading(true);
 
     try {
-      const response = await apiClient.post(endpoint, {
-        nip,
-        password,
-      });
+      const response = await apiClient.post('/auth/login', {nip, password});
 
-      console.log('Login response:', response);
+      // Memeriksa apakah status berhasil
+      if (response.status === 200 && response.headers['authorization']) {
+        const token = response.headers['authorization']; // Token dari header 'Authorization'
+        await Keychain.setGenericPassword('token', token); // Menyimpan token di Keychain
 
-      if (response.status === 200 && response.headers.authorization) {
-        const token = response.headers.authorization;
-        console.log('Token received:', token);
-        await Keychain.setGenericPassword('token', token);
-
-        console.log('Fetching user data with token.');
-        const userData = await fetchUser(token);
-        console.log('User data fetched:', userData);
+        // Menyertakan token di header untuk permintaan berikutnya
+        const userData = await fetchUser(token); // Menyertakan token untuk mengambil data user
 
         if (userData) {
-          console.log('Login successful. Navigating to Home.');
           login(userData, token);
           navigation.replace('AppTabs');
+        } else {
+          console.error('User data not found.');
         }
       } else {
-        console.warn('Response does not contain a token:', response);
-        Alert.alert('Error', 'Token not found in response.');
+        console.error('Token not found in response headers.');
       }
     } catch (error) {
       console.error('Login error:', error);
-      console.error(
-        'Detailed error response:',
-        error.response?.data || 'No response data.',
-      );
-      Alert.alert(
-        'Error',
-        error.response?.data?.message || 'An error occurred during login.',
-      );
     } finally {
       setIsLoading(false);
     }
@@ -141,20 +129,12 @@ const LoginScreen = ({navigation}) => {
   const fetchUser = async token => {
     try {
       const response = await apiClient.get('/auth/user', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: {Authorization: `Bearer ${token}`}, // Pastikan token dikirim dalam header Authorization
       });
-
-      if (response.status === 200) {
-        return response.data.data;
-      } else {
-        Alert.alert('Error', 'Failed to fetch user data.');
-        return null;
-      }
+      console.log('Fetched user data:', response.data);
+      return response.data?.data || null;
     } catch (error) {
       console.error('Fetch user error:', error);
-      Alert.alert('Error', 'An error occurred while fetching user data.');
       return null;
     }
   };
@@ -195,12 +175,10 @@ const LoginScreen = ({navigation}) => {
         <TouchableOpacity
           style={[styles.button, isLoading && styles.buttonDisabled]}
           onPress={loginHandler}
-          disabled={isLoading} // Tombol dinonaktifkan saat loading
-        >
+          disabled={isLoading}>
           <Text style={styles.buttonText}>Masuk</Text>
         </TouchableOpacity>
       </View>
-      {/* LOADING INDICATOR */}
       {isLoading && (
         <View style={styles.loadingOverlay}>
           <BarIndicator color="white" size={24} count={5} />
