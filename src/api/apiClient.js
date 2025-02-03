@@ -18,6 +18,7 @@ const useApiClient = () => {
             Authorization: `Bearer ${token}`,
             Accept: 'application/json',
             'Content-Type': 'application/json',
+            'X-requested-with': 'XMLHttpRequest',
           }
         : {},
       timeout: 10000, // Set reasonable timeout

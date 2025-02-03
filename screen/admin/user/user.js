@@ -19,7 +19,7 @@ import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import useApiClient from '../../../src/api/apiClient';
 import * as Keychain from 'react-native-keychain';
-import {BarIndicator} from 'react-native-indicators';
+  import {BarIndicator} from 'react-native-indicators';
 
 export default function User() {
   const [data, setData] = useState([]);

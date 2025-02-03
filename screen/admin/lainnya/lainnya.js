@@ -166,6 +166,9 @@ const Allmenu = ({navigation}) => {
           {renderIcon('Persentase Capaian', 'stats-chart-outline', () =>
             navigation.navigate('SettingPersentaseCapaian'),
           )}
+          {renderIcon('Setting Tugas Tambahan', 'settings-outline', () =>
+            navigation.navigate('SettingTugasTambahan'),
+          )}
         </View>
       </ScrollView>
     </View>

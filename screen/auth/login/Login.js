@@ -81,37 +81,54 @@ const LoginScreen = ({navigation}) => {
   }, [token, refreshToken]);
 
   const loginHandler = async () => {
+    console.log('Login handler triggered.');
+
     if (!nip || !password) {
+      console.warn('Validation failed: Missing nip or password.');
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
-    setIsLoading(true);
+
+    // Log baseURL dan endpoint lengkap
+    const baseURL = apiClient.defaults.baseURL || 'Base URL not set';
+    const endpoint = '/auth/login';
+    const fullURL = `${baseURL}${endpoint}`;
+    console.log('Full API URL:', fullURL); // Log endpoint lengkap
+
+    console.log('Attempting login with:', {nip, password});
 
     try {
-      const response = await apiClient.post('/auth/login', {
+      const response = await apiClient.post(endpoint, {
         nip,
         password,
       });
 
-      console.log('Login response:', response); // Cek response untuk debugging
+      console.log('Login response:', response);
 
       if (response.status === 200 && response.headers.authorization) {
         const token = response.headers.authorization;
-        await Keychain.setGenericPassword(
-          'auth',
-          JSON.stringify({token, refreshToken}),
-        );
+        console.log('Token received:', token);
+        await Keychain.setGenericPassword('token', token);
 
+        console.log('Fetching user data with token.');
         const userData = await fetchUser(token);
+        console.log('User data fetched:', userData);
+
         if (userData) {
+          console.log('Login successful. Navigating to Home.');
           login(userData, token);
           navigation.replace('AppTabs');
         }
       } else {
+        console.warn('Response does not contain a token:', response);
         Alert.alert('Error', 'Token not found in response.');
       }
     } catch (error) {
       console.error('Login error:', error);
+      console.error(
+        'Detailed error response:',
+        error.response?.data || 'No response data.',
+      );
       Alert.alert(
         'Error',
         error.response?.data?.message || 'An error occurred during login.',

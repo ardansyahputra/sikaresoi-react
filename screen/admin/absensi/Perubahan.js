@@ -7,18 +7,18 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
-  Linking,
   Modal,
   TextInput,
   Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Dropdown} from 'react-native-element-dropdown';
-import axios from 'axios';
+import useApiClient from '../../../src/api/apiClient'; // Import useApiClient
+import {BarIndicator} from 'react-native-indicators';
 
 export default function PerubahanPresensi() {
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -26,36 +26,30 @@ export default function PerubahanPresensi() {
   const [isApproveModalVisible, setApproveModalVisible] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
   const [selectedUuid, setSelectedUuid] = useState(null);
-  const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedDisplay, setSelectedDisplay] = useState(null);
+
+  const apiClient = useApiClient(); // Using useApiClient hook
+
 
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
   }, [currentPage, selectedDisplay]);
 
-  const fetchData = async page => {
+  const fetchData = async (page, per) => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.60.123:8000/api/v1/perubahan_absensi/indexadmin',
-        {
-          page,
-          per: selectedDisplay, // Menambahkan parameter 'per' untuk membatasi jumlah data yang ditampilkan
-        },
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-          },
-        },
-      );
+      const response = await apiClient.post('/perubahan_absensi/indexadmin', {
+        page,
+        per, // Add per to limit the data
+      });
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
     } catch (error) {
       console.error('Error fetching data', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -75,44 +69,43 @@ export default function PerubahanPresensi() {
 
   const submitDecline = async () => {
     try {
-      await axios.post(
-        `http://192.168.61.123:8000/api/v1/perubahan_absensi/${selectedUuid}/change`,
-        {status: '2', revisi: declineReason},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-            Accept: 'application/json',
-          },
-        },
-      );
+      await apiClient.post(`/perubahan_absensi/${selectedUuid}/change`, {
+        status: '2',
+        revisi: declineReason,
+      });
+      await apiClient.post(`/perubahan_absensi/${selectedUuid}/change`, {
+        status: '2',
+        revisi: declineReason,
+      });
       Alert.alert('Berhasil', 'Penolakan berhasil.');
       setModalVisible(false);
       setDeclineReason('');
-      fetchData(currentPage); // Refresh data
+      fetchData(currentPage, selectedDisplay); // Refresh data
+      fetchData(currentPage, selectedDisplay); // Refresh data
     } catch (error) {
       Alert.alert('Error', 'Gagal menolak data.');
     }
   };
+
+
   const submitApprove = async () => {
     try {
-      await axios.post(
-        `http://192.168.61.123:8000/api/v1/perubahan_absensi/${selectedUuid}/change`,
-        {status: '1', revisi: null},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM1NjE5NzMxLCJleHAiOjE3ODk2MzMxMTgsIm5iZiI6MTczNTYxOTczOCwianRpIjoiZE5Jck1EdG9qMDZGOURJeCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vZ9Wi3ZtLJIIIZK3mhVZPOnl3Mw9iJw8B64iFOb55kU',
-            Accept: 'application/json',
-          },
-        },
-      );
+      await apiClient.post(`/perubahan_absensi/${selectedUuid}/change`, {
+        status: '1',
+        revisi: null,
+      });
+      await apiClient.post(`/perubahan_absensi/${selectedUuid}/change`, {
+        status: '1',
+        revisi: null,
+      });
       Alert.alert('Berhasil', 'Persetujuan Berhasil.');
-      setModalVisible(false);
-      setDeclineReason('');
-      fetchData(currentPage); // Refresh data
+      setApproveModalVisible(false);
+      fetchData(currentPage, selectedDisplay); // Refresh data
+      setApproveModalVisible(false);
+      fetchData(currentPage, selectedDisplay); // Refresh data
     } catch (error) {
-      Alert.alert('Error', 'Gagal menolak data.');
+      Alert.alert('Error', 'Gagal menyetujui data.');
+      Alert.alert('Error', 'Gagal menyetujui data.');
     }
   };
 
@@ -281,124 +274,11 @@ export default function PerubahanPresensi() {
         </View>
       </View>
       {/* Loading Indicator */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : (
-        <FlatList
-          ListHeaderComponent={TableHeader}
-          data={data}
-          renderItem={renderItem}
-          keyExtractor={item => item.id.toString()}
-          contentContainerStyle={styles.card}
-          ListFooterComponent={
-            <View>
-              <Text style={styles.pageInfo}>
-                Showing page {currentPage} of {lastPage}
-              </Text>
-              <View style={styles.paginationContainer}>
-                <View style={styles.paginationButtons}>
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === 1 && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === 1}
-                    onPress={() =>
-                      setCurrentPage(prev => Math.max(prev - 1, 1))
-                    }>
-                    <Text style={styles.pageButtonText}>Previous</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === lastPage && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === lastPage}
-                    onPress={() =>
-                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
-                    }>
-                    <Text style={styles.pageButtonText}>Next</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          }
-        />
-      )}
-      <Modal
-        visible={isApproveModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setApproveModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Setujui Data</Text>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setApproveModalVisible(false)}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.submitButton, styles.approveButton]}
-                onPress={submitApprove}>
-                <Text style={styles.buttonText}>Setujui</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
         </View>
-      </Modal>
-
-      {/* Modal Input Alasan Penolakan */}
-      <Modal
-        visible={isModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Tolak Data</Text>
-            <Text style={styles.modalLabel}>Alasan Penolakan:</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Masukkan alasan"
-              multiline
-              value={declineReason}
-              onChangeText={setDeclineReason}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setModalVisible(false)}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={submitDecline}>
-                <Text style={styles.buttonText}>Tolak</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Image
-            source={require('../assets/images/logo.png')}
-            style={styles.logo}
-          />
-        </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
-          <TouchableOpacity style={styles.iconWrapper}>
-            <Ionicons name="person-circle-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
-      </View>
-      {/* Loading Indicator */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
@@ -789,5 +669,10 @@ const styles = StyleSheet.create({
   },
   customFont: {
     fontFamily: 'Poppins-Regular',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

@@ -15,23 +15,21 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
+import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../../src/api/apiClient';
+import {BarIndicator} from 'react-native-indicators';
 
 export default function UangMakan() {
+  const navigation = useNavigation();
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [isTambahModalVisible, setTambahModalVisible] = useState(false);
   const [isHapusModalVisible, setHapusModalVisible] = useState(false);
-  const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);
-  const [selectedGolongan, setSelectedGolongan] = useState(null);
-  const [selectedNominal, setSelectedNominal] = useState(null);
-  const [editData, setEditData] = useState({});
   const apiClient = useApiClient();
 
   useEffect(() => {
@@ -40,7 +38,7 @@ export default function UangMakan() {
 
   const fetchData = async page => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       const response = await apiClient.post('/uang_makan/index', {page});
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
@@ -48,37 +46,12 @@ export default function UangMakan() {
     } catch (error) {
       console.error('Error fetching data', error);
     } finally {
-      setLoading(false);
-    }
-  };
-
-  const submitEdit = async () => {
-    try {
-      await apiClient.post(`/uang_makan/${editData.uuid}/update`, {
-        golongan: editData.golongan,
-        nominal: editData.nominal,
-      });
-      Alert.alert('Berhasil', 'Data berhasil diperbarui.');
-      setEditModalVisible(false);
-      fetchData(currentPage); // Refresh data
-    } catch (error) {
-      Alert.alert('Error', 'Gagal memperbarui data.');
-    }
-  };
-
-  const fetchEditData = async uuid => {
-    try {
-      const response = await apiClient.get(`/uang_makan/${uuid}/edit`);
-      setEditData(response.data.data); // Simpan data edit di state
-      setEditModalVisible(true); // Tampilkan modal edit
-    } catch (error) {
-      console.error('Error fetching edit data:', error);
-      Alert.alert('Error', 'Gagal mengambil data untuk diedit.');
+      setIsLoading(false);
     }
   };
 
   const handleEdit = uuid => {
-    fetchEditData(uuid);
+    navigation.navigate('EditUangMakan', {uuid});
   };
 
   const handleHapus = uuid => {
@@ -98,27 +71,7 @@ export default function UangMakan() {
   };
 
   const handleTambah = () => {
-    setTambahModalVisible(true);
-  };
-
-  const submitTambah = async () => {
-    try {
-      await apiClient.post('/uang_makan/create', {
-        golongan: selectedGolongan,
-        nominal: selectedNominal,
-      });
-      Alert.alert('Berhasil', 'Data berhasil ditambahkan.');
-      setTambahModalVisible(false);
-      fetchData(currentPage); // Refresh data
-    } catch (error) {
-      Alert.alert('Error', 'Gagal menambahkan data.');
-    }
-  };
-
-  const handleCloseTambahModal = () => {
-    setSelectedGolongan('');
-    setSelectedNominal('');
-    setTambahModalVisible(false);
+    navigation.navigate('TambahUangMakan');
   };
 
   const display = [
@@ -247,8 +200,11 @@ export default function UangMakan() {
         </View>
       </View>
       {/* Loading Indicator */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
+        </View>
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
@@ -291,99 +247,6 @@ export default function UangMakan() {
           }
         />
       )}
-
-      <Modal
-        visible={isEditModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setEditModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Data</Text>
-            <Text style={styles.modalLabel}>Golongan</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Golongan"
-              value={editData.golongan || ''} // Pastikan menggunakan default kosong jika null
-              onChangeText={text =>
-                setEditData(prev => ({...prev, golongan: text}))
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <Text style={styles.modalLabel}>Nominal</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Nominal"
-              value={editData.nominal || ''}
-              onChangeText={text =>
-                setEditData(prev => ({...prev, nominal: text}))
-              }
-              placeholderTextColor={'#B6B9CA'}
-              keyboardType="numeric"
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setEditModalVisible(false)}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={submitEdit} // Fungsi untuk menyimpan perubahan
-              >
-                <Text style={styles.buttonText}>Simpan</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Tambah Uang Makan Modal */}
-      <Modal
-        visible={isTambahModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setTambahModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Tambah Data</Text>
-            <Text style={styles.modalLabel}>Golongan</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Golongan"
-              multiline
-              value={selectedGolongan}
-              onChangeText={setSelectedGolongan}
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <Text style={styles.modalLabel}>Nominal</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Nominal"
-              multiline
-              value={selectedNominal}
-              onChangeText={setSelectedNominal}
-              placeholderTextColor={'#B6B9CA'}
-              keyboardType="numeric"
-            />
-            {/* Tombol Modal */}
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => handleCloseTambahModal()}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={() => {
-                  submitTambah(); // Tutup modal setelah menyimpan
-                }}>
-                <Text style={styles.buttonText}>Simpan</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       {/* Hapus Uang Makan Modal */}
       <Modal
@@ -742,5 +605,10 @@ const styles = StyleSheet.create({
   customFont: {
     color: 'white',
     fontFamily: 'Poppins-Regular',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

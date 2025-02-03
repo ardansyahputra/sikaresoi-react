@@ -16,56 +16,32 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
+import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../../src/api/apiClient';
+import {BarIndicator} from 'react-native-indicators';
 
 export default function UnitKerja() {
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [isTambahModalVisible, setTambahModalVisible] = useState(false);
   const [isHapusModalVisible, setHapusModalVisible] = useState(false);
   const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);
-  const [selectedUnitKerja, setSelectedUnitKerja] = useState(null);
   const [editData, setEditData] = useState({});
-  const [isMaster, setIsMaster] = useState(false);
-  const [isSub, setIsSub] = useState(false);
-  const [pickUnitKerjaOptions, setPickUnitKerjaOptions] = useState([]);
-  const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
+  const navigation = useNavigation();
   const apiClient = useApiClient();
 
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
   }, [currentPage, selectedDisplay]);
 
-  useEffect(() => {
-    if (isSub) {
-      fetchUnitKerjaOptions();
-    }
-  }, [isSub]);
-
-  const fetchUnitKerjaOptions = async () => {
-    try {
-      const response = await apiClient.get('/unit_kerja/get_unit_kerja');
-      setUnitKerjaOptions(
-        response.data.data.map(item => ({
-          label: `${item.kd_unit_kerja} - ${item.nm_unit_kerja}`,
-          value: item.id,
-        })),
-      );
-    } catch (error) {
-      console.error('Error fetching jabatan options:', error);
-      Alert.alert('Error', 'Gagal memuat data jabatan.');
-    }
-  };
-
   const fetchData = async page => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       const response = await apiClient.post('/unit_kerja/index', {page});
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
@@ -73,7 +49,7 @@ export default function UnitKerja() {
     } catch (error) {
       console.error('Error fetching data', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -108,7 +84,7 @@ export default function UnitKerja() {
   };
 
   const handleEdit = uuid => {
-    fetchEditData(uuid);
+    navigation.navigate('EditUnitKerja', {uuid});
   };
 
   const handleHapus = uuid => {
@@ -128,38 +104,7 @@ export default function UnitKerja() {
   };
 
   const handleTambah = () => {
-    setTambahModalVisible(true);
-  };
-
-  const submitTambah = async () => {
-    try {
-      await apiClient.post('/unit_kerja/create', {
-        nm_unit_kerja: selectedUnitKerja,
-        is_master: isMaster,
-        is_sub: isSub,
-        code: pickUnitKerjaOptions,
-      });
-
-      console.log('Data berhasil dikirim.');
-      Alert.alert('Berhasil', 'Data berhasil ditambahkan.');
-      setTambahModalVisible(false);
-      fetchData(currentPage); // Refresh data
-
-      // Reset form setelah berhasil
-      setSelectedUnitKerja('');
-      setUnitKerjaOptions('');
-      setIsMaster(false);
-      setIsSub(false);
-      console.log('Form telah direset.');
-    } catch (error) {
-      console.error('Error saat mengirim data:', error);
-      Alert.alert('Error', 'Gagal menambahkan data.');
-    }
-  };
-
-  const handleCloseTambahModal = () => {
-    setSelectedUnitKerja('');
-    setTambahModalVisible(false);
+    navigation.navigate('TambahUnitKerja');
   };
 
   const display = [
@@ -293,8 +238,11 @@ export default function UnitKerja() {
         </View>
       </View>
       {/* Loading Indicator */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
+        </View>
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
@@ -366,97 +314,6 @@ export default function UnitKerja() {
                 style={styles.submitButton}
                 onPress={submitEdit} // Fungsi untuk menyimpan perubahan
               >
-                <Text style={styles.buttonText}>Simpan</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Tambah unit kerja Modal */}
-      <Modal
-        visible={isTambahModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setTambahModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Tambah Data</Text>
-            <Text style={styles.modalLabel}>Nama Unit Kerja</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Nama Unit Kerja"
-              multiline
-              value={selectedUnitKerja}
-              onChangeText={setSelectedUnitKerja}
-              placeholderTextColor={'#B6B9CA'}
-            />
-
-            {/* Switch untuk Master */}
-            <View style={styles.switchContainer}>
-              <Text style={styles.switchLabel}>Master</Text>
-              <Switch
-                value={isMaster}
-                onValueChange={value => {
-                  setIsMaster(value); // Perbarui Master
-                  if (value) {
-                    setIsSub(false); // Nonaktifkan Sub jika Master aktif
-                  }
-                }}
-              />
-            </View>
-
-            {/* Switch untuk Sub */}
-            <View style={styles.switchContainer}>
-              <Text style={styles.switchLabel}>Sub</Text>
-              <Switch
-                value={isSub}
-                onValueChange={value => {
-                  setIsSub(value); // Perbarui Sub
-                  if (value) {
-                    setIsMaster(false); // Nonaktifkan Master jika Sub aktif
-                  }
-                }}
-              />
-            </View>
-
-            {isSub && (
-              <>
-                <Text style={styles.modalLabel}>Jabatan Sub</Text>
-                <Dropdown
-                  style={styles.modalInput}
-                  data={unitKerjaOptions}
-                  labelField="label"
-                  valueField="value"
-                  placeholder="Pilih Jabatan"
-                  placeholderStyle={{color: '#B6B9CA'}}
-                  value={pickUnitKerjaOptions}
-                  onChange={item => setPickUnitKerjaOptions(item.value)}
-                  renderItem={item => (
-                    <Text
-                      style={[
-                        styles.dropdownItem,
-                        styles.customFont,
-                        {color: '#333'},
-                      ]}>
-                      {item.label}
-                    </Text>
-                  )}
-                />
-              </>
-            )}
-            {/* Tombol Modal */}
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => handleCloseTambahModal()}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={() => {
-                  submitTambah(); // Tutup modal setelah menyimpan
-                }}>
                 <Text style={styles.buttonText}>Simpan</Text>
               </TouchableOpacity>
             </View>
@@ -831,5 +688,10 @@ const styles = StyleSheet.create({
   switchLabel: {
     fontSize: 16,
     color: '#333',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

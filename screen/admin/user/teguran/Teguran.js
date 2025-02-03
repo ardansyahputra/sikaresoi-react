@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,147 +7,82 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
-  Linking,
+  Switch,
   Modal,
   TextInput,
   Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {Dropdown} from 'react-native-element-dropdown';
-import axios from 'axios';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import { Dropdown } from 'react-native-element-dropdown';
+import {useNavigation} from '@react-navigation/native';
+import useApiClient from '../../../../src/api/apiClient';
 
-export default function PerubahanPresensi() {
+export default function Jabatan() {
+    const navigation = useNavigation();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [isModalVisible, setModalVisible] = useState(false);
-  const [isApproveModalVisible, setApproveModalVisible] = useState(false);
-  const [declineReason, setDeclineReason] = useState('');
-  const [selectedUuid, setSelectedUuid] = useState(null);
-  const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedDisplay, setSelectedDisplay] = useState(null);
-  const [per, setPer] = useState("25");  // Nilai default per
+  const [tambahModalVisible, setTambahModalVisible] = useState(false); // Tambahkan state ini
+  const apiClient = useApiClient();
 
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
   }, [currentPage, selectedDisplay]);
 
-  const fetchData = async page => {
+  const fetchData = async (page) => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.61.123:8000/api/v1/perubahan_absensi/indexandro',
-        {
-          page,
-          per, // Menambahkan parameter 'per' untuk membatasi jumlah data yang ditampilkan
-        },
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYxLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM0OTIwMzIyLCJleHAiOjE3MzQ5MzM2MjgsIm5iZiI6MTczNDkzMDAyOCwianRpIjoiZk9XcW5naEZ4ZjZmRWFNQyIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.K_Xnt7ZbNpogo5TG9zfT2MQhTqbw1BHCCSeG88qwLrI',
-          },
-        },
-      );
-      setData(response.data.data);
-      setCurrentPage(response.data.current_page);
-      setLastPage(response.data.last_page);
+      const response = await apiClient.post('/teguran/indexandro', { page });
+      if (response?.data?.data) {
+        setData(response.data.data);
+        setCurrentPage(response.data.current_page);
+        setLastPage(response.data.last_page);
+      } else {
+        console.error('Data tidak valid:', response);
+        setData([]);
+      }
     } catch (error) {
-      console.error('Error fetching data', error);
+      console.error('Error fetching data:', error);
+      Alert.alert('Error', 'Gagal memuat data.');
     } finally {
       setLoading(false);
     }
-  };  
-
-  const handleSearch = (query) => {
-    setSearchQuery(query);
   };
 
-  const handleApprove = uuid => {
-    setSelectedUuid(uuid);
-    setApproveModalVisible(true);
-  };
-  const handleDecline = uuid => {
-    setSelectedUuid(uuid);
-    setModalVisible(true);
+  const handleTambah = () => {
+    setTambahModalVisible(true); // Ubah sesuai state yang didefinisikan
+    navigation.navigate('Tambahtegur');
   };
 
-  const submitDecline = async () => {
-    try {
-      await axios.post(
-        `http://192.168.61.123:8000/api/v1/perubahan_absensi/${selectedUuid}/change`,
-        {status: '2', revisi: declineReason},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYxLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM0OTIwMzIyLCJleHAiOjE3MzQ5MjUyNjEsIm5iZiI6MTczNDkyMTY2MSwianRpIjoiYmFFTm9TU0VxUHd2cDIybCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.MFYjY0MSN739BUU5KOI80TgnxCjP8vjgOI7276hSOuA',
-            Accept: 'application/json',
-          },
-        },
-      );
-      Alert.alert('Berhasil', 'Penolakan berhasil.');
-      setModalVisible(false);
-      setDeclineReason('');
-      fetchData(currentPage); // Refresh data
-    } catch (error) {
-      Alert.alert('Error', 'Gagal menolak data.');
-    }
-  };
-  const submitApprove = async () => {
-    try {
-      await axios.post(
-        `http://192.168.61.123:8000/api/v1/perubahan_absensi/${selectedUuid}/change`,
-        {status: '1', revisi: null},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYxLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM0OTIwMzIyLCJleHAiOjE3MzQ5MjUyNjEsIm5iZiI6MTczNDkyMTY2MSwianRpIjoiYmFFTm9TU0VxUHd2cDIybCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.MFYjY0MSN739BUU5KOI80TgnxCjP8vjgOI7276hSOuA',
-            Accept: 'application/json',
-          },
-        },
-      );
-      Alert.alert('Berhasil', 'Persetujuan Berhasil.');
-      setModalVisible(false);
-      setDeclineReason('');
-      fetchData(currentPage); // Refresh data
-    } catch (error) {
-      Alert.alert('Error', 'Gagal menolak data.');
-    }
+  const handleEdit = (uuid) => {
+    navigation.navigate('Edittegur', { uuid });
   };
 
   const display = [
-    {label: '5', value: 1},
-    {label: '10', value: 2},
-    {label: '25', value: 3},
-    {label: '50', value: 4},
-    {label: '100', value: 5},
+    { label: '5', value: 1 },
+    { label: '10', value: 2 },
+    { label: '25', value: 3 },
+    { label: '50', value: 4 },
+    { label: '100', value: 5 },
   ];
 
-  const handlePerChange = (event) => {
-    setPer(event.target.value);  // Perbarui nilai 'per' dengan nilai yang dipilih
-  };
-  
-
-  const toggleExpand = id => {
+  const toggleExpand = (id) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const getStatusStyle = status => {
-    switch (status?.toUpperCase()) {
-      case 'DISETUJUI':
-        return styles.approvedStatus;
-      case 'DITOLAK':
-        return styles.rejectedStatus;
-      case 'MENUNGGU':
-        return styles.pendingStatus;
-      default:
-        return styles.defaultStatus;
-    }
-  }; 
-
   const TableHeader = () => (
     <View>
+      <View style={styles.tambahContainer}>
+        <TouchableOpacity style={styles.tambahButton} onPress={handleTambah}>
+          <FontAwesome name="plus" size={20} color="#fff" style={styles.icon} />
+          <Text style={styles.tambahText}>TAMBAH</Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.filterContainer}>
         <View style={styles.displayContainer}>
           <Text style={styles.displayText}>Display</Text>
@@ -158,16 +93,14 @@ export default function PerubahanPresensi() {
             valueField="value"
             placeholder="10"
             value={selectedDisplay}
-            onChange={item => setSelectedDisplay(item.value)}
-            renderItem={item => (
+            onChange={(item) => setSelectedDisplay(item.value)}
+            renderItem={(item) => (
               <Text style={[styles.dropdownItem, styles.customFont]}>
                 {item.label}
               </Text>
             )}
-            placeholderStyle={styles.customFont}
           />
         </View>
-        {/* Search Bar */}
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchBar}
@@ -179,15 +112,24 @@ export default function PerubahanPresensi() {
       </View>
       <View style={styles.tableHeader}>
         <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
-        <Text style={[styles.headerCell, styles.nameCell]}>Name</Text>
-        <Text style={[styles.headerCell, styles.tableStatusCell]}>Dibaca</Text>
+        <Text style={[styles.headerCell, styles.nameCell]}>User</Text>
+        <Text style={[styles.headerCell, styles.tableStatusCell]}>Potongan</Text>
         <View style={styles.expandIconCell} />
       </View>
     </View>
   );
 
-  const renderItem = ({item, index}) => {
+  const renderItem = ({ item, index }) => {
+    if (!item) return null;
+
+    const userName = item.user ? item.user.name : '-';
+    const jenisTeguran = item.jenis || '-';
+    const potongan = item.potongan || '-';
+    const tanggalPelanggaran = item.tgl_pelanggaran || '-';
+    const dibaca = item.dibaca || '-';
+
     const isExpanded = expandedId === item.id;
+    const isDibacaEmpty = dibaca === '-';
 
     return (
       <View style={styles.tableRow}>
@@ -195,23 +137,15 @@ export default function PerubahanPresensi() {
           style={styles.rowHeader}
           onPress={() => toggleExpand(item.id)}>
           <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
-          <Text
-            style={[styles.tableCell, styles.nameCell]}
-            numberOfLines={1}
-            ellipsizeMode="tail">
-            {item.user?.name || '-'}
+          <Text style={[styles.tableCell, styles.nameCell]} numberOfLines={1} ellipsizeMode="tail">
+            {userName}
           </Text>
           <View style={styles.statusCellContainer}>
-            <Text
-              style={[
-                styles.tableCell,
-                styles.statusCell,
-                getStatusStyle(item.status),
-              ]}>
-              {item.status || '-'}
+            <Text style={[styles.tableCell, styles.statusCell]}>
+              {potongan}
             </Text>
           </View>
-          <View style={styles.expandIconCell}>
+          <View style={styles.actionCell}>
             <Ionicons
               name={isExpanded ? 'chevron-up' : 'chevron-down'}
               size={20}
@@ -221,33 +155,30 @@ export default function PerubahanPresensi() {
         </TouchableOpacity>
         {isExpanded && (
           <View style={styles.expandedContent}>
-            <Text style={styles.expandedText}>
-              Jenis: {item.tanggal || '-'}
-            </Text>
-            <Text style={styles.expandedText}>
-              Tahun: {item.jam_masuk || '-'}
-            </Text>
-            <Text style={styles.expandedText}>
-              Jam Keluar: {item.jam_keluar || '-'}
-            </Text>
-            <View style={styles.filetext}>
-              <Text>File:</Text>
-              <Text
-                style={styles.expandedLinkText}
-                onPress={() => Linking.openURL(item.file)}>
-                File Absensi
-              </Text>
+            <Text style={styles.expandedText}>Jenis Teguran: {jenisTeguran}</Text>
+            <Text style={styles.expandedText}>Potongan: {potongan}</Text>
+            <Text style={styles.expandedText}>Tanggal Pelanggaran: {tanggalPelanggaran}</Text>
+
+            <View style={styles.dibacaWrapper}>
+              <Text style={styles.expandedText}>Dibaca:</Text>
+              <View style={[styles.dibacaValueWrapper, isDibacaEmpty && { backgroundColor: 'red' }]}>
+                <Text style={styles.DibacaText}>{dibaca}</Text>
+              </View>
             </View>
+
+            <Text style={styles.expandedText}>User: {userName}</Text>
             <View style={styles.actionContainer}>
               <TouchableOpacity
-                style={styles.approveButton}
-                onPress={() => handleApprove(item.uuid)}>
-                <Ionicons name="checkmark" size={20} color="white" />
+                style={styles.editButton}
+                onPress={() => handleEdit(item.uuid)}>
+                <FontAwesome name="pencil" size={20} color="white" />
+                <Text style={styles.customFont}>Edit</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.declineButton}
-                onPress={() => handleDecline(item.uuid)}>
-                <Ionicons name="close" size={20} color="white" />
+                onPress={() => handleHapus(item.uuid)}>
+                <Ionicons name="trash" size={20} color="white" />
+                <Text style={styles.customFont}>Hapus</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -255,14 +186,13 @@ export default function PerubahanPresensi() {
       </View>
     );
   };
+  
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-        {/* IMAGE COy )@@#######r*/}
-        </View>
+        <View style={styles.headerLeft}></View>
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
           <TouchableOpacity style={styles.iconWrapper}>
@@ -315,62 +245,6 @@ export default function PerubahanPresensi() {
           }
         />
       )}
-      <Modal
-        visible={isApproveModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setApproveModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Setujui Data</Text>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setApproveModalVisible(false)}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.submitButton, styles.approveButton]}
-                onPress={submitApprove}>
-                <Text style={styles.buttonText}>Setujui</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Modal Input Alasan Penolakan */}
-      <Modal
-        visible={isModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Tolak Data</Text>
-            <Text style={styles.modalLabel}>Alasan Penolakan:</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Masukkan alasan"
-              multiline
-              value={declineReason}
-              onChangeText={setDeclineReason}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setModalVisible(false)}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={submitDecline}>
-                <Text style={styles.buttonText}>Tolak</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -431,6 +305,7 @@ const styles = StyleSheet.create({
   nameCell: {
     flex: 1,
     overflow: 'hidden',
+    marginRight: 10,
   },
   statusCellContainer: {
     width: 100,
@@ -438,6 +313,7 @@ const styles = StyleSheet.create({
   statusCell: {
     textAlign: 'center',
     fontWeight: 'bold',
+    marginRight: 35,
   },
   expandIconCell: {
     width: 40,
@@ -462,6 +338,26 @@ const styles = StyleSheet.create({
   expandedText: {
     marginBottom: 5,
     fontSize: 14,
+  },
+  dibacaWrapper: {
+    flexDirection: 'row', // Menyusun "Dibaca:" dan nilai dibaca dalam satu baris
+    alignItems: 'center',  // Menyusun konten secara vertikal agar berada sejajar
+    marginBottom: 5,       // Memberikan jarak bawah setelah wrapper
+    flexWrap: 'wrap',      // Memungkinkan elemen untuk membungkus jika terlalu panjang
+  },
+  dibacaValueWrapper: {
+    backgroundColor: '#28c4ac', // Warna latar belakang default
+    borderRadius: 8,            // Membuat sudut rounded
+    paddingVertical: 5,         // Menambahkan padding vertikal di dalam wrapper
+    paddingHorizontal: 10,      // Menambahkan padding horizontal di dalam wrapper
+    marginLeft: 5,       
+    marginBottom: 20,      // Memberikan jarak antara "Dibaca:" dan nilai
+    maxWidth: '70%',            // Membatasi lebar nilai agar tidak melampaui layar
+    overflow: 'hidden',         // Menyembunyikan konten yang melampaui batas
+  },
+  DibacaText: {
+    fontSize: 14,
+    color: '#fff',             // Warna teks putih agar kontras dengan background
   },
   expandedLinkText: {
     color: 'blue',
@@ -594,7 +490,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 5,
     padding: 10,
-    minHeight: 80,
+    minHeight: 10,
     marginBottom: 15,
     textAlignVertical: 'top',
   },
@@ -658,10 +554,61 @@ const styles = StyleSheet.create({
   },
   dropdownItem: {
     padding: 10,
-    fontSize: 16,
+    fontSize: 12,
     color: '#333',
   },
   customFont: {
     fontFamily: 'Poppins-Regular',
+  },
+  tambahContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  tambahButton: {
+    flexDirection: 'row',
+    backgroundColor: '#3699FF',
+    width: 90,
+    height: 40,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tambahText: {
+    marginTop: 1,
+    fontFamily: 'Poppins-Regular',
+    color: 'white',
+    marginLeft: 5,
+    lineHeight: 20,
+    fontSize: 13,
+    textAlignVertical: 'center',
+  },
+  editButton: {
+    gap: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#3699FF',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  customFont: {
+    color: 'white',
+    fontFamily: 'Poppins-Regular',
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: 10,
+  },
+  switchLabel: {
+    fontSize: 16,
+    color: '#333',
   },
 });

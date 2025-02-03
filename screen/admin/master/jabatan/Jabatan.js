@@ -14,59 +14,31 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import {useNavigation} from '@react-navigation/native';
 import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../../../../src/api/apiClient';
+import {BarIndicator} from 'react-native-indicators';
 
 export default function Jabatan() {
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [isTambahModalVisible, setTambahModalVisible] = useState(false);
   const [isHapusModalVisible, setHapusModalVisible] = useState(false);
-  const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);
-  const [selectedJabatan, setSelectedJabatan] = useState(null);
-  const [selectedGrade, setSelectedGrade] = useState(null);
-  const [selectedNilaiJabatan, setSelectedNilaiJabatan] = useState(null);
-  const [editData, setEditData] = useState({});
-  const [isMaster, setIsMaster] = useState(false);
-  const [isSub, setIsSub] = useState(false);
-  const [pickJabatanOptions, setPickJabatanOptions] = useState([]);
-  const [jabatanOptions, setJabatanOptions] = useState([]);
+  const navigation = useNavigation();
   const apiClient = useApiClient();
 
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
   }, [currentPage, selectedDisplay]);
 
-  useEffect(() => {
-    if (isSub) {
-      fetchJabatanOptions();
-    }
-  }, [isSub]);
-
-  const fetchJabatanOptions = async () => {
-    try {
-      const response = await apiClient.get('/jabatan/getjabatan');
-      setJabatanOptions(
-        response.data.data.map(item => ({
-          label: `${item.kd_jabatan} - ${item.nm_jabatan}`,
-          value: item.id,
-        })),
-      );
-    } catch (error) {
-      console.error('Error fetching jabatan options:', error);
-      Alert.alert('Error', 'Gagal memuat data jabatan.');
-    }
-  };
-
   const fetchData = async page => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       const response = await apiClient.post('/jabatan/index', {page});
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
@@ -74,38 +46,12 @@ export default function Jabatan() {
     } catch (error) {
       console.error('Error fetching data', error);
     } finally {
-      setLoading(false);
-    }
-  };
-
-  const submitEdit = async () => {
-    try {
-      await apiClient.post(`/jabatan/${editData.uuid}/update`, {
-        nm_jabatan: editData.nm_jabatan,
-        grade: editData.grade,
-        jv: editData.jv,
-      });
-      Alert.alert('Berhasil', 'Data berhasil diperbarui.');
-      setEditModalVisible(false);
-      fetchData(currentPage); // Refresh data
-    } catch (error) {
-      Alert.alert('Error', 'Gagal memperbarui data.');
-    }
-  };
-
-  const fetchEditData = async uuid => {
-    try {
-      const response = await apiClient.get(`/jabatan/${uuid}/edit`);
-      setEditData(response.data.data); // Simpan data edit di state
-      setEditModalVisible(true); // Tampilkan modal edit
-    } catch (error) {
-      console.error('Error fetching edit data:', error);
-      Alert.alert('Error', 'Gagal mengambil data untuk diedit.');
+      setIsLoading(false);
     }
   };
 
   const handleEdit = uuid => {
-    fetchEditData(uuid);
+    navigation.navigate('EditJabatan', {uuid});
   };
 
   const handleHapus = uuid => {
@@ -125,40 +71,7 @@ export default function Jabatan() {
   };
 
   const handleTambah = () => {
-    setTambahModalVisible(true);
-  };
-
-  const submitTambah = async () => {
-    try {
-      await apiClient.post('/jabatan/create', {
-        nm_jabatan: selectedJabatan,
-        grade: selectedGrade,
-        jv: selectedNilaiJabatan,
-        code: pickJabatanOptions,
-        master: isMaster,
-        sub_master: isSub,
-      });
-
-      setSelectedJabatan(null); // Reset dropdown jabatan
-      setSelectedGrade(null); // Reset grade
-      setSelectedNilaiJabatan(null); // Reset nilai jabatan
-      setIsMaster(false); // Reset status master
-      setIsSub(false); // Reset status sub_master
-      setPickJabatanOptions(null); // Reset dropdown jabatan sub
-
-      Alert.alert('Berhasil', 'Data berhasil ditambahkan.');
-      setTambahModalVisible(false);
-      fetchData(currentPage); // Refresh data
-    } catch (error) {
-      console.error('Error:', error);
-      Alert.alert('Error', 'Gagal menambahkan data.');
-    }
-  };
-
-  const handleCloseTambahModal = () => {
-    setSelectedJabatan('');
-    setSelectedGrade('');
-    setTambahModalVisible(false);
+    navigation.navigate('TambahJabatan');
   };
 
   const display = [
@@ -297,8 +210,11 @@ export default function Jabatan() {
         </View>
       </View>
       {/* Loading Indicator */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
+        </View>
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
@@ -341,172 +257,6 @@ export default function Jabatan() {
           }
         />
       )}
-
-      {/* Edit Jabatan Modal */}
-      <Modal
-        visible={isEditModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setEditModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Data</Text>
-            <Text style={styles.modalLabel}>Jabatan</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Jabatan"
-              value={editData.nm_jabatan || ''} // Pastikan menggunakan default kosong jika null
-              onChangeText={text =>
-                setEditData(prev => ({...prev, nm_jabatan: text}))
-              }
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <Text style={styles.modalLabel}>Grade</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Grade"
-              value={editData.grade || ''}
-              onChangeText={text =>
-                setEditData(prev => ({...prev, grade: text}))
-              }
-              placeholderTextColor={'#B6B9CA'}
-              keyboardType="numeric"
-            />
-            <Text style={styles.modalLabel}>Nilai Jabatan</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Job Value"
-              value={editData.jv || ''} // Pastikan menggunakan default kosong jika null
-              onChangeText={text => setEditData(prev => ({...prev, jv: text}))}
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setEditModalVisible(false)}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={submitEdit} // Fungsi untuk menyimpan perubahan
-              >
-                <Text style={styles.buttonText}>Simpan</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Tambah Jabatan Modal */}
-      <Modal
-        visible={isTambahModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setTambahModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Tambah Data</Text>
-            <Text style={styles.modalLabel}>Nama Jabatan</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Nama Jabatan"
-              multiline
-              value={selectedJabatan}
-              onChangeText={setSelectedJabatan}
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <Text style={styles.modalLabel}>Grade</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Grade"
-              multiline
-              value={selectedGrade}
-              onChangeText={setSelectedGrade}
-              placeholderTextColor={'#B6B9CA'}
-            />
-            <Text style={styles.modalLabel}>Nilai Jabatan</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Job Value"
-              multiline
-              value={selectedNilaiJabatan}
-              onChangeText={setSelectedNilaiJabatan}
-              placeholderTextColor={'#B6B9CA'}
-              keyboardType="numeric"
-            />
-
-            {/* Switch untuk Master */}
-            <View style={styles.switchContainer}>
-              <Text style={styles.switchLabel}>Master</Text>
-              <Switch
-                value={isMaster}
-                onValueChange={value => {
-                  setIsMaster(value); // Perbarui Master
-                  if (value) {
-                    setIsSub(false); // Nonaktifkan Sub jika Master aktif
-                  }
-                }}
-              />
-            </View>
-
-            {/* Switch untuk Sub */}
-            <View style={styles.switchContainer}>
-              <Text style={styles.switchLabel}>Sub</Text>
-              <Switch
-                value={isSub}
-                onValueChange={value => {
-                  setIsSub(value); // Perbarui Sub
-                  if (value) {
-                    setIsMaster(false); // Nonaktifkan Master jika Sub aktif
-                  }
-                }}
-              />
-            </View>
-
-            {isSub && (
-              <>
-                <Text style={styles.modalLabel}>Jabatan Sub</Text>
-                <Dropdown
-                  style={styles.modalInput}
-                  data={jabatanOptions}
-                  labelField="label"
-                  valueField="value"
-                  placeholder="Pilih Jabatan"
-                  placeholderStyle={{color: '#B6B9CA'}}
-                  value={pickJabatanOptions}
-                  onChange={item => setPickJabatanOptions(item.value)}
-                  renderItem={item => (
-                    <Text
-                      style={[
-                        styles.dropdownItem,
-                        styles.customFont,
-                        {color: '#333'},
-                      ]}>
-                      {item.label}
-                    </Text>
-                  )}
-                />
-              </>
-            )}
-
-            {/* Tombol Modal */}
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => handleCloseTambahModal()}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={() => {
-                  submitTambah(); // Tutup modal setelah menyimpan
-                }}>
-                <Text style={styles.buttonText}>Simpan</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       {/* Hapus Jabatan Modal */}
       <Modal
@@ -875,5 +625,10 @@ const styles = StyleSheet.create({
   switchLabel: {
     fontSize: 16,
     color: '#333',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
