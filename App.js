@@ -27,14 +27,18 @@ import DataTable2 from './screen/DataTable2';
 import RemunerasiScreen from './screen/BottomNavBar/Home/Persetujuan/Renumerasi.js';
 import PencapaianKerja from './screen/PencapaianKerja.js';
 import Remunerasi from './screen/Remunerasi.js';
-import KontrakKerja from './screen/KontrakKerja.js';
+// import KontrakKerja from './screen/KontrakKerja.js';
 import HistoryPresensi from './screen/HistoryPresensi';
 import ProfileScreen from './screen/BottomNavBar/Profile/ProfileScreen';
 import ProfileEdit from './screen/BottomNavBar/Profile/ProfileEdit';
 import Password from './screen/BottomNavBar/Profile/Password';
 import PersetujuanRealisasi from './screen/PersetujuanRealisasi';
+import Persetujuan from './screen/Persetujuan.js';
+import Bacascreen from './screen/Bacascreen.js';
+import Bacakontrak from './screen/Bacakontrak.js';
+import KontrakKerja from './screen/BottomNavBar/Menu/Laporan/KontrakKerja.js';
+import RealisasiNext from './screen/RealisasiNext.js';
 
-// Bottom Tab Navigator
 const Tab = createBottomTabNavigator();
 
 // Stack Navigator untuk Menu
@@ -121,12 +125,12 @@ function HomeStack() {
         options={{headerShown: false}}
       />
       <Stack.Screen
-        name="Persetujusn"
+        name="Persetujuan"
         component={Persetujuan}
         options={{headerShown: false}}
       />
       <Stack.Screen
-        name="PersetujuanRelisasi"
+        name="PersetujuanRealisasi"
         component={PersetujuanRealisasi}
         options={{headerShown: false}}
       />
@@ -138,6 +142,32 @@ function HomeStack() {
       <Stack.Screen
         name="KontrakKerja"
         component={KontrakKerja}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="Bacascreen"
+        component={Bacascreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="Bacakontrak"
+        component={Bacakontrak}
+        options={{headerShown: false}}
+      />
+
+      <Stack.Screen
+        name="Remunerasi"
+        component={Remunerasi}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="PencapaianKerja"
+        component={PencapaianKerja}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="RealisasiNext"
+        component={RealisasiNext}
         options={{headerShown: false}}
       />
     </Stack.Navigator>
@@ -210,6 +240,3 @@ export default function App() {
     </AuthProvider>
   );
 }
-
-
-

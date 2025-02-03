@@ -1,4 +1,7 @@
 {
   "name": "Sikaresoi",
-  "displayName": "Sikaresoi"
+  "displayName": "Sikaresoi",
+  "plugins": [
+    "expo-font"
+  ]
 }

@@ -12,29 +12,37 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
+import useApiClient from '../src/api/apiClient';
 
 const HistoryPresensi = ({ navigation }) => {
   const [search, setSearch] = useState('');
   const [data, setData] = useState([]);
   const [isLoading, setLoading] = useState(false);
+  const apiClient = useApiClient();
 
   const fetchData = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.60.176:8000/api/v1/user/absensi/index',
+      const response = await apiClient.post(
+        '/user/absensi/index',
         { page },
         {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE3Njo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2ODIwMjUyLCJleHAiOjE3MzY4MjcxMjAsIm5iZiI6MTczNjgyMzUyMCwianRpIjoiaHRqRURxMFlwY0d2VU5UNiIsInN1YiI6OCwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.M0HOt7U3TdM6UoYPw7ndnjONOazFC_kdiFfL0GLc-mo',
-          },
         }
       );
 
       console.log('API Response:', response.data); // Debugging log
 
-      setData(response.data.data || []);
+
+      const apiData = response.data.data.map((item) => ({
+        id: item.id,
+        tanggal: item.tanggal || 'N/A',
+        jam_masuk: item.jam_masuk || 'N/A',
+        jam_keluar: item.jam_keluar || 'N/A',
+        type: item.type?.replace(/<[^>]+>/g, '') || 'N/A', // Remove HTML tags
+        pemotongan: item.pemotongan || 'N/A',
+      }));
+
+      setData(apiData);
     } catch (error) {
       console.error('Error fetching data:', error);
       Alert.alert('Error', 'Failed to fetch data. Please check your network or try again later.');
@@ -52,14 +60,6 @@ const HistoryPresensi = ({ navigation }) => {
       field?.toLowerCase().includes(search.toLowerCase())
     )
   );
-
-  const formatDate = (date) => {
-    return date ? date : 'N/A';
-  };
-
-  const formatJam = (jam) => {
-    return jam ? jam : 'N/A';
-  };
 
   return (
     <ScrollView style={styles.container}>
@@ -122,10 +122,10 @@ const HistoryPresensi = ({ navigation }) => {
               }
               renderItem={({ item }) => (
                 <View style={styles.tableRow}>
-                  <Text style={styles.tableCell}>{formatDate(item.tanggal)}</Text>
-                  <Text style={styles.tableCell}>{formatJam(item.jam_masuk)}</Text>
-                  <Text style={styles.tableCell}>{formatJam(item.jam_keluar)}</Text>
-                  <Text style={styles.tableCell}>{item.type || 'N/A'}</Text>
+                  <Text style={styles.tableCell}>{item.tanggal}</Text>
+                  <Text style={styles.tableCell}>{item.jam_masuk}</Text>
+                  <Text style={styles.tableCell}>{item.jam_keluar}</Text>
+                  <Text style={styles.tableCell}>{item.type}</Text>
                   <Text style={styles.tableCell}>{item.pemotongan}</Text>
                 </View>
               )}
@@ -145,7 +145,6 @@ const HistoryPresensi = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  // Styles tetap sama seperti yang Anda tulis
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
@@ -182,9 +181,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
     color: '#333',
     marginTop: 30,
+    fontFamily: 'Poppins-SemiBold',
   },
   actionButtons: {
     flexDirection: 'row',
@@ -210,8 +209,8 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#fff',
-    fontWeight: 'bold',
     fontSize: 14,
+    fontFamily: 'Poppins-SemiBold',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -224,29 +223,33 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     marginTop: 10,
+    fontFamily: 'Poppins-SemiBold',
   },
   searchInput: {
     flex: 1,
     marginRight: 8,
     color: '#333',
+    fontFamily: 'Poppins-Regular',
   },
   tableContainer: {
     backgroundColor: '#fff',
     borderRadius: 4,
     overflow: 'hidden',
     marginTop: 8,
+    fontFamily: 'Poppins-SemiBold',
   },
   tableHeader: {
     flexDirection: 'row',
     backgroundColor: '#e9ecef',
     paddingVertical: 8,
     paddingHorizontal: 16,
+    fontFamily: 'Poppins-SemiBold',
   },
   tableHeaderText: {
     flex: 1,
-    fontWeight: 'bold',
     color: '#333',
     textAlign: 'center',
+    fontFamily: 'Poppins-SemiBold',
   },
   tableRow: {
     flexDirection: 'row',
@@ -254,16 +257,19 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ddd',
     paddingVertical: 8,
     paddingHorizontal: 16,
+    fontFamily: 'Poppins-SemiBold',
   },
   tableCell: {
     flex: 1,
     color: '#333',
     textAlign: 'center',
+    fontFamily: 'Poppins-Regular',
   },
   emptyText: {
     textAlign: 'center',
     color: '#888',
     paddingVertical: 16,
+    fontFamily: 'Poppins-SemiBold',
   },
   paginationContainer: {
     marginTop: 16,
@@ -271,6 +277,7 @@ const styles = StyleSheet.create({
   paginationText: {
     textAlign: 'center',
     color: '#888',
+    fontFamily: 'Poppins-SemiBold',
   },
 });
 
