@@ -9,7 +9,6 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons'; // Import Icon Library
 
 const Allmenu = ({navigation}) => {
-  // Menambahkan navigation sebagai prop
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -29,28 +28,22 @@ const Allmenu = ({navigation}) => {
         <View style={styles.iconGrid}>
           {renderIcon('Tugas Tambahan', 'clipboard-outline', () =>
             navigation.navigate('TugasTambahan'),
-          )}{' '}
-          {/* Ikon untuk Tugas Tambahan */}
+          )}
           {renderIcon('Kontrak Kerja', 'bag-check-outline', () =>
             navigation.navigate('KontrakKerja'),
-          )}{' '}
-          {/* Ikon untuk Kontrak Kerja */}
+          )}
           {renderIcon('Capaian Kinerja', 'stats-chart-outline', () =>
             navigation.navigate('CapaianKinerja'),
-          )}{' '}
-          {/* Ikon untuk Capaian Kinerja */}
+          )}
           {renderIcon('Rekapitulasi', 'document-text-outline', () =>
             navigation.navigate('Rekapitulasi'),
-          )}{' '}
-          {/* Ikon untuk Rekapitulasi */}
+          )}
           {renderIcon('Remunerasi', 'checkmark-done-circle', () =>
             navigation.navigate('Remunerasi'),
-          )}{' '}
-          {/* Ikon untuk Remunerasi */}
+          )}
           {renderIcon('Tunjangan Tambahan', 'wallet-outline', () =>
             navigation.navigate('TunjanganTambahan'),
-          )}{' '}
-          {/* Ikon untuk Tunjangan Tambahan */}
+          )}
         </View>
 
         {/* USER */}

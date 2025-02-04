@@ -7,7 +7,7 @@ const useApiClient = () => {
 
   const apiClient = axios.create({
     baseURL: API_URL,
-    timeout: 30000, // Timeout request untuk menghindari freeze
+    timeout: 15000, // Timeout request untuk menghindari freeze
   });
 
   apiClient.interceptors.request.use(
@@ -15,6 +15,8 @@ const useApiClient = () => {
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+      config.headers['Content-Type'] = 'application/json';
+      config.headers['X-requested-with'] = 'XMLHttpRequest';
       return config;
     },
     error => Promise.reject(error),
@@ -29,7 +31,7 @@ const useApiClient = () => {
         return new Promise((resolve, reject) => {
           setTimeout(() => {
             axios(error.config).then(resolve).catch(reject);
-          }, 3000); // Retry after 3 seconds
+          }, 2000); // Retry after 3 seconds
         });
       }
 

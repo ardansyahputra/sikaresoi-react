@@ -16,6 +16,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useAuth} from '../AuthContext';
 import axios from 'axios';
 import useApiClient from '../../../src/api/apiClient';
+import FastImage from 'react-native-fast-image';
 import {BarIndicator} from 'react-native-indicators';
 
 const {height} = Dimensions.get('window');
@@ -27,37 +28,54 @@ const LoginScreen = ({navigation}) => {
   const {login, token, refreshToken} = useAuth();
   const apiClient = useApiClient();
   const [isLoading, setIsLoading] = useState(false);
+  const [backgroundImage, setBackgroundImage] = useState(null);
+  const [logoImage, setLogoImage] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [isMounted, setIsMounted] = useState(true); // Menambahkan state isMounted
+
   const isValid = nip.length >= 8 && password.length >= 8;
+  const [isPageLoading, setIsPageLoading] = useState(true); // Tambahkan ini
 
   useEffect(() => {
-    setIsMounted(true); // Menandai komponen sebagai terpasang
-    return () => setIsMounted(false); // Menandai komponen sebagai tidak terpasang saat komponen dibersihkan
-  }, []);
-
-  useEffect(() => {
-    const checkLoginStatus = async () => {
+    const initializeApp = async () => {
       try {
-        // Mengambil token dari Keychain
-        const credentials = await Keychain.getGenericPassword();
-        if (credentials && credentials.password) {
-          // Jika token ditemukan, lakukan login otomatis
+        setIsPageLoading(true);
+
+        // Fetch Token dan Setting secara bersamaan
+        const [credentials, settingsResponse] = await Promise.all([
+          Keychain.getGenericPassword(),
+          apiClient.get('setting'),
+        ]);
+
+        // Proses Token Login
+        if (credentials?.password) {
           const storedToken = credentials.password;
-          const token = credentials.password;
           const userData = await fetchUser(storedToken);
-          login(userData, token); // login dengan token saja, tidak perlu user data
-          navigation.replace('AppTabs'); // Langsung ke AppTabs jika sudah login
-        } else {
-          // Jika token tidak ada, tetap di layar login
-          console.log('No token found, please login.');
+          if (userData) {
+            login(userData, storedToken);
+            navigation.replace('AppTabs');
+          }
+        }
+
+        // Preload Images
+        if (settingsResponse.data?.status) {
+          const {backgrounddir, logowhitedir} = settingsResponse.data.data;
+
+          FastImage.preload([
+            {uri: backgrounddir, priority: FastImage.priority.high},
+            {uri: logowhitedir, priority: FastImage.priority.high},
+          ]);
+
+          setBackgroundImage(backgrounddir);
+          setLogoImage(logowhitedir);
         }
       } catch (error) {
-        console.error('Error checking login status:', error);
+        console.error('Error during initialization:', error);
+      } finally {
+        setIsPageLoading(false);
       }
     };
 
-    checkLoginStatus();
+    initializeApp();
   }, []);
 
   useEffect(() => {
@@ -96,7 +114,7 @@ const LoginScreen = ({navigation}) => {
       axios.interceptors.request.eject(requestInterceptor);
       axios.interceptors.response.eject(responseInterceptor);
     };
-  }, [token, refreshToken, isMounted]);
+  }, [token, refreshToken]);
 
   const loginHandler = async () => {
     if (!isValid) return;
@@ -159,71 +177,97 @@ const LoginScreen = ({navigation}) => {
 
   return (
     <View style={styles.container}>
-      <ImageBackground
-        source={require('../../admin/assets/images/poltekpol-barombong-bg.jpg')}
-        style={styles.background}
-        resizeMode="cover">
-        <View style={styles.overlay} />
-      </ImageBackground>
-
-      <View style={styles.formContainer}>
-        <Image
-          source={require('../../admin/assets/images/logo-default.png')}
-          style={styles.logo}
-        />
-        <View style={[styles.inputContainer, error.nip && styles.inputError]}>
-          <Ionicons
-            name={'person'}
-            color="#7f8c8d"
-            size={15}
-            style={styles.icon}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="NIP"
-            placeholderTextColor="#BCC7CA"
-            value={nip}
-            onChangeText={setNip}
-          />
-          {error.nip && <Text style={styles.errorText}>{error.nip}</Text>}
+      {isPageLoading ? (
+        // Loading sebelum semuanya muncul (termasuk background)
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingBox}>
+            <BarIndicator color="black" size={24} count={5} />
+            <Text style={styles.loadingText}>Memuat...</Text>
+          </View>
         </View>
-        <View
-          style={[styles.inputContainer, error.password && styles.inputError]}>
-          <Ionicons
-            name={'lock-closed'}
-            color="#7f8c8d"
-            size={15}
-            style={styles.icon}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#BCC7CA"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-          />
-          {error.password && (
-            <Text style={styles.errorText}>{error.password}</Text>
-          )}
-          <TouchableOpacity
-            onPress={togglePasswordVisibility}
-            style={styles.eyeIcon}>
-            <Ionicons
-              name={showPassword ? 'eye-outline' : 'eye-off-outline'}
-              size={18}
-              color="#7f8c8d"
+      ) : (
+        <>
+          <View style={styles.background}>
+            <FastImage
+              source={{uri: backgroundImage, priority: FastImage.priority.high}}
+              style={StyleSheet.absoluteFill} // Full screen
+              resizeMode={FastImage.resizeMode.cover}
             />
-          </TouchableOpacity>
-        </View>
-        <TouchableOpacity
-          style={[styles.button, !isValid && styles.buttonDisabled]}
-          onPress={loginHandler}
-          disabled={!isValid || isLoading}>
-          <Text style={styles.buttonText}>Masuk</Text>
-        </TouchableOpacity>
-      </View>
+            <View style={styles.overlay} />
+          </View>
 
+          <View style={styles.formContainer}>
+            <FastImage
+              source={{uri: logoImage, priority: FastImage.priority.high}}
+              style={styles.logo}
+              resizeMode={FastImage.resizeMode.contain}
+            />
+
+            {/* Input NIP */}
+            <View
+              style={[styles.inputContainer, error.nip && styles.inputError]}>
+              <Ionicons
+                name={'person'}
+                color="#7f8c8d"
+                size={15}
+                style={styles.icon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="NIP"
+                placeholderTextColor="#BCC7CA"
+                value={nip}
+                onChangeText={setNip}
+              />
+              {error.nip && <Text style={styles.errorText}>{error.nip}</Text>}
+            </View>
+
+            {/* Input Password */}
+            <View
+              style={[
+                styles.inputContainer,
+                error.password && styles.inputError,
+              ]}>
+              <Ionicons
+                name={'lock-closed'}
+                color="#7f8c8d"
+                size={15}
+                style={styles.icon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor="#BCC7CA"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+              />
+              {error.password && (
+                <Text style={styles.errorText}>{error.password}</Text>
+              )}
+              <TouchableOpacity
+                onPress={togglePasswordVisibility}
+                style={styles.eyeIcon}>
+                <Ionicons
+                  name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                  size={18}
+                  color="#7f8c8d"
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Tombol Login */}
+            <TouchableOpacity
+              style={[styles.button, !isValid && styles.buttonDisabled]}
+              onPress={loginHandler}
+              disabled={!isValid || isLoading}>
+              <Text style={styles.buttonText}>Masuk</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
+
+      {/* Loading saat tombol login ditekan */}
       {isLoading && (
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingBox}>
@@ -358,4 +402,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginScreen;
+export default React.memo(LoginScreen);
