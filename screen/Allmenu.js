@@ -29,7 +29,7 @@ const Allmenu = ({ navigation }) => { // Menambahkan navigation sebagai prop
         <Text style={styles.sectionTitle}>LAPORAN</Text>
         <View style={styles.iconGrid}>
           {renderIcon('Kontrak Kerja', 'bag-check-outline', () => navigation.navigate('KontrakKerja'))}
-          {renderIcon('Pencapaian Kerja', 'gift-outline', () => navigation.navigate('PencapaianKerja'))}
+          {renderIcon('Capaian Kerja', 'gift-outline', () => navigation.navigate('PencapaianKerja'))}
           {renderIcon('Remunerasi', 'checkmark-done-circle', () => navigation.navigate('Remunerasi'))}
         </View>
       </ScrollView>

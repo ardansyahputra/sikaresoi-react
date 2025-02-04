@@ -157,7 +157,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   backButton: {
-    marginRight: 16,
+    marginTop:1,
+    marginLeft:3,
+    marginRight:8,
   },
   headerImage: {
     width: '45%',

@@ -127,6 +127,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
+    marginBottom: 30,
   },
   bannerContainer: {
     paddingHorizontal: 16, // Memberi jarak dari sisi layar

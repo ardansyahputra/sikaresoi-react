@@ -230,6 +230,7 @@ export default function Persetujuan({ navigation }) {
             style={styles.logo}
           />
         </View>
+
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
           <TouchableOpacity style={styles.iconWrapper}>
@@ -237,7 +238,11 @@ export default function Persetujuan({ navigation }) {
           </TouchableOpacity>
         </View>
       </View>
-
+      <View style={styles.headerTextContainer}>
+                          <Text style={styles.headerTitle}>Persetujuan Kontrak Kinerja</Text>
+                          <Text style={styles.separatorText}> • </Text>
+                          <Text style={styles.headerSubtitle}></Text>
+                        </View>
       {/* Loading Indicator */}
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
@@ -654,5 +659,29 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
   },
- 
+  headerTextContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 15, // Menambahkan jarak ke kiri
+    marginTop: 20, 
+  },
+
+  headerTitle: {
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 17,
+    color: "#000",
+  },
+
+  separatorText: {
+    fontSize: 20,
+    color: "#000",
+    marginBottom: 3,
+  },
+
+  headerSubtitle: {
+    fontFamily: "Poppins-Regular",
+    fontSize: 14,
+    color: "#000",
+    marginLeft: 0,
+  },
 });

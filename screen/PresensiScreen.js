@@ -11,6 +11,8 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import moment from 'moment-timezone';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import 'moment/locale/id';  // Import Indonesian locale
+
 
 const PresensiScreen = ({ navigation }) => {
   const [currentTime, setCurrentTime] = useState(moment().tz("Asia/Jakarta").format('HH:mm:ss'));
@@ -67,7 +69,11 @@ const PresensiScreen = ({ navigation }) => {
         </TouchableOpacity>
         <Image source={require('./assets/images/sikaresoi.png')} style={styles.headerImage} />
       </View>
-
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.headerTitle}>Presensi</Text>
+              <Text style={styles.separatorText}> • </Text>
+              <Text style={styles.headerSubtitle}>Data Presensi</Text>
+            </View>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.dateContainer}>
           <View style={styles.dateSection}>
@@ -127,11 +133,10 @@ const PresensiScreen = ({ navigation }) => {
   );
 };
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f7f8fa',
+    backgroundColor: '#F7F8FB',
   },
   header: {
     flexDirection: 'row',
@@ -145,11 +150,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     elevation: 5,
   },
-  backButton: {
-    position: 'absolute',
-    left: 15,
-    top: 40,
-  },
   headerImage: {
     width: '50%',
     height: undefined,
@@ -160,6 +160,8 @@ const styles = StyleSheet.create({
   },
   backButton: {
     marginTop:1,
+    marginLeft:3,
+    marginRight:1,
   },
   scrollContainer: {
     padding: 20,
@@ -168,6 +170,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
+    marginTop: -10,
     padding: 15,
     backgroundColor: '#fff',
     borderRadius: 10,
@@ -177,20 +180,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  timeSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   dateText: {
     marginLeft: 10,
     fontSize: 16,
     color: '#333',
     fontFamily: 'Poppins-SemiBold',
-  },
-  timeText: {
-    marginLeft: 10,
-    fontSize: 16,
-    color: '#555',
   },
   stopwatchContainer: {
     alignItems: 'center',
@@ -202,7 +196,7 @@ const styles = StyleSheet.create({
     width: 190,
     height: 190,
     borderRadius: 100,
-    borderWidth: 10, // Dipertebal dari 5 menjadi 10
+    borderWidth: 10,
     opacity: 0.5,
     marginTop: 45,
   },
@@ -286,12 +280,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     fontFamily: 'Poppins-SemiBold',
-    
   },
   stopwatchLabel: {
     fontSize: 20,
     color: '#555',
     fontFamily: 'Poppins-SemiBold',
+  },
+  headerTextContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 20,
+    marginTop: 20,
+  },
+  headerTitle: {
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 17,
+    color: "#000",
+  },
+  separatorText: {
+    fontSize: 20,
+    color: "#000",
+    marginBottom: 3,
+  },
+  headerSubtitle: {
+    fontFamily: "Poppins-Regular",
+    fontSize: 14,
+    color: "#000",
+    marginLeft: 0,
   },
 });
 

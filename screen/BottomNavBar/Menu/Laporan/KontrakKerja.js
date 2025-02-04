@@ -1,22 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Button, Alert, Modal,  ScrollView,
-  Image, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Button, Alert, Modal, ActivityIndicator,  ScrollView,
+  Image, TouchableOpacity } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import AwesomeAlert from 'react-native-awesome-alerts';
 import RNFS from 'react-native-fs';
 import FileViewer from "react-native-file-viewer";
 import Icon from 'react-native-vector-icons/Ionicons'; // Pastikan Anda telah menginstal react-native-vector-icons
-import { useNavigation } from "@react-navigation/native";
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from "@react-navigation/native";
 
-const KontrakKerja = ({ navigation }) => {
+const KontrakKerja = () => {
   const [postData, setPostData] = useState({ tahun_id: '' });
   const [listTahun, setListTahun] = useState([]);
   const [pdfUrl, setPdfUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [showNotFoundModal, setShowNotFoundModal] = useState(false);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
+  const navigation = useNavigation();
 
   useEffect(() => {
     const tahunData = [
@@ -39,7 +41,7 @@ const KontrakKerja = ({ navigation }) => {
   };
 
   const generatePdfUrl = (tahunId) => {
-    const url = `http://192.168.60.176:8000/report/kontrak_kinerja/0a4df7b9-7962-457c-bd47-23ce9a50a02d?type=stream&keuangan=0&tahun_id=${tahunId}`;
+    const url = `http://192.168.60.216:8000/report/kontrak_kinerja/0a4df7b9-7962-457c-bd47-23ce9a50a02d?type=stream&keuangan=0&tahun_id=${tahunId}`;
     setPdfUrl(url);
   };
 
@@ -55,31 +57,58 @@ const KontrakKerja = ({ navigation }) => {
     try {
       setLoading(true);
 
-      const downloadResult = await RNFS.downloadFile({
-        fromUrl: pdfUrl,
-        toFile: filePath,
-        progress: (res) => {
-          const progress = (res.bytesWritten / res.contentLength) * 100;
-          console.log(`Unduh PDF ${progress.toFixed(2)}% selesai.`);
-        },
-      }).promise;
+      // const downloadResult = await RNFS.downloadFile({
+      //   fromUrl: pdfUrl,
+      //   toFile: filePath,
+      //   progress: (res) => {
+      //     const progress = (res.bytesWritten / res.contentLength) * 100;
+      //     console.log(`Unduh PDF ${progress.toFixed(2)}% selesai.`);
+      //   },
+      // }).promise;
 
-      if (downloadResult.statusCode === 200) {
-              setSuccessModalVisible(true); // Menampilkan modal sukses
-              FileViewer.open(filePath);
-            } else {
-              throw new Error(`Gagal mengunduh file. Kode status: ${downloadResult.statusCode}`);
-            }
-          } catch (error) {
-            setErrorMessage(error.message || 'Terjadi kesalahan saat mengunduh file.');
-          } finally {
-            setLoading(false);
-          }
-        };
+      // if (downloadResult.statusCode === 200) {
+      //   setSuccessModalVisible(true); // Menampilkan modal sukses
+      //   FileViewer.open(filePath);
+      // } else {
+      //   throw new Error(`Gagal mengunduh file. Kode status: ${downloadResult.statusCode}`);
+      // }
+
+      console.log("Downloading:", pdfUrl);
+      const response = await fetch(pdfUrl, { method: 'GET' });
+
+      if (!response.ok) {
+        throw new Error(`Gagal mengunduh file. Kode status: ${response.status}`);
+      }
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType.includes('application/pdf')) {
+        setShowNotFoundModal(true);
+        return;
+      }
+
+      const blob = await response.blob();
+      const reader = new FileReader();
+
+      reader.onloadend = async () => {
+        const base64data = reader.result.split(',')[1];
+        await RNFS.writeFile(filePath, base64data, 'base64');
+        console.log("File downloaded:", filePath);
+        setSuccessModalVisible(true);
+        FileViewer.open(filePath);
+      };
+
+      reader.readAsDataURL(blob);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+      setErrorMessage(error.message || 'Terjadi kesalahan saat mengunduh file.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-    <View style={styles.header}>
+        <ScrollView contentContainerStyle={styles.container}>
+          <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
               <Ionicons name="arrow-back" size={26} color="#000" />
             </TouchableOpacity>
@@ -87,8 +116,13 @@ const KontrakKerja = ({ navigation }) => {
               source={require('../../../assets/images/sikaresoi.png')}
               style={styles.headerImage}
             />
-    </View>
-
+          </View>
+    
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.headerTitle}>Laporan Kontrak Kerja</Text>
+            <Text style={styles.separatorText}> • </Text>
+            <Text style={styles.headerSubtitle}>Kontrak Kerja</Text>
+          </View>
     <View style={{ flex: 1, padding: 20 }}>
       <View style={styles.card}>
         <View style={styles.cardBody}>
@@ -103,46 +137,66 @@ const KontrakKerja = ({ navigation }) => {
               value={postData.tahun_id}
               onChange={(item) => handleSelectTahun(item.id)}
               placeholder="-- PILIH TAHUN --"
-              placeholderStyle={{ fontFamily: 'Poppins-Regular', fontSize: 14 }}
               style={styles.dropdown}
-              labelStyle={{ fontFamily: 'Poppins-Regular', fontSize: 14 }} // Apply Poppins font to label
-              itemTextStyle={{ fontFamily: 'Poppins-Regular', fontSize: 14 }}
+              labelStyle={styles.dropdownLabel} // Label font Poppins
+              selectedTextStyle={styles.dropdownText} // Font Poppins untuk teks yang dipilih
+              placeholderStyle={styles.dropdownPlaceholder} // Placeholder dengan font Poppins
+              itemTextStyle={styles.dropdownItemText} // Font Poppins untuk teks opsi
+              itemStyle={styles.dropdownItemText} // Gaya untuk item dalam dropdown
             />
           </View>
 
           {loading ? (
             <Text style={styles.loadingText}>Memuat data...</Text>
-          ) : pdfUrl ? (
-            <Button title="Unduh PDF" onPress={downloadAndOpenPdf} />
-          ) : (
-            postData.tahun_id && <Text style={styles.noDataText}>Tidak ada data untuk ditampilkan.</Text>
-          )}
+            ) : pdfUrl ? (
+              <TouchableOpacity
+                onPress={downloadAndOpenPdf}
+                style={styles.downloadButtonContainer}>
+                <Text style={styles.downloadButtonText}>Unduh PDF</Text>
+              </TouchableOpacity>
+            ) : (
+              postData.tahun_id && <Text style={styles.noDataText}>Tidak ada data untuk ditampilkan.</Text>
+            )}
+          </View>
         </View>
-      </View>
 
       {/* Modal Loading */}
       <Modal transparent={true} visible={loading}>
         <View style={styles.modalBackground}>
           <View style={styles.activityIndicatorWrapper}>
             <ActivityIndicator size="large" color="#0000ff" />
-            <Text style={{ marginTop: 10 }}>Sedang Memuat...</Text>
+            <Text style={{ marginTop: 10, fontFamily: 'Poppins-Regular' }}>Sedang Memuat...</Text>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal transparent={true} visible={showNotFoundModal} animationType="slide">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Icon name="checkmark-circle" size={64} color="red" />
+            <Text style={styles.successText}>File tidak ditemukan</Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowNotFoundModal(false)}>
+              <Text style={styles.closeButtonText}>Tutup</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
       <Modal transparent={true} visible={successModalVisible} animationType="slide">
-              <View style={styles.modalContainer}>
-                <View style={styles.modalContent}>
-                  <Icon name="checkmark-circle" size={64} color="green" />
-                  <Text style={styles.successText}>Unduhan Selesai!</Text>
-                  <TouchableOpacity
-                    style={styles.closeButton}
-                    onPress={() => setSuccessModalVisible(false)}>
-                    <Text style={styles.closeButtonText}>Tutup</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </Modal>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Icon name="checkmark-circle" size={64} color="green" />
+            <Text style={styles.successText}>Unduhan Selesai!</Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setSuccessModalVisible(false)}>
+              <Text style={styles.closeButtonText}>Tutup</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
     </ScrollView>
   );
@@ -150,9 +204,8 @@ const KontrakKerja = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    padding: 0,
-    backgroundColor: "#f7f7f7",
+    flex: 1,
+    backgroundColor: '#F7F8FB',
   },
   header: {
     flexDirection: 'row',
@@ -173,6 +226,11 @@ const styles = StyleSheet.create({
     marginRight: 190,
     resizeMode: 'contain',
     alignSelf: 'center',
+  },
+  backButton: {
+    marginTop:1,
+    marginLeft:3,
+    marginRight:1,
   },
   card: {
     backgroundColor: '#FFF',
@@ -277,6 +335,57 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Poppins-SemiBold',
   },
+
+  headerTextContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 25, // Menambahkan jarak ke kiri
+    marginTop: 20, 
+  },
+
+  headerTitle: {
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 17,
+    color: "#000",
+  },
+
+  separatorText: {
+    fontSize: 20,
+    color: "#000",
+    marginBottom: 3,
+  },
+
+  headerSubtitle: {
+    fontFamily: "Poppins-Regular",
+    fontSize: 14,
+    color: "#000",
+    marginLeft: 0,
+  },
+  downloadButtonContainer: {
+    backgroundColor: '#007BFF',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  downloadButtonText: {
+    fontFamily: 'Poppins-SemiBold',
+    color: 'white',
+    fontSize: 16,
+  },
+  dropdownItemText: {
+  fontFamily: 'Poppins-Regular', // Poppins untuk teks item
+  fontSize: 14,
+},
+dropdownPlaceholder: {
+  fontFamily: 'Poppins-Regular', // Placeholder font Poppins
+  fontSize: 14,
+},
+
+dropdownLabel: {
+  fontFamily: 'Poppins-SemiBold', // Label font Poppins
+  fontSize: 16,
+},
 });
 
 export default KontrakKerja;

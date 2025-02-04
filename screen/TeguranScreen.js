@@ -184,6 +184,7 @@ export default function Teguranscreen({ navigation }) {
             style={styles.logo}
           />
         </View>
+        
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
           <TouchableOpacity style={styles.iconWrapper}>
@@ -191,7 +192,11 @@ export default function Teguranscreen({ navigation }) {
           </TouchableOpacity>
         </View>
       </View>
-
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.headerTitle}>Teguran</Text>
+              <Text style={styles.separatorText}> • </Text>
+              <Text style={styles.headerSubtitle}>Data Teguran</Text>
+            </View>
       {/* Loading Indicator */}
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
@@ -267,7 +272,7 @@ const styles = StyleSheet.create({
   },
   headerCell: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
     color: '#333',
   },
   tableRow: {
@@ -284,6 +289,7 @@ const styles = StyleSheet.create({
   tableCell: {
     flexWrap: 'wrap',
     fontSize: 14,
+    fontFamily: 'Poppins-SemiBold',
   },
   tableStatusCell: {
     textAlign: 'center',
@@ -300,7 +306,7 @@ const styles = StyleSheet.create({
   },
   statusCell: {
     textAlign: 'center',
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
   },
   expandIconCell: {
     width: 40,
@@ -325,6 +331,7 @@ const styles = StyleSheet.create({
   expandedText: {
     marginBottom: 5,
     fontSize: 14,
+    fontFamily: 'Poppins-SemiBold',
   },
   expandedLinkText: {
     color: 'blue',
@@ -333,6 +340,7 @@ const styles = StyleSheet.create({
   },
   filetext: {
     flexDirection: 'row',
+    fontFamily: 'Poppins-SemiBold',
   },
   actionContainer: {
     flexDirection: 'row',
@@ -383,14 +391,14 @@ const styles = StyleSheet.create({
   },
   pageButtonText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
   },
   disabledButton: {
     backgroundColor: '#CCCCCC',
   },
   paginationText: {
     color: 'white',
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
   },
   pageInfo: {
     fontSize: 13,
@@ -463,6 +471,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
   },
+  pageInfo: {
+    fontFamily: 'Poppins-Regular',
+  },
   cancelButton: {
     backgroundColor: '#ccc',
     padding: 10,
@@ -501,8 +512,9 @@ const styles = StyleSheet.create({
   searchBar: {
     flex: 1,
     paddingHorizontal: 12,
-    paddingRight: 40, 
+    paddingRight: 40,
     color: '#000',
+    fontFamily: 'Poppins-Regular',
   },
   searchIcon: {
     position: 'absolute',
@@ -515,6 +527,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
+    
   },
   displayText: {
     fontFamily: 'Poppins-Regular',
@@ -537,5 +550,31 @@ const styles = StyleSheet.create({
     padding: 10,
     fontSize: 12,
     color: '#333',
+    fontFamily: 'Poppins-Regular',
+  },
+  headerTextContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 15, // Menambahkan jarak ke kiri
+    marginTop: 20, 
+  },
+
+  headerTitle: {
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 17,
+    color: "#000",
+  },
+
+  separatorText: {
+    fontSize: 20,
+    color: "#000",
+    marginBottom: 3,
+  },
+
+  headerSubtitle: {
+    fontFamily: "Poppins-Regular",
+    fontSize: 14,
+    color: "#000",
+    marginLeft: 0,
   },
 });

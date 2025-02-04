@@ -675,7 +675,9 @@ const styles = StyleSheet.create({
   },
 
   backButton: {
-    marginRight: 16,
+    marginTop:1,
+    marginLeft:3,
+    marginRight:8,
   },
 
   headerImage: {

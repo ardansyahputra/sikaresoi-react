@@ -105,6 +105,12 @@ const Remunerasi = () => {
         />
       </View>
 
+      <View style={styles.headerTextContainer}>
+        <Text style={styles.headerTitle}>Laporan Remunerasi</Text>
+        <Text style={styles.separatorText}> • </Text>
+        <Text style={styles.headerSubtitle}>Remunerasi</Text>
+      </View>
+
       {/* Card for Month and Year Selector */}
       <View style={styles.card2}>
       <View style={styles.row}>
@@ -113,10 +119,10 @@ const Remunerasi = () => {
             <Text style={styles.date}>Pilih Bulan <Text style={styles.required}>*</Text> :</Text>
             <Dropdown
               style={styles.dropdown}
-              data={listBulan.map(bulan => ({ label: bulan.bulan, value: bulan.id }))}
+              data={listBulan.map(bulan => ({ label: bulan.bulan, value: bulan.id }))} // Update data
               labelField="label"
               valueField="value"
-              placeholder="Pilih Bulan"
+              placeholder="Pilih Bulan" // Placeholder text
               value={postData.bulan_id}
               onChange={(item) => handleSelectMonth(item.value)}
               renderItem={(item) => (
@@ -124,6 +130,9 @@ const Remunerasi = () => {
                   <Text style={styles.dropdownText}>{item.label}</Text>
                 </View>
               )}
+              placeholderStyle={styles.dropdownPlaceholder} // Gaya font Poppins untuk placeholder
+              selectedTextStyle={styles.dropdownText} // Gaya font Poppins untuk teks yang dipilih
+              labelStyle={styles.dropdownLabel} // Gaya font Poppins untuk label
             />
           </View>
 
@@ -132,10 +141,10 @@ const Remunerasi = () => {
             <Text style={styles.date}>Pilih Tahun <Text style={styles.required}>*</Text> :</Text>
             <Dropdown
               style={styles.dropdown}
-              data={listTahun.map(tahun => ({ label: tahun.tahun, value: tahun.id }))}
+              data={listTahun.map(tahun => ({ label: tahun.tahun, value: tahun.id }))} // Update data
               labelField="label"
               valueField="value"
-              placeholder="Pilih Tahun"
+              placeholder="Pilih Tahun" // Placeholder text
               value={postData.tahun_id}
               onChange={(item) => handleSelectYear(item.value)}
               renderItem={(item) => (
@@ -143,6 +152,9 @@ const Remunerasi = () => {
                   <Text style={styles.dropdownText}>{item.label}</Text>
                 </View>
               )}
+              placeholderStyle={styles.dropdownPlaceholder} // Gaya font Poppins untuk placeholder
+              selectedTextStyle={styles.dropdownText} // Gaya font Poppins untuk teks yang dipilih
+              labelStyle={styles.dropdownLabel} // Gaya font Poppins untuk label
             />
           </View>
         </View>
@@ -226,9 +238,8 @@ const Remunerasi = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    padding: 0,
-    backgroundColor: "#f7f7f7",
+    flex: 1,
+    backgroundColor: '#F7F8FB',
   },
   header: {
     flexDirection: 'row',
@@ -250,6 +261,11 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     alignSelf: 'center',
   },
+  backButton: {
+    marginTop:1,
+    marginLeft:3,
+    marginRight:1,
+  },
 card: {
   padding: 30,
   marginBottom: 30,
@@ -268,7 +284,7 @@ card: {
 card2: {
   padding: 15,
   marginBottom: 10,
-  marginTop: 30, // Menambahkan jarak atas 20px
+  marginTop: 10, // Menambahkan jarak atas 20px
   borderRadius: 8,
   backgroundColor: "#fff",
   elevation: 1,
@@ -320,10 +336,10 @@ card2: {
     padding: 12,
     borderRadius: 8,
     backgroundColor: "#fafafa",
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'Poppins-Regular',
   },
     dropdownText: {
-    fontFamily: "Poppins-SemiBold",
+    fontFamily: "Poppins-Regular",
     fontSize: 14,
     color: "#000",
   },
@@ -425,6 +441,31 @@ cardLeft: {
   maxWidth: 200, // Membatasi lebar maksimal
   minWidth: 100, // Membatasi lebar minimal
 },
+headerTextContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 25, // Menambahkan jarak ke kiri
+    marginTop: 20, 
+  },
+
+  headerTitle: {
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 17,
+    color: "#000",
+  },
+
+  separatorText: {
+    fontSize: 20,
+    color: "#000",
+    marginBottom: 3,
+  },
+
+  headerSubtitle: {
+    fontFamily: "Poppins-Regular",
+    fontSize: 14,
+    color: "#000",
+    marginLeft: 0,
+  },
 
 });
 
