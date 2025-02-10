@@ -11,7 +11,6 @@ import {
   Dimensions,
 } from 'react-native';
 import * as Keychain from 'react-native-keychain';
-import Icon from 'react-native-vector-icons/FontAwesome';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useAuth} from '../AuthContext';
 import axios from 'axios';

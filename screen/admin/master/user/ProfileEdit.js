@@ -28,6 +28,7 @@ const ProfileEdit = ({navigation}) => {
   const [dropdownItems, setDropdownItems] = useState([]);
 
   useEffect(() => {
+    console.log('user data saya', user);
     fetchPangkat();
   }, []);
 

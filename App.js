@@ -11,6 +11,8 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 //login screens
 import LoginScreen from './screen/auth/login/Login';
+import Toast from 'react-native-toast-message';
+import customToastConfig from './screen/components/toastConfig';
 
 // Import screens
 import Home from './screen/admin/home/home';
@@ -709,6 +711,7 @@ export default function App() {
       <NavigationProvider>
         <NavigationContainer>
           <RootStack />
+          <Toast config={customToastConfig} />
         </NavigationContainer>
       </NavigationProvider>
     </AuthProvider>

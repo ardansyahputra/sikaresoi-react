@@ -7,12 +7,15 @@ import {
   StyleSheet,
   Switch,
   Alert,
+  Dimensions,
   ScrollView,
 } from 'react-native';
 import useApiClient from '../../../src/api/apiClient';
 import {Dropdown} from 'react-native-element-dropdown';
 import {BarIndicator} from 'react-native-indicators';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Header from '../../components/Header';
+import GlobalStyle from '../../../src/utils/GlobalStyle';
+const {width} = Dimensions.get('window');
 
 const TambahUser = ({navigation, route}) => {
   const [uraianOptions, setUraianOptions] = useState([]);
@@ -71,15 +74,15 @@ const TambahUser = ({navigation, route}) => {
       !selectedPassword ||
       !selectedPasswordConfirmation
     ) {
-      Alert.alert('Error', 'Semua kolom harus diisi.');
+      console.log('Error: Semua kolom harus diisi.');
       return;
     }
 
     if (selectedPassword !== selectedPasswordConfirmation) {
-      Alert.alert('Error', 'Password tidak sama.');
+      console.log('Error: Password tidak sama.');
       return;
     }
-
+    setIsLoading(true);
     try {
       const response = await apiClient.post('/user_master/create', {
         nip: selectedNip,
@@ -96,14 +99,16 @@ const TambahUser = ({navigation, route}) => {
       });
 
       if (response.data.status) {
-        Alert.alert('Berhasil', response.data.data);
+        console.log('Berhasil:', response.data.data);
         navigation.goBack();
       } else {
-        Alert.alert('Error', response.data.res.message);
+        console.log('Error:', response.data.res.message);
       }
     } catch (error) {
       console.error('Error saat mengirim data:', error);
-      Alert.alert('Error', 'Gagal menambahkan data.');
+      console.log('Error: Gagal menambahkan data.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -186,284 +191,280 @@ const TambahUser = ({navigation, route}) => {
   ];
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Tambah Data</Text>
-      </View>
-      {isLoading ? (
-        // Loading Indicator
-        <View style={styles.loadingContainer}>
-          <BarIndicator color="#D4C6C6" count={5} size={24} />
-        </View>
-      ) : (
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}>
-          <Text style={styles.label}>NIP/NRP</Text>
-          <TextInput
-            style={[
-              styles.input,
-              focusState.selectedNip && styles.inputFocused,
-              selectedNip && styles.inputFilled,
-            ]}
-            placeholder="NIP"
-            value={selectedNip}
-            onChangeText={setSelectedNip}
-            placeholderTextColor="#B6B9CA"
-            onFocus={() => handleFocus('selectedNip')}
-            onBlur={() => handleBlur('selectedNip')}
-          />
-          <Text style={styles.label}>Nama</Text>
-          <TextInput
-            style={[
-              styles.input,
-              focusState.selectedNama && styles.inputFocused,
-              selectedNama && styles.inputFilled,
-            ]}
-            placeholder="Nama"
-            value={selectedNama}
-            onChangeText={setSelectedNama}
-            placeholderTextColor="#B6B9CA"
-            onFocus={() => handleFocus('selectedNama')}
-            onBlur={() => handleBlur('selectedNama')}
-          />
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={[
-              styles.input,
-              focusState.selectedPassword && styles.inputFocused,
-              selectedPassword && styles.inputFilled,
-            ]}
-            placeholder="Password"
-            value={selectedPassword}
-            onChangeText={setSelectedPassword}
-            placeholderTextColor="#B6B9CA"
-            onFocus={() => handleFocus('selectedPassword')}
-            onBlur={() => handleBlur('selectedPassword')}
-          />
-          <Text style={styles.label}>Konfirmasi Password</Text>
-          <TextInput
-            style={[
-              styles.input,
-              focusState.selectedPasswordConfirmation && styles.inputFocused,
-              selectedPasswordConfirmation && styles.inputFilled,
-            ]}
-            placeholder="Konfirmasi Password"
-            value={selectedPasswordConfirmation}
-            onChangeText={setSelectedPasswordConfirmation}
-            placeholderTextColor="#B6B9CA"
-            onFocus={() => handleFocus('selectedPasswordConfirmation')}
-            onBlur={() => handleBlur('selectedPasswordConfirmation')}
-          />
-          <Text style={styles.label}>Pangkat/Gol. Ruang</Text>
-          <Dropdown
-            style={[
-              styles.input,
-              focusState.selectedPangkat && styles.inputFocused,
-              selectedPangkat && styles.inputFilled,
-            ]}
-            data={pangkatOptions}
-            labelField="label"
-            valueField="value"
-            placeholder="Pilih Pangkat"
-            onFocus={() => handleFocus('selectedPangkat')}
-            onBlur={() => handleBlur('selectedPangkat')}
-            placeholderStyle={{color: '#B6B9CA'}}
-            value={selectedPangkat}
-            onChange={item => setSelectedPangkat(item.value)}
-            renderItem={item => (
-              <Text
-                style={[
-                  styles.dropdownItem,
-                  styles.customFont,
-                  {color: '#333'},
-                ]}>
-                {item.label}
-              </Text>
-            )}
-          />
-          <Text style={styles.label}>Status PTKP</Text>
-          <Dropdown
-            style={[
-              styles.input,
-              focusState.selectedPtkp && styles.inputFocused,
-              selectedPtkp && styles.inputFilled,
-            ]}
-            data={ptkpOptions}
-            labelField="label"
-            valueField="value"
-            placeholder="Pilih PTKP"
-            onFocus={() => handleFocus('selectedPtkp')}
-            onBlur={() => handleBlur('selectedPtkp')}
-            placeholderStyle={{color: '#B6B9CA'}}
-            value={selectedPtkp}
-            onChange={item => setSelectedPtkp(item.value)}
-            renderItem={item => (
-              <Text
-                style={[
-                  styles.dropdownItem,
-                  styles.customFont,
-                  {color: '#333'},
-                ]}>
-                {item.label}
-              </Text>
-            )}
-          />
-          <Text style={styles.label}>No. Rekening</Text>
-          <TextInput
-            style={[
-              styles.input,
-              focusState.selectedNoRek && styles.inputFocused,
-              selectedNoRek && styles.inputFilled,
-            ]}
-            placeholder="-"
-            value={selectedNoRek}
-            onChangeText={setSelectedNoRek}
-            placeholderTextColor={'#B6B9CA'}
-            onFocus={() => handleFocus('selectedNoRek')}
-            onBlur={() => handleBlur('selectedNoRek')}
-          />
-          <Text style={styles.label}>Level</Text>
-          <Dropdown
-            style={[
-              styles.input,
-              focusState.level && styles.inputFocused,
-              level && styles.inputFilled,
-            ]}
-            data={levelOptions}
-            labelField="label"
-            valueField="value"
-            placeholder="Pilih Level"
-            onFocus={() => handleFocus('level')}
-            onBlur={() => handleBlur('level')}
-            placeholderStyle={{color: '#B6B9CA'}}
-            value={level}
-            onChange={item => setLevel(item.value)}
-            renderItem={item => (
-              <Text
-                style={[
-                  styles.dropdownItem,
-                  styles.customFont,
-                  {color: '#333'},
-                ]}>
-                {item.label}
-              </Text>
-            )}
-          />
-          <Text style={styles.label}>User Group</Text>
-          <Dropdown
-            style={[
-              styles.input,
-              focusState.selectedGroup && styles.inputFocused,
-              selectedGroup && styles.inputFilled,
-            ]}
-            data={uraianOptions}
-            labelField="label"
-            valueField="value"
-            placeholder="Pilih Grup Pengguna"
-            onFocus={() => handleFocus('selectedGroup')}
-            onBlur={() => handleBlur('selectedGroup')}
-            placeholderStyle={{color: '#B6B9CA'}}
-            value={selectedGroup}
-            onChange={item => setSelectedGroup(item.value)}
-            renderItem={item => (
-              <Text
-                style={[
-                  styles.dropdownItem,
-                  styles.customFont,
-                  {color: '#333'},
-                ]}>
-                {item.label}
-              </Text>
-            )}
-          />
-          <Text style={styles.label}>Jenis Pegawai</Text>
-          <Dropdown
-            style={[
-              styles.input,
-              focusState.selectedJenisPegawai && styles.inputFocused,
-              selectedJenisPegawai && styles.inputFilled,
-            ]}
-            data={jenisPegawaiOptions}
-            labelField="label"
-            valueField="value"
-            placeholder="Uraian"
-            onFocus={() => handleFocus('selectedJenisPegawai')}
-            onBlur={() => handleBlur('selectedJenisPegawai')}
-            placeholderStyle={{color: '#B6B9CA'}}
-            value={selectedJenisPegawai}
-            onChange={item => setSelectedJenisPegawai(item.value)}
-            renderItem={item => (
-              <Text
-                style={[
-                  styles.dropdownItem,
-                  styles.customFont,
-                  {color: '#333'},
-                ]}>
-                {item.label}
-              </Text>
-            )}
-          />
-          <Text style={styles.label}>Finger ID</Text>
-          <TextInput
-            style={[
-              styles.input,
-              focusState.fingerid && styles.inputFocused,
-              fingerid && styles.inputFilled,
-            ]}
-            placeholder="-"
-            value={fingerid?.toString()} // Pastikan nilainya berupa string
-            onChangeText={text => setfingerid(text)} // Perbarui state saat input berubah
-            placeholderTextColor={'#B6B9CA'}
-            onFocus={() => handleFocus('fingerid')}
-            onBlur={() => handleBlur('fingerid')}
-          />
-
-          <View style={styles.buttons}>
-            <TouchableOpacity style={styles.saveButton} onPress={submitTambah}>
-              <Text style={styles.buttonText}>Simpan</Text>
-            </TouchableOpacity>
+    <View style={styles.rootContainer}>
+      <Header title="Tambah User" />
+      <View style={styles.container}>
+        {isLoading ? (
+          // Loading Indicator
+          <View style={styles.loadingContainer}>
+            <BarIndicator color="#D4C6C6" count={5} size={24} />
           </View>
-        </ScrollView>
-      )}
+        ) : (
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}>
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>NIP/NRP</Text>
+            <TextInput
+              style={[
+                GlobalStyle.SemiBold,
+                styles.input,
+                focusState.selectedNip && styles.inputFocused,
+                selectedNip && styles.inputFilled,
+              ]}
+              placeholder="NIP"
+              value={selectedNip}
+              onChangeText={setSelectedNip}
+              placeholderTextColor="#B0B0B0"
+              onFocus={() => handleFocus('selectedNip')}
+              onBlur={() => handleBlur('selectedNip')}
+            />
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>Nama</Text>
+            <TextInput
+              style={[
+                GlobalStyle.SemiBold,
+                styles.input,
+                focusState.selectedNama && styles.inputFocused,
+                selectedNama && styles.inputFilled,
+              ]}
+              placeholder="Nama"
+              value={selectedNama}
+              onChangeText={setSelectedNama}
+              placeholderTextColor="#B0B0B0"
+              onFocus={() => handleFocus('selectedNama')}
+              onBlur={() => handleBlur('selectedNama')}
+            />
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>Password</Text>
+            <TextInput
+              style={[
+                GlobalStyle.SemiBold,
+                styles.input,
+                focusState.selectedPassword && styles.inputFocused,
+                selectedPassword && styles.inputFilled,
+              ]}
+              placeholder="Password"
+              value={selectedPassword}
+              onChangeText={setSelectedPassword}
+              placeholderTextColor="#B0B0B0"
+              onFocus={() => handleFocus('selectedPassword')}
+              onBlur={() => handleBlur('selectedPassword')}
+            />
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>
+              Konfirmasi Password
+            </Text>
+            <TextInput
+              style={[
+                GlobalStyle.SemiBold,
+                styles.input,
+                focusState.selectedPasswordConfirmation && styles.inputFocused,
+                selectedPasswordConfirmation && styles.inputFilled,
+              ]}
+              placeholder="Konfirmasi Password"
+              value={selectedPasswordConfirmation}
+              onChangeText={setSelectedPasswordConfirmation}
+              placeholderTextColor="#B0B0B0"
+              onFocus={() => handleFocus('selectedPasswordConfirmation')}
+              onBlur={() => handleBlur('selectedPasswordConfirmation')}
+            />
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>
+              Pangkat/Gol. Ruang
+            </Text>
+            <Dropdown
+              style={[
+                GlobalStyle.SemiBold,
+                styles.input,
+                focusState.selectedPangkat && styles.inputFocused,
+                selectedPangkat && styles.inputFilled,
+              ]}
+              data={pangkatOptions}
+              labelField="label"
+              valueField="value"
+              placeholder="Pilih Pangkat"
+              onFocus={() => handleFocus('selectedPangkat')}
+              onBlur={() => handleBlur('selectedPangkat')}
+              placeholderStyle={{
+                ...GlobalStyle.SemiBold,
+                color: '#B0B0B0',
+                fontSize: 14,
+              }}
+              value={selectedPangkat}
+              onChange={item => setSelectedPangkat(item.value)}
+              renderItem={item => (
+                <Text style={[GlobalStyle.SemiBold, styles.dropdownItem]}>
+                  {item.label}
+                </Text>
+              )}
+            />
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>
+              Status PTKP
+            </Text>
+            <Dropdown
+              style={[
+                GlobalStyle.SemiBold,
+                styles.input,
+                focusState.selectedPtkp && styles.inputFocused,
+                selectedPtkp && styles.inputFilled,
+              ]}
+              data={ptkpOptions}
+              labelField="label"
+              valueField="value"
+              placeholder="Pilih PTKP"
+              onFocus={() => handleFocus('selectedPtkp')}
+              onBlur={() => handleBlur('selectedPtkp')}
+              placeholderStyle={{
+                ...GlobalStyle.SemiBold,
+                color: '#B0B0B0',
+                fontSize: 14,
+              }}
+              value={selectedPtkp}
+              onChange={item => setSelectedPtkp(item.value)}
+              renderItem={item => (
+                <Text style={[GlobalStyle.SemiBold, styles.dropdownItem]}>
+                  {item.label}
+                </Text>
+              )}
+            />
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>
+              No. Rekening
+            </Text>
+            <TextInput
+              style={[
+                GlobalStyle.SemiBold,
+                styles.input,
+                focusState.selectedNoRek && styles.inputFocused,
+                selectedNoRek && styles.inputFilled,
+              ]}
+              placeholder="-"
+              value={selectedNoRek}
+              onChangeText={setSelectedNoRek}
+              placeholderTextColor={'#B0B0B0'}
+              onFocus={() => handleFocus('selectedNoRek')}
+              onBlur={() => handleBlur('selectedNoRek')}
+            />
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>Level</Text>
+            <Dropdown
+              style={[
+                GlobalStyle.SemiBold,
+                styles.input,
+                focusState.level && styles.inputFocused,
+                level && styles.inputFilled,
+              ]}
+              data={levelOptions}
+              labelField="label"
+              valueField="value"
+              placeholder="Pilih Level"
+              onFocus={() => handleFocus('level')}
+              onBlur={() => handleBlur('level')}
+              placeholderStyle={{
+                ...GlobalStyle.SemiBold,
+                color: '#B0B0B0',
+                fontSize: 14,
+              }}
+              value={level}
+              onChange={item => setLevel(item.value)}
+              renderItem={item => (
+                <Text style={[GlobalStyle.SemiBold, styles.dropdownItem]}>
+                  {item.label}
+                </Text>
+              )}
+            />
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>User Group</Text>
+            <Dropdown
+              style={[
+                GlobalStyle.SemiBold,
+                styles.input,
+                focusState.selectedGroup && styles.inputFocused,
+                selectedGroup && styles.inputFilled,
+              ]}
+              data={uraianOptions}
+              labelField="label"
+              valueField="value"
+              placeholder="Pilih Grup Pengguna"
+              onFocus={() => handleFocus('selectedGroup')}
+              onBlur={() => handleBlur('selectedGroup')}
+              placeholderStyle={{
+                ...GlobalStyle.SemiBold,
+                color: '#B0B0B0',
+                fontSize: 14,
+              }}
+              value={selectedGroup}
+              onChange={item => setSelectedGroup(item.value)}
+              renderItem={item => (
+                <Text style={[GlobalStyle.SemiBold, styles.dropdownItem]}>
+                  {item.label}
+                </Text>
+              )}
+            />
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>
+              Jenis Pegawai
+            </Text>
+            <Dropdown
+              style={[
+                GlobalStyle.SemiBold,
+                styles.input,
+                focusState.selectedJenisPegawai && styles.inputFocused,
+                selectedJenisPegawai && styles.inputFilled,
+              ]}
+              data={jenisPegawaiOptions}
+              labelField="label"
+              valueField="value"
+              placeholder="Uraian"
+              onFocus={() => handleFocus('selectedJenisPegawai')}
+              onBlur={() => handleBlur('selectedJenisPegawai')}
+              placeholderStyle={{
+                ...GlobalStyle.SemiBold,
+                color: '#B0B0B0',
+                fontSize: 14,
+              }}
+              value={selectedJenisPegawai}
+              onChange={item => setSelectedJenisPegawai(item.value)}
+              renderItem={item => (
+                <Text style={[GlobalStyle.SemiBold, styles.dropdownItem]}>
+                  {item.label}
+                </Text>
+              )}
+            />
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>Finger ID</Text>
+            <TextInput
+              style={[
+                GlobalStyle.SemiBold,
+                styles.input,
+                focusState.fingerid && styles.inputFocused,
+                fingerid && styles.inputFilled,
+              ]}
+              placeholder="-"
+              value={fingerid?.toString()} // Pastikan nilainya berupa string
+              onChangeText={text => setfingerid(text)} // Perbarui state saat input berubah
+              placeholderTextColor={'#B0B0B0'}
+              onFocus={() => handleFocus('fingerid')}
+              onBlur={() => handleBlur('fingerid')}
+            />
+
+            <View style={styles.buttons}>
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={submitTambah}>
+                <Text style={[GlobalStyle.SemiBold, styles.buttonText]}>
+                  Simpan
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        )}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  rootContainer: {
+    flex: 1,
+    backgroundColor: '#FFF',
+  },
   container: {
     flex: 1,
     backgroundColor: '#FFF',
-    paddingTop: 60,
-    paddingHorizontal: 20,
-  }, // Menambahkan padding top agar header tidak terpotong
-  header: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 8,
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-  },
-  backButton: {
-    position: 'absolute',
-    left: 16,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    paddingHorizontal: width * 0.05,
+    paddingTop: 10,
   },
   cardContainer: {
     backgroundColor: '#FFFF',
@@ -480,15 +481,16 @@ const styles = StyleSheet.create({
 
     marginTop: 37, // Memberikan margin agar konten tidak tumpang tindih dengan header
   },
-  label: {fontSize: 14, marginTop: 10, fontWeight: 800},
+  label: {fontSize: 14, color: '#313131'},
   input: {
     padding: 10,
     fontSize: 14,
     borderRadius: 5, // Default border radius
-    marginVertical: 10,
+    marginBottom: 20,
     backgroundColor: '#F0ECEC', // Default background color
     borderWidth: 1,
     borderColor: 'transparent', // Default border color (tidak terlihat)
+    color: '#313131',
   },
   inputFocused: {
     borderRadius: 5, // Border radius saat fokus
@@ -499,7 +501,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#F2F8FF', // Background lebih gelap saat terisi
     borderRadius: 5, // Hilangkan border radius
     padding: 10,
-    marginVertical: 10,
   },
   scrollContent: {
     paddingBottom: 10, // Tambahkan padding bawah agar tidak terpotong
@@ -534,14 +535,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  buttonText: {color: '#fff', fontSize: 14, fontWeight: '600'},
+  buttonText: {color: '#fff', fontSize: 14},
   dropdownItem: {
     padding: 10,
-    fontSize: 12,
-    color: '#333',
-  },
-  customFont: {
-    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: '#313131',
   },
   loadingContainer: {
     flex: 1,

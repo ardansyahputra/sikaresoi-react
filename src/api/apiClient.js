@@ -15,7 +15,12 @@ const useApiClient = () => {
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-      config.headers['Content-Type'] = 'application/json';
+
+      // Pastikan tidak override Content-Type saat pakai FormData
+      if (!(config.data instanceof FormData)) {
+        config.headers['Content-Type'] = 'application/json';
+      }
+
       config.headers['X-requested-with'] = 'XMLHttpRequest';
       return config;
     },
