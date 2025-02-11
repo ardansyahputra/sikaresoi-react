@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -14,12 +14,12 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import { Dropdown } from 'react-native-element-dropdown';
+import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../../src/api/apiClient';
 
 export default function Jabatan() {
-    const navigation = useNavigation();
+  const navigation = useNavigation();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
@@ -34,10 +34,10 @@ export default function Jabatan() {
     fetchData(currentPage, selectedDisplay);
   }, [currentPage, selectedDisplay]);
 
-  const fetchData = async (page) => {
+  const fetchData = async page => {
     try {
       setLoading(true);
-      const response = await apiClient.post('/teguran/indexandro', { page });
+      const response = await apiClient.post('/teguran/indexandro', {page});
       if (response?.data?.data) {
         setData(response.data.data);
         setCurrentPage(response.data.current_page);
@@ -59,19 +59,19 @@ export default function Jabatan() {
     navigation.navigate('Tambahtegur');
   };
 
-  const handleEdit = (uuid) => {
-    navigation.navigate('Edittegur', { uuid });
+  const handleEdit = uuid => {
+    navigation.navigate('Edittegur', {uuid});
   };
 
   const display = [
-    { label: '5', value: 1 },
-    { label: '10', value: 2 },
-    { label: '25', value: 3 },
-    { label: '50', value: 4 },
-    { label: '100', value: 5 },
+    {label: '5', value: 1},
+    {label: '10', value: 2},
+    {label: '25', value: 3},
+    {label: '50', value: 4},
+    {label: '100', value: 5},
   ];
 
-  const toggleExpand = (id) => {
+  const toggleExpand = id => {
     setExpandedId(expandedId === id ? null : id);
   };
 
@@ -93,8 +93,8 @@ export default function Jabatan() {
             valueField="value"
             placeholder="10"
             value={selectedDisplay}
-            onChange={(item) => setSelectedDisplay(item.value)}
-            renderItem={(item) => (
+            onChange={item => setSelectedDisplay(item.value)}
+            renderItem={item => (
               <Text style={[styles.dropdownItem, styles.customFont]}>
                 {item.label}
               </Text>
@@ -113,13 +113,15 @@ export default function Jabatan() {
       <View style={styles.tableHeader}>
         <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
         <Text style={[styles.headerCell, styles.nameCell]}>User</Text>
-        <Text style={[styles.headerCell, styles.tableStatusCell]}>Potongan</Text>
+        <Text style={[styles.headerCell, styles.tableStatusCell]}>
+          Potongan
+        </Text>
         <View style={styles.expandIconCell} />
       </View>
     </View>
   );
 
-  const renderItem = ({ item, index }) => {
+  const renderItem = ({item, index}) => {
     if (!item) return null;
 
     const userName = item.user ? item.user.name : '-';
@@ -137,7 +139,10 @@ export default function Jabatan() {
           style={styles.rowHeader}
           onPress={() => toggleExpand(item.id)}>
           <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
-          <Text style={[styles.tableCell, styles.nameCell]} numberOfLines={1} ellipsizeMode="tail">
+          <Text
+            style={[styles.tableCell, styles.nameCell]}
+            numberOfLines={1}
+            ellipsizeMode="tail">
             {userName}
           </Text>
           <View style={styles.statusCellContainer}>
@@ -155,13 +160,21 @@ export default function Jabatan() {
         </TouchableOpacity>
         {isExpanded && (
           <View style={styles.expandedContent}>
-            <Text style={styles.expandedText}>Jenis Teguran: {jenisTeguran}</Text>
+            <Text style={styles.expandedText}>
+              Jenis Teguran: {jenisTeguran}
+            </Text>
             <Text style={styles.expandedText}>Potongan: {potongan}</Text>
-            <Text style={styles.expandedText}>Tanggal Pelanggaran: {tanggalPelanggaran}</Text>
+            <Text style={styles.expandedText}>
+              Tanggal Pelanggaran: {tanggalPelanggaran}
+            </Text>
 
             <View style={styles.dibacaWrapper}>
               <Text style={styles.expandedText}>Dibaca:</Text>
-              <View style={[styles.dibacaValueWrapper, isDibacaEmpty && { backgroundColor: 'red' }]}>
+              <View
+                style={[
+                  styles.dibacaValueWrapper,
+                  isDibacaEmpty && {backgroundColor: 'red'},
+                ]}>
                 <Text style={styles.DibacaText}>{dibaca}</Text>
               </View>
             </View>
@@ -186,7 +199,6 @@ export default function Jabatan() {
       </View>
     );
   };
-  
 
   return (
     <View style={styles.container}>
@@ -341,23 +353,23 @@ const styles = StyleSheet.create({
   },
   dibacaWrapper: {
     flexDirection: 'row', // Menyusun "Dibaca:" dan nilai dibaca dalam satu baris
-    alignItems: 'center',  // Menyusun konten secara vertikal agar berada sejajar
-    marginBottom: 5,       // Memberikan jarak bawah setelah wrapper
-    flexWrap: 'wrap',      // Memungkinkan elemen untuk membungkus jika terlalu panjang
+    alignItems: 'center', // Menyusun konten secara vertikal agar berada sejajar
+    marginBottom: 5, // Memberikan jarak bawah setelah wrapper
+    flexWrap: 'wrap', // Memungkinkan elemen untuk membungkus jika terlalu panjang
   },
   dibacaValueWrapper: {
     backgroundColor: '#28c4ac', // Warna latar belakang default
-    borderRadius: 8,            // Membuat sudut rounded
-    paddingVertical: 5,         // Menambahkan padding vertikal di dalam wrapper
-    paddingHorizontal: 10,      // Menambahkan padding horizontal di dalam wrapper
-    marginLeft: 5,       
-    marginBottom: 20,      // Memberikan jarak antara "Dibaca:" dan nilai
-    maxWidth: '70%',            // Membatasi lebar nilai agar tidak melampaui layar
-    overflow: 'hidden',         // Menyembunyikan konten yang melampaui batas
+    borderRadius: 8, // Membuat sudut rounded
+    paddingVertical: 5, // Menambahkan padding vertikal di dalam wrapper
+    paddingHorizontal: 10, // Menambahkan padding horizontal di dalam wrapper
+    marginLeft: 5,
+    marginBottom: 20, // Memberikan jarak antara "Dibaca:" dan nilai
+    maxWidth: '70%', // Membatasi lebar nilai agar tidak melampaui layar
+    overflow: 'hidden', // Menyembunyikan konten yang melampaui batas
   },
   DibacaText: {
     fontSize: 14,
-    color: '#fff',             // Warna teks putih agar kontras dengan background
+    color: '#fff', // Warna teks putih agar kontras dengan background
   },
   expandedLinkText: {
     color: 'blue',

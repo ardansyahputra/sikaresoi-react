@@ -266,14 +266,6 @@ export default function User() {
     }
   };
 
-  const handleBackPress = () => {
-    console.log('Back Pressed');
-  };
-
-  const handleHelpPress = () => {
-    console.log('Help Pressed');
-  };
-
   const display = [
     {label: '5', value: 1},
     {label: '10', value: 2},
@@ -356,7 +348,7 @@ export default function User() {
               {item.nip || '-'}
             </Text>
 
-            <View style={[styles.tableCell, styles.switchCell]}>
+            <View style={styles.tableCell}>
               <Switch
                 value={item.status === 1}
                 onValueChange={() => handleSwitchToggle(item.uuid, item.status)}

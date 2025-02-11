@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -9,19 +9,35 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
+  Dimensions,
 } from 'react-native';
 import useApiClient from '../../../../../src/api/apiClient';
+import Header from '../../../../components/Header';
+import GlobalStyle from '../../../../../src/utils/GlobalStyle';
+import {BarIndicator} from 'react-native-indicators';
+const {width} = Dimensions.get('window');
 
-const TambahPage = ({ navigation }) => {
+const TambahPage = ({navigation}) => {
   const [selectedPotongan, setSelectedPotongan] = useState('');
   const [selectedBatasAtas, setSelectedBatasAtas] = useState('00:00:00');
   const [selectedBatasBawah, setSelectedBatasBawah] = useState('00:00:00');
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const apiClient = useApiClient();
+  const [focusState, setFocusState] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => setKeyboardOpen(true));
-    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => setKeyboardOpen(false));
+    setTimeout(() => setIsLoading(false), 1000);
+
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => setKeyboardOpen(true),
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => setKeyboardOpen(false),
+    );
 
     return () => {
       keyboardDidShowListener.remove();
@@ -30,8 +46,11 @@ const TambahPage = ({ navigation }) => {
   }, []);
 
   const handleSave = async () => {
+    setIsLoading(true);
+
     if (!selectedPotongan || !selectedBatasAtas || !selectedBatasBawah) {
-      Alert.alert('Error', 'Please fill in all fields before saving.');
+      console.log('Error', 'Please fill in all fields before saving.');
+      setIsLoading(false);
       return;
     }
 
@@ -48,13 +67,15 @@ const TambahPage = ({ navigation }) => {
       );
 
       if (response.status === 200 && response.data.status) {
-        Alert.alert('Success', 'Data has been created successfully.');
+        console.log('Success', 'Data has been created successfully.');
         navigation.goBack();
       } else {
-        Alert.alert('Error', 'Failed to create data. Please try again.');
+        console.log('Error', 'Failed to create data. Please try again.');
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to create data.');
+      console.log('Error', 'Failed to create data.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -62,111 +83,189 @@ const TambahPage = ({ navigation }) => {
     const filteredText = text.replace(/[^0-9:]/g, '');
     setState(filteredText);
   };
+  const handleFocus = inputName => {
+    setFocusState(prevState => ({...prevState, [inputName]: true}));
+  };
+
+  const handleBlur = inputName => {
+    setFocusState(prevState => ({...prevState, [inputName]: false}));
+  };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <View style={styles.rootContainer}>
+      <Header title="Tambah PA" />
       <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.headerTitle}>Tambah Data</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.cardContainer}>
-          <Text style={styles.label}>Potongan</Text>
-          <TextInput
-            style={styles.input}
-            value={selectedPotongan}
-            onChangeText={(text) => handleTextChange(text, setSelectedPotongan)}
-            keyboardType="default"
-            placeholder="Masukkan Potongan (angka atau ':')"
-          />
-
-          <Text style={styles.label}>Batas Atas</Text>
-          <TextInput
-            style={styles.input}
-            value={selectedBatasAtas}
-            onChangeText={(text) => handleTextChange(text, setSelectedBatasAtas)}
-            keyboardType="default"
-            placeholder="Masukkan Batas Atas (angka atau ':')"
-          />
-
-          <Text style={styles.label}>Batas Bawah</Text>
-          <TextInput
-            style={styles.input}
-            value={selectedBatasBawah}
-            onChangeText={(text) => handleTextChange(text, setSelectedBatasBawah)}
-            keyboardType="default"
-            placeholder="Masukkan Batas Bawah (angka atau ':')"
-          />
-
-          <View style={styles.buttons}>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => navigation.goBack()}>
-              <Text style={styles.buttonText}>Batal</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.saveButton}
-              onPress={handleSave}>
-              <Text style={styles.buttonText}>Simpan</Text>
-            </TouchableOpacity>
+        {isLoading ? (
+          // Loading Indicator
+          <View style={styles.loadingContainer}>
+            <BarIndicator color="#D4C6C6" count={5} size={24} />
           </View>
-        </View>
+        ) : (
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}>
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>Potongan</Text>
+            <TextInput
+              style={[
+                GlobalStyle.SemiBold,
+                styles.input,
+                focusState.selectedPotongan && styles.inputFocused,
+                selectedPotongan && styles.inputFilled,
+              ]}
+              value={selectedPotongan}
+              onChangeText={text => handleTextChange(text, setSelectedPotongan)}
+              keyboardType="default"
+              placeholder="Masukkan Potongan (angka atau ':')"
+              placeholderTextColor="#B0B0B0"
+              onFocus={() => handleFocus('selectedPotongan')}
+              onBlur={() => handleBlur('selectedPotongan')}
+            />
+
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>Batas Atas</Text>
+            <TextInput
+              style={[
+                GlobalStyle.SemiBold,
+                styles.input,
+                focusState.selectedBatasAtas && styles.inputFocused,
+                selectedBatasAtas && styles.inputFilled,
+              ]}
+              value={selectedBatasAtas}
+              onChangeText={text =>
+                handleTextChange(text, setSelectedBatasAtas)
+              }
+              keyboardType="default"
+              placeholder="Masukkan Batas Atas (angka atau ':')"
+              placeholderTextColor="#B0B0B0"
+              onFocus={() => handleFocus('selectedBatasAtas')}
+              onBlur={() => handleBlur('selectedBatasAtas')}
+            />
+
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>
+              Batas Bawah
+            </Text>
+            <TextInput
+              style={[
+                GlobalStyle.SemiBold,
+                styles.input,
+                focusState.selectedBatasBawah && styles.inputFocused,
+                selectedBatasBawah && styles.inputFilled,
+              ]}
+              value={selectedBatasBawah}
+              onChangeText={text =>
+                handleTextChange(text, setSelectedBatasBawah)
+              }
+              keyboardType="default"
+              placeholder="Masukkan Batas Bawah (angka atau ':')"
+              placeholderTextColor="#B0B0B0"
+              onFocus={() => handleFocus('selectedBatasBawah')}
+              onBlur={() => handleBlur('selectedBatasBawah')}
+            />
+
+            <View style={styles.buttons}>
+              <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                <Text style={[GlobalStyle.SemiBold, styles.buttonText]}>
+                  Simpan
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        )}
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#E7E9F1', paddingTop: 20 },
-  header: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
-    borderBottomLeftRadius: 15,
-    borderBottomRightRadius: 15,
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
+  rootContainer: {
+    flex: 1,
+    backgroundColor: '#FFF',
   },
-  headerTitle: { textAlign: 'center', fontSize: 20, fontWeight: 'bold' },
+  container: {
+    flex: 1,
+    backgroundColor: '#FFF',
+    paddingHorizontal: width * 0.05,
+    paddingTop: 10,
+  },
   cardContainer: {
     backgroundColor: '#FFFF',
     paddingVertical: 20,
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
     borderRadius: 10,
     elevation: 4,
     marginVertical: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.1,
     shadowRadius: 10,
-    marginHorizontal: 20,
-    marginTop: 37,
+    width: '100%',
+
+    marginTop: 37, // Memberikan margin agar konten tidak tumpang tindih dengan header
   },
-  label: { fontSize: 16, marginTop: 10 },
+  label: {fontSize: 14, color: '#313131'},
   input: {
-    borderWidth: 1,
-    borderColor: '#CCC',
     padding: 10,
+    fontSize: 14,
+    borderRadius: 5, // Default border radius
+    marginBottom: 20,
+    backgroundColor: '#F0ECEC', // Default background color
+    borderWidth: 1,
+    borderColor: 'transparent', // Default border color (tidak terlihat)
+    color: '#313131',
+  },
+  inputFocused: {
+    borderRadius: 5, // Border radius saat fokus
+    borderColor: '#75BAFF',
+    borderWidth: 1.5,
+  },
+  inputFilled: {
+    backgroundColor: '#F2F8FF', // Background lebih gelap saat terisi
+    borderRadius: 5, // Hilangkan border radius
+    padding: 10,
+  },
+  scrollContent: {
+    paddingBottom: 10, // Tambahkan padding bawah agar tidak terpotong
+  },
+  dropdown: {
+    position: 'absolute',
+    top: 195, // Adjust this value to make sure dropdown is below the input field
+    left: 20,
+    right: 180,
+    backgroundColor: '#fff',
     borderRadius: 5,
-    marginVertical: 10,
+    padding: 10,
+    zIndex: 5,
+    shadowColor: '#000', // Menambahkan bayangan
+    shadowOffset: {width: 0, height: 2}, // Menyesuaikan posisi bayangan
+    shadowOpacity: 0.3, // Menyesuaikan intensitas bayangan
+    shadowRadius: 5, // Menyesuaikan kelembutan bayangan
+    elevation: 5, // Memberikan bayangan di perangkat Android
   },
   buttons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 20,
   },
-  cancelButton: { backgroundColor: '#CCC', padding: 15, borderRadius: 5 },
-  saveButton: { backgroundColor: '#007BFF', padding: 15, borderRadius: 5 },
-  buttonText: { color: '#FFF', fontWeight: 'bold' },
+  cancelButton: {backgroundColor: '#187DE4', padding: 15, borderRadius: 5},
+  saveButton: {
+    width: '100%',
+    height: 48,
+    backgroundColor: '#3699FE',
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  buttonText: {color: '#fff', fontSize: 14},
+  dropdownItem: {
+    padding: 10,
+    fontSize: 14,
+    color: '#313131',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
 
 export default TambahPage;

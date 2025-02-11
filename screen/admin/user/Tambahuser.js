@@ -177,6 +177,7 @@ const TambahUser = ({navigation, route}) => {
       Alert.alert('Error', 'Gagal memuat data jabatan.');
     }
   };
+
   const handleFocus = inputName => {
     setFocusState(prevState => ({...prevState, [inputName]: true}));
   };
