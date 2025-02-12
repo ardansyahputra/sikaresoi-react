@@ -199,7 +199,7 @@ export default function Teguranscreen({ navigation }) {
             </View>
       {/* Loading Indicator */}
       {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
@@ -576,5 +576,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#000",
     marginLeft: 0,
+  },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10, // Optional: Adjust positioning
   },
 });

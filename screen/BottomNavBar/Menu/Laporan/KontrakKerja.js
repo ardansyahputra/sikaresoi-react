@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Button, Alert, Modal, ActivityIndicator,  ScrollView,
+import { View, Text, StyleSheet, Button, Alert, Modal, ActivityIndicator, ScrollView,
   Image, TouchableOpacity } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import AwesomeAlert from 'react-native-awesome-alerts';
@@ -57,23 +57,6 @@ const KontrakKerja = () => {
     try {
       setLoading(true);
 
-      // const downloadResult = await RNFS.downloadFile({
-      //   fromUrl: pdfUrl,
-      //   toFile: filePath,
-      //   progress: (res) => {
-      //     const progress = (res.bytesWritten / res.contentLength) * 100;
-      //     console.log(`Unduh PDF ${progress.toFixed(2)}% selesai.`);
-      //   },
-      // }).promise;
-
-      // if (downloadResult.statusCode === 200) {
-      //   setSuccessModalVisible(true); // Menampilkan modal sukses
-      //   FileViewer.open(filePath);
-      // } else {
-      //   throw new Error(`Gagal mengunduh file. Kode status: ${downloadResult.statusCode}`);
-      // }
-
-      console.log("Downloading:", pdfUrl);
       const response = await fetch(pdfUrl, { method: 'GET' });
 
       if (!response.ok) {
@@ -107,47 +90,48 @@ const KontrakKerja = () => {
   };
 
   return (
-        <ScrollView contentContainerStyle={styles.container}>
-          <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-              <Ionicons name="arrow-back" size={26} color="#000" />
-            </TouchableOpacity>
-            <Image
-              source={require('../../../assets/images/sikaresoi.png')}
-              style={styles.headerImage}
-            />
-          </View>
-    
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.headerTitle}>Laporan Kontrak Kerja</Text>
-            <Text style={styles.separatorText}> • </Text>
-            <Text style={styles.headerSubtitle}>Kontrak Kerja</Text>
-          </View>
-    <View style={{ flex: 1, padding: 20 }}>
-      <View style={styles.card}>
-        <View style={styles.cardBody}>
-          <View style={styles.row}>
-            <Text style={styles.label}>
-              Pilih Tahun <Text style={styles.required}>*</Text>:
-            </Text>
-            <Dropdown
-              data={listTahun}
-              labelField="tahun"
-              valueField="id"
-              value={postData.tahun_id}
-              onChange={(item) => handleSelectTahun(item.id)}
-              placeholder="-- PILIH TAHUN --"
-              style={styles.dropdown}
-              labelStyle={styles.dropdownLabel} // Label font Poppins
-              selectedTextStyle={styles.dropdownText} // Font Poppins untuk teks yang dipilih
-              placeholderStyle={styles.dropdownPlaceholder} // Placeholder dengan font Poppins
-              itemTextStyle={styles.dropdownItemText} // Font Poppins untuk teks opsi
-              itemStyle={styles.dropdownItemText} // Gaya untuk item dalam dropdown
-            />
-          </View>
+    <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={26} color="#000" />
+        </TouchableOpacity>
+        <Image
+          source={require('../../../assets/images/sikaresoi.png')}
+          style={styles.headerImage}
+        />
+      </View>
 
-          {loading ? (
-            <Text style={styles.loadingText}>Memuat data...</Text>
+      <View style={styles.headerTextContainer}>
+        <Text style={styles.headerTitle}>Laporan Kontrak Kerja</Text>
+        <Text style={styles.separatorText}> • </Text>
+        <Text style={styles.headerSubtitle}>Kontrak Kerja</Text>
+      </View>
+
+      <View style={{ flex: 1, padding: 20 }}>
+        <View style={styles.card}>
+          <View style={styles.cardBody}>
+            <View style={styles.row}>
+              <Text style={styles.label}>
+                Pilih Tahun <Text style={styles.required}>*</Text>:
+              </Text>
+              <Dropdown
+                data={listTahun}
+                labelField="tahun"
+                valueField="id"
+                value={postData.tahun_id}
+                onChange={(item) => handleSelectTahun(item.id)}
+                placeholder="-- PILIH TAHUN --"
+                style={styles.dropdown}
+                labelStyle={styles.dropdownLabel} // Label font Poppins
+                selectedTextStyle={styles.dropdownText} // Font Poppins untuk teks yang dipilih
+                placeholderStyle={styles.dropdownPlaceholder} // Placeholder dengan font Poppins
+                itemTextStyle={styles.dropdownItemText} // Font Poppins untuk teks opsi
+                itemStyle={styles.dropdownItemText} // Gaya untuk item dalam dropdown
+              />
+            </View>
+
+            {loading ? (
+              <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
             ) : pdfUrl ? (
               <TouchableOpacity
                 onPress={downloadAndOpenPdf}
@@ -160,44 +144,46 @@ const KontrakKerja = () => {
           </View>
         </View>
 
-      {/* Modal Loading */}
-      <Modal transparent={true} visible={loading}>
-        <View style={styles.modalBackground}>
-          <View style={styles.activityIndicatorWrapper}>
-            <ActivityIndicator size="large" color="#0000ff" />
-            <Text style={{ marginTop: 10, fontFamily: 'Poppins-Regular' }}>Sedang Memuat...</Text>
+        {/* Modal Loading */}
+        <Modal transparent={true} visible={loading}>
+          <View style={styles.modalBackground}>
+            <View style={styles.activityIndicatorWrapper}>
+              <ActivityIndicator size="large" color="#0000ff" />
+              <Text style={{ marginTop: 10, fontFamily: 'Poppins-Regular' }}>Sedang Memuat...</Text>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
 
-      <Modal transparent={true} visible={showNotFoundModal} animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Icon name="checkmark-circle" size={64} color="red" />
-            <Text style={styles.successText}>File tidak ditemukan</Text>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setShowNotFoundModal(false)}>
-              <Text style={styles.closeButtonText}>Tutup</Text>
-            </TouchableOpacity>
+        {/* Modal File Not Found */}
+        <Modal transparent={true} visible={showNotFoundModal} animationType="slide">
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Icon name="close-circle-sharp" size={90} color="red" />
+              <Text style={styles.succesText}>File tidak ditemukan</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setShowNotFoundModal(false)}>
+                <Text style={styles.closeButtonText}>Tutup</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
 
-      <Modal transparent={true} visible={successModalVisible} animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Icon name="checkmark-circle" size={64} color="green" />
-            <Text style={styles.successText}>Unduhan Selesai!</Text>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setSuccessModalVisible(false)}>
-              <Text style={styles.closeButtonText}>Tutup</Text>
-            </TouchableOpacity>
+        {/* Modal Success */}
+        <Modal transparent={true} visible={successModalVisible} animationType="slide">
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Icon name="checkmark-circle-sharp" size={90} color="green" />
+              <Text style={styles.successText}>Unduhan Selesai!</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setSuccessModalVisible(false)}>
+                <Text style={styles.closeButtonText}>Tutup</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
-    </View>
+        </Modal>
+      </View>
     </ScrollView>
   );
 };
@@ -231,6 +217,7 @@ const styles = StyleSheet.create({
     marginTop:1,
     marginLeft:3,
     marginRight:1,
+    opacity: 0.4,
   },
   card: {
     backgroundColor: '#FFF',
@@ -323,6 +310,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-SemiBold',
   },
 
+  succesText: {
+    marginTop: 10,
+    fontSize: 18,
+    color: 'red',
+    fontFamily: 'Poppins-SemiBold',
+  },
+
   closeButton: {
     marginTop: 20,
     backgroundColor: '#007BFF',
@@ -341,6 +335,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginLeft: 25, // Menambahkan jarak ke kiri
     marginTop: 20, 
+    marginBottom: -8,
   },
 
   headerTitle: {
@@ -385,6 +380,12 @@ dropdownPlaceholder: {
 dropdownLabel: {
   fontFamily: 'Poppins-SemiBold', // Label font Poppins
   fontSize: 16,
+},
+loader: {
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginTop: 10, // Optional: Adjust positioning
 },
 });
 

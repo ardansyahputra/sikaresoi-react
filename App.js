@@ -8,6 +8,7 @@ import {
   useNavigationContext,
 } from './src/navigation/NavigationContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { StyleSheet } from 'react-native';
 
 //login screens
 import LoginScreen from './screen/auth/login/Login';
@@ -37,7 +38,13 @@ import KontrakKerja from './screen/BottomNavBar/Menu/Laporan/KontrakKerja.js';
 import RealisasiNext from './screen/RealisasiNext.js';
 
 const Tab = createBottomTabNavigator();
-
+const styles = StyleSheet.create({
+  tabLabel: {
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 11,
+    opacity: 0.6,
+  },
+});
 // Stack Navigator untuk Menu
 const Stack = createNativeStackNavigator();
 
@@ -180,11 +187,11 @@ function AppTabs() {
         tabBarIcon: ({focused, color, size}) => {
           let iconName;
 
-          if (route.name === 'Dashboard') {
+          if (route.name === 'DASHBOARD') {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'KontrakKinerja') {
-            iconName = focused ? 'document' : 'document-outline';
-          } else if (route.name === 'Profile') {
+          } else if (route.name === 'KONTRAK KINERJA') {
+            iconName = focused ? 'documents' : 'documents-outline';
+          } else if (route.name === 'PROFIL') {
             iconName = focused ? 'person' : 'person-outline';
           }
 
@@ -196,19 +203,20 @@ function AppTabs() {
           backgroundColor: 'white',
           display: shouldShowTabNavigator ? 'flex' : 'none',
         },
+        tabBarLabelStyle: styles.tabLabel, // Menggunakan style yang sudah dibuat
       })}>
       <Tab.Screen
-        name="Dashboard"
+        name="DASHBOARD"
         component={HomeStack}
         options={{headerShown: false}}
       />
       <Tab.Screen
-        name="KontrakKinerja"
+        name="KONTRAK KINERJA"
         component={KontrakKinerjaScreen} // Pastikan Presensi sudah ada
         options={{headerShown: false}}
       />
       <Tab.Screen
-        name="Profile"
+        name="PROFIL"
         component={ProfileStack}
         options={{headerShown: false}}
       />

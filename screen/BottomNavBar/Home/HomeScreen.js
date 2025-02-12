@@ -5,6 +5,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Ardhan from 'react-native-vector-icons/MaterialIcons';
 import Gusti from 'react-native-vector-icons/MaterialCommunityIcons';
 import Oliv from 'react-native-vector-icons/MaterialCommunityIcons';
+import Nana from 'react-native-vector-icons/FontAwesome6';
 
 const { width } = Dimensions.get('window'); // Mendapatkan lebar layar
 
@@ -53,7 +54,7 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.bannerContainer}>
           <View style={styles.banner}>
             <Image
-              source={{ uri: 'https://via.placeholder.com/350x150' }}
+              source={require('../../assets/images/3.png')}
               style={styles.bannerImage}
               resizeMode="cover"
             />
@@ -63,7 +64,7 @@ export default function HomeScreen({ navigation }) {
         {/* Menu Favorite */}
         <View style={styles.menuRow}>
           {renderMenuIcon('Setting Jabatan', 'settings', () => navigation.navigate('SettingJabatan'))}
-          {renderMenuIcon('Realisasi Kinerja', 'add-circle-outline', () => navigation.navigate('RealisasiKinerja'))}
+          {renderMenuIcon('Realisasi Kinerja', 'add-circle', () => navigation.navigate('RealisasiKinerja'))}
           {renderMenuIcon('Persetujuan Kontrak Kinerja', 'shield-checkmark', () => navigation.navigate('Persetujuan'))}
           {renderMenuIcon('Lainnya', 'apps', () => navigation.navigate('Allmenu'))}
         </View>
@@ -90,15 +91,15 @@ export default function HomeScreen({ navigation }) {
 
           <View style={styles.row}>
             <TouchableOpacity style={[styles.card]} onPress={() => navigation.navigate('Persetujuan')}>
-              <LinearGradient colors={['#D32F2F', '#F44336']} style={styles.gradient}>
-                <Oliv name="file-document" size={60} color="#FFFFFF" />
+              <LinearGradient colors={['#fca623', '#ed6809']} style={styles.gradient}>
+                <Nana name="file-contract" size={55} color="#FFFFFF" />
                 <Text style={styles.cardTitle}>1 Kontrak Bawahan</Text>
                 <Text style={styles.cardSubtitle}>Belum Disetujui</Text>
               </LinearGradient>
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.card]} onPress={() => navigation.navigate('PersetujuanRealisasi')}>
-              <LinearGradient colors={['#F57F17', '#FBC02D']} style={styles.gradient}>
+              <LinearGradient colors={['#965eff', '#7437e6']} style={styles.gradient}>
                 <Oliv name="file-document" size={60} color="#FFFFFF" />
                 <Text style={styles.cardTitle}>0 Realisasi Bawahan</Text>
                 <Text style={styles.cardSubtitle}>Belum Disetujui</Text>
@@ -179,6 +180,7 @@ const styles = StyleSheet.create({
     width: '50%',
     height: undefined,
     aspectRatio: 5,
+    marginRight: 190,
     resizeMode: 'contain',
     alignSelf: 'center',
   },
@@ -209,18 +211,25 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   cardTitle: {
-    fontSize: 19,
+    fontSize: 20,
     color: '#fff',
     marginTop: 10,
     textAlign: 'center',
     fontFamily: 'Poppins-SemiBold',
   },
-  cardSubtitle: {
-    fontSize: 13,
+    cardTitle: {
+    fontSize: 20,
     color: '#fff',
-    marginTop: 4,
+    marginTop: 10,
     textAlign: 'center',
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Poppins-Bold',
+  },
+  cardSubtitle: {
+    fontSize: 14,
+    color: '#fff',
+    marginTop: -5,
+    textAlign: 'center',
+    fontFamily: 'Poppins-SemiBold',
   },
   themeToggle: {
     position: 'absolute',

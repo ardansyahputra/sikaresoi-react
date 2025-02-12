@@ -191,14 +191,14 @@ export default function RealisasiNext({ navigation }) {
     return (
       <View style={styles.container}>
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={26} color="#000" />
-          </TouchableOpacity>
-          <Image
-            source={require('./assets/images/sikaresoi.png')}
-            style={styles.headerImage}
-          />
+      <View style={styles.header}>
+                  <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <Ionicons name="arrow-back" size={26} color="#000" />
+                  </TouchableOpacity>
+                  <Image
+                    source={require('./assets/images/sikaresoi.png')}
+                    style={styles.headerImage}
+                  />
         </View>
         {/* Loading Indicator */}
         {loading ? (
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
     color: '#333',
     textAlign: 'center',
     marginBottom: 10,
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   },
   revisiTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
     color: '#333',
     marginBottom: 10,
   },
@@ -334,6 +334,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
     marginBottom: 10,
+    fontFamily: 'Poppins-Regular',
   },
   revisiInput: {
     borderWidth: 1,
@@ -357,7 +358,7 @@ const styles = StyleSheet.create({
   },
   revisiCancelText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
     textAlign: 'center',
   },
   confirmButton: {
@@ -368,7 +369,7 @@ const styles = StyleSheet.create({
   },
   confirmButtonText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
     textAlign: 'center',
   },
 
@@ -383,7 +384,7 @@ const styles = StyleSheet.create({
 
   revisiButtonText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
   },
 
   approvedButton: {
@@ -398,13 +399,14 @@ const styles = StyleSheet.create({
 
   approvedButtonText: {
     color: '#00a79d',
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
   },
 
   errorText: {
     fontSize: 14,
     color: '#333',
     textAlign: 'center',
+    fontFamily: 'Poppins-SemiBold',
   },
 
 
@@ -438,13 +440,14 @@ const styles = StyleSheet.create({
     marginBottom: 12, // Increased spacing between lines
     lineHeight: 24, // Improved line height for better readability
     textAlign: 'left', // Left-aligned text for better consistency
+    fontFamily: 'Poppins-SemiBold',
   },
   
 
   buttonText: {
     color: '#fff', // Warna teks putih
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
   },
 
   yearMonthContainer: {
@@ -538,7 +541,7 @@ const styles = StyleSheet.create({
 
   statusCell: {
     textAlign: 'center',
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
   },
 
   expandIconCell: {
@@ -570,16 +573,19 @@ const styles = StyleSheet.create({
   expandedText: {
     marginBottom: 5,
     fontSize: 14,
+    fontFamily: 'Poppins-Regular',
   },
 
   expandedLinkText: {
     color: 'blue',
     marginBottom: 5,
     fontSize: 14,
+    fontFamily: 'Poppins-SemiBold',
   },
 
   filetext: {
     flexDirection: 'row',
+    fontFamily: 'Poppins-SemiBold',
   },
 
   actionContainer: {
@@ -647,7 +653,7 @@ const styles = StyleSheet.create({
 
   paginationText: {
     color: 'white',
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
   },
 
   pageInfo: {
@@ -662,47 +668,47 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
     paddingHorizontal: 16,
     paddingVertical: 18,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOpacity: 0.1,
     elevation: 5,
   },
-
-  backButton: {
-    marginTop:1,
-    marginLeft:3,
-    marginRight:8,
-  },
-
   headerImage: {
-    width: '45%',
+    width: '50%',
     height: undefined,
     aspectRatio: 5,
     marginRight: 190,
+
     resizeMode: 'contain',
     alignSelf: 'center',
-    marginBottom: 10,
+  },
+  backButton: {
+    marginTop:1,
+    marginLeft:3,
+    marginRight:1,
+    opacity: 0.4,
   },
 
   headerTitle: {
     fontSize: 18,
-    fontWeight: "bold",
     color: "#000",
     marginLeft: 20,
     marginBottom: 4, 
     marginTop: 10,
+    fontFamily: 'Poppins-SemiBold',
   },
 
   headerSubtitle: {
     color: "#000",
     marginLeft: 20,
     marginBottom: 4,
+    fontFamily: 'Poppins-SemiBold',
   },
 
   headerLeft: {
@@ -726,7 +732,6 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
 
-
   searchContainer: {
     flex: 1,
     flexDirection: 'row',
@@ -747,6 +752,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     fontSize: 16,
     color: '#000',
+    fontFamily: 'Poppins-SemiBold',
   },
   
   filterHeader: {
@@ -796,6 +802,7 @@ const styles = StyleSheet.create({
     padding: 10,
     fontSize: 16,
     color: '#333',
+    fontFamily: 'Poppins-Regular',
   },
 
   editButton: {

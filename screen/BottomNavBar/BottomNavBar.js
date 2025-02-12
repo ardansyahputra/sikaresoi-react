@@ -46,7 +46,7 @@ export default function App() {
             } else if (route.name === 'Realisasi Kerja') {
               iconName = focused ? 'bar-chart' : 'bar-chart-outline';
             } else if (route.name === 'Kontrak Kinerja') {
-              iconName = focused ? 'document' : 'document-outline';
+              iconName = focused ? 'documents' : 'documents-outline';
             } else if (route.name === 'Profil') {
                 iconName = focused ? 'person' : 'person-outline';
             }

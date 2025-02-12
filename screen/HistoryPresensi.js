@@ -160,6 +160,7 @@ const styles = StyleSheet.create({
     marginTop:1,
     marginLeft:3,
     marginRight:8,
+    opacity: 0.4,
   },
   headerImage: {
     width: '45%',

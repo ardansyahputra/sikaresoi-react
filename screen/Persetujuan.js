@@ -220,79 +220,105 @@ export default function Persetujuan({ navigation }) {
     );
   };
 
-  return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Image
-            source={require('./assets/images/sikaresoi.png')}
-            style={styles.logo}
-          />
-        </View>
+return (
+  <View style={styles.container}>
+    {/* Header */}
+    <View style={styles.header}>
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <Ionicons name="arrow-back" size={26} color="#000" />
+      </TouchableOpacity>
+      <Image source={require('./assets/images/sikaresoi.png')} style={styles.headerImage} />
 
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
-          <TouchableOpacity style={styles.iconWrapper}>
-            <Ionicons name="person-circle-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
+      <View style={styles.headerRight}>
+        <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
+        <TouchableOpacity style={styles.iconWrapper}>
+          <Ionicons name="person-circle-outline" size={24} color="#333" />
+        </TouchableOpacity>
       </View>
-      <View style={styles.headerTextContainer}>
-                          <Text style={styles.headerTitle}>Persetujuan Kontrak Kinerja</Text>
-                          <Text style={styles.separatorText}> • </Text>
-                          <Text style={styles.headerSubtitle}></Text>
-                        </View>
-      {/* Loading Indicator */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : (
-        <FlatList
-          ListHeaderComponent={TableHeader}
-          data={data}
-          renderItem={renderItem}
-          keyExtractor={item => item.id.toString()}
-          contentContainerStyle={styles.card}
-          ListFooterComponent={
-            <View>
-              <Text style={styles.pageInfo}>
-                Showing page {currentPage} of {lastPage}
-              </Text>
-              <View style={styles.paginationContainer}>
-                <View style={styles.paginationButtons}>
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === 1 && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === 1}
-                    onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
-                    <Text style={styles.pageButtonText}>Previous</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === lastPage && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === lastPage}
-                    onPress={() => setCurrentPage(prev => Math.min(prev + 1, lastPage))}>
-                    <Text style={styles.pageButtonText}>Next</Text>
-                  </TouchableOpacity>
-                </View>
+    </View>
+
+    {/* Header Text */}
+    <View style={styles.headerTextContainer}>
+      <Text style={styles.headerTitle}>Persetujuan Kontrak Kinerja</Text>
+      <Text style={styles.separatorText}> • </Text>
+      <Text style={styles.headerSubtitle}>Persetujuan</Text>
+    </View>
+
+    {/* Loading Indicator atau FlatList */}
+    {loading ? (
+      <ActivityIndicator size="large" color="#0000ff" />
+    ) : (
+      <FlatList
+        ListHeaderComponent={TableHeader}
+        data={data}
+        renderItem={renderItem}
+        keyExtractor={item => item.id.toString()}
+        contentContainerStyle={styles.card}
+        ListFooterComponent={
+          <View>
+            <Text style={styles.pageInfo}>
+              Showing page {currentPage} of {lastPage}
+            </Text>
+            <View style={styles.paginationContainer}>
+              <View style={styles.paginationButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.pageButton,
+                    currentPage === 1 && styles.disabledButton,
+                  ]}
+                  disabled={currentPage === 1}
+                  onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
+                  <Text style={styles.pageButtonText}>Previous</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.pageButton,
+                    currentPage === lastPage && styles.disabledButton,
+                  ]}
+                  disabled={currentPage === lastPage}
+                  onPress={() => setCurrentPage(prev => Math.min(prev + 1, lastPage))}>
+                  <Text style={styles.pageButtonText}>Next</Text>
+                </TouchableOpacity>
               </View>
             </View>
-          }
-        />
-      )}
-    </View>
-  );
+          </View>
+        }
+      />
+    )}
+  </View> // **Pastikan ini adalah kurung tutup terakhir**
+);
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
     backgroundColor: '#F7F8FB', // Tetap sesuai dengan warna default Anda
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    elevation: 5,
+  },
+  headerImage: {
+    width: '50%',
+    height: undefined,
+    aspectRatio: 5,
+    marginRight: 190,
+    resizeMode: 'contain',
+    alignSelf: 'center',
+  },
+  backButton: {
+    marginTop:7,
+    marginLeft:3,
+    marginRight:1,
+    opacity: 0.4,
   },
   card: {
     backgroundColor: '#FFFFFF',

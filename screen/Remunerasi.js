@@ -21,6 +21,8 @@ const Remunerasi = () => {
   const [data, setData] = useState({});
   const navigation = useNavigation();
   const apiClient = useApiClient();
+  const [loading, setLoading] = useState(false);
+
   
 
   // Fetch Bulan data
@@ -55,20 +57,25 @@ const Remunerasi = () => {
   }, [postData]);
 
   const getDataRemunerasi = () => {
+    setLoading(true); // Mulai loading
+  
     const formRequest = {
       bulan: postData.bulan_id,
       tahun: postData.tahun_id.toString(),
     };
-
-    apiClient.post('/laporan/remunerasi', formRequest, {
-    })
-    .then(response => {
-      setData(response.data.data);
-    })
-    .catch(error => {
-      console.error("Error fetching remuneration data:", error.response?.data || error.message);
-    });
+  
+    apiClient.post('/laporan/remunerasi', formRequest)
+      .then(response => {
+        setData(response.data.data);
+      })
+      .catch(error => {
+        console.error("Error fetching remuneration data:", error.response?.data || error.message);
+      })
+      .finally(() => {
+        setLoading(false); // Selesai loading
+      });
   };
+  
 
   const getSelectedBulan = () => {
     const selectedBulan = listBulan.find((bulan) => bulan.id === postData.bulan_id);
@@ -265,6 +272,7 @@ const styles = StyleSheet.create({
     marginTop:1,
     marginLeft:3,
     marginRight:1,
+    opacity: 0.4,
   },
 card: {
   padding: 30,

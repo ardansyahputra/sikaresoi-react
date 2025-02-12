@@ -162,6 +162,7 @@ const styles = StyleSheet.create({
     marginTop:1,
     marginLeft:3,
     marginRight:1,
+    opacity: 0.4,
   },
   scrollContainer: {
     padding: 20,

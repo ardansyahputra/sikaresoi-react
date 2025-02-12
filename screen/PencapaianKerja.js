@@ -5,7 +5,7 @@ import { Dropdown } from 'react-native-element-dropdown';
 import AwesomeAlert from 'react-native-awesome-alerts';
 import RNFS from 'react-native-fs';
 import FileViewer from "react-native-file-viewer";
-import Icon from 'react-native-vector-icons/Ionicons'; // Pastikan Anda telah menginstal react-native-vector-icons
+import Icon from 'react-native-vector-icons/Ionicons'; 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from "@react-navigation/native";
 
@@ -90,7 +90,7 @@ const PencapaianKerja = () => {
         return;
       }
 
-      const blob = await response.blob();
+      const blob = await response.blob(); 
       const reader = new FileReader();
 
       reader.onloadend = async () => {
@@ -190,8 +190,8 @@ const PencapaianKerja = () => {
       <Modal transparent={true} visible={showNotFoundModal} animationType="slide">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Icon name="checkmark-circle" size={64} color="red" />
-            <Text style={styles.successText}>File tidak ditemukan</Text>
+            <Icon name="close-circle-sharp" size={90} color="red" />
+            <Text style={styles.succesText}>File tidak ditemukan</Text>
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setShowNotFoundModal(false)}>
@@ -204,7 +204,7 @@ const PencapaianKerja = () => {
       <Modal transparent={true} visible={successModalVisible} animationType="slide">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Icon name="checkmark-circle" size={64} color="green" />
+            <Icon name="checkmark-circle-sharp" size={64} color="green" />
             <Text style={styles.successText}>Unduhan Selesai!</Text>
             <TouchableOpacity
               style={styles.closeButton}
@@ -248,6 +248,7 @@ const styles = StyleSheet.create({
     marginTop:1,
     marginLeft:3,
     marginRight:1,
+    opacity: 0.4,
   },
   card: {
     backgroundColor: '#FFF',
@@ -267,6 +268,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: 'Poppins-SemiBold',
     color: 'green',
+  },
+  succesText: {
+    marginTop: 10,
+    fontSize: 18,
+    color: 'red',
+    fontFamily: 'Poppins-SemiBold',
   },
   closeButton: {
     marginTop: 20,
@@ -349,7 +356,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginLeft: 25, // Menambahkan jarak ke kiri
-    marginTop: 20, 
+    marginTop: 20,
+    marginBottom: -8,
   },
 
   headerTitle: {
@@ -415,7 +423,7 @@ const styles = StyleSheet.create({
   },
   dropdownItemText: {
     fontFamily: 'Poppins-Regular',
-    fontSize: 16,
+    fontSize: 15,
     color: '#000',
   },
 });
