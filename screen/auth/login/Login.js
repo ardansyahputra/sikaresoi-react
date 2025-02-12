@@ -24,7 +24,7 @@ const LoginScreen = ({navigation}) => {
   const [nip, setNip] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState({nip: '', password: ''});
-  const {login, token, refreshToken} = useAuth();
+  const {login, token, refreshToken, setUserMenu} = useAuth();
   const apiClient = useApiClient();
   const [isLoading, setIsLoading] = useState(false);
   const [backgroundImage, setBackgroundImage] = useState(null);
@@ -124,16 +124,31 @@ const LoginScreen = ({navigation}) => {
     try {
       const response = await apiClient.post('/auth/login', {nip, password});
 
-      // Memeriksa apakah status berhasil
       if (response.status === 200 && response.headers['authorization']) {
-        const token = response.headers['authorization']; // Token dari header 'Authorization'
-        await Keychain.setGenericPassword('token', token); // Menyimpan token di Keychain
+        const token = response.headers['authorization'];
+        await Keychain.setGenericPassword('token', token);
 
-        // Menyertakan token di header untuk permintaan berikutnya
-        const userData = await fetchUser(token); // Menyertakan token untuk mengambil data user
+        const userData = await fetchUser(token);
 
         if (userData) {
           login(userData, token);
+
+          // **Tambahkan: Ambil akses menu setelah login berhasil**
+          try {
+            const menuResponse = await apiClient.get('/routes/access', {
+              headers: {Authorization: `Bearer ${token}`},
+            });
+
+            if (menuResponse.data?.status) {
+              setUserMenu(menuResponse.data.data); // Simpan ke state/context
+              console.log(menuResponse);
+              console.log('setUserMenu:', setUserMenu);
+            }
+          } catch (menuError) {
+            console.error('Gagal mengambil akses menu:', menuError);
+          }
+
+          // Navigasi ke halaman utama
           navigation.replace('AppTabs');
         } else {
           setError({

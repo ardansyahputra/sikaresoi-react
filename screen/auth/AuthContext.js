@@ -10,6 +10,7 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({children, navigation}) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [userMenu, setUserMenu] = useState([]);
   const [loading, setLoading] = useState(false); // For loading state
   const [error, setError] = useState(null); // For error handling
   const [pangkatItems, setPangkatItems] = useState([]);
@@ -19,6 +20,10 @@ export const AuthProvider = ({children, navigation}) => {
     if (credentials) {
       setToken(credentials.password); // Set token from Keychain if it exists
     }
+  };
+
+  const setMenuAccess = menu => {
+    setUserMenu(menu);
   };
 
   // Fungsi untuk fetch data pangkat
@@ -79,6 +84,7 @@ export const AuthProvider = ({children, navigation}) => {
   const logout = () => {
     setUser(null);
     setToken(null);
+    setUserMenu([]);
     Keychain.resetGenericPassword();
   };
 
@@ -112,6 +118,8 @@ export const AuthProvider = ({children, navigation}) => {
       value={{
         user,
         token,
+        userMenu,
+        setUserMenu: setMenuAccess,
         login,
         logout,
         fetchPangkat,
