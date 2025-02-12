@@ -76,7 +76,7 @@ export default function TugasTambahan({ navigation }) {
 
       const base64Data = arrayBufferToBase64(response.data);
 
-      const filePath = `${RNFS.DownloadDirectoryPath}/Laporan_Absensi_${selectedMonth}_${selectedYear}.xlsx`;
+      const filePath = `${RNFS.DownloadDirectoryPath}/Laporan_Absensi_${selectedMonth}_${selectedYear}.pdf`;
 
       await RNFS.writeFile(filePath, base64Data, 'base64');
 

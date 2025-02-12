@@ -54,6 +54,44 @@ export default function Jabatan() {
     }
   };
 
+
+  const handleHapus = async (uuid) => {
+    Alert.alert(
+      'Hapus Data',
+      'Apakah Anda yakin ingin menghapus data ini?',
+      [
+        {
+          text: 'Batal',
+          style: 'cancel',
+        },
+        {
+          text: 'Hapus',
+          onPress: async () => {
+            try {
+              console.log(`Attempting to delete UUID: ${uuid}`);
+              const response = await apiClient.delete(`/teguran/${uuid}/delete`);
+              console.log('Delete response:', response);
+              
+              if (response?.data?.success) {
+                Alert.alert('Berhasil', 'Data berhasil dihapus.');
+                // Refresh the data after deletion by calling fetchData
+                fetchData(currentPage);
+              } else {
+                fetchData(currentPage);
+              }
+            } catch (error) {
+              console.error('Error deleting data:', error);
+              Alert.alert('Error', 'Gagal menghapus data.');
+            }
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+  };
+  
+  
+
   const handleTambah = () => {
     setTambahModalVisible(true); // Ubah sesuai state yang didefinisikan
     navigation.navigate('Tambahtegur');
@@ -192,13 +230,12 @@ export default function Jabatan() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerLeft}></View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
-          <TouchableOpacity style={styles.iconWrapper}>
-            <Ionicons name="person-circle-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24}  />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Menu Cepat</Text>
       </View>
       {/* Loading Indicator */}
       {loading ? (

@@ -1,5 +1,6 @@
 import React, {useState, useEffect} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, Modal} from 'react-native';
+import {View, Text, TouchableOpacity, StyleSheet, Modal, Linking, ActivityIndicator
+} from 'react-native';
 import {Dropdown} from 'react-native-element-dropdown';
 import RNFS from 'react-native-fs';
 import {APP_URL} from '@env';
@@ -7,8 +8,8 @@ import useApiClient from '../../../../src/api/apiClient'; // Custom API hook for
 
 export default function KontrakKerja({navigation}) {
   const [selectedYear, setSelectedYear] = useState(null);
-    const [selectedMonth, setSelectedMonth] = useState(null);
-  
+  const [selectedMonth, setSelectedMonth] = useState(null);
+
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [userList, setUserList] = useState([]);
@@ -16,6 +17,9 @@ export default function KontrakKerja({navigation}) {
   const [url, setUrl] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+  const [isConfirmationVisible, setIsConfirmationVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  
   const apiClient = useApiClient(); // Invoke the custom API hook
 
   // Fetch users
@@ -70,79 +74,106 @@ export default function KontrakKerja({navigation}) {
     }
   }, [selectedUser]);
 
-// Year options
-const yearData = [
-  {label: '2020', value: '1'},
-  {label: '2021', value: '2'},
-  {label: '2022', value: '3'},
-  {label: '2023', value: '4'},
-  {label: '2024', value: '5'},
-];
-
-
-  const monthData = [
-    { label: 'Januari', value: 1 },
-    { label: 'Februari', value: 2 },
-    { label: 'Maret', value: 3 },
-    { label: 'April', value: 4 },
-    { label: 'Mei', value: 5 },
-    { label: 'Juni', value: 6 },
-    { label: 'Juli', value: 7 },
-    { label: 'Agustus', value: 8 },
-    { label: 'September', value: 9 },
-    { label: 'Oktober', value: 10 },
-    { label: 'November', value: 11 },
-    { label: 'Desember', value: 12 },
+  // Year options
+  const yearData = [
+    {label: '2020', value: '1'},
+    {label: '2021', value: '2'},
+    {label: '2022', value: '3'},
+    {label: '2023', value: '4'},
+    {label: '2024', value: '5'},
   ];
 
-  const handleDownload = async () => {
-    if (!selectedMonth || !selectedYear || !selectedUser || !selectedPosition) {
-      setModalMessage('Harap pilih bulan dan tahun untuk laporan!');
+  const monthData = [
+    {label: 'Januari', value: 1},
+    {label: 'Februari', value: 2},
+    {label: 'Maret', value: 3},
+    {label: 'April', value: 4},
+    {label: 'Mei', value: 5},
+    {label: 'Juni', value: 6},
+    {label: 'Juli', value: 7},
+    {label: 'Agustus', value: 8},
+    {label: 'September', value: 9},
+    {label: 'Oktober', value: 10},
+    {label: 'November', value: 11},
+    {label: 'Desember', value: 12},
+  ];
+
+  const validateAndShowConfirmation = () => {
+    // Validasi input
+    if (!selectedUser || !selectedPosition || !selectedYear) {
+      setModalMessage('Mohon lengkapi semua field yang diperlukan');
       setIsModalVisible(true);
       return;
     }
-  
-    // URL API untuk file PDF
+    // Tampilkan modal konfirmasi
+    setIsConfirmationVisible(true);
+  };
+
+  // Fungsi untuk menangani download
+  const handleDownload = async () => {
+    setIsConfirmationVisible(false);
+    setIsLoading(true);
+
     const downloadUrl = `${APP_URL}/report/capaian_kinerja?type=stream&bulan_id=${selectedMonth}&tahun_id=${selectedYear}&user_jabatan_id=${selectedPosition}`;
-  
-    // Path penyimpanan file PDF pada perangkat
-    const filePath = `${RNFS.DownloadDirectoryPath}/Capaian_Kinerja_${selectedUser}_${selectedMonth}_${selectedYear}.pdf`;
-  
+    const filePath = `/storage/emulated/0/Download/Capaian_Kinerja_${selectedUser}_${selectedMonth}_${selectedYear}.pdf`;
+
     try {
-      // Fetch the file to check its content type
-      const response = await apiClient.get(downloadUrl, { responseType: 'blob' });
-  
-      // Check if the response is not a PDF
-      const contentType = response.headers['content-type'];
-      if (!contentType || !contentType.includes('application/pdf')) {
-        setModalMessage('Data kosong atau laporan tidak ditemukan.');
-        setIsModalVisible(true);
-        return;
-      }
-  
-      // Proceed with downloading if it is a PDF
+      console.log('Memulai proses download:', downloadUrl);
+
       const download = RNFS.downloadFile({
         fromUrl: downloadUrl,
         toFile: filePath,
+        connectionTimeout: 20000,
+        readTimeout: 60000,
+        progress: res => {
+          if (res.contentLength && res.contentLength > 0) {
+            const progressPercent = (
+              (res.bytesWritten / res.contentLength) *
+              100
+            ).toFixed(2);
+            console.log(`Download progress: ${progressPercent}%`);
+          }
+        },
       });
-  
+
       const result = await download.promise;
-  
+
       if (result.statusCode === 200) {
-        setModalMessage(`Laporan berhasil diunduh`)
+        try {
+          const fileUri = `file://${filePath}`;
+          const supported = await Linking.canOpenURL(fileUri);
+
+          if (supported) {
+            await Linking.openURL(fileUri);
+            setModalMessage('Laporan berhasil diunduh dan dibuka!');
+          } else {
+            const androidUri = `content://com.android.externalstorage.documents/document/primary%3ADownload%2Fkontrak_kerja${selectedUser}_${selectedYear}.pdf`;
+            await Linking.openURL(androidUri);
+            setModalMessage('Laporan berhasil diunduh dan dibuka!');
+          }
+        } catch (openError) {
+          console.error('Gagal membuka file:', openError);
+          setModalMessage(
+            'Laporan berhasil diunduh tetapi gagal dibuka secara otomatis. ' +
+              'Silakan buka file secara manual dari folder Download. ' +
+              `Nama file: kontrak_kerja${selectedUser}_${selectedYear}.pdf`,
+          );
+        }
       } else {
-        setModalMessage('Gagal mengunduh laporan. Coba lagi.');
+        throw new Error('Download failed with status: ' + result.statusCode);
       }
     } catch (error) {
-      console.error(error);
-      setModalMessage('Terjadi kesalahan saat mengunduh file.');
+      console.error('Terjadi kesalahan:', error);
+      setModalMessage(
+        error.message.includes('timeout')
+          ? 'Gagal mengunduh laporan: Koneksi timeout. Coba lagi dengan jaringan yang lebih stabil.'
+          : 'Terjadi kesalahan saat mengunduh file. Silakan coba lagi.',
+      );
+    } finally {
+      setIsLoading(false);
+      setIsModalVisible(true);
     }
-  
-    setIsModalVisible(true);
   };
-  
-  
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -201,10 +232,49 @@ const yearData = [
 
         <TouchableOpacity
           style={styles.downloadButton}
-          onPress={handleDownload}>
+          onPress={validateAndShowConfirmation}>
+          {' '}
+          // Ubah ini
           <Text style={styles.buttonText}>Download Laporan</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Konfirmasi Download Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={isConfirmationVisible}
+        onRequestClose={() => setIsConfirmationVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalMessage}>
+              Apakah anda yakin akan mendownload file ke perangkat anda?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setIsConfirmationVisible(false)}>
+                <Text style={styles.modalButtonText}>Tidak</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={handleDownload}>
+                <Text style={styles.modalButtonText}>Ya</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Loading Modal */}
+      <Modal animationType="fade" transparent={true} visible={isLoading}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.loadingContent}>
+            <ActivityIndicator size="large" color="#28c4ac" />
+            <Text style={styles.loadingText}>Mendownload file...</Text>
+          </View>
+        </View>
+      </Modal>
 
       {/* Modal for errors */}
       <Modal
@@ -296,8 +366,43 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     alignItems: 'center',
+    width: '80%',
   },
-  modalMessage: {fontSize: 16, color: '#333'},
+  loadingContent: {
+    backgroundColor: '#FFF',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#333',
+  },
+  modalMessage: {fontSize: 16, color: '#333', textAlign: 'center'},
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    width: '100%',
+    paddingHorizontal: 20,
+  },
+  modalButton: {
+    padding: 10,
+    borderRadius: 5,
+    width: '45%',
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#dc3545',
+  },
+  confirmButton: {
+    backgroundColor: '#28c4ac',
+  },
+  modalButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+  },
   closeButton: {
     backgroundColor: '#28c4ac',
     padding: 10,
@@ -309,11 +414,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#ddd',
     marginVertical: 10,
   },
-  closeButtonText: {color: '#FFF', fontWeight: 'bold'},
+  cardHeader: {marginBottom: 15},
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginLeft: 5,
-    marginBottom: 15,
+    marginBottom: -5,
   },
+  closeButtonText: {color: '#FFF', fontWeight: 'bold'},
 });

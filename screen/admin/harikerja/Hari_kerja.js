@@ -1,63 +1,83 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, Alert, ScrollView, StyleSheet, Modal } from 'react-native';
-import { Dropdown } from 'react-native-element-dropdown';
-import DatePicker from 'react-native-modern-datepicker';
-import useApiClient from '../../../src/api/apiClient';  
+import React, {useState, useEffect, useCallback} from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Modal,
+} from 'react-native';
+import {Dropdown} from 'react-native-element-dropdown';
+import useApiClient from '../../../src/api/apiClient';
 
 const CalendarComponent = () => {
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedDays, setSelectedDays] = useState([]); // Tanggal yang dipilih
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
-  const [selectedDate, setSelectedDate] = useState(null);
   const apiClient = useApiClient();
 
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [displayedMonth, setDisplayedMonth] = useState(
+    new Date().getMonth() + 1,
+  );
+  const [displayedYear, setDisplayedYear] = useState(new Date().getFullYear());
+  const [selectedDays, setSelectedDays] = useState([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+
   const monthNames = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember',
   ];
 
+  const fetchWorkDays = async (month, year) => {
+    try {
+      const response = await apiClient.get('/admin/harikerja/show', {
+        params: {bulan: month, tahun: year},
+      });
+      setSelectedDays(response.data.data.days);
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Gagal mengambil data',
+      );
+    }
+  };
+
   useEffect(() => {
-    const fetchWorkDays = async () => {
-      try {
-        const response = await apiClient.get('/admin/harikerja/show', {
-          params: { bulan: selectedMonth, tahun: selectedYear }
-        });
+    fetchWorkDays(displayedMonth, displayedYear);
+  }, []);
 
-        const newDays = response.data.data.days;
-        setSelectedDays(newDays);
-      } catch (error) {
-        Alert.alert('Error', error.response?.data?.message || 'Gagal mengambil data');
-      }
-    };
-
-    fetchWorkDays();
-  }, [selectedMonth, selectedYear]);
-
-  const handleDateSelect = useCallback((date) => {
-    console.log("Tanggal yang dipilih:", date); // Debugging tanggal yang dipilih
-
+  const handleDateSelect = useCallback(date => {
     const selectedDate = new Date(date);
-    const weekday = selectedDate.toLocaleDateString('id-ID', { weekday: 'short' });
+    const weekday = selectedDate.toLocaleDateString('id-ID', {
+      weekday: 'short',
+    });
 
-    // Menambahkan tanggal baru jika belum ada di array
     setSelectedDays(prevDays => {
-      const exists = prevDays.some(d => d.date === date); // Cek jika tanggal sudah ada
+      const exists = prevDays.some(d => d.date === date);
       if (!exists) {
-        console.log("Menambahkan tanggal:", date); // Debugging saat tanggal ditambahkan
-        return [...prevDays, { date, weekday }]; // Jika belum ada, tambahkan tanggal baru
+        return [...prevDays, {date, weekday}];
       }
-      return prevDays; // Jika sudah ada, tetapkan array seperti semula
+      return prevDays;
     });
   }, []);
 
   const saveWorkDays = useCallback(async () => {
     try {
-      const response = await apiClient.post('/admin/harikerja/save', {
-        bulan: selectedMonth,
-        tahun: selectedYear,
-        days: selectedDays
+      await apiClient.post('/admin/harikerja/save', {
+        bulan: displayedMonth,
+        tahun: displayedYear,
+        days: selectedDays,
       });
       setModalMessage('Data berhasil disimpan!');
       setIsModalVisible(true);
@@ -65,31 +85,107 @@ const CalendarComponent = () => {
       setModalMessage(error.response?.data?.message || 'Gagal menyimpan data');
       setIsModalVisible(true);
     }
-  }, [selectedDays, selectedMonth, selectedYear]);
+  }, [selectedDays, displayedMonth, displayedYear]);
 
-  // Memastikan bahwa tanggal yang dipilih sudah sesuai dengan format yang benar
-  const customDatesStyles = selectedDays.map(day => ({
-    date: day.date.replace(/-/g, '/'), // Mengubah format menjadi YYYY/MM/DD jika perlu
-    selected: true,
-    selectedColor: '#FF6347',
-    selectedTextColor: '#fff',
-  }));
-  
+  const createCalendarDays = () => {
+    const daysInMonth = new Date(displayedYear, displayedMonth, 0).getDate();
+    const firstDayOfMonth = new Date(
+      displayedYear,
+      displayedMonth - 1,
+      1,
+    ).getDay();
 
-  console.log("Custom Dates Styles:", customDatesStyles); // Debugging untuk melihat apakah customDatesStyles terisi
+    const days = [];
+    for (let i = 1; i < firstDayOfMonth; i++) {
+      days.push(<View key={`empty-${i}`} style={styles.emptyDay}></View>);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const currentDate = new Date(displayedYear, displayedMonth - 1, day);
+      const dateString = currentDate.toISOString().split('T')[0];
+
+      days.push(
+        <TouchableOpacity
+          key={day}
+          style={[
+            styles.day,
+            selectedDays.some(d => d.date === dateString) && styles.selectedDay,
+          ]}
+          onPress={() => handleDateSelect(dateString)}>
+          <Text
+            style={[
+              styles.dayText,
+              selectedDays.some(d => d.date === dateString) &&
+                styles.selectedText,
+            ]}>
+            {day}
+          </Text>
+        </TouchableOpacity>,
+      );
+    }
+    return days;
+  };
+
+  const changeMonth = direction => {
+    if (direction === 'prev') {
+      if (selectedMonth === 1) {
+        setSelectedMonth(12);
+        setSelectedYear(prevYear => prevYear - 1);
+      } else {
+        setSelectedMonth(prevMonth => prevMonth - 1);
+      }
+    } else if (direction === 'next') {
+      if (selectedMonth === 12) {
+        setSelectedMonth(1);
+        setSelectedYear(prevYear => prevYear + 1);
+      } else {
+        setSelectedMonth(prevMonth => prevMonth + 1);
+      }
+    }
+
+    // Memperbarui displayedMonth dan displayedYear saat bulan diubah
+    setDisplayedMonth(selectedMonth);
+    setDisplayedYear(selectedYear);
+    fetchWorkDays(selectedMonth, selectedYear);
+  };
+
+  const handleLihat = () => {
+    setDisplayedMonth(selectedMonth); // Menampilkan bulan yang dipilih
+    setDisplayedYear(selectedYear); // Menampilkan tahun yang dipilih
+    fetchWorkDays(selectedMonth, selectedYear); // Mengambil data hari kerja untuk bulan yang dipilih
+  };
 
   return (
     <ScrollView>
+      <View style={styles.header}>
+        <Text style={{fontSize: 20, fontWeight: 'bold'}}></Text>
+      </View>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}></Text>
-        </View>
-
         <View style={styles.cardContainer}>
+          <Text style={styles.monthName}>
+            {monthNames[displayedMonth - 1]} {displayedYear}
+          </Text>
+          <View style={styles.monthNavContainer}>
+            <TouchableOpacity
+              onPress={() =>changeMonth('prev')}
+              style={styles.monthNavButton}>
+              <Text style={styles.navButtonText}>{'<'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => changeMonth('next')}
+              style={styles.monthNavButton}>
+              <Text style={styles.navButtonText}>{'>'}</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.calendarContainer}>{createCalendarDays()}</View>
+
           <Text style={styles.label}>Pilih Bulan:</Text>
           <Dropdown
             style={styles.dropdown}
-            data={monthNames.map((month, index) => ({ label: month, value: index + 1 }))}
+            data={monthNames.map((month, index) => ({
+              label: month,
+              value: index + 1,
+            }))}
             value={selectedMonth}
             onChange={item => setSelectedMonth(item.value)}
             placeholder="Pilih Bulan"
@@ -101,7 +197,10 @@ const CalendarComponent = () => {
           <Text style={styles.label}>Pilih Tahun:</Text>
           <Dropdown
             style={styles.dropdown}
-            data={[{ label: '2023', value: 2023 }, { label: '2024', value: 2024 }]}
+            data={Array.from({length: 7}, (_, i) => ({
+              label: `${2020 + i}`,
+              value: 2020 + i,
+            }))}
             value={selectedYear}
             onChange={item => setSelectedYear(item.value)}
             placeholder="Pilih Tahun"
@@ -110,29 +209,12 @@ const CalendarComponent = () => {
             containerStyle={styles.dropdownContainer}
           />
 
-          {/* Modern Date Picker */}
-          <DatePicker
-            mode="calendar"
-            selected={selectedDate}
-            onDateChange={handleDateSelect}
-            options={{
-              backgroundColor: '#f9f9f9',
-              textHeaderColor: '#333',
-              textDefaultColor: '#000',
-              selectedTextColor: '#fff',
-              mainColor: '#333',
-              textSecondaryColor: '#333',
-              customDatesStyles: customDatesStyles, // Menampilkan lingkaran pada semua tanggal yang dipilih
-            }}
-            style={styles.datePicker}
-          />
-
           <View style={styles.buttonContainer}>
             <TouchableOpacity onPress={saveWorkDays} style={styles.saveButton}>
               <Text style={styles.buttonText}>Simpan</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setDatePickerVisible(!datePickerVisible)} style={styles.viewButton}>
-              <Text style={styles.buttonTextli}>Lihat</Text>
+            <TouchableOpacity onPress={handleLihat} style={styles.viewButton}>
+              <Text style={styles.buttonText}>Lihat</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -141,12 +223,13 @@ const CalendarComponent = () => {
           animationType="fade"
           transparent={true}
           visible={isModalVisible}
-          onRequestClose={() => setIsModalVisible(false)}
-        >
+          onRequestClose={() => setIsModalVisible(false)}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
               <Text>{modalMessage}</Text>
-              <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.modalButton}>
+              <TouchableOpacity
+                onPress={() => setIsModalVisible(false)}
+                style={styles.modalButton}>
                 <Text style={styles.buttonText}>Tutup</Text>
               </TouchableOpacity>
             </View>
@@ -159,6 +242,16 @@ const CalendarComponent = () => {
 
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: '#E7E9F1'},
+  cardContainer: {
+    padding: 15,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 10,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.25,
+    shadowRadius: 3.5,
+  },
   header: {
     backgroundColor: '#fff',
     paddingHorizontal: 16,
@@ -171,10 +264,6 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 15,
     marginBottom: 10,
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
   label: {
     marginVertical: 5,
     fontSize: 16,
@@ -186,17 +275,57 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 5,
     marginVertical: 5,
+    marginBottom: 10,
     paddingHorizontal: 10,
   },
-  cardContainer: {
-    padding: 15,
+  monthName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginVertical: 10,
+    textAlign: 'center',
+  },
+  monthNavContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: -45,
+    marginBottom: 10,
+  },
+  monthNavButton: {
+    padding: 10,
+  },
+  navButtonText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  calendarContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 25,
     backgroundColor: '#f9f9f9',
-    borderRadius: 10,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.25,
-    shadowRadius: 3.5,
+  },
+  day: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
+    margin: 3,
+  },
+  dayText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  selectedDay: {
+    backgroundColor: '#38a169',
+  },
+  selectedText: {
+    color: '#fff',
+  },
+  emptyDay: {
+    width: 40,
+    height: 40,
   },
   buttonContainer: {
     marginTop: 20,
@@ -231,10 +360,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#007BFF',
     padding: 10,
     borderRadius: 5,
-  },
-  datePicker: {
-    borderRadius: 10,
-    marginTop: 10,
   },
   buttonText: {
     fontSize: 13,

@@ -1,14 +1,24 @@
 import React, {useState} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, Modal} from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Modal,
+  Linking,
+  ActivityIndicator,
+} from 'react-native';
 import {Dropdown} from 'react-native-element-dropdown';
 import RNFS from 'react-native-fs';
 import {APP_URL} from '@env';
 
-export default function TugasTambahan({navigation}) {
+export default function Rekapitulasi({navigation}) {
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [selectedYear, setSelectedYear] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+  const [isConfirmationVisible, setIsConfirmationVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const monthData = [
     {label: 'Januari', value: 1},
@@ -34,54 +44,101 @@ export default function TugasTambahan({navigation}) {
     {label: '2025', value: '2025'},
   ];
 
-  const handleDownload = async () => {
+  const showConfirmationDialog = () => {
     if (!selectedMonth || !selectedYear) {
       setModalMessage('Harap pilih bulan dan tahun untuk laporan!');
       setIsModalVisible(true);
       return;
     }
 
-    // URL API untuk file Excel
+    if (!APP_URL) {
+      setModalMessage('URL server tidak ditemukan. Periksa konfigurasi!');
+      setIsModalVisible(true);
+      return;
+    }
+
+    setIsConfirmationVisible(true);
+  };
+
+  const handleDownload = async () => {
+    setIsConfirmationVisible(false);
+    setIsLoading(true);
+
     const downloadUrl = `${APP_URL}/report/admin/rekapitulasi/${selectedMonth}/${selectedYear}`;
-
-    // Path penyimpanan file Excel pada perangkat
-    const filePath = `${RNFS.DownloadDirectoryPath}/Laporan_${selectedMonth}_${selectedYear}.xlsx`;
-
+    const filePath = `/storage/emulated/0/Download/Laporan_Rekapitulasi${selectedMonth}_${selectedYear}.xlsx`;
     try {
+      console.log('Memulai proses download:', downloadUrl);
+
       const download = RNFS.downloadFile({
         fromUrl: downloadUrl,
         toFile: filePath,
+        connectionTimeout: 20000,
+        readTimeout: 60000,
+        progress: res => {
+          if (res.contentLength && res.contentLength > 0) {
+            const progressPercent = (
+              (res.bytesWritten / res.contentLength) *
+              100
+            ).toFixed(2);
+            console.log(`Download progress: ${progressPercent}%`);
+          }
+        },
       });
 
       const result = await download.promise;
 
       if (result.statusCode === 200) {
-        setModalMessage(`Laporan berhasil diunduh!\nTersimpan di: ${filePath}`);
+        setModalMessage('Laporan berhasil diunduh!');
+        
+        try {
+          // Matikan loading sebelum mencoba membuka file
+          setIsLoading(false);
+          
+          // Coba buka file yang telah diunduh
+          const canOpen = await Linking.canOpenURL(`file://${filePath}`);
+          if (canOpen) {
+            await Linking.openURL(`file://${filePath}`);
+          } else {
+            // Jika gagal buka langsung, coba dengan content URI
+            const fileUri = `content://com.android.providers.downloads.documents/document/raw:${filePath}`;
+            await Linking.openURL(fileUri);
+          }
+        } catch (openError) {
+          console.error('Gagal membuka file:', openError);
+          setModalMessage('Laporan berhasil diunduh tetapi gagal dibuka secara otomatis. Silakan buka file secara manual dari folder Download.');
+          setIsModalVisible(true);
+        }
       } else {
         setModalMessage('Gagal mengunduh laporan. Coba lagi.');
+        setIsLoading(false);
+        setIsModalVisible(true);
       }
     } catch (error) {
-      console.error(error);
-      setModalMessage('Terjadi kesalahan saat mengunduh file.');
+      console.error('Terjadi kesalahan saat mengunduh file:', error);
+      if (error.message.includes('timeout')) {
+        setModalMessage(
+          'Gagal mengunduh laporan: Koneksi timeout. Coba lagi dengan jaringan yang lebih stabil.',
+        );
+      } else {
+        setModalMessage('Terjadi kesalahan saat mengunduh file.');
+      }
+      setIsLoading(false);
+      setIsModalVisible(true);
     }
-
-    setIsModalVisible(true);
   };
+
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.headerTitle}></Text>
+          <Text style={styles.headerTitle}>Laporan Tugas Tambahan</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.cardContainer}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>
-            {' '}
-            Report Rekapitulasi Capaian Kinerja
-          </Text>
+          <Text style={styles.cardTitle}>Report Capaian Kinerja Pegawai</Text>
         </View>
         <View style={styles.cardDivider}></View>
         <Text style={styles.label}>Pilih Bulan *</Text>
@@ -108,11 +165,49 @@ export default function TugasTambahan({navigation}) {
 
         <TouchableOpacity
           style={styles.downloadButton}
-          onPress={handleDownload}>
+          onPress={showConfirmationDialog}>
           <Text style={styles.buttonText}>Download Laporan</Text>
         </TouchableOpacity>
       </View>
 
+      {/* Konfirmasi Download Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={isConfirmationVisible}
+        onRequestClose={() => setIsConfirmationVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalMessage}>
+              Apakah anda yakin akan mendownload file ke perangkat anda?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setIsConfirmationVisible(false)}>
+                <Text style={styles.modalButtonText}>Tidak</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={handleDownload}>
+                <Text style={styles.modalButtonText}>Ya</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Loading Modal */}
+      <Modal animationType="fade" transparent={true} visible={isLoading}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.loadingContent}>
+            <ActivityIndicator size="large" color="#28c4ac" />
+            <Text style={styles.loadingText}>Mendownload file...</Text>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Notification Modal */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -191,8 +286,43 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     alignItems: 'center',
+    width: '80%',
   },
-  modalMessage: {fontSize: 16, color: '#333'},
+  loadingContent: {
+    backgroundColor: '#FFF',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#333',
+  },
+  modalMessage: {fontSize: 16, color: '#333', textAlign: 'center'},
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    width: '100%',
+    paddingHorizontal: 20,
+  },
+  modalButton: {
+    padding: 10,
+    borderRadius: 5,
+    width: '45%',
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#dc3545',
+  },
+  confirmButton: {
+    backgroundColor: '#28c4ac',
+  },
+  modalButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+  },
   closeButton: {
     backgroundColor: '#28c4ac',
     padding: 10,

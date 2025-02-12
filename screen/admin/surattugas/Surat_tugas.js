@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Dropdown } from 'react-native-element-dropdown'
-import axios from 'axios';
+import useApiClient from '../../../src/api/apiClient';
 
 export default function Presensi() {
   const [data, setData] = useState([]);
@@ -27,6 +27,8 @@ export default function Presensi() {
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);
+  const apiClient = useApiClient(); // Using useApiClient hook
+
   
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
@@ -35,8 +37,8 @@ export default function Presensi() {
   const fetchData = async page => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        'http://192.168.61.123:8000/api/v1/perubahan_absensi/indexandro',
+      const response = await apiClient.post(
+        '/perubahan_absensi/indexadmin',
         {page},
         {
           headers: {
@@ -62,8 +64,8 @@ export default function Presensi() {
         {
           text: 'Ya',
           onPress: async () => {
-            await axios.post(
-              `http://192.168.2.152:8000/perubahan_absensi/${uuid}/change`,
+            await apiClient.post(
+              `/perubahan_absensi/${uuid}/change`,
               {status: '1', revisi: null},
             );
             Alert.alert('Berhasil', 'Konfirmasi berhasil.');

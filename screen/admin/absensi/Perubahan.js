@@ -27,6 +27,7 @@ export default function PerubahanPresensi() {
   const [declineReason, setDeclineReason] = useState('');
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true); // setLoading didefinisikan di sini
   const [selectedDisplay, setSelectedDisplay] = useState(null);
 
   const apiClient = useApiClient(); // Using useApiClient hook
