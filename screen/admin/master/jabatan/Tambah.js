@@ -61,6 +61,7 @@ const TambahJabatan = ({navigation}) => {
       setPickJabatanOptions(null); // Reset dropdown jabatan sub
 
       Alert.alert('Berhasil', 'Data berhasil ditambahkan.');
+      navigation.goBack();
     } catch (error) {
       console.error('Error:', error);
       Alert.alert('Error', 'Gagal menambahkan data.');
@@ -76,7 +77,7 @@ const TambahJabatan = ({navigation}) => {
       </View>
 
       <View style={styles.cardContainer}>
-        <Text style={styles.label}>Grade</Text>
+        <Text style={styles.label}>Nama Jabatan</Text>
         <TextInput
           style={styles.input}
           placeholder="Nama Jabatan"
@@ -86,7 +87,7 @@ const TambahJabatan = ({navigation}) => {
           placeholderTextColor={'#B6B9CA'}
         />
 
-        <Text style={styles.label}>Nominal</Text>
+        <Text style={styles.label}>Grade</Text>
         <TextInput
           style={styles.input}
           placeholder="Grade"
@@ -96,7 +97,7 @@ const TambahJabatan = ({navigation}) => {
           placeholderTextColor={'#B6B9CA'}
         />
 
-        <Text style={styles.label}>Nominal</Text>
+        <Text style={styles.label}>Nilai Jabatan</Text>
         <TextInput
           style={styles.input}
           placeholder="Job Value"
@@ -109,57 +110,57 @@ const TambahJabatan = ({navigation}) => {
 
         {/* Switch untuk Master */}
         <View style={styles.switchContainer}>
-              <Text style={styles.switchLabel}>Master</Text>
-              <Switch
-                value={isMaster}
-                onValueChange={value => {
-                  setIsMaster(value); // Perbarui Master
-                  if (value) {
-                    setIsSub(false); // Nonaktifkan Sub jika Master aktif
-                  }
-                }}
-              />
-            </View>
+          <Text style={styles.switchLabel}>Master</Text>
+          <Switch
+            value={isMaster}
+            onValueChange={value => {
+              setIsMaster(value); // Perbarui Master
+              if (value) {
+                setIsSub(false); // Nonaktifkan Sub jika Master aktif
+              }
+            }}
+          />
+        </View>
 
-            {/* Switch untuk Sub */}
-            <View style={styles.switchContainer}>
-              <Text style={styles.switchLabel}>Sub</Text>
-              <Switch
-                value={isSub}
-                onValueChange={value => {
-                  setIsSub(value); // Perbarui Sub
-                  if (value) {
-                    setIsMaster(false); // Nonaktifkan Master jika Sub aktif
-                  }
-                }}
-              />
-            </View>
+        {/* Switch untuk Sub */}
+        <View style={styles.switchContainer}>
+          <Text style={styles.switchLabel}>Sub</Text>
+          <Switch
+            value={isSub}
+            onValueChange={value => {
+              setIsSub(value); // Perbarui Sub
+              if (value) {
+                setIsMaster(false); // Nonaktifkan Master jika Sub aktif
+              }
+            }}
+          />
+        </View>
 
-            {isSub && (
-              <>
-                <Text style={styles.modalLabel}>Jabatan Sub</Text>
-                <Dropdown
-                  style={styles.input}
-                  data={jabatanOptions}
-                  labelField="label"
-                  valueField="value"
-                  placeholder="Pilih Jabatan"
-                  placeholderStyle={{color: '#B6B9CA'}}
-                  value={pickJabatanOptions}
-                  onChange={item => setPickJabatanOptions(item.value)}
-                  renderItem={item => (
-                    <Text
-                      style={[
-                        styles.dropdownItem,
-                        styles.customFont,
-                        {color: '#333'},
-                      ]}>
-                      {item.label}
-                    </Text>
-                  )}
-                />
-              </>
-            )}
+        {isSub && (
+          <>
+            <Text style={styles.modalLabel}>Jabatan Sub</Text>
+            <Dropdown
+              style={styles.input}
+              data={jabatanOptions}
+              labelField="label"
+              valueField="value"
+              placeholder="Pilih Jabatan"
+              placeholderStyle={{color: '#B6B9CA'}}
+              value={pickJabatanOptions}
+              onChange={item => setPickJabatanOptions(item.value)}
+              renderItem={item => (
+                <Text
+                  style={[
+                    styles.dropdownItem,
+                    styles.customFont,
+                    {color: '#333'},
+                  ]}>
+                  {item.label}
+                </Text>
+              )}
+            />
+          </>
+        )}
 
         <View style={styles.buttons}>
           <TouchableOpacity
