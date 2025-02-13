@@ -92,15 +92,12 @@ export default function TugasTambahan({navigation}) {
         setModalMessage('Laporan berhasil diunduh!');
         
         try {
-          // Matikan loading sebelum mencoba membuka file
           setIsLoading(false);
           
-          // Coba buka file yang telah diunduh
           const canOpen = await Linking.canOpenURL(`file://${filePath}`);
           if (canOpen) {
             await Linking.openURL(`file://${filePath}`);
           } else {
-            // Jika gagal buka langsung, coba dengan content URI
             const fileUri = `content://com.android.providers.downloads.documents/document/raw:${filePath}`;
             await Linking.openURL(fileUri);
           }
@@ -128,7 +125,6 @@ export default function TugasTambahan({navigation}) {
     }
   };
 
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -141,7 +137,8 @@ export default function TugasTambahan({navigation}) {
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>Report Tugas Tambahan</Text>
         </View>
-        <View style={styles.cardDivider}></View>
+        <View style={styles.cardDivider} />
+        
         <Text style={styles.label}>Pilih Bulan *</Text>
         <Dropdown
           style={styles.dropdown}
@@ -183,7 +180,7 @@ export default function TugasTambahan({navigation}) {
               <Text style={styles.modalTitle}>Apakah Anda Yakin?</Text>
             </View>
             <View style={styles.modalBody}>
-              <Text style={styles.modalDescription}>
+              <Text style={styles.modalText}>
                 Anda Akan Mendownload Report Berformat Excel, Mungkin Membutuhkan Waktu Beberapa Detik!
               </Text>
             </View>
@@ -204,7 +201,10 @@ export default function TugasTambahan({navigation}) {
       </Modal>
 
       {/* Loading Modal */}
-      <Modal animationType="fade" transparent={true} visible={isLoading}>
+      <Modal 
+        animationType="fade" 
+        transparent={true} 
+        visible={isLoading}>
         <View style={styles.modalOverlay}>
           <View style={styles.loadingContent}>
             <ActivityIndicator size="large" color="#28c4ac" />
@@ -221,11 +221,11 @@ export default function TugasTambahan({navigation}) {
         onRequestClose={() => setIsModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalMessage}>{modalMessage}</Text>
+            <Text style={styles.modalText}>{modalMessage}</Text>
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setIsModalVisible(false)}>
-              <Text style={styles.closeButtonText}>Tutup</Text>
+              <Text style={styles.buttonText}>Tutup</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -235,7 +235,12 @@ export default function TugasTambahan({navigation}) {
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: '#E7E9F1', paddingTop: 20},
+  // Container & Header Styles
+  container: {
+    flex: 1,
+    backgroundColor: '#E7E9F1',
+    paddingTop: 20,
+  },
   header: {
     backgroundColor: '#fff',
     paddingHorizontal: 16,
@@ -252,19 +257,44 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
   },
-  headerTitle: {textAlign: 'center', fontSize: 20, fontWeight: 'bold'},
+  headerTitle: {
+    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+
+  // Card Styles
   cardContainer: {
     backgroundColor: '#FFFF',
     paddingVertical: 20,
     paddingHorizontal: 10,
     borderRadius: 10,
     elevation: 4,
-    marginVertical: 20,
     marginHorizontal: 10,
     marginTop: 60,
     width: 387,
   },
-  label: {fontSize: 16, marginBottom: 5, color: '#333'},
+  cardHeader: {
+    marginBottom: 15,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 5,
+    marginBottom: -5,
+  },
+  cardDivider: {
+    height: 1,
+    backgroundColor: '#ddd',
+    marginVertical: 10,
+  },
+
+  // Form Elements
+  label: {
+    fontSize: 16,
+    marginBottom: 5,
+    color: '#333',
+  },
   dropdown: {
     borderWidth: 1,
     borderColor: '#CCC',
@@ -280,7 +310,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 20,
   },
-  buttonText: {color: '#FFF', fontWeight: 'bold'},
+  buttonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+  },
+
+  // Modal Styles
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
@@ -292,20 +327,16 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     width: '85%',
     maxWidth: 400,
+    padding: 20,
     elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
   },
   modalHeader: {
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     backgroundColor: '#ccc',
     padding: 20,
+    marginHorizontal: -20,
+    marginTop: -20,
   },
   modalTitle: {
     color: '#333',
@@ -318,16 +349,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
   },
-  modalDescription: {
+  modalText: {
     fontSize: 16,
     color: '#333',
     textAlign: 'center',
-    lineHeight: 24,
+    marginBottom: 20,
   },
   modalFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: 16,
+    paddingHorizontal: 16,
   },
   modalButton: {
     flex: 1,
@@ -340,7 +371,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#dc3545',
   },
   confirmButton: {
-    backgroundColor: '#',
+    backgroundColor: '#28c4ac',
   },
   modalButtonText: {
     color: '#FFF',
@@ -348,8 +379,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
-  
-  // Update loading modal styles untuk konsistensi
+
+  // Loading Modal
   loadingContent: {
     backgroundColor: '#FFF',
     padding: 24,
@@ -364,47 +395,12 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '500',
   },
-  modalMessage: {fontSize: 16, color: '#333', textAlign: 'center'},
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
-    width: '100%',
-    paddingHorizontal: 20,
-  },
-  modalButton: {
-    padding: 10,
-    borderRadius: 5,
-    width: '45%',
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#dc3545',
-  },
-  confirmButton: {
-    backgroundColor: '#1D56C0',
-  },
-  modalButtonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-  },
+
+  // Close Button
   closeButton: {
     backgroundColor: '#28c4ac',
     padding: 10,
     borderRadius: 5,
-    marginTop: 10,
+    alignItems: 'center',
   },
-  cardDivider: {
-    height: 1,
-    backgroundColor: '#ddd',
-    marginVertical: 10,
-  },
-  cardHeader: {marginBottom: 15},
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 5,
-    marginBottom: -5,
-  },
-  closeButtonText: {color: '#FFF', fontWeight: 'bold'},
 });

@@ -39,6 +39,9 @@ const CalendarComponent = () => {
     'Desember',
   ];
 
+  const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+
+
   const fetchWorkDays = async (month, year) => {
     try {
       const response = await apiClient.get('/admin/harikerja/show', {
@@ -89,42 +92,51 @@ const CalendarComponent = () => {
 
   const createCalendarDays = () => {
     const daysInMonth = new Date(displayedYear, displayedMonth, 0).getDate();
-    const firstDayOfMonth = new Date(
-      displayedYear,
-      displayedMonth - 1,
-      1,
-    ).getDay();
-
-    const days = [];
-    for (let i = 1; i < firstDayOfMonth; i++) {
-      days.push(<View key={`empty-${i}`} style={styles.emptyDay}></View>);
+    const firstDayOfMonth = new Date(displayedYear, displayedMonth - 1, 1).getDay();
+  
+    // Add day headers
+    const dayHeaders = dayNames.map((day, index) => (
+      <View key={`header-${index}`} style={styles.dayHeader}>
+        <Text style={styles.dayHeaderText}>{day}</Text>
+      </View>
+    ));
+  
+    // Add empty days for the first week (before the first day of the month)
+    const emptyDays = [];
+    for (let i = 0; i < firstDayOfMonth; i++) {
+      emptyDays.push(<View key={`empty-${i}`} style={styles.emptyDay}></View>);
     }
-
+  
+    // Add the actual days in the month
+    const calendarDays = [];
     for (let day = 1; day <= daysInMonth; day++) {
       const currentDate = new Date(displayedYear, displayedMonth - 1, day);
       const dateString = currentDate.toISOString().split('T')[0];
-
-      days.push(
+  
+      calendarDays.push(
         <TouchableOpacity
           key={day}
           style={[
             styles.day,
             selectedDays.some(d => d.date === dateString) && styles.selectedDay,
           ]}
-          onPress={() => handleDateSelect(dateString)}>
+          onPress={() => handleDateSelect(dateString)}
+        >
           <Text
             style={[
               styles.dayText,
-              selectedDays.some(d => d.date === dateString) &&
-                styles.selectedText,
-            ]}>
+              selectedDays.some(d => d.date === dateString) && styles.selectedText,
+            ]}
+          >
             {day}
           </Text>
-        </TouchableOpacity>,
+        </TouchableOpacity>
       );
     }
-    return days;
+  
+    return [...dayHeaders, ...emptyDays, ...calendarDays];
   };
+
 
   const changeMonth = direction => {
     if (direction === 'prev') {
@@ -157,27 +169,27 @@ const CalendarComponent = () => {
 
   return (
     <ScrollView>
-      <View style={styles.header}>
-        <Text style={{fontSize: 20, fontWeight: 'bold'}}></Text>
-      </View>
-      <View style={styles.container}>
-        <View style={styles.cardContainer}>
-          <Text style={styles.monthName}>
-            {monthNames[displayedMonth - 1]} {displayedYear}
-          </Text>
-          <View style={styles.monthNavContainer}>
-            <TouchableOpacity
-              onPress={() =>changeMonth('prev')}
-              style={styles.monthNavButton}>
-              <Text style={styles.navButtonText}>{'<'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => changeMonth('next')}
-              style={styles.monthNavButton}>
-              <Text style={styles.navButtonText}>{'>'}</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.calendarContainer}>{createCalendarDays()}</View>
+    <View style={styles.header}>
+      <Text style={{fontSize: 20, fontWeight: 'bold'}}></Text>
+    </View>
+    <View style={styles.container}>
+      <View style={styles.cardContainer}>
+        <Text style={styles.monthName}>
+          {monthNames[displayedMonth - 1]} {displayedYear}
+        </Text>
+        <View style={styles.monthNavContainer}>
+          <TouchableOpacity
+            onPress={() => changeMonth('prev')}
+            style={styles.monthNavButton}>
+            <Text style={styles.navButtonText}>{'<'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => changeMonth('next')}
+            style={styles.monthNavButton}>
+            <Text style={styles.navButtonText}>{'>'}</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.calendarContainer}>{createCalendarDays()}</View>
 
           <Text style={styles.label}>Pilih Bulan:</Text>
           <Dropdown
@@ -298,35 +310,62 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 5,
   },
-  calendarContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 25,
-    backgroundColor: '#f9f9f9',
-  },
-  day: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 20,
-    margin: 3,
-  },
-  dayText: {
-    fontSize: 14,
-    color: '#333',
-  },
-  selectedDay: {
-    backgroundColor: '#38a169',
-  },
-  selectedText: {
-    color: '#fff',
-  },
-  emptyDay: {
-    width: 40,
-    height: 40,
-  },
+calendarContainer: {
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  marginBottom: 25,
+  backgroundColor: '#f9f9f9',
+  paddingTop: 10,
+  justifyContent: 'flex-start', // Penyesuaian agar kalender tersusun rapi
+},
+
+dayHeader: {
+  width: 45,
+  height: 45,
+  justifyContent: 'center',
+  alignItems: 'center',
+  margin: 3,
+},
+
+emptyDay: {
+  width: 45,  // Pastikan ukuran ruang kosong sama dengan ukuran hari
+  height: 45, // Sama seperti ukuran hari
+  margin: 3,
+},
+
+day: {
+  width: 45,
+  height: 45,
+  justifyContent: 'center',
+  alignItems: 'center',
+  borderRadius: 20,
+  margin: 3,
+},
+
+selectedDay: {
+  backgroundColor: '#38a169', // Warna hijau
+  width: 35,  // Ukuran lingkaran lebih kecil
+  height: 35, // Ukuran lingkaran lebih kecil
+  borderRadius: 17.5,  // Membuatnya tetap bulat
+  justifyContent: 'center',
+  alignItems: 'center',
+  margin: 8,
+},
+
+selectedText: {
+  color: '#fff',
+},
+
+dayText: {
+  fontSize: 14,
+  color: '#333',
+},
+
+dayHeaderText: {
+  fontSize: 14,
+  fontWeight: 'bold',
+  color: '#666',
+},
   buttonContainer: {
     marginTop: 20,
     flexDirection: 'row',

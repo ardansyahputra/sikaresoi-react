@@ -93,7 +93,7 @@ export default function TunjanganTambahan({navigation}) {
 
   const showConfirmationDialog = () => {
     if (!selectedMonth || !selectedYear) {
-      setModalMessage('Harap pilih bulan dan tahun untuk laporan!');
+      setModalMessage('Harap isi kolom dengan lengakp!');
       setIsModalVisible(true);
       return;
     }
@@ -294,31 +294,36 @@ export default function TunjanganTambahan({navigation}) {
       </ScrollView>
 
       {/* Konfirmasi Download Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={isConfirmationVisible}
-        onRequestClose={() => setIsConfirmationVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalMessage}>
-              Apakah anda yakin akan mendownload file ke perangkat anda?
-            </Text>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setIsConfirmationVisible(false)}>
-                <Text style={styles.modalButtonText}>Tidak</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.confirmButton]}
-                onPress={handleDownload}>
-                <Text style={styles.modalButtonText}>Ya</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+         <Modal
+             animationType="fade"
+             transparent={true}
+             visible={isConfirmationVisible}
+             onRequestClose={() => setIsConfirmationVisible(false)}>
+             <View style={styles.modalOverlay}>
+               <View style={styles.modalContent}>
+                 <View style={styles.modalHeader}>
+                   <Text style={styles.modalTitle}>Apakah Anda Yakin?</Text>
+                 </View>
+                 <View style={styles.modalBody}>
+                   <Text style={styles.modalText}>
+                     Anda Akan Mendownload Report Berformat Excel, Mungkin Membutuhkan Waktu Beberapa Detik!
+                   </Text>
+                 </View>
+                 <View style={styles.modalFooter}>
+                   <TouchableOpacity
+                     style={[styles.modalButton, styles.cancelButton]}
+                     onPress={() => setIsConfirmationVisible(false)}>
+                     <Text style={styles.modalButtonText}>Batal</Text>
+                   </TouchableOpacity>
+                   <TouchableOpacity
+                     style={[styles.modalButton, styles.confirmButton]}
+                     onPress={handleDownload}>
+                     <Text style={styles.modalButtonText}>Download</Text>
+                   </TouchableOpacity>
+                 </View>
+               </View>
+             </View>
+           </Modal>
 
       {/* Loading Modal */}
       <Modal animationType="fade" transparent={true} visible={isLoading}>
@@ -337,11 +342,11 @@ export default function TunjanganTambahan({navigation}) {
         onRequestClose={() => setIsModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalMessage}>{modalMessage}</Text>
+            <Text style={styles.modalText}>{modalMessage}</Text>
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setIsModalVisible(false)}>
-              <Text style={styles.closeButtonText}>Tutup</Text>
+              <Text style={styles.buttonText}>Tutup</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -351,103 +356,137 @@ export default function TunjanganTambahan({navigation}) {
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: '#E7E9F1'},
-  header: {
-    backgroundColor: '#FFFF',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-    marginBottom: 10,
+  // Container & Header Styles
+  container: {
+    flex: 1,
+    backgroundColor: '#E7E9F1',
+    paddingTop: 20,
   },
-  headerTitle: {fontSize: 18, fontWeight: 'bold'},
-  content: {flex: 1},
-  contentContainer: {padding: 10},
+  header: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    borderBottomLeftRadius: 15,
+    borderBottomRightRadius: 15,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+  },
+  headerTitle: {
+    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+
+  // Card Styles
   cardContainer: {
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    backgroundColor: '#FFFF',
+    paddingVertical: 20,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    elevation: 4,
+    marginHorizontal: 10,
+    marginTop: 60,
+    width: 387,
   },
   cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    marginBottom: 15,
   },
-  cardTitle: {fontSize: 20, fontWeight: 'bold'},
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 5,
+    marginBottom: -5,
+  },
   cardDivider: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-    marginVertical: 15,
+    height: 1,
+    backgroundColor: '#ddd',
+    marginVertical: 10,
   },
-  label: {fontSize: 14, color: '#333', marginBottom: 5},
+
+  // Form Elements
+  label: {
+    fontSize: 16,
+    marginBottom: 5,
+    color: '#333',
+  },
   dropdown: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#CCC',
     padding: 10,
-    borderRadius: 8,
+    borderRadius: 5,
     marginBottom: 15,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 15,
+    backgroundColor: '#F9F9F9',
   },
   downloadButton: {
     backgroundColor: '#28c4ac',
     padding: 15,
-    borderRadius: 8,
+    borderRadius: 5,
     alignItems: 'center',
+    marginTop: 20,
   },
-  buttonText: {color: '#fff', fontWeight: 'bold', fontSize: 16},
+  buttonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+  },
+
+input: { borderWidth: 1, borderColor: '#E0E0E0', padding: 10, borderRadius: 8, marginBottom: 15 },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   modalContent: {
     backgroundColor: '#FFF',
+    borderRadius: 16,
+    width: '85%',
+    maxWidth: 400,
     padding: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    width: '80%',
+    elevation: 5,
   },
-  loadingContent: {
-    backgroundColor: '#FFF',
+  modalHeader: {
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    backgroundColor: '#ccc',
     padding: 20,
-    borderRadius: 10,
-    alignItems: 'center',
+    marginHorizontal: -20,
+    marginTop: -20,
   },
-  loadingText: {
-    marginTop: 10,
+  modalTitle: {
+    color: '#333',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalBody: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+  modalText: {
     fontSize: 16,
     color: '#333',
+    textAlign: 'center',
+    marginBottom: 20,
   },
-  modalMessage: {fontSize: 16, color: '#333', textAlign: 'center'},
-  modalButtons: {
+  modalFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
-    width: '100%',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
   },
   modalButton: {
-    padding: 10,
-    borderRadius: 5,
-    width: '45%',
-    alignItems: 'center',
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    elevation: 2,
+    marginHorizontal: 8,
   },
   cancelButton: {
     backgroundColor: '#dc3545',
@@ -458,26 +497,33 @@ const styles = StyleSheet.create({
   modalButtonText: {
     color: '#FFF',
     fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
   },
+
+  // Loading Modal
+  loadingContent: {
+    backgroundColor: '#FFF',
+    padding: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+    minWidth: 200,
+    elevation: 5,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+  },
+
+  // Close Button
   closeButton: {
     backgroundColor: '#28c4ac',
     padding: 10,
     borderRadius: 5,
-    marginTop: 10,
+    alignItems: 'center',
   },
-  cardDivider: {
-    height: 1,
-    backgroundColor: '#ddd',
-    marginVertical: 10,
-  },
-  cardHeader: {marginBottom: 15},
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 5,
-    marginBottom: -5,
-  },
-  closeButtonText: {color: '#FFF', fontWeight: 'bold'},
   dropdownItem: {
     padding: 15,
     borderBottomWidth: 1,
