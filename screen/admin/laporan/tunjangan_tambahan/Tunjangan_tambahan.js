@@ -194,7 +194,6 @@ export default function TunjanganTambahan({navigation}) {
             <Text style={styles.cardTitle}>Report Tunjangan Tambahan</Text>
           </View>
           <View style={styles.cardDivider}></View>
-
           <Text style={styles.label}>Pilih Bulan *</Text>
           <Dropdown
             style={styles.dropdown}
@@ -205,7 +204,6 @@ export default function TunjanganTambahan({navigation}) {
             value={selectedMonth}
             onChange={item => setSelectedMonth(item.value)}
           />
-
           <Text style={styles.label}>Pilih Tahun *</Text>
           <Dropdown
             style={styles.dropdown}
@@ -216,7 +214,6 @@ export default function TunjanganTambahan({navigation}) {
             value={selectedYear}
             onChange={item => setSelectedYear(item.value)}
           />
-
           <Text style={styles.label}>Potongan Pajak *</Text>
           <Dropdown
             style={styles.dropdown}
@@ -227,7 +224,6 @@ export default function TunjanganTambahan({navigation}) {
             value={taxReduction}
             onChange={item => setTaxReduction(item.value)}
           />
-
           <Text style={styles.label}>Tunjangan Ke *</Text>
           <Dropdown
             style={styles.dropdown}
@@ -238,7 +234,6 @@ export default function TunjanganTambahan({navigation}) {
             value={selectedAllowance}
             onChange={item => setSelectedAllowance(item.value)}
           />
-
           <Text style={styles.label}>P2 Murni</Text>
           <Switch
             value={isP2Pure}
@@ -246,7 +241,6 @@ export default function TunjanganTambahan({navigation}) {
             trackColor={{false: '#767577', true: '#28c4ac'}}
             thumbColor={isP2Pure ? '#f4f3f4' : '#f4f3f4'}
           />
-
           <Text style={styles.label}>Persentase :</Text>
           <TextInput
             style={styles.input}
@@ -255,33 +249,47 @@ export default function TunjanganTambahan({navigation}) {
             keyboardType="numeric"
             placeholder="Masukkan persentase"
           />
-
-        <Text style={styles.label}>Tanda Tangan Kiri *</Text>
-        <Dropdown
-          style={styles.dropdown}
-          data={signatures}
-          labelField="label"
-          valueField="value"
-          placeholder="Pilih Tanda Tangan Kiri"
-          value={leftSignature}
-          onChange={item => setLeftSignature(item.value)}
-        />
-
-        <Text style={styles.label}>Tanda Tangan Kanan *</Text>
-        <Dropdown
-          style={styles.dropdown}
-          data={signatures}
-          labelField="label"
-          valueField="value"
-          placeholder="Pilih Tanda Tangan Kanan"
-          value={rightSignature}
-          onChange={item => setRightSignature(item.value)}
-        />
-        <TouchableOpacity
-          style={styles.downloadButton}
-          onPress={showConfirmationDialog}>
-          <Text style={styles.buttonText}>Download Laporan</Text>
-        </TouchableOpacity>
+          <Text style={styles.label}>Tanda Tangan Kiri *</Text>
+          <Dropdown
+            style={styles.dropdown}
+            data={signatures}
+            labelField="label"
+            valueField="value"
+            placeholder="Pilih Tanda Tangan Kiri"
+            value={leftSignature}
+            onChange={item => setLeftSignature(item.value)}
+            search
+            searchPlaceholder="Cari nama..."
+            maxHeight={300}
+            renderItem={item => (
+              <View style={styles.dropdownItem}>
+                <Text style={styles.dropdownText}>{item.label}</Text>
+              </View>
+            )}
+          />
+          <Text style={styles.label}>Tanda Tangan Kanan *</Text>
+          <Dropdown
+            style={styles.dropdown}
+            data={signatures}
+            labelField="label"
+            valueField="value"
+            placeholder="Pilih Tanda Tangan Kanan"
+            value={rightSignature}
+            onChange={item => setRightSignature(item.value)}
+            search
+            searchPlaceholder="Cari nama..."
+            maxHeight={300}
+            renderItem={item => (
+              <View style={styles.dropdownItem}>
+                <Text style={styles.dropdownText}>{item.label}</Text>
+              </View>
+            )}
+          />
+          <TouchableOpacity
+            style={styles.downloadButton}
+            onPress={showConfirmationDialog}>
+            <Text style={styles.buttonText}>Download Laporan</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -470,4 +478,21 @@ const styles = StyleSheet.create({
     marginBottom: -5,
   },
   closeButtonText: {color: '#FFF', fontWeight: 'bold'},
+  dropdownItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  dropdown: {
+    borderWidth: 1,
+    borderColor: '#CCC',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 15,
+    backgroundColor: '#F9F9F9',
+  },
 });

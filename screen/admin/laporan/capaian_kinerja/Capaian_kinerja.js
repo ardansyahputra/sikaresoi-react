@@ -1,5 +1,12 @@
 import React, {useState, useEffect} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, Modal, Linking, ActivityIndicator
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Modal,
+  Linking,
+  ActivityIndicator,
 } from 'react-native';
 import {Dropdown} from 'react-native-element-dropdown';
 import RNFS from 'react-native-fs';
@@ -19,7 +26,7 @@ export default function KontrakKerja({navigation}) {
   const [modalMessage, setModalMessage] = useState('');
   const [isConfirmationVisible, setIsConfirmationVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const apiClient = useApiClient(); // Invoke the custom API hook
 
   // Fetch users
@@ -182,7 +189,7 @@ export default function KontrakKerja({navigation}) {
         </TouchableOpacity>
       </View>
       <View style={styles.cardContainer}>
-        <Text style={styles.cardTitle}>Report Capaian Kinerja Pegawai</Text>
+        <Text style={styles.cardTitle}>Report Kontrak Kerja Pegawai</Text>
         <View style={styles.cardDivider}></View>
 
         <Text style={styles.label}>Pilih User *</Text>
@@ -194,6 +201,14 @@ export default function KontrakKerja({navigation}) {
           placeholder="Pilih User"
           value={selectedUser}
           onChange={item => setSelectedUser(item.value)}
+          search
+          searchPlaceholder="Cari nama..."
+          maxHeight={300}
+          renderItem={item => (
+            <View style={styles.dropdownItem}>
+              <Text style={styles.dropdownText}>{item.label}</Text>
+            </View>
+          )}
         />
 
         <Text style={styles.label}>Pilih Jabatan User *</Text>
@@ -422,4 +437,30 @@ const styles = StyleSheet.create({
     marginBottom: -5,
   },
   closeButtonText: {color: '#FFF', fontWeight: 'bold'},
+  dropdownItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  dropdown: {
+    borderWidth: 1,
+    borderColor: '#CCC',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 15,
+    backgroundColor: '#F9F9F9',
+    // Add shadow for better visibility
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
 });

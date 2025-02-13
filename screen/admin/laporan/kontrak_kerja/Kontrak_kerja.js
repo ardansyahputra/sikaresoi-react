@@ -48,6 +48,12 @@ export default function KontrakKerja({navigation}) {
     fetchUsers();
   }, []);
 
+  const searchConfig = {
+    search: true,
+    searchPlaceholder: "Cari nama...",
+    searchField: "label"
+  };
+
   // Fetch user positions
   useEffect(() => {
     if (selectedUser) {
@@ -164,26 +170,34 @@ const handleDownload = async () => {
 };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.headerTitle}></Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.cardContainer}>
-        <Text style={styles.cardTitle}>Report Kontrak Kerja Pegawai</Text>
-        <View style={styles.cardDivider}></View>
-
-        <Text style={styles.label}>Pilih User *</Text>
-        <Dropdown
-          style={styles.dropdown}
-          data={userList}
-          labelField="label"
-          valueField="value"
-          placeholder="Pilih User"
-          value={selectedUser}
-          onChange={item => setSelectedUser(item.value)}
-        />
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Text style={styles.headerTitle}></Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.cardContainer}>
+          <Text style={styles.cardTitle}>Report Kontrak Kerja Pegawai</Text>
+          <View style={styles.cardDivider}></View>
+  
+          <Text style={styles.label}>Pilih User *</Text>
+          <Dropdown
+            style={styles.dropdown}
+            data={userList}
+            labelField="label"
+            valueField="value"
+            placeholder="Pilih User"
+            value={selectedUser}
+            onChange={item => setSelectedUser(item.value)}
+            search
+            searchPlaceholder="Cari nama..."
+            maxHeight={300}
+            renderItem={item => (
+              <View style={styles.dropdownItem}>
+                <Text style={styles.dropdownText}>{item.label}</Text>
+              </View>
+            )}
+          />
 
         <Text style={styles.label}>Pilih Jabatan User *</Text>
         <Dropdown
@@ -398,4 +412,30 @@ const styles = StyleSheet.create({
     marginBottom: -5,
   },
   closeButtonText: {color: '#FFF', fontWeight: 'bold'},
+  dropdownItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  dropdown: {
+    borderWidth: 1,
+    borderColor: '#CCC',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 15,
+    backgroundColor: '#F9F9F9',
+    // Add shadow for better visibility
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
 });

@@ -179,19 +179,24 @@ export default function TugasTambahan({navigation}) {
         onRequestClose={() => setIsConfirmationVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalMessage}>
-              Apakah anda yakin akan mendownload file ke perangkat anda?
-            </Text>
-            <View style={styles.modalButtons}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Apakah Anda Yakin?</Text>
+            </View>
+            <View style={styles.modalBody}>
+              <Text style={styles.modalDescription}>
+                Anda Akan Mendownload Report Berformat Excel, Mungkin Membutuhkan Waktu Beberapa Detik!
+              </Text>
+            </View>
+            <View style={styles.modalFooter}>
               <TouchableOpacity
                 style={[styles.modalButton, styles.cancelButton]}
                 onPress={() => setIsConfirmationVisible(false)}>
-                <Text style={styles.modalButtonText}>Tidak</Text>
+                <Text style={styles.modalButtonText}>Batal</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalButton, styles.confirmButton]}
                 onPress={handleDownload}>
-                <Text style={styles.modalButtonText}>Ya</Text>
+                <Text style={styles.modalButtonText}>Download</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -280,25 +285,84 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   modalContent: {
     backgroundColor: '#FFF',
-    padding: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    width: '80%',
+    borderRadius: 16,
+    width: '85%',
+    maxWidth: 400,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
-  loadingContent: {
-    backgroundColor: '#FFF',
+  modalHeader: {
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    backgroundColor: '#ccc',
     padding: 20,
-    borderRadius: 10,
-    alignItems: 'center',
   },
-  loadingText: {
-    marginTop: 10,
+  modalTitle: {
+    color: '#333',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalBody: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+  modalDescription: {
     fontSize: 16,
     color: '#333',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    elevation: 2,
+    marginHorizontal: 8,
+  },
+  cancelButton: {
+    backgroundColor: '#dc3545',
+  },
+  confirmButton: {
+    backgroundColor: '#',
+  },
+  modalButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  
+  // Update loading modal styles untuk konsistensi
+  loadingContent: {
+    backgroundColor: '#FFF',
+    padding: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+    minWidth: 200,
+    elevation: 5,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
   },
   modalMessage: {fontSize: 16, color: '#333', textAlign: 'center'},
   modalButtons: {
@@ -318,7 +382,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#dc3545',
   },
   confirmButton: {
-    backgroundColor: '#28c4ac',
+    backgroundColor: '#1D56C0',
   },
   modalButtonText: {
     color: '#FFF',

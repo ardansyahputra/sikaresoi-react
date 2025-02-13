@@ -225,8 +225,15 @@ const handleDownload = async () => {
           placeholder="Pilih Tanda Tangan Kiri"
           value={leftSignature}
           onChange={item => setLeftSignature(item.value)}
-        />
-
+            search
+            searchPlaceholder="Cari nama..."
+            maxHeight={300}
+            renderItem={item => (
+              <View style={styles.dropdownItem}>
+                <Text style={styles.dropdownText}>{item.label}</Text>
+              </View>
+            )}
+          />
         <Text style={styles.label}>Tanda Tangan Kanan *</Text>
         <Dropdown
           style={styles.dropdown}
@@ -236,8 +243,15 @@ const handleDownload = async () => {
           placeholder="Pilih Tanda Tangan Kanan"
           value={rightSignature}
           onChange={item => setRightSignature(item.value)}
-        />
-        <TouchableOpacity
+            search
+            searchPlaceholder="Cari nama..."
+            maxHeight={300}
+            renderItem={item => (
+              <View style={styles.dropdownItem}>
+                <Text style={styles.dropdownText}>{item.label}</Text>
+              </View>
+            )}
+          />        <TouchableOpacity
           style={styles.downloadButton}
           onPress={showConfirmationDialog}>
           <Text style={styles.buttonText}>Download Laporan</Text>
@@ -415,4 +429,21 @@ const styles = StyleSheet.create({
     marginBottom: -5,
   },
   closeButtonText: {color: '#FFF', fontWeight: 'bold'},
+  dropdownItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  dropdown: {
+    borderWidth: 1,
+    borderColor: '#CCC',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 15,
+    backgroundColor: '#F9F9F9',
+  },
 });
