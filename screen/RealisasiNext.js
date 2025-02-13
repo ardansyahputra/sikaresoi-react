@@ -9,11 +9,13 @@ import {
   Image,
   TextInput,
   Alert,
+  Modal,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
 import useApiClient from '../src/api/apiClient';
+import DocumentPicker from 'react-native-document-picker';
 
 export default function RealisasiNext({ navigation }) {
   const [data, setData] = useState([]);
@@ -191,14 +193,14 @@ export default function RealisasiNext({ navigation }) {
     return (
       <View style={styles.container}>
         {/* Header */}
-      <View style={styles.header}>
-                  <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={26} color="#000" />
-                  </TouchableOpacity>
-                  <Image
-                    source={require('./assets/images/sikaresoi.png')}
-                    style={styles.headerImage}
-                  />
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={26} color="#000" />
+          </TouchableOpacity>
+          <Image
+            source={require('./assets/images/sikaresoi.png')}
+            style={styles.headerImage}
+          />
         </View>
         {/* Loading Indicator */}
         {loading ? (
@@ -292,11 +294,152 @@ export default function RealisasiNext({ navigation }) {
     );
 }
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F7F8FB',
   },
+
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+  },
+  modalContent: {
+    width: '85%', // Slightly wider modal for better presentation
+    backgroundColor: '#fff',
+    borderRadius: 15, // Increased corner radius for smooth rounded edges
+    padding: 25,
+    elevation: 5, // Adds shadow for depth
+    shadowColor: '#000', // Shadow for iOS
+    shadowOffset: { width: 0, height: 5 }, // Shadow direction
+    shadowOpacity: 0.3, // Subtle shadow opacity
+    shadowRadius: 10, // More blur to the shadow
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600', // Slightly lighter weight for a modern feel
+    color: '#333', // Darker text for contrast
+  },
+  closeIcon: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#f0f0f0', // Subtle background for close button
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#555', // Soft gray for text color
+    marginBottom: 20,
+    lineHeight: 24, // Increase line height for readability
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  hapusButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: '#04d60b', // Red background for cancel
+    borderRadius: 8, // Rounded edges for buttons
+    alignItems: 'center', // Centered text
+    width: '48%',
+  },
+  hapusButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500', // Lighter font weight for a modern touch
+  },
+
+  cancelButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: '#d60404', // Red background for cancel
+    borderRadius: 8, // Rounded edges for buttons
+    alignItems: 'center', // Centered text
+    width: '48%',
+  },
+  cancelButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500', // Lighter font weight for a modern touch
+  },
+  
+  confirmButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: '#3498db', // Blue background for confirm
+    borderRadius: 8,
+    alignItems: 'center',
+    width: '48%',
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+
+  addDocumentButton: {
+    marginTop: 10,
+    backgroundColor: '#28a745',
+    padding: 10,
+    alignItems: 'center',
+  },
+  addDocumentButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  documentList: {
+    marginTop: 10,
+    color: '#000',
+  },
+  documentItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    marginBottom: 5,
+  },
+  documentText: {
+    fontSize: 14,
+    color: '#000',
+    flex: 1,
+  },
+  chooseFileButton: {
+    backgroundColor: '#007bff',
+    padding: 5,
+    borderRadius: 5,
+    marginHorizontal: 10,
+  },
+  chooseFileText: {
+    color: '#fff',
+    fontSize: 12,
+  },
+  deleteButton: {
+    backgroundColor: '#dc3545',
+    padding: 5,
+    borderRadius: 5,
+  },
+
+  deleteButtonText: {
+    color: '#fff', // White text to stand out on darker button
+    fontSize: 16,
+    fontWeight: '600', // Slightly bold to make it prominent
+    textTransform: 'uppercase', // Capitalized for emphasis
+    letterSpacing: 1.2, // Adds space between letters for a sleek look
+    textAlign: 'center', // Centers the text
+  },
+
 
   footerContainer: {
     alignItems: 'center',

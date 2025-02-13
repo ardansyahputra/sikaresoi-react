@@ -14,6 +14,8 @@ import { StyleSheet } from 'react-native';
 import LoginScreen from './screen/auth/login/Login';
 import HomeScreen from './screen/BottomNavBar/Home/HomeScreen';
 import KontrakKinerjaScreen from './screen/BottomNavBar/KontrakKinerja/KontrakKinerjaScreen';
+import GetAktifCard from './screen/BottomNavBar/KontrakKinerja/GetAktif.js';
+import KirimKontrak from './screen/BottomNavBar/KontrakKinerja/KirimKontrak.js';
 import SettingJabatan from './screen/BottomNavBar/Menu/SettingJabatan/SettingJabatan';
 import FormJabatan from './screen/BottomNavBar/Menu/SettingJabatan/Form.js';
 import TeguranScreen from './screen/TeguranScreen.js';
@@ -82,6 +84,16 @@ function HomeStack() {
         name="KontrakKinerja"
         component={KontrakKinerjaScreen}
         options={{headerShown: false}}
+      />
+      <Stack.Screen
+      name="GetAktif"
+      component={GetAktifCard}
+      options={{headerShown: false}}
+      />
+      <Stack.Screen
+      name="KirimKontrak"
+      component={GetAktifCard}
+      options={{headerShown: false}}
       />
       <Stack.Screen
         name="Profile"

@@ -8,41 +8,95 @@ import {
   ActivityIndicator,
   TextInput,
   Alert,
+  ScrollView,
+  Image,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
+import useApiClient from '../../../src/api/apiClient';
+import GetAktifCard from './GetAktif';
+import KirimKontrak from './KirimKontrak';
 
-export default function Jabatan() {
+const KontrakKinerjaScreen = () => {
   const navigation = useNavigation();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [yearOptions, setYearOptions] = useState([]);
   const [selectedDisplay, setSelectedDisplay] = useState(null);
-  const [tambahModalVisible, setTambahModalVisible] = useState(false); // Tambahkan state ini
+  const [userJabatanData, setUserJabatanData] = useState(null);
 
-  const baseURL = 'http://192.168.60.230:8000/api/v1';
-  const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjIzMDo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM3MzM5NjIyLCJleHAiOjE3MzczNDUwMTAsIm5iZiI6MTczNzM0MTQxMCwianRpIjoiR2VhMkdFdElhM3JnazJEWCIsInN1YiI6MzAsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.pLHSajlylagBHdKZHE2EyhpLkY0kW3zG9P8PSsDLato';
+  const apiClient = useApiClient();
+
+  useEffect(() => {
+    fetchYears();
+    fetchUserJabatanData();
+  }, []);
 
 
   useEffect(() => {
-    fetchData(currentPage, selectedDisplay);
-  }, [currentPage, selectedDisplay]);
+    if (selectedYear) {
+      fetchData(currentPage, selectedYear, selectedDisplay);
+    }
+  }, [currentPage, selectedYear, selectedDisplay]);
 
-  const fetchData = async page => {
+  const fetchUserJabatanData = async () => {
+    try {
+      const response = await apiClient.post('/user/jabatan/aktif');
+      if (response?.data?.data) {
+        setUserJabatanData(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching user jabatan data:', error);
+    }
+  };
+
+  const fetchYears = async () => {
     try {
       setLoading(true);
-      const response = await axios.post(`${baseURL}/teguran/indexandro`, {page});
+      const response = await apiClient.get('/tahun/show');
       if (response?.data?.data) {
-        setData(response.data.data);
+        const years = response.data.data.map(year => ({
+          label: year.tahun.toString(),
+          value: year.id,
+        }));
+        setYearOptions(years);
+
+        // Set default year to the current year
+        const currentYear = new Date().getFullYear();
+        const defaultYear = years.find(year => year.label === currentYear.toString());
+        setSelectedYear(defaultYear ? defaultYear.value : years[0]?.value);
+      } else {
+        console.error('Failed to load year options:', response);
+        Alert.alert('Error', 'Gagal memuat data tahun.');
+      }
+    } catch (error) {
+      console.error('Error fetching years:', error);
+      Alert.alert('Error', 'Gagal memuat data tahun.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchData = async (page, year) => {
+    try {
+      setLoading(true);
+      const response = await apiClient.post('/user/kinerja/list/index', {
+        page,
+        tahun_id: year,
+      });
+      if (response?.data?.data) {
+        setData(response.data.data || []);
         setCurrentPage(response.data.current_page);
         setLastPage(response.data.last_page);
+        console.log('Data fetched:', response.data);
       } else {
-        console.error('Data tidak valid:', response);
+        console.error('Invalid data:', response);
         setData([]);
       }
     } catch (error) {
@@ -53,14 +107,69 @@ export default function Jabatan() {
     }
   };
 
-  const handleTambah = () => {
-    setTambahModalVisible(true); // Ubah sesuai state yang didefinisikan
-    navigation.navigate('presensiexcel');
-  };
+  const onSaveKinerja = async (updatedItem) => {
+    console.log('Updated Item:', updatedItem);
+    try {
+        const payload = {
+            kinerja: {
+                // Add the required fields for `kinerja`
+                id: updatedItem.id,
+                user_jabatan_id: updatedItem.user_jabatan_id,
+                tahun_id: updatedItem.tahun_id || 0,
+                tgs_tambahan: updatedItem.tgs_tambahan || 0, // Include `tgs_tambahan` with a default value
+            },
+            list: [updatedItem],
+        };
+        console.log('Payload:', payload); // Log the payload
+        const response = await apiClient.post('/user/kinerja/list/save', payload);
 
-  const handleEdit = uuid => {
-    navigation.navigate('Presensiedit', {uuid});
+        if (response?.data?.data) {
+            Alert.alert('Sukses', 'Data kinerja berhasil diperbarui.');
+            setData((prevData) =>
+                prevData.map((item) =>
+                    item.id === updatedItem.id ? { ...item, ...updatedItem } : item
+                )
+            );
+        } else {
+            Alert.alert('Gagal', 'Terjadi kesalahan saat memperbarui data.');
+        }
+    } catch (error) {
+        console.error('Error updating kinerja:', error);
+        console.error('Response data:', error.response?.data); // Log the response data
+        Alert.alert('Error', 'Gagal menyimpan perubahan.');
+    }
+};
+  
+  const onDeleteKinerja = async (uuid) => {
+    Alert.alert(
+      'Konfirmasi',
+      'Apakah Anda yakin ingin menghapus data ini?',
+      [
+        {
+          text: 'Batal',
+          style: 'cancel',
+        },
+        {
+          text: 'Hapus',
+          onPress: async () => {
+            try {
+              const response = await apiClient.delete(`/user/kinerja/list/${uuid}/delete`);
+              if (response?.data?.data) {
+                Alert.alert('Sukses', 'Data berhasil dihapus.');
+                setData((prevData) => prevData.filter((item) => item.id !== uuid));
+              } else {
+                Alert.alert('Gagal', 'Gagal menghapus data.');
+              }
+            } catch (error) {
+              console.error('Error deleting kinerja:', error);
+              Alert.alert('Error', 'Terjadi kesalahan saat menghapus data.');
+            }
+          },
+        },
+      ]
+    );
   };
+  
 
   const display = [
     {label: '5', value: 1},
@@ -70,136 +179,260 @@ export default function Jabatan() {
     {label: '100', value: 5},
   ];
 
+
   const toggleExpand = id => {
     setExpandedId(expandedId === id ? null : id);
   };
 
   const TableHeader = () => (
-  <View>
-    <View style={styles.tambahContainer}>
-      <TouchableOpacity
-        style={styles.downloadButton}
-        onPress={() => navigation.navigate('Presensiexcel')}
-      >
-        <FontAwesome size={20} color="#fff" style={styles.icon} />
-        <Text style={styles.downloadText}>Download Excel</Text>
-      </TouchableOpacity>
-    </View>
-    <View style={styles.filterContainer}>
-      <View style={styles.displayContainer}>
-        <Text style={styles.displayText}>Display</Text>
-        <Dropdown
-          style={styles.dropdown}
-          data={display}
-          labelField="label"
-          valueField="value"
-          placeholder="10"
-          value={selectedDisplay}
-          onChange={item => setSelectedDisplay(item.value)}
-          renderItem={item => (
-            <Text style={[styles.dropdownItem, styles.customFont]}>
-              {item.label}
-            </Text>
-          )}
-        />
+    <View>
+      <View style={styles.filterContainer}>
+        {/* Tahun Selector */}
+        <View style={styles.displayContainer}>
+          <Dropdown
+            style={styles.dropdown}
+            data={yearOptions}
+            labelField="label"
+            valueField="value"
+            value={selectedYear}
+            onChange={item => setSelectedYear(item.value)}
+          />
+        </View>
+
+        {/*Button Kinerja */}
+        <View style={styles.buttonRightContainer}>
+          <TouchableOpacity style={styles.listkinerjaButton}>
+            <FontAwesome name="plus" size={15} color="white" />
+            <Text style={styles.buttonText}>LIST KINERJA</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.salinkontrakButton}>
+            <FontAwesome name="copy" size={15} color="white" />
+            <Text style={styles.buttonText}>SALIN KONTRAK</Text>
+          </TouchableOpacity>
+        </View>
+
       </View>
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchBar}
-          placeholder="Search"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
+        <View style={styles.tableHeader}>
+          <Text style={[styles.headerCell, styles.numberCell]} align="center">Nomor</Text>
+          <Text style={[styles.headerCell, styles.nameCell]}>Indikator Kinerja</Text>
+          <View style={styles.expandIconCell} />
+        </View>
     </View>
-    <View style={styles.tableHeader}>
-      <Text style={[styles.headerCell, styles.numberCell]}>Nomor</Text>
-      <Text style={[styles.headerCell, styles.nameCell]}>Indikator Kinerja</Text>
-      <Text style={[styles.headerCell, styles.nameCell]}>Biaya</Text>
-      <Text style={[styles.headerCell, styles.nameCell]} align="center">AK</Text>
-      <Text style={[styles.headerCell, styles.nameCell]}>Kuantitas</Text>
-      <Text style={[styles.headerCell, styles.nameCell]}>Kualitas</Text>
-      <Text style={[styles.headerCell, styles.nameCell]}>Waktu</Text>
-      <Text style={[styles.headerCell, styles.nameCell]} align="center">WPT</Text>
-      <Text style={[styles.headerCell, styles.nameCell]} align="center">BOBOT</Text>
-      <Text style={[styles.headerCell, styles.nameCell]}>STATUS</Text>
-      <Text style={[styles.headerCell, styles.nameCell]}>Action</Text>
-    </View>
-  </View>
-);
+  );
 
   
 
-  const renderItem = ({item, index}) => {
-    if (!item) return null;
-
-    const userName = item.user ? item.user.name : '-';
-    const jenisTeguran = item.jenis || '-';
-    const potongan = item.potongan || '-';
-    const tanggalPelanggaran = item.tgl_pelanggaran || '-';
-    const dibaca = item.dibaca || '-';
-
+  const renderItem = ({ item, index }) => {
     const isExpanded = expandedId === item.id;
-    const isDibacaEmpty = dibaca === '-';
-
+  
     return (
-      <View style={styles.tableRow}>
-        <TouchableOpacity
-          style={styles.rowHeader}
-          onPress={() => toggleExpand(item.id)}>
-          <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
-          <Text
-            style={[styles.tableCell, styles.nameCell]}
-            numberOfLines={1}
-            ellipsizeMode="tail">
-            {userName}
-          </Text>
-          <View style={styles.dibacaWrapper}>
-            <View
-              style={[
-                styles.dibacaValueWrapper,
-                isDibacaEmpty && {backgroundColor: 'red'},
-              ]}>
-              <Text style={styles.DibacaText}>{dibaca}</Text>
+      <View>
+        {/* Tampilan Ringkas */}
+        <View style={styles.tableRow}>
+          <TouchableOpacity style={styles.rowHeader}
+            onPress={() => toggleExpand(item.id)}>
+            <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
+            <Text style={[styles.tableCell, styles.nameCell]}>{item.uraian.nm_uraian || '-'}</Text>
+            <View style={styles.expandIconCell}>
+              <Ionicons
+                name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#333"
+              />
             </View>
-          </View>
-          <View style={styles.actionCell}>
-            <Ionicons
-              name={isExpanded ? 'chevron-up' : 'chevron-down'}
-              size={20}
-              color="#333"
-            />
-          </View>
-        </TouchableOpacity>
-        {isExpanded && (
-          <View style={styles.expandedContent}>
-            <Text style={styles.expandedText}>
-              Jenis Teguran: {jenisTeguran}
-            </Text>
-            <Text style={styles.expandedText}>Potongan: {potongan}</Text>
-            <Text style={styles.expandedText}>
-              Tanggal Pelanggaran: {tanggalPelanggaran}
-            </Text>
+          </TouchableOpacity>
+        </View>
 
-            <View style={styles.dibacaWrapper}>
-              <Text style={styles.expandedText}>Dibaca:</Text>
-              <View
-                style={[
-                  styles.dibacaValueWrapper,
-                  isDibacaEmpty && {backgroundColor: 'red'},
-                ]}>
-                <Text style={styles.DibacaText}>{dibaca}</Text>
+        {/* Tampilan Penuh */}
+        {isExpanded && (
+          <View style={styles.expandedRow}>
+            <View style={styles.splitContainer}>
+              {/* Kolom kiri */}
+              <View style={styles.leftColumn}>
+                <Text style={styles.expandedText}>Biaya: </Text>
+                <Text style={styles.expandedTextDetail}>Rp {item.uraian.biaya}</Text>
+                
+                <Text style={styles.expandedText}>AK: </Text>
+                <Text style={styles.expandedTextDetail}>{item.uraian.angka_kredit}</Text>
+
+                <Text style={styles.expandedText}>Kuantitas: </Text>
+                <View style={styles.inputWrapper}>
+                  {/* Input Angka */}
+                  <TextInput
+                    style={styles.input}
+                    value={item.kuantitas?.toString()}
+                    onChangeText={(value) => {
+                      const numericValue = parseInt(value) || 1; // Pastikan minimal 1
+                      const updatedItem = { ...item, kuantitas: numericValue };
+                      onSaveKinerja(updatedItem);
+                    }}
+                    keyboardType="numeric"
+                    placeholder="0"
+                    placeholderTextColor="#999"
+                  />
+                  {/* Tombol Decrement */}
+                  <TouchableOpacity
+                    style={styles.arrowButton}
+                    onPress={() => {
+                      if (item.kuantitas > 1) {
+                        const updatedItem = { ...item, kuantitas: item.kuantitas - 1 };
+                        onSaveKinerja(updatedItem);
+                      }
+                    }}
+                  >
+                    <Text style={styles.arrowText}>-</Text>
+                  </TouchableOpacity>
+                  {/* Tombol Increment */}
+                  <TouchableOpacity
+                    style={styles.arrowButton}
+                    onPress={() => {
+                      const updatedItem = { ...item, kuantitas: item.kuantitas + 1 };
+                      onSaveKinerja(updatedItem);
+                    }}
+                  >
+                    <Text style={styles.arrowText}>+</Text>
+                  </TouchableOpacity>
+
+                  {/* Satuan */}
+                  <Text style={styles.inputSuffix}>{item.uraian?.satuan}</Text>
+                </View>
+                {item.kuantitas <= 0 && (
+                  <Text style={styles.errorText}>Tidak boleh 0</Text>
+                )} 
+
+                <Text style={styles.expandedText}>Kualitas: </Text>
+                <View style={styles.inputWrapper}>
+                  {/* Input Angka */}
+                  <TextInput
+                    style={styles.input}
+                    value={item.kualitas?.toString()}
+                    onChangeText={(value) => {
+                      const numericValue = parseInt(value) || 1; // Pastikan minimal 1
+                      const updatedItem = { ...item, kualitas: numericValue };
+                      onSaveKinerja(updatedItem);
+                    }}
+                    keyboardType="numeric"
+                    placeholder="0"
+                    placeholderTextColor="#999"
+                  />
+                  {/* Tombol Decrement */}
+                  <TouchableOpacity
+                    style={styles.arrowButton}
+                    onPress={() => {
+                      if (item.kuantitas > 1) {
+                        const updatedItem = { ...item, kualitas: item.kualitas - 1 };
+                        onSaveKinerja(updatedItem);
+                      }
+                    }}
+                  >
+                    <Text style={styles.arrowText}>-</Text>
+                  </TouchableOpacity>
+                  {/* Tombol Increment */}
+                  <TouchableOpacity
+                    style={styles.arrowButton}
+                    onPress={() => {
+                      const updatedItem = { ...item, kualitas: item.kualitas + 1 };
+                      onSaveKinerja(updatedItem);
+                    }}
+                  >
+                    <Text style={styles.arrowText}>+</Text>
+                  </TouchableOpacity>
+
+                  {/* Satuan */}
+                  <Text style={styles.inputSuffix}>           %</Text>
+                </View>
+                {item.kualitas <= 0 && (
+                  <Text style={styles.errorText}>Tidak boleh 0</Text>
+                )}              
+              </View>
+
+              {/* Kolom kanan */}
+              <View style={styles.rightColumn}>
+                <Text style={styles.expandedText}>Waktu: </Text>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={styles.input}
+                    value={item.waktu?.toString()}
+                    onChangeText={(value) => {
+                      const updatedItem = { ...item, waktu: value };
+                      onSaveKinerja(updatedItem);
+                    }}
+                    keyboardType="numeric"
+                    placeholder="0"
+                    placeholderTextColor="#999"
+                  />
+                  <Text style={styles.inputSuffix}>BULAN</Text>
+                </View>
+                {item.waktu <= 0 && (
+                  <Text style={styles.errorText}>Tidak boleh 0</Text>
+                )}              
+
+                <Text style={styles.expandedText}>WPT: </Text>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={styles.input}
+                    value={item.wpt?.toString()}
+                    onChangeText={(value) => {
+                      const updatedItem = { ...item, wpt: value };
+                      onSaveKinerja(updatedItem);
+                    }}
+                    keyboardType="numeric"
+                    placeholder="0"
+                    placeholderTextColor="#999"
+                  />
+                </View>     
+
+                <Text style={styles.expandedText}>Bobot: </Text>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={styles.input}
+                    value={item.bobot?.toString()}
+                    onChangeText={(value) => {
+                      const updatedItem = { ...item, bobot: value };
+                      onSaveKinerja(updatedItem);
+                    }}
+                    keyboardType="numeric"
+                    placeholder="0"
+                    placeholderTextColor="#999"
+                  />
+                </View>
+                {item.bobot <= 0 && (
+                  <Text style={styles.errorText}>Tidak boleh 0</Text>
+                )}              
+
+                <Text style={styles.expandedText}>Status: </Text>
+                <View style={styles.statusSection}>
+                {item.kuantitas <= 0 || item.kualitas <= 0 || item.waktu <= 0 || item.bobot <= 0 || item.wpt <= 0 ? (
+                  <View style={styles.statusBadgeDanger}>
+                    <Ionicons name="alert" size={16} color="white" />
+                    <Text style={styles.statusText}>LENGKAPI DATA</Text>
+                  </View>
+                  ) : item.total_target === null ? (
+                  <View style={styles.statusBadgeWarning}>
+                    <Ionicons name="clock-alert" size={16} color="white" />
+                    <Text style={styles.statusText}>BELUM BREAKDOWN</Text>
+                  </View>
+                  ) : (
+                  <View style={styles.statusBadgeSuccess}>
+                    <Ionicons name="check-circle" size={16} color="white" />
+                    <Text style={styles.statusText}>LENGKAP</Text>
+                  </View>
+                  )}
+                </View>
               </View>
             </View>
 
-            <Text style={styles.expandedText}>User: {userName}</Text>
             <View style={styles.actionContainer}>
-              <TouchableOpacity
+              <TouchableOpacity 
                 style={styles.editButton}
-                onPress={() => handleEdit(item.uuid)}>
-                <FontAwesome name="cogs" size={30} color="white" />
-                <Text style={styles.customFont}></Text>
+                onPress={() => handleEdit(item)}>
+                <Ionicons name="create" size={20} color="white" />
               </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => confirmDelete(item)}>
+                <Ionicons name="trash" size={20} color="white" />
+              </TouchableOpacity>              
             </View>
           </View>
         )}
@@ -210,10 +443,14 @@ export default function Jabatan() {
 
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
+    <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.headerLeft}></View>
+        <View style={styles.headerLeft}>
+          <Image
+            source={require('../../assets/sikaresoi.png')}
+            style={styles.logo}
+            />
+        </View>
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
           <TouchableOpacity style={styles.iconWrapper}>
@@ -221,6 +458,13 @@ export default function Jabatan() {
           </TouchableOpacity>
         </View>
       </View>
+      <View>
+        <Text style={styles.headerTitle}>Kontrak Kinerja</Text>
+        <Text style={styles.headerSubtitle}>User • Kontrak Kinerja</Text>
+      </View>
+
+      {userJabatanData && <GetAktifCard data={userJabatanData} />}
+
       {/* Loading Indicator */}
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
@@ -266,7 +510,8 @@ export default function Jabatan() {
           }
         />
       )}
-    </View>
+      <KinerjaActionsCard kinerja={kinerja} dataAktif={userJabatanData} />
+    </ScrollView>
   );
 }
 
@@ -275,6 +520,33 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F7F8FB',
   },
+  headerLeft: {
+    flex: 1,
+  },
+  logo: {
+    width: 140,
+    height: 40,
+    resizeMode: 'contain',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000",
+    marginLeft: 20,
+    marginBottom: 4, 
+    marginTop: 10,
+  },
+  headerSubtitle: {
+    color: "#000",
+    marginLeft: 20,
+    marginBottom: 4,
+  },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
@@ -285,6 +557,35 @@ const styles = StyleSheet.create({
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.2,
     shadowRadius: 4,
+  },
+  buttonRightContainer: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  listkinerjaButton: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between',
+    padding: 8, 
+    backgroundColor: '#1bc5bd', 
+    borderRadius: 5,
+    marginRight: 5,
+    marginBottom: 5,
+  },
+  salinkontrakButton: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between',
+    padding: 8, 
+    backgroundColor: '#3699ff', 
+    borderRadius: 5,
+    marginRight: 5,
+  },
+  buttonText: { 
+    fontWeight: 'bold',
+    color: 'white', 
+    marginLeft: 8, 
   },
   tableHeader: {
     flexDirection: 'row',
@@ -297,6 +598,7 @@ const styles = StyleSheet.create({
   headerCell: {
     fontFamily: 'Poppins-SemiBold',
     fontSize: 13,
+    fontWeight: 'bold',
     color: '#333',
   },
   tableRow: {
@@ -306,7 +608,7 @@ const styles = StyleSheet.create({
   },
   rowHeader: {
     flexDirection: 'row',
-    padding: 15,
+    padding: 10,
     backgroundColor: '#F0F0F0',
     alignItems: 'center',
   },
@@ -321,12 +623,12 @@ const styles = StyleSheet.create({
     paddingLeft: 0,
   },
   numberCell: {
-    width: 50,
+    flex: 1,
+    textAlign: 'center',
   },
   nameCell: {
-    flex: 1,
-    overflow: 'hidden',
-    marginRight: 10,
+    flex: 3,
+    overflow: 'hidden', // Untuk menjaga tampilan saat teks panjang
   },
   statusCellContainer: {
     width: 100,
@@ -340,53 +642,114 @@ const styles = StyleSheet.create({
     width: 40,
     alignItems: 'flex-end',
   },
-  approvedStatus: {
-    color: '#4CAF50',
+  splitContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
-  rejectedStatus: {
-    color: '#F44336',
+  leftColumn: {
+    flex: 1,
+    marginRight: 10,
   },
-  pendingStatus: {
-    color: '#FFC107',
+  rightColumn: {
+    flex: 1,
+    marginLeft: 10,
   },
-  defaultStatus: {
-    color: '#9E9E9E',
-  },
-  expandedContent: {
+  expandedRow: {
     padding: 15,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: '#F0F0',
   },
   expandedText: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    color: '#555',
+    marginTop: 7,
+  },
+  expandedTextDetail: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#555', // Warna teks detail
     marginBottom: 5,
-    fontSize: 14,
-  },
-  dibacaWrapper: {
-    flexDirection: 'row', // Menyusun "Dibaca:" dan nilai dibaca dalam satu baris
-    alignItems: 'center', // Menyusun konten secara vertikal agar berada sejajar
-    marginBottom: 5, // Memberikan jarak bawah setelah wrapper
-    flexWrap: 'wrap', // Memungkinkan elemen untuk membungkus jika terlalu panjang
-  },
-  dibacaValueWrapper: {
-    backgroundColor: '#4CAF50', // Warna latar belakang default
-    borderRadius: 8, // Membuat sudut rounded
-    paddingVertical: 5, // Menambahkan padding vertikal di dalam wrapper
-    paddingHorizontal: 10, // Menambahkan padding horizontal di dalam wrapper
-    marginright: 20,
-    marginBottom: 20, // Memberikan jarak antara "Dibaca:" dan nilai
-    maxWidth: '100%', // Membatasi lebar nilai agar tidak melampaui layar
-    overflow: 'hidden', // Menyembunyikan konten yang melampaui batas
-  },
-  DibacaText: {
-    fontSize: 14,
-    color: '#fff', // Warna teks putih agar kontras dengan background
   },
   expandedLinkText: {
     color: 'blue',
     marginBottom: 5,
     fontSize: 14,
   },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fe',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  input: {
+    flex: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    fontSize: 14,
+    color: '#2D3748',
+  },
+  inputSuffix: {
+    paddingHorizontal: 10,
+    fontSize: 12,
+    color: '#718096',
+  },
+  arrowButton: {
+    backgroundColor: '#e2e8f0',
+    paddingHorizontal: 5,
+    paddingVertical: 0,
+    borderRadius: 3,
+    borderWidth: 0.5,
+    borderColor: '2D3748',
+    marginHorizontal: 0.5,
+  },
+  arrowText: {
+    color: '#718096',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#E53E3E',
+    marginTop: 4,
+  },
   filetext: {
     flexDirection: 'row',
+  },
+  tatusSection: {
+    marginVertical: 16,
+  },
+  statusBadgeDanger: {
+    backgroundColor: '#E53E3E',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  statusBadgeWarning: {
+    backgroundColor: '#D69E2E',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  statusBadgeSuccess: {
+    backgroundColor: '#38A169',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  statusText: {
+    color: 'white',
+    marginLeft: 4,
+    fontSize: 12,
+    fontWeight: '600',
   },
   actionContainer: {
     flexDirection: 'row',
@@ -548,13 +911,13 @@ const styles = StyleSheet.create({
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 15,
+    marginBottom: 10,
   },
   displayContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 20,
+    marginRight: 10,
   },
   displayText: {
     fontFamily: 'Poppins-Regular',
@@ -569,7 +932,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 5,
     paddingHorizontal: 10,
-    width: 75,
+    width: 80,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -593,7 +956,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 5,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
   },
   tambahText: {
     fontFamily: 'Poppins-Regular',
@@ -640,6 +1003,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
   },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f64e60',
+    margin: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
   customFont: {
     color: 'white',
     fontFamily: 'Poppins-Regular',
@@ -655,3 +1032,5 @@ const styles = StyleSheet.create({
     color: '#333',
   },
 });
+
+export default KontrakKinerjaScreen;

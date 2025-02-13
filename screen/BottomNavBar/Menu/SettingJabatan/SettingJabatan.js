@@ -214,7 +214,7 @@ const SettingJabatan = ({ navigation }) => {
           </View>
         </TouchableOpacity>
         {isExpanded && (
-          <View style={styles.expandedContent}>
+          <View style={styles.expandedRow}>
             <Text style={styles.expandedText}>
               Detail Jabatan: <Text style={styles.expandedTextDetail}> {item.detail_jabatan || '-'}</Text>
             </Text>
@@ -257,10 +257,10 @@ const SettingJabatan = ({ navigation }) => {
             style={styles.headerImage}
         />
       </View>
-        <View style={styles.headerTextContainer}>
-          <Text style={styles.headerTitle}>Setting Jabatan</Text>
-          <Text style={styles.separatorText}> • </Text>
-          <Text style={styles.headerSubtitle}>Jabatan</Text>
+        <View style={styles.headerTextContainer1}>
+          <Text style={styles.headerTitle1}>Setting Jabatan</Text>
+          <Text style={styles.separatorText1}> • </Text>
+          <Text style={styles.headerSubtitle1}>Jabatan</Text>
         </View>
       <Modal
         animationType="slide"
@@ -370,26 +370,26 @@ const styles = StyleSheet.create({
     marginRight:1,
     opacity: 0.4,
   },
-  headerTextContainer: {
+  headerTextContainer1: {
     flexDirection: "row",
     alignItems: "center",
     marginLeft: 13, // Menambahkan jarak ke kiri
     marginTop: 20, 
   },
 
-  headerTitle: {
+  headerTitle1: {
     fontFamily: "Poppins-SemiBold",
     fontSize: 17,
     color: "#000",
   },
 
-  separatorText: {
+  separatorText1: {
     fontSize: 20,
     color: "#000",
     marginBottom: 3,
   },
 
-  headerSubtitle: {
+  headerSubtitle1: {
     fontFamily: "Poppins-Regular",
     fontSize: 14,
     color: "#000",
@@ -437,6 +437,20 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     flex: 1,
   },
+  headerTitle: {
+    fontSize: 18,
+    fontFamily: "Poppins-SemiBold",
+    color: "#000",
+    marginLeft: 20,
+    marginBottom: 4, 
+    marginTop: 10,
+  },
+  headerSubtitle: {
+    color: "#000",
+    marginLeft: 20,
+    marginBottom: 4,
+    fontFamily: "Poppins-SemiBold",
+  },
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -500,7 +514,7 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   addButtonText: { 
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
     color: 'white', 
     marginLeft: 8, 
   },
@@ -528,7 +542,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F0F0', // Memberi warna netral untuk header baris
   },
   headerCell: {
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
     fontSize: 14,
     color: '#333', // Warna teks header
   },
@@ -536,6 +550,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     flexWrap: 'wrap',
+    fontFamily: "Poppins-Regular",
   },
   numberCell: {
     flex: 1,
@@ -548,6 +563,7 @@ const styles = StyleSheet.create({
   detailCell: {
     flex: 1,
     textAlign: 'right',
+    fontFamily: "Poppins-SemiBold",
   },
   dateCell: {
     flex: 2,
@@ -558,7 +574,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  expandedContent: {
+  expandedRow: {
     padding: 10,
     backgroundColor: '#FAFAFA',
     borderTopWidth: 1,
@@ -568,10 +584,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
     marginBottom: 5,
+    fontFamily: "Poppins-Regular",
   },
   expandedTextDetail: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
     color: '#555', // Warna teks detail
     marginBottom: 5,
   },
@@ -579,6 +596,7 @@ const styles = StyleSheet.create({
     color: 'blue', // Teks berwarna biru untuk link
     fontSize: 14,
     marginBottom: 5,
+    fontFamily: "Poppins-SemiBold",
   },
   actionContainer: {
     flexDirection: 'row',
@@ -605,7 +623,7 @@ const styles = StyleSheet.create({
   },
   pageButtonText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
   },
   editButton: {
     flexDirection: 'row',
@@ -646,17 +664,18 @@ const styles = StyleSheet.create({
   },
   pageButtonText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
   },
   disabledButton: {
     backgroundColor: '#CCCCCC',
   },
   paginationText: {
     color: 'white',
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
   },
   pageInfo: {
     fontSize: 13,
+    fontFamily: "Poppins-Regular",
   },
   paginationContainer: {
     flexDirection: 'row',
@@ -688,13 +707,14 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
     marginBottom: 15,
     textAlign: 'center',
     color: '#333',
   },
   modalText: {
     fontSize: 16,
+    fontFamily: "Poppins-SemiBold",
     textAlign: 'center',
     color: '#555',
     marginBottom: 20,
@@ -721,7 +741,7 @@ const styles = StyleSheet.create({
   modalButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
     textAlign: 'center',
   },
 });

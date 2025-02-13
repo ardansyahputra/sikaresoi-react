@@ -162,12 +162,13 @@ const styles = StyleSheet.create({
   },
   profileName: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
   },
   profileHandle: {
     fontSize: 14,
     color: '#888',
     marginTop: 4,
+    fontFamily: 'Poppins-Regular',
   },
   menuSection: {
     marginTop: 10,

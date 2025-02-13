@@ -207,20 +207,20 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: '700',
     marginBottom: 20,
     color: '#34495e',
     textAlign: 'center',
+    fontFamily: 'Poppins-SemiBold',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    height: 48,
     backgroundColor: '#f2f3f5',
     borderRadius: 10,
     marginBottom: 20,
     fontSize: 16,
+    fontFamily: 'Poppins-Regular',
     color: '#34495e',
     borderWidth: 1,
     borderColor: '#dcdcdc',
@@ -234,6 +234,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     fontSize: 16,
     color: '#34495e',
+    fontFamily: 'Poppins-Regular',
   },
   button: {
     width: '100%',
@@ -247,7 +248,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
   },
 });
 
