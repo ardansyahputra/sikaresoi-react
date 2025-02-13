@@ -21,7 +21,6 @@ import TeguranScreen from './screen/TeguranScreen.js';
 import RealisasiKinerja from './screen/BottomNavBar/Menu/RealisasiKinerja/RealisasiKinerja';
 import PresensiScreen from './screen/PresensiScreen';
 import Allmenu from './screen/Allmenu';
-import Persetujuan from './screen/Persetujuan';
 import DataTable from './screen/DataTable';
 import DataTable2 from './screen/DataTable2';
 import RemunerasiScreen from './screen/BottomNavBar/Home/Persetujuan/Renumerasi.js';
