@@ -342,7 +342,7 @@ const SettingJabatan = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F8FB', // Tetap sesuai dengan warna default Anda
+    backgroundColor: '#F7F8FB',
   },
   header1: {
     flexDirection: 'row',

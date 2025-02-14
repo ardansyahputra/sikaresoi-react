@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
   },
   dropdownLabel: {
     fontFamily: 'Poppins-Regular', // Label font Poppins
-    fontSize: 16,
+    fontSize: 15,
   },
   selectedTextStyle: {
     fontSize: 16,

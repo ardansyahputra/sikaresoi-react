@@ -238,19 +238,15 @@ const FormJabatan = ({navigation, route}) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Image
-            source={require('../../../assets/images/sikaresoi.png')}
-            style={styles.logo}
-          />
-        </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconWrapper}>
-            <Ionicons name="person-circle-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <View style={styles.header1}>
+              <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                <Ionicons name="arrow-back" size={26} color="#000" />
+              </TouchableOpacity>
+              <Image
+                  source={require('../../../assets/images/sikaresoi.png')}
+                  style={styles.headerImage}
+              />
+            </View>
       
       <View style={styles.formContainer}>
         <Text style={styles.title}>
@@ -441,7 +437,6 @@ const FormJabatan = ({navigation, route}) => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
     backgroundColor: '#F7F8FB',
     flexGrow: 1,
   },
@@ -461,11 +456,38 @@ const styles = StyleSheet.create({
     right: 0, // Menjaga agar header tetap lebar penuh
     zIndex: 10, // Memberikan prioritas rendering agar header tidak tertutup oleh konten
   },
+
+  header1: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    elevation: 5,
+  },
+  headerImage: {
+    width: '50%',
+    height: undefined,
+    aspectRatio: 5,
+    marginRight: 190,
+    resizeMode: 'contain',
+    alignSelf: 'center',
+  },
+  backButton: {
+    marginTop:1,
+    marginLeft:3,
+    marginRight:1,
+    opacity: 0.4,
+  },
   formContainer: {
-    marginTop: 50,
+    marginTop: 30,
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
-    padding: 20,
+    padding: 30,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},

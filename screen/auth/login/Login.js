@@ -144,7 +144,7 @@ const LoginScreen = ({navigation}) => {
           source={require('../../assets/sikaresoi.png')}
           style={styles.logo}
         />
-        <Text style={styles.title}>Masuk</Text>
+        <Text style={styles.title}>MASUK</Text>
         <View style={styles.inputContainer}>
           <Icon name="user" size={20} color="#7f8c8d" style={styles.icon} />
           <TextInput
