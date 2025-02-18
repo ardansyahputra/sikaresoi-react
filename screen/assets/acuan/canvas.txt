@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
-import useApiClient from '../../../src/api/apiClient';
-import {useAuth} from '../../auth/AuthContext';
+import useApiClient from '../../../../src/api/apiClient';
+import {useAuth} from '../../../auth/AuthContext';
 import ImagePicker from 'react-native-image-crop-picker';
 import DropDownPicker from 'react-native-dropdown-picker';
 

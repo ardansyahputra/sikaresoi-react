@@ -355,9 +355,10 @@ const FormJabatan = ({navigation, route}) => {
           </Text>
           <Ionicons name="calendar-outline" size={20} color="#000" />
         </TouchableOpacity>
-
+          
         {/* Date Picker Modal */}
         {datePickerVisible && (
+          <View style={styles.datePickerContainer}>  
           <View style={styles.datePickerModal}>
             <DateRangePicker
               selected={
@@ -396,7 +397,9 @@ const FormJabatan = ({navigation, route}) => {
               </TouchableOpacity>
             </View>
           </View>
+          </View>
         )}
+          
 
         {/* Switch Dosen */}
         <View style={styles.switchContainer}>
@@ -495,7 +498,6 @@ const styles = StyleSheet.create({
   },
   datePickerContainer: {
     backgroundColor: '#fff',
-    padding: 20,
     borderRadius: 10,
     elevation: 5,
     shadowColor: '#000',
@@ -523,14 +525,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 20,
   },
-  datePickerContainer: {
-    backgroundColor: '#fff',
+  datePickerModal: {
     padding: 20,
-    borderRadius: 10,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
   },
   datePickerButtons: {
     flexDirection: 'row',

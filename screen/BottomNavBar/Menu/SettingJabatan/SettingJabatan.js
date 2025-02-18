@@ -298,9 +298,7 @@ const SettingJabatan = ({ navigation }) => {
         </View>
       </Modal>
   
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : (
+  
         <FlatList
           data={filteredData}
           keyExtractor={(item, index) => index.toString()}
@@ -309,6 +307,7 @@ const SettingJabatan = ({ navigation }) => {
           contentContainerStyle={styles.card}
           ListFooterComponent={
             <View>
+              {loading && <ActivityIndicator size="large" color="#0000ff" />}
               <Text style={styles.pageInfo}>
                 Showing page {currentPage} of {lastPage}
               </Text>
@@ -341,7 +340,6 @@ const SettingJabatan = ({ navigation }) => {
             </View>
           }
         />
-      )}
     </View>
   );
 }
@@ -383,6 +381,7 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     flex: 1,
+    flexDirection: 'row',
   },
   logo: {
     width: 140,
@@ -455,6 +454,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 5,
     paddingHorizontal: 8,
+  },
+  dropdownItem: {
+    padding: 10,
+    fontSize: 15,
+    color: '#333',
+  },
+  customFont: {
+    fontFamily: 'Poppins-Regular',
   },
   addContainer: {
     flexDirection: 'row',

@@ -279,4 +279,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LaporanKontrakKerja;
+export default KontrakKerja;
