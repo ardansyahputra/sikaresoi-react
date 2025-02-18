@@ -11,10 +11,10 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
-import useApiClient from '../../../src/api/apiClient';
-import {useAuth} from '../../auth/AuthContext';
 import ImagePicker from 'react-native-image-crop-picker';
 import DropDownPicker from 'react-native-dropdown-picker';
+import useApiClient from '../../../src/api/apiClient';
+import { useAuth } from '../../auth/AuthContext';
 
 const ProfileEdit = ({navigation}) => {
   const {user, login, token, fetchPangkat, pangkatItems} = useAuth();
@@ -147,6 +147,11 @@ const ProfileEdit = ({navigation}) => {
           setItems={setDropdownItems}
           placeholder="Pilih Pangkat"
           style={styles.dropdown}
+          labelStyle={styles.dropdownLabel} // Label font Poppins
+          selectedTextStyle={styles.selectedTextStyle} // Font Poppins untuk teks yang dipilih
+                placeholderStyle={styles.dropdownPlaceholder} // Placeholder dengan font Poppins
+                itemTextStyle={styles.dropdownItemText} // Font Poppins untuk teks opsi
+                itemStyle={styles.dropdownItemText} // Gaya untuk item dalam dropdown
           dropDownContainerStyle={styles.dropdownContainer}
         />
 
@@ -175,7 +180,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
     color: 'black',
     marginRight: 150,
   },
@@ -202,7 +207,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     marginBottom: 5,
-    fontWeight: 'bold', // Made label text bold
+    fontFamily: 'Poppins-SemiBold',
   },
   input: {
     borderWidth: 1,
@@ -211,6 +216,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 12, // Increased padding for better spacing
     fontSize: 14,
+    fontFamily: 'Poppins-Regular',
     marginBottom: 20, // Increased margin bottom for spacing between fields
     backgroundColor: '#f9f9f9',
   },
@@ -224,7 +230,7 @@ const styles = StyleSheet.create({
   updateButtonText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
   },
 
   dropdown: {
@@ -239,6 +245,28 @@ const styles = StyleSheet.create({
   dropdownContainer: {
     borderWidth: 1,
     borderColor: '#ddd',
+  },
+  dropdownItemText: {
+    fontFamily: 'Poppins-Regular', // Poppins untuk teks item
+    fontSize: 14,
+  },
+  dropdownPlaceholder: {
+    fontFamily: 'Poppins-Regular', // Placeholder font Poppins
+    fontSize: 14,
+  },
+  dropdownLabel: {
+    fontFamily: 'Poppins-Regular', // Label font Poppins
+    fontSize: 15,
+  },
+  selectedTextStyle: {
+    fontSize: 16,
+    fontFamily: "Poppins-Regular",
+    color: '#333333',
+  },
+  placeholderStyle: {
+    fontSize: 16,
+    fontFamily: "Poppins-Regular",
+    color: '#999999',
   },
 });
 

@@ -1,4 +1,4 @@
-import React from 'react';
+  import React from 'react';
 import {AuthProvider} from './screen/auth/AuthContext';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -8,6 +8,7 @@ import {
   useNavigationContext,
 } from './src/navigation/NavigationContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { StyleSheet } from 'react-native';
 
 //login screens
 import LoginScreen from './screen/auth/login/Login';
@@ -41,7 +42,13 @@ import SalinKontrak from './screen/BottomNavBar/KontrakKinerja/SalinKontrak.js';
 import Kumulatif from './screen/BottomNavBar/KontrakKinerja/Kumulatif.js';
 
 const Tab = createBottomTabNavigator();
-
+const styles = StyleSheet.create({
+  tabLabel: {
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 11,
+    opacity: 0.6,
+  },
+});
 // Stack Navigator untuk Menu
 const Stack = createNativeStackNavigator();
 
@@ -202,7 +209,7 @@ function AppTabs() {
         tabBarIcon: ({focused, color, size}) => {
           let iconName;
 
-          if (route.name === 'Dashboard') {
+          if (route.name === 'DASHBOARD') {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Kontrak') {
             iconName = focused ? 'document' : 'document-outline';
@@ -218,9 +225,10 @@ function AppTabs() {
           backgroundColor: 'white',
           display: shouldShowTabNavigator ? 'flex' : 'none',
         },
+        tabBarLabelStyle: styles.tabLabel, // Menggunakan style yang sudah dibuat
       })}>
       <Tab.Screen
-        name="Dashboard"
+        name="DASHBOARD"
         component={HomeStack}
         options={{headerShown: false}}
       />
@@ -230,7 +238,7 @@ function AppTabs() {
         options={{headerShown: false}}
       />
       <Tab.Screen
-        name="Profile"
+        name="PROFIL"
         component={ProfileStack}
         options={{headerShown: false}}
       />

@@ -9,11 +9,13 @@ import {
   Image,
   TextInput,
   Alert,
+  Modal,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
 import useApiClient from '../src/api/apiClient';
+import DocumentPicker from 'react-native-document-picker';
 
 export default function RealisasiNext({ navigation }) {
   const [data, setData] = useState([]);
@@ -22,16 +24,60 @@ export default function RealisasiNext({ navigation }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [showDetails, setShowDetails] = useState({});  // Track details visibility for each item
+  const [documents, setDocuments] = useState([]); // Track added documents
   const [isRevisiVisible, setIsRevisiVisible] = useState(false);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false); // State to control delete confirmation modal
+  const [documentToDelete, setDocumentToDelete] = useState(null); // Track the document to be deleted
   const apiClient = useApiClient();
-
-
-
-
+  const [revisiText, setRevisiText] = useState('');
 
   useEffect(() => {
     fetchData();
+    handleKonfirmasi();
   }, [currentPage]); // Tambahkan currentPage sebagai dependensi
+
+  const handleKonfirmasi = async () => {
+    // Pastikan bahwa tahun_id dan bulan_id sudah tersedia
+    if (!tahunId) {
+      Alert.alert('Error', 'Terjadi kesalahan: Tahun tidak ditemukan.');
+      return;
+    }
+
+    console.log('Bulan ID:', selectedBulanId); // Debugging
+    console.log('Tahun ID:', tahunId); // Debugging
+    console.log('Revisi Text:', revisiText); // Debugging
+
+    try {
+      const response = await apiClient.post(
+        '/user/kinerja/0D6DD280-068D-FF90-CA8B-B12B1C74AC8B/konfirmasi_realisasi',
+        { 
+          revisi: revisiText, 
+          bulan_id: selectedBulanId,
+          tahun_id: tahunId
+        },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+
+      console.log('Response:', response.data); // Debugging respons API
+
+      if (response.data?.status) {
+        Alert.alert('Sukses', 'Data berhasil dikonfirmasi');
+        setIsRevisiVisible(false);
+        setRevisiText('');
+      } else {
+        Alert.alert('Gagal', 'Konfirmasi gagal, coba lagi.');
+      }
+    } catch (error) {
+      console.error('Error:', error.response?.data || error.message); // Log error API
+
+      Alert.alert(
+        'Gagal',
+        `Terjadi kesalahan saat mengonfirmasi data. ${
+          error.response?.data?.message || error.message || 'Silakan coba lagi nanti.'
+        }`
+      );
+    }
+};
 
   const fetchData = async () => {
     try {
@@ -69,19 +115,30 @@ export default function RealisasiNext({ navigation }) {
       setLoading(false);
     }
   };
-  
 
   const TableHeader = () => (
-      <View style={styles.tableHeader}>
-        <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
-        <Text style={[styles.headerCell, styles.nameCell]}>Uraian Kegiatan</Text>
-        <Text style={[styles.headerCell, styles.tableStatusCell]}>Biaya</Text>
-        <View style={styles.expandIconCell} />
-      </View>
+    <View style={styles.tableHeader}>
+      <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
+      <Text style={[styles.headerCell, styles.nameCell]}>Uraian Kegiatan</Text>
+      <Text style={[styles.headerCell, styles.tableStatusCell]}>Biaya</Text>
+      <View style={styles.expandIconCell} />
+    </View>
   );
 
   const toggleExpand = id => {
     setExpandedId(prevId => (prevId === id ? null : id));
+  };
+
+  const addDocument = () => {
+    const nextFileNumber = documents.length + 1; // Increment the file number
+    setDocuments([...documents, { name: `File ${nextFileNumber}` }]); // Add the new file object
+  };
+
+  // Function to handle deleting a document
+  const handleDeleteDocument = () => {
+    const newDocuments = documents.filter((_, i) => i !== documentToDelete);
+    setDocuments(newDocuments); // Remove the document
+    setIsDeleteModalVisible(false); // Close the modal after deletion
   };
 
   const renderItem = ({ item, index }) => {
@@ -94,7 +151,7 @@ export default function RealisasiNext({ navigation }) {
     // Biaya
     const biaya = item.target?.list_kinerja?.uraian?.biaya ?? 0;
 
-        // Usulan Kuantitas and Kualitas from the item
+    // Usulan Kuantitas and Kualitas from the item
     const usulanKuantitas = item.usulan_kuantitas || 'Tidak tersedia';
     const usulanKualitas = item.usulan_kualitas || 'Tidak tersedia';
 
@@ -126,170 +183,248 @@ export default function RealisasiNext({ navigation }) {
             />
           </View>
         </TouchableOpacity>
-  
+
         {isExpanded && (
-        <View style={styles.expandedContent}>
-          {/* Display AK */}
-          <Text style={styles.expandedText}>
-            AK: {item.target?.list_kinerja?.uraian?.angka_kredit ?? 'Tidak tersedia'}
-          </Text>
+          <View style={styles.expandedContent}>
+            {/* Display AK */}
+            <Text style={styles.expandedText}>
+              AK: {item.target?.list_kinerja?.uraian?.angka_kredit ?? 'Tidak tersedia'}
+            </Text>
 
-          {/* Display Kuantitas */}
-          <Text style={styles.expandedText}>
-            Kuantitas: {item.kuantitas || '-'}
-          </Text>
+            {/* Display Kuantitas */}
+            <Text style={styles.expandedText}>
+              Kuantitas: {item.kuantitas || '-'}
+            </Text>
 
-          {/* Display Kualitas */}
-          <Text style={styles.expandedText}>
-            Kualitas: {item.kualitas || '-'}
-          </Text>
+            {/* Display Kualitas */}
+            <Text style={styles.expandedText}>
+              Kualitas: {item.kualitas || '-'}
+            </Text>
 
-          {/* Display BOBOT */}
-          <Text style={styles.expandedText}>
-            BOBOT: {item.target?.list_kinerja?.bobot || '-'}
-          </Text>
+            {/* Display BOBOT */}
+            <Text style={styles.expandedText}>
+              BOBOT: {item.target?.list_kinerja?.bobot || '-'}
+            </Text>
 
-          {/* Display STATUS */}
-          <Text style={styles.expandedText}>
-            STATUS: {item.status ? 'Aktif' : 'Tidak Aktif'}
-          </Text>
+            {/* Display STATUS */}
+            <Text style={styles.expandedText}>
+              STATUS: {item.status ? 'Aktif' : 'Tidak Aktif'}
+            </Text>
 
-             {/* Button Realisasi */}
-             <TouchableOpacity
-            style={styles.realisasiButton}
-            onPress={() => setShowDetails(!showDetails)} // Tampilkan/matikan detail saat tombol ditekan
-          >
-            <Text style={styles.buttonText}>REALISASI</Text>
-          </TouchableOpacity>
+            {/* Button Realisasi */}
+            <TouchableOpacity
+              style={styles.realisasiButton}
+              onPress={() => setShowDetails(!showDetails)} // Tampilkan/matikan detail saat tombol ditekan
+            >
+              <Text style={styles.buttonText}>REALISASI</Text>
+            </TouchableOpacity>
 
-          {/* Detail tambahan untuk Realisasi */}
-          {showDetails && (
-            <View style={styles.realisasiDetails}>
-              <Text style={styles.detailsText}>
-                Usulan Kuantitas: {usulanKuantitas} Laporan
-              </Text>
-              <Text style={styles.detailsText}>
-                Persetujuan Kuantitas: {usulanKuantitas} Laporan
-              </Text>
-              <Text style={styles.detailsText}>
-                Usulan Kualitas: {usulanKualitas}%
-              </Text>
-              <Text style={styles.detailsText}>
-                Persetujuan Kualitas: {usulanKualitas}%
-              </Text>
-              <Text style={styles.detailsText}>File 1: Download Berkas</Text>
-              <Text style={styles.detailsText}>File 2: Download Berkas</Text>
-            </View>
-          )}
-        </View>
-      )}
-      </View>
-      );
-    };
-  
-
-    return (
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={26} color="#000" />
-          </TouchableOpacity>
-          <Image
-            source={require('./assets/images/sikaresoi.png')}
-            style={styles.headerImage}
-          />
-        </View>
-        {/* Loading Indicator */}
-        {loading ? (
-          <ActivityIndicator size="large" color="#0000ff" />
-        ) : (
-          <FlatList
-            ListHeaderComponent={TableHeader}
-            data={data}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id?.toString()}
-            contentContainerStyle={styles.card}
-            ListFooterComponent={
-              <View>
-                <Text style={styles.pageInfo}>
-                  Showing page {currentPage} of {lastPage}
+            {/* Detail tambahan untuk Realisasi */}
+            {showDetails && (
+              <View style={styles.realisasiDetails}>
+                <Text style={styles.detailsText}>
+                  Usulan Kuantitas: {usulanKuantitas} Laporan
                 </Text>
-                <View style={styles.paginationContainer}>
-                  <View style={styles.paginationButtons}>
+                <Text style={styles.detailsText}>
+                  Persetujuan Kuantitas: {usulanKuantitas} Laporan
+                </Text>
+                <Text style={styles.detailsText}>
+                  Usulan Kualitas: {usulanKualitas}%
+                </Text>
+                <Text style={styles.detailsText}>
+                  Persetujuan Kualitas: {usulanKualitas}%
+                </Text>
+                {/* Replace Download Links with "Tambah Dokumen" Button */}
+                <TouchableOpacity
+                  style={styles.addDocumentButton}
+                  onPress={addDocument} // Add document when clicked
+                >
+                  <Text style={styles.addDocumentButtonText}>Tambah Dokumen</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Display the added documents */}
+            {documents.length > 0 && (
+              <View style={styles.documentList}>
+                {documents.map((doc, index) => (
+                  <View key={index} style={styles.documentItem}>
+                    <Text style={styles.documentText}>{doc.name}</Text>
                     <TouchableOpacity
-                      style={[styles.pageButton, currentPage === 1 && styles.disabledButton]}
-                      disabled={currentPage === 1}
-                      onPress={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                    >
-                      <Text style={styles.pageButtonText}>Previous</Text>
-                    </TouchableOpacity>
+  style={styles.chooseFileButton}
+  onPress={async () => {
+    try {
+      const result = await DocumentPicker.pickSingle({
+        type: [DocumentPicker.types.allFiles], // Memungkinkan semua jenis file
+      });
+
+      if (result) {
+        const newDocuments = [...documents];
+        newDocuments[index] = { name: result.name, uri: result.uri };
+        setDocuments(newDocuments);
+      }
+    } catch (err) {
+      if (DocumentPicker.isCancel(err)) {
+        console.log('User cancelled the picker');
+      } else {
+        console.error('Document Picker Error:', err);
+        Alert.alert('Error', 'Gagal memilih dokumen.');
+      }
+    }
+  }}
+>
+  <Text style={styles.chooseFileText}>Choose File</Text>
+</TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.pageButton, currentPage === lastPage && styles.disabledButton]}
-                      disabled={currentPage === lastPage}
-                      onPress={() => setCurrentPage((prev) => Math.min(prev + 1, lastPage))}
+                      style={styles.deleteButton}
+                      onPress={() => {
+                        setDocumentToDelete(index); // Set the document index to delete
+                        setIsDeleteModalVisible(true); // Show the delete modal
+                      }}
                     >
-                      <Text style={styles.pageButtonText}>Next</Text>
+                      <Ionicons name="trash-outline" size={20} color="#fff" />
                     </TouchableOpacity>
                   </View>
-                </View>
-                {/* Footer */}
-                <View style={styles.footerContainer}>
-                  <Text style={styles.footerText}>
-                    Data Sudah Di{' '}
-                      <Text style={styles.approvedButtonText}>DISETUJUI ?</Text>
-                  </Text>
-                  {isRevisiVisible ? (
-                    <View style={styles.revisiContainer}>
-                      <View style={styles.revisiSection}>
-                        <Text style={styles.revisiTitle}>Catatan Dari:</Text>
-                        <Text style={styles.revisiContent}>
-                          Belum Ada Catatan Dari HASTUTY BACHTIAR
-                        </Text>
-                      </View>
-                      <View style={styles.revisiSection}>
-                        <Text style={styles.revisiTitle}>
-                          Catatan Untuk HASTUTY BACHTIAR:
-                        </Text>
-                        <Text style={styles.revisiContent}>
-                          Anda Belum Memberikan Revisi.
-                        </Text>
-                        <TextInput
-                          style={styles.revisiInput}
-                          placeholder="Type your text here..."
-                          multiline
-                        />
-                      </View>
-                      <View style={styles.revisiButtons}>
-                        <TouchableOpacity
-                          style={styles.revisiCancelButton}
-                          onPress={() => setIsRevisiVisible(false)}
-                        >
-                          <Text style={styles.revisiCancelText}>Batal</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.confirmButton}
-                          onPress={() => setIsRevisiVisible(false)}
-                        >
-                          <Text style={styles.confirmButtonText}>KONFIRMASI</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  ) : (
-                    <TouchableOpacity
-                      style={styles.revisiButton}
-                      onPress={() => setIsRevisiVisible(true)}
-                    >
-                      <Text style={styles.revisiButtonText}>REVISI DATA</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
+                ))}
               </View>
-            }
-          />
+            )}
+          </View>
         )}
       </View>
     );
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+                  <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <Ionicons name="arrow-back" size={26} color="#000" />
+                  </TouchableOpacity>
+                  <Image
+                    source={require('./assets/images/sikaresoi.png')}
+                    style={styles.headerImage}
+                  />
+                </View>
+      {/* Loading Indicator */}
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <FlatList
+          ListHeaderComponent={TableHeader}
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id?.toString()}
+          contentContainerStyle={styles.card}
+          ListFooterComponent={
+            <View>
+              <Text style={styles.pageInfo}>
+                Showing page {currentPage} of {lastPage}
+              </Text>
+              <View style={styles.paginationContainer}>
+                <View style={styles.paginationButtons}>
+                  <TouchableOpacity
+                    style={[styles.pageButton, currentPage === 1 && styles.disabledButton]}
+                    disabled={currentPage === 1}
+                    onPress={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  >
+                    <Text style={styles.pageButtonText}>Previous</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.pageButton, currentPage === lastPage && styles.disabledButton]}
+                    disabled={currentPage === lastPage}
+                    onPress={() => setCurrentPage((prev) => Math.min(prev + 1, lastPage))}
+                  >
+                    <Text style={styles.pageButtonText}>Next</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              {/* Footer */}
+              <View style={styles.footerContainer}>
+                <Text style={styles.footerText}>
+                  Data Sudah Di{' '}
+                  <Text style={styles.approvedButtonText}>DISETUJUI ?</Text>
+                </Text>
+                {isRevisiVisible ? (
+                  <View style={styles.revisiContainer}>
+                    <View style={styles.revisiSection}>
+                      <Text style={styles.revisiTitle}>Catatan Dari:</Text>
+                      <Text style={styles.revisiContent}>
+                        Belum Ada Catatan Dari HASTUTY BACHTIAR
+                      </Text>
+                    </View>
+                    <View style={styles.revisiSection}>
+                      <Text style={styles.revisiTitle}>
+                        Catatan Untuk HASTUTY BACHTIAR:
+                      </Text>
+                      <Text style={styles.revisiContent}>
+                        Anda Belum Memberikan Revisi.
+                      </Text>
+                      <TextInput
+                        style={styles.revisiInput}
+                        placeholder="Type your text here..."
+                        multiline
+                      />
+                    </View>
+                    <View style={styles.revisiButtons}>
+                      <TouchableOpacity
+                        style={styles.revisiCancelButton}
+                        onPress={() => setIsRevisiVisible(false)}
+                      >
+                        <Text style={styles.revisiCancelText}>Revisi Data</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.confirmButton}
+                        onPress={handleKonfirmasi}
+                        >
+                        <Text style={styles.confirmButtonText}>KONFIRMASI</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.revisiButton}
+                    onPress={() => setIsRevisiVisible(true)}
+                  >
+                    <Text style={styles.revisiButtonText}>REVISI DATA</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          }
+        />
+      )}
+ 
+
+      {/* Modal for delete confirmation */}
+      <Modal
+        transparent={true}
+        visible={isDeleteModalVisible}
+        animationType="fade"
+        onRequestClose={() => setIsDeleteModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>Apakah Anda yakin ingin menghapus dokumen ini?</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setIsDeleteModalVisible(false)}
+              >
+                <Text style={styles.cancelButtonText}>Batal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.hapusButton}
+                onPress={handleDeleteDocument}
+              >
+                <Text style={styles.hapusButtonText}>Hapus</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -297,6 +432,150 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F7F8FB',
   },
+
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+  },
+  modalContent: {
+    width: '85%', // Slightly wider modal for better presentation
+    backgroundColor: '#fff',
+    borderRadius: 15, // Increased corner radius for smooth rounded edges
+    padding: 25,
+    elevation: 5, // Adds shadow for depth
+    shadowColor: '#000', // Shadow for iOS
+    shadowOffset: { width: 0, height: 5 }, // Shadow direction
+    shadowOpacity: 0.3, // Subtle shadow opacity
+    shadowRadius: 10, // More blur to the shadow
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#333', // Darker text for contrast
+  },
+  closeIcon: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#f0f0f0', // Subtle background for close button
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#555', // Soft gray for text color
+    marginBottom: 20,
+    lineHeight: 24, // Increase line height for readability
+    fontFamily: 'Poppins-SemiBold',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  hapusButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: '#04d60b', // Red background for cancel
+    borderRadius: 8, // Rounded edges for buttons
+    alignItems: 'center', // Centered text
+    width: '48%',
+  },
+  hapusButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
+  },
+
+  cancelButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: '#d60404', // Red background for cancel
+    borderRadius: 8, // Rounded edges for buttons
+    alignItems: 'center', // Centered text
+    width: '48%',
+  },
+  cancelButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  
+  confirmButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: '#3498db', // Blue background for confirm
+    borderRadius: 8,
+    alignItems: 'center',
+    width: '48%',
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
+  },
+
+  addDocumentButton: {
+    marginTop: 10,
+    backgroundColor: '#28a745',
+    padding: 10,
+    alignItems: 'center',
+  },
+  addDocumentButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  documentList: {
+    marginTop: 10,
+    color: '#000',
+  },
+  documentItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    marginBottom: 5,
+  },
+  documentText: {
+    fontSize: 14,
+    color: '#000',
+    flex: 1,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  chooseFileButton: {
+    backgroundColor: '#007bff',
+    padding: 5,
+    borderRadius: 5,
+    marginHorizontal: 10,
+  },
+  chooseFileText: {
+    color: '#fff',
+    fontSize: 12,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  deleteButton: {
+    backgroundColor: '#dc3545',
+    padding: 5,
+    borderRadius: 5,
+  },
+
+  deleteButtonText: {
+    color: '#fff', // White text to stand out on darker button
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
+    textTransform: 'uppercase', // Capitalized for emphasis
+    letterSpacing: 1.2, // Adds space between letters for a sleek look
+    textAlign: 'center', // Centers the text
+  },
+
 
   footerContainer: {
     alignItems: 'center',
@@ -308,7 +587,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
     color: '#333',
     textAlign: 'center',
     marginBottom: 10,
@@ -326,7 +605,7 @@ const styles = StyleSheet.create({
   },
   revisiTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
     color: '#333',
     marginBottom: 10,
   },
@@ -334,6 +613,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
     marginBottom: 10,
+    fontFamily: 'Poppins-SemiBold',
   },
   revisiInput: {
     borderWidth: 1,
@@ -343,6 +623,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     fontSize: 14,
     color: '#333',
+    fontFamily: 'Poppins-SemiBold',
   },
   revisiButtons: {
     flexDirection: 'row',
@@ -357,7 +638,7 @@ const styles = StyleSheet.create({
   },
   revisiCancelText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
     textAlign: 'center',
   },
   confirmButton: {
@@ -368,7 +649,7 @@ const styles = StyleSheet.create({
   },
   confirmButtonText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
     textAlign: 'center',
   },
 
@@ -383,7 +664,7 @@ const styles = StyleSheet.create({
 
   revisiButtonText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
   },
 
   approvedButton: {
@@ -398,13 +679,14 @@ const styles = StyleSheet.create({
 
   approvedButtonText: {
     color: '#00a79d',
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
   },
 
   errorText: {
     fontSize: 14,
     color: '#333',
     textAlign: 'center',
+    fontFamily: 'Poppins-SemiBold',
   },
 
 
@@ -433,7 +715,7 @@ const styles = StyleSheet.create({
   
   detailsText: {
     fontSize: 16, // Slightly larger font size for better readability
-    fontWeight: '500', // Make the text a bit bolder for emphasis
+    fontFamily: 'Poppins-SemiBold',
     color: '#333', // Dark gray color for the text
     marginBottom: 12, // Increased spacing between lines
     lineHeight: 24, // Improved line height for better readability
@@ -444,7 +726,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff', // Warna teks putih
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
   },
 
   yearMonthContainer: {
@@ -538,7 +820,7 @@ const styles = StyleSheet.create({
 
   statusCell: {
     textAlign: 'center',
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
   },
 
   expandIconCell: {
@@ -570,12 +852,14 @@ const styles = StyleSheet.create({
   expandedText: {
     marginBottom: 5,
     fontSize: 14,
+    fontFamily: 'Poppins-Regular',
   },
 
   expandedLinkText: {
     color: 'blue',
     marginBottom: 5,
     fontSize: 14,
+    fontFamily: 'Poppins-SemiBold',
   },
 
   filetext: {
@@ -647,7 +931,7 @@ const styles = StyleSheet.create({
 
   paginationText: {
     color: 'white',
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
   },
 
   pageInfo: {
@@ -662,30 +946,30 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
     paddingHorizontal: 16,
     paddingVertical: 18,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOpacity: 0.1,
     elevation: 5,
   },
-
-  backButton: {
-    marginRight: 16,
-  },
-
   headerImage: {
-    width: '45%',
+    width: '50%',
     height: undefined,
     aspectRatio: 5,
     marginRight: 190,
     resizeMode: 'contain',
     alignSelf: 'center',
-    marginBottom: 10,
+  },
+  backButton: {
+    marginTop:1,
+    marginLeft:3,
+    marginRight:1,
+    opacity: 0.4,
   },
 
   headerTitle: {
@@ -794,6 +1078,7 @@ const styles = StyleSheet.create({
     padding: 10,
     fontSize: 16,
     color: '#333',
+    fontFamily: 'Poppins-Regular',
   },
 
   editButton: {

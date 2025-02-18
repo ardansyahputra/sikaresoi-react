@@ -44,7 +44,8 @@ const ProfileScreen = ({navigation}) => {
       <View style={styles.header}>
         <Image
           source={require('../../assets/images/sikaresoi.png')}
-          style={styles.headerImage}
+          style={styles.logo}
+          resizeMode="cover"
         />
       </View>
 
@@ -107,7 +108,7 @@ const styles = StyleSheet.create({
     marginBottom: 500,
   },
   headerImage: {
-    width: '50%',
+    width: '55%',
     height: undefined,
     aspectRatio: 5,
     marginRight: 190,
@@ -119,12 +120,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
     paddingHorizontal: 16,
-    paddingVertical: 18,
+    paddingVertical: 16,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     shadowColor: '#000',
     shadowOpacity: 0.1,
     elevation: 5,
+  },
+  logo: {
+    width: '50%',
+    height: undefined,
+    aspectRatio: 5,
+    marginRight: 190,
+    resizeMode: 'contain',
+    alignSelf: 'center',
   },
   cardWrapper: {
     marginTop: 180,
@@ -153,12 +162,13 @@ const styles = StyleSheet.create({
   },
   profileName: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
   },
   profileHandle: {
     fontSize: 14,
     color: '#888',
     marginTop: 4,
+    fontFamily: 'Poppins-Regular',
   },
   menuSection: {
     marginTop: 10,

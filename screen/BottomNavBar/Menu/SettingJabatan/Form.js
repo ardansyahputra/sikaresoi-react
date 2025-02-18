@@ -238,19 +238,15 @@ const FormJabatan = ({navigation, route}) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Image
-            source={require('../../../assets/images/sikaresoi.png')}
-            style={styles.logo}
-          />
-        </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconWrapper}>
-            <Ionicons name="person-circle-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <View style={styles.header1}>
+              <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                <Ionicons name="arrow-back" size={26} color="#000" />
+              </TouchableOpacity>
+              <Image
+                  source={require('../../../assets/images/sikaresoi.png')}
+                  style={styles.headerImage}
+              />
+            </View>
       
       <View style={styles.formContainer}>
         <Text style={styles.title}>
@@ -264,8 +260,11 @@ const FormJabatan = ({navigation, route}) => {
         <Dropdown
           loading={dropdownLoading}
           style={styles.dropdown}
-          placeholderStyle={styles.placeholderStyle}
-          selectedTextStyle={styles.selectedTextStyle}
+          labelStyle={styles.dropdownLabel} // Label font Poppins
+          selectedTextStyle={styles.selectedTextStyle} // Font Poppins untuk teks yang dipilih
+                placeholderStyle={styles.dropdownPlaceholder} // Placeholder dengan font Poppins
+                itemTextStyle={styles.dropdownItemText} // Font Poppins untuk teks opsi
+                itemStyle={styles.dropdownItemText} // Gaya untuk item dalam dropdown
           data={dropdownOptions.pimpinan}
           maxHeight={300}
           labelField="label"
@@ -281,8 +280,11 @@ const FormJabatan = ({navigation, route}) => {
         </Text>
         <Dropdown
           style={styles.dropdown}
-          placeholderStyle={styles.placeholderStyle}
-          selectedTextStyle={styles.selectedTextStyle}
+          labelStyle={styles.dropdownLabel} // Label font Poppins
+          selectedTextStyle={styles.selectedTextStyle} // Font Poppins untuk teks yang dipilih
+                placeholderStyle={styles.dropdownPlaceholder} // Placeholder dengan font Poppins
+                itemTextStyle={styles.dropdownItemText} // Font Poppins untuk teks opsi
+                itemStyle={styles.dropdownItemText} // Gaya untuk item dalam dropdown
           data={dropdownOptions.jabatan_pimpinan}
           maxHeight={300}
           labelField="label"
@@ -298,8 +300,11 @@ const FormJabatan = ({navigation, route}) => {
         </Text>
         <Dropdown
           style={styles.dropdown}
-          placeholderStyle={styles.placeholderStyle}
-          selectedTextStyle={styles.selectedTextStyle}
+          labelStyle={styles.dropdownLabel} // Label font Poppins
+          selectedTextStyle={styles.selectedTextStyle} // Font Poppins untuk teks yang dipilih
+                placeholderStyle={styles.dropdownPlaceholder} // Placeholder dengan font Poppins
+                itemTextStyle={styles.dropdownItemText} // Font Poppins untuk teks opsi
+                itemStyle={styles.dropdownItemText} // Gaya untuk item dalam dropdown
           data={dropdownOptions.unit_kerja_pimpinan}
           maxHeight={300}
           labelField="label"
@@ -315,8 +320,11 @@ const FormJabatan = ({navigation, route}) => {
         </Text>
         <Dropdown
           style={styles.dropdown}
-          placeholderStyle={styles.placeholderStyle}
-          selectedTextStyle={styles.selectedTextStyle}
+          labelStyle={styles.dropdownLabel} // Label font Poppins
+          selectedTextStyle={styles.selectedTextStyle} // Font Poppins untuk teks yang dipilih
+                placeholderStyle={styles.dropdownPlaceholder} // Placeholder dengan font Poppins
+                itemTextStyle={styles.dropdownItemText} // Font Poppins untuk teks opsi
+                itemStyle={styles.dropdownItemText} // Gaya untuk item dalam dropdown
           data={dropdownOptions.jabatan}
           maxHeight={300}
           labelField="label"
@@ -332,8 +340,11 @@ const FormJabatan = ({navigation, route}) => {
         </Text>
         <Dropdown
           style={styles.dropdown}
-          placeholderStyle={styles.placeholderStyle}
-          selectedTextStyle={styles.selectedTextStyle}
+          labelStyle={styles.dropdownLabel} // Label font Poppins
+          selectedTextStyle={styles.selectedTextStyle} // Font Poppins untuk teks yang dipilih
+                placeholderStyle={styles.dropdownPlaceholder} // Placeholder dengan font Poppins
+                itemTextStyle={styles.dropdownItemText} // Font Poppins untuk teks opsi
+                itemStyle={styles.dropdownItemText} // Gaya untuk item dalam dropdown
           data={dropdownOptions.unit_kerja}
           maxHeight={300}
           labelField="label"
@@ -429,7 +440,6 @@ const FormJabatan = ({navigation, route}) => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
     backgroundColor: '#F7F8FB',
     flexGrow: 1,
   },
@@ -449,11 +459,38 @@ const styles = StyleSheet.create({
     right: 0, // Menjaga agar header tetap lebar penuh
     zIndex: 10, // Memberikan prioritas rendering agar header tidak tertutup oleh konten
   },
+
+  header1: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    elevation: 5,
+  },
+  headerImage: {
+    width: '50%',
+    height: undefined,
+    aspectRatio: 5,
+    marginRight: 190,
+    resizeMode: 'contain',
+    alignSelf: 'center',
+  },
+  backButton: {
+    marginTop:1,
+    marginLeft:3,
+    marginRight:1,
+    opacity: 0.4,
+  },
   formContainer: {
-    marginTop: 50,
+    marginTop: 30,
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
-    padding: 20,
+    padding: 30,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
@@ -467,13 +504,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: "Poppins-Bold",
     marginBottom: 20,
     textAlign: 'center',
     color: '#333',
   },
   label: {
     fontSize: 14,
+    fontFamily: "Poppins-SemiBold",
     marginBottom: 5,
     color: '#333',
   },
@@ -490,10 +528,12 @@ const styles = StyleSheet.create({
   },
   placeholderStyle: {
     fontSize: 16,
+    fontFamily: "Poppins-Regular",
     color: '#999999',
   },
   selectedTextStyle: {
     fontSize: 16,
+    fontFamily: "Poppins-Regular",
     color: '#333333',
   },
   datePickerContainer: {
@@ -517,6 +557,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 16,
+    fontFamily: "Poppins-Regular",
     color: '#333333',
   },
   dateButton: {
@@ -551,6 +592,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 16,
+    fontFamily: "Poppins-Regular",
     color: '#333333',
   },
   switchContainer: {
@@ -565,7 +607,7 @@ const styles = StyleSheet.create({
   },
   ButtonText: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
     fontSize: 16,
   },
   saveButton: {
@@ -578,7 +620,7 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
+    fontFamily: "Poppins-Bold",
     fontSize: 16,
   },
   cancelButton: {
@@ -591,7 +633,19 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
+    fontFamily: "Poppins-Bold",
+    fontSize: 16,
+  },
+  dropdownItemText: {
+    fontFamily: 'Poppins-Regular', // Poppins untuk teks item
+    fontSize: 14,
+  },
+  dropdownPlaceholder: {
+    fontFamily: 'Poppins-Regular', // Placeholder font Poppins
+    fontSize: 14,
+  },
+  dropdownLabel: {
+    fontFamily: 'Poppins-SemiBold', // Label font Poppins
     fontSize: 16,
   },
 });

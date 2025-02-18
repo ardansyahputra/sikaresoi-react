@@ -73,8 +73,8 @@ const Password = ({navigation}) => {
 
   return (
     <ImageBackground
-      source={require('../../assets/background.jpg')} // Ganti dengan gambar latar belakang yang diinginkan
-      style={[styles.container, styles.backgroundStyle]}>
+    source={require('../../assets/bfg.jpeg')} // Replace with your desired background image
+    style={[styles.container, styles.backgroundStyle]}>
       <ScrollView contentContainerStyle={styles.formWrapper}>
         <Text style={styles.label}>Password Lama</Text>
         <TextInput
@@ -154,6 +154,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
+    fontFamily: 'Poppins-Bold',
     fontWeight: '600',
     marginBottom: 8,
     color: '#555',
@@ -167,6 +168,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     backgroundColor: '#fafafa',
     fontSize: 16,
+    fontFamily: 'Poppins-Regular',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -185,7 +187,7 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
     marginLeft: 10,
   },
   backButton: {
@@ -200,7 +202,7 @@ const styles = StyleSheet.create({
   backButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
     marginLeft: 10,
   },
   buttonContent: {
