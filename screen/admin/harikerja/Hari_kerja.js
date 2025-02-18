@@ -16,9 +16,7 @@ const CalendarComponent = () => {
 
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [displayedMonth, setDisplayedMonth] = useState(
-    new Date().getMonth() + 1,
-  );
+  const [displayedMonth, setDisplayedMonth] = useState(new Date().getMonth() + 1,);
   const [displayedYear, setDisplayedYear] = useState(new Date().getFullYear());
   const [selectedDays, setSelectedDays] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -65,13 +63,16 @@ const CalendarComponent = () => {
     const weekday = selectedDate.toLocaleDateString('id-ID', {
       weekday: 'short',
     });
-
+  
     setSelectedDays(prevDays => {
       const exists = prevDays.some(d => d.date === date);
-      if (!exists) {
+      if (exists) {
+        // Jika tanggal sudah ada, maka unselect (hapus)
+        return prevDays.filter(d => d.date !== date);
+      } else {
+        // Jika tanggal belum ada, maka pilih
         return [...prevDays, {date, weekday}];
       }
-      return prevDays;
     });
   }, []);
 
@@ -84,11 +85,15 @@ const CalendarComponent = () => {
       });
       setModalMessage('Data berhasil disimpan!');
       setIsModalVisible(true);
+      
+      // Refresh kalender setelah menyimpan
+      fetchWorkDays(displayedMonth, displayedYear);
     } catch (error) {
       setModalMessage(error.response?.data?.message || 'Gagal menyimpan data');
       setIsModalVisible(true);
     }
   }, [selectedDays, displayedMonth, displayedYear]);
+  
 
   const createCalendarDays = () => {
     const daysInMonth = new Date(displayedYear, displayedMonth, 0).getDate();
@@ -189,9 +194,11 @@ const CalendarComponent = () => {
             <Text style={styles.navButtonText}>{'>'}</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.calendarContainer}>{createCalendarDays()}</View>
+        <View style={styles.calendarContainer}>
+        
+        {createCalendarDays()}</View>
 
-          <Text style={styles.label}>Pilih Bulan:</Text>
+          <Text style={styles.label}>Bulan:</Text>
           <Dropdown
             style={styles.dropdown}
             data={monthNames.map((month, index) => ({
@@ -206,7 +213,7 @@ const CalendarComponent = () => {
             containerStyle={styles.dropdownContainer}
           />
 
-          <Text style={styles.label}>Pilih Tahun:</Text>
+          <Text style={styles.label}>Tahun:</Text>
           <Dropdown
             style={styles.dropdown}
             data={Array.from({length: 7}, (_, i) => ({
@@ -242,7 +249,7 @@ const CalendarComponent = () => {
               <TouchableOpacity
                 onPress={() => setIsModalVisible(false)}
                 style={styles.modalButton}>
-                <Text style={styles.buttonText}>Tutup</Text>
+                <Text style={styles.buttonTextclose}>Tutup</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -253,7 +260,7 @@ const CalendarComponent = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: '#E7E9F1'},
+  container: {flex: 1, backgroundColor: '#fff'},
   cardContainer: {
     padding: 15,
     backgroundColor: '#f9f9f9',
@@ -293,21 +300,22 @@ const styles = StyleSheet.create({
   monthName: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginVertical: 10,
+    marginVertical: 1,
     textAlign: 'center',
+    marginBottom:-12,
   },
   monthNavContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginVertical: -45,
-    marginBottom: 10,
+    marginBottom: -10,
   },
   monthNavButton: {
-    padding: 10,
+    padding: 20,
+    margintop:20,
   },
   navButtonText: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 35,
     marginBottom: 5,
   },
 calendarContainer: {
@@ -317,8 +325,11 @@ calendarContainer: {
   backgroundColor: '#f9f9f9',
   paddingTop: 10,
   justifyContent: 'flex-start', // Penyesuaian agar kalender tersusun rapi
+  borderWidth: 2, // Tambahkan garis
+  borderColor: '#ccc', // Warna garis
+  borderRadius: 5, // Opsional untuk sudut membulat
+  padding: 9, // Tambahan padding agar kontennya tidak terlalu mepet ke border
 },
-
 dayHeader: {
   width: 45,
   height: 45,
@@ -354,6 +365,8 @@ selectedDay: {
 
 selectedText: {
   color: '#fff',
+  fontWeight: 'bold',
+
 },
 
 dayText: {
@@ -376,12 +389,15 @@ dayHeaderText: {
     padding: 15,
     borderRadius: 5,
     width: '20%',
+    fontWeight: 'bold',
+
   },
   viewButton: {
     backgroundColor: '#28c4ac',
     padding: 15,
     borderRadius: 5,
     width: '17%',
+    fontWeight: 'bold',
   },
   modalOverlay: {
     flex: 1,
@@ -399,10 +415,23 @@ dayHeaderText: {
     backgroundColor: '#007BFF',
     padding: 10,
     borderRadius: 5,
+    fontWeight: 'bold',
+  },
+  modalButton: {
+    marginTop: 10,
+    backgroundColor: '#ff555f',
+    padding: 10,
+    borderRadius: 5,
+    fontWeight: 'bold',
   },
   buttonText: {
     fontSize: 13,
     color: '#fff',
+  },
+  buttonTextclose: {
+    fontSize: 13,
+    color: '#fff',
+    marginLeft: 45,
   },
   buttonTextli: {
     fontSize: 13,

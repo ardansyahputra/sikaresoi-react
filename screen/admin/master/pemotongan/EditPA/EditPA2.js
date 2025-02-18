@@ -6,26 +6,33 @@ import {
   TouchableOpacity,
   Keyboard,
   StyleSheet,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
   Dimensions,
+  ScrollView,
 } from 'react-native';
 import useApiClient from '../../../../../src/api/apiClient';
-import Header from '../../../components/Header';
-import GlobalStyle from '../../../../../src/utils/GlobalStyle';
 import {BarIndicator} from 'react-native-indicators';
+import GlobalStyle from '../../../../../src/utils/GlobalStyle';
+import Header from '../../../components/Header';
 const {width} = Dimensions.get('window');
-import Toast from 'react-native-toast-message';
 
-const TambahPage = ({navigation}) => {
-  const [selectedPotongan, setSelectedPotongan] = useState('');
-  const [selectedBatasAtas, setSelectedBatasAtas] = useState('00:00:00');
-  const [selectedBatasBawah, setSelectedBatasBawah] = useState('00:00:00');
+const EditPage = ({navigation, route}) => {
+  const {initialPotongan, initialBatasAtas, initialBatasBawah, id, uuid} =
+    route.params;
+
+  const [selectedPotongan, setSelectedPotongan] = useState(initialPotongan);
+  const [selectedBatasAtas, setSelectedBatasAtas] = useState(
+    initialBatasAtas || '00:00:00',
+  );
+  const [selectedBatasBawah, setSelectedBatasBawah] = useState(
+    initialBatasBawah || '00:00:00',
+  );
+  const [showDropdownAtas, setShowDropdownAtas] = useState(false);
+  const [showDropdownBawah, setShowDropdownBawah] = useState(false);
+  const [currentTimeType, setCurrentTimeType] = useState(null);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
-  const apiClient = useApiClient();
+  const [tempSelectedTime, setTempSelectedTime] = useState(null);
   const [focusState, setFocusState] = useState({});
+  const apiClient = useApiClient(); // Panggil useApiClient untuk mendapatkan instance
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -46,39 +53,94 @@ const TambahPage = ({navigation}) => {
     };
   }, []);
 
-  const handleSave = async () => {
+  const handleSave = async (
+    uuid,
+    selectedPotongan,
+    selectedBatasAtas,
+    selectedBatasBawah,
+    navigation,
+  ) => {
     setIsLoading(true);
 
-    if (!selectedPotongan || !selectedBatasAtas || !selectedBatasBawah) {
-      console.log('Error', 'Please fill in all fields before saving.');
+    const finalBatasAtas =
+      tempSelectedTime && currentTimeType === 'batasAtas'
+        ? tempSelectedTime
+        : selectedBatasAtas;
+    const finalBatasBawah =
+      tempSelectedTime && currentTimeType === 'batasBawah'
+        ? tempSelectedTime
+        : selectedBatasBawah;
+
+    if (!selectedPotongan || !finalBatasAtas || !finalBatasBawah) {
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal',
+        text2: 'Please fill in all fields before saving.',
+      });
       setIsLoading(false);
       return;
     }
 
     const payload = {
-      batas_bawah: selectedBatasBawah,
-      batas_atas: selectedBatasAtas,
+      batas_bawah: finalBatasBawah,
+      batas_atas: finalBatasAtas,
       potongan: selectedPotongan,
     };
 
+    console.log('Sending Payload:', payload);
+
     try {
       const response = await apiClient.post(
-        '/pemotongan_pulang_awal/create',
+        `/pemotongan_terlambat/${uuid}/update`,
         payload,
       );
 
       if (response.status === 200 && response.data.status) {
-        console.log('Success', 'Data has been created successfully.');
+        console.log('Server Response:', response.data);
+
+        setSelectedPotongan(response.data.potongan || selectedPotongan);
+        setSelectedBatasAtas(response.data.batas_atas || finalBatasAtas);
+        setSelectedBatasBawah(response.data.batas_bawah || finalBatasBawah);
+
+        console.log('Success', 'Data has been updated successfully.');
         navigation.goBack();
       } else {
-        console.log('Error', 'Failed to create data. Please try again.');
+        console.error('Failed to update - Status:', response.status);
+        console.error('Response ', response.data);
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal',
+          text2: 'Failed to update data. Please try again.',
+        });
       }
     } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Gagal',
-        text2: 'Gagal menambahkan data.',
-      });
+      // Detail error logging
+      console.error('=== API Error Details ===');
+      console.error('Error status:', error.response?.status);
+      console.error('Error data:', error.response?.data);
+      console.error('Error message:', error.message);
+      console.error('Full error object:', error);
+      
+      // Specific handling for 500 error
+      if (error.response?.status === 500) {
+        console.error('=== Server Error (500) Details ===');
+        console.error('Server Error Message:', error.response?.data?.message);
+        console.error('Server Error Stack:', error.response?.data?.stack);
+        console.error('Request URL:', `/pemotongan_terlambat/${uuid}/update`);
+        console.error('Request Payload:', payload);
+        
+        Toast.show({
+          type: 'error',
+          text1: 'Server Error (500)',
+          text2: 'An internal server error occurred. Please contact support.',
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: error.response?.data?.message || 'Failed to update data.',
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -98,7 +160,7 @@ const TambahPage = ({navigation}) => {
 
   return (
     <View style={styles.rootContainer}>
-      <Header title="Tambah PA ori" />
+      <Header title="Edit PA 2" />
       <View style={styles.container}>
         {isLoading ? (
           // Loading Indicator
@@ -109,7 +171,7 @@ const TambahPage = ({navigation}) => {
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}>
-            <Text style={[GlobalStyle.SemiBold, styles.label]}>Potongan</Text>
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>Potongan 2</Text>
             <TextInput
               style={[
                 GlobalStyle.SemiBold,
@@ -165,9 +227,18 @@ const TambahPage = ({navigation}) => {
               onFocus={() => handleFocus('selectedBatasBawah')}
               onBlur={() => handleBlur('selectedBatasBawah')}
             />
-
             <View style={styles.buttons}>
-              <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={() =>
+                  handleSave(
+                    uuid,
+                    selectedPotongan,
+                    selectedBatasAtas,
+                    selectedBatasBawah,
+                    navigation,
+                  )
+                }>
                 <Text style={[GlobalStyle.SemiBold, styles.buttonText]}>
                   Simpan
                 </Text>
@@ -191,6 +262,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: width * 0.05,
     paddingTop: 10,
   },
+
   cardContainer: {
     backgroundColor: '#FFFF',
     paddingVertical: 20,
@@ -273,4 +345,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TambahPage;
+export default EditPage;

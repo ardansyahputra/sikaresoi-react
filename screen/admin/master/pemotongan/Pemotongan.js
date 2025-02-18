@@ -1,25 +1,28 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
+  Pressable,
   Modal,
   TextInput,
-  Alert,
+  modalVisible,
 } from 'react-native';
+import {useFocusEffect} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../../src/api/apiClient';
 import {BarIndicator} from 'react-native-indicators';
+import Header from '../../components/Header';
+import Toast from 'react-native-toast-message';
+import GlobalStyle from '../../../../src/utils/GlobalStyle';
+import { Alert } from 'react-native';
+
 
 export default function UangMakan() {
   const navigation = useNavigation();
-
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
@@ -31,23 +34,204 @@ export default function UangMakan() {
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDisplay, setSelectedDisplay] = useState(null);
-
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedAction, setSelectedAction] = useState(null);
+  const [activeButton, setActiveButton] = useState('pulangAwal'); // New state for active button
   const [selectedGolongan, setSelectedGolongan] = useState('');
   const [selectedNominal, setSelectedNominal] = useState('');
 
   const apiClient = useApiClient();
 
-  useEffect(() => {
-    fetchData(currentPage, selectedDisplay);
-  }, [currentPage, selectedDisplay]);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchData(currentPage, selectedDisplay);
+    }, [currentPage, selectedDisplay]),
+  );
 
   const fetchData = async (page, display) => {
     try {
+      if (!activeButton) return; // Prevent unnecessary API calls
+
       setIsLoading(true);
-      const response = await apiClient.post('/pemotongan_pulang_awal/index', {
+      let endpoint = '';
+      switch (activeButton) {
+        case 'pulangAwal':
+          endpoint = '/pemotongan_pulang_awal/index';
+          break;
+        case 'telambat':
+          endpoint = '/pemotongan_terlambat/index';
+          break;
+        case 'tidakHadir':
+          endpoint = '/pemotongan_tidak_hadir/index';
+          break;
+        default:
+          throw new Error('Invalid button type');
+      }
+
+      const response = await apiClient.post(endpoint, {
         page,
         display,
       });
+
+      if (!response.data) throw new Error('No data received');
+
+      setData(response.data.data);
+      setCurrentPage(response.data.current_page);
+      setLastPage(response.data.last_page);
+    } catch (error) {
+      console.error('Error fetching ', error);
+      // Optional: Show error toast to user
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to fetch data. Please try again.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTidakHadirEdit = async (uuid, navigation) => {
+    try {
+      if (!uuid || typeof uuid !== 'string') {
+        console.error('UUID tidak valid:', uuid);
+        console.log('Error', 'UUID tidak valid.');
+        return;
+      }
+
+      const endpoint = `/pemotongan_tidak_hadir/${uuid}/edit`;
+      const response = await apiClient.get(endpoint);
+      const data = response.data.data;
+
+      // Handle specific structure for 'tidakHadir'
+      if (
+        !data ||
+        data.batas_toleransi === undefined ||
+        data.potongan === undefined
+      ) {
+        console.error('Data tidak lengkap:', data);
+        console.log('Error', 'Data tidak valid untuk diedit.');
+        return;
+      }
+
+      console.log('Data edit yang di-fetch:', data);
+
+      navigation.push('EditPa3', {
+        jenisAlasan: data.jenis_alasan,
+        batasToleransi: data.batas_toleransi,
+        potongan: data.potongan,
+        uuid: data.uuid,
+      });
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        'Terjadi kesalahan saat mengambil data.';
+      console.error('Error fetch data edit:', error.response || error);
+      console.log('Error', errorMessage);
+    }
+  };
+
+  // Handle for 'pulangAwal' and 'telambat' (combined in the same function)
+  const handleEdit = async (uuid, navigation) => {
+    try {
+      if (!uuid || typeof uuid !== 'string') {
+        console.error('UUID tidak valid:', uuid);
+        console.log('Error', 'UUID tidak valid.');
+        return;
+      }
+
+      let endpoint = '';
+      let navigateTo = '';
+
+      switch (activeButton) {
+        case 'pulangAwal':
+          endpoint = `/pemotongan_pulang_awal/${uuid}/edit`;
+          navigateTo = 'EditPa'; // Assuming this is the correct screen for pulangAwal
+          break;
+        case 'telambat':
+          endpoint = `/pemotongan_terlambat/${uuid}/edit`;
+          navigateTo = 'EditPa2'; // Assuming this is the correct screen for telambat
+          break;
+        case 'tidakHadir':
+          // Do not handle 'tidakHadir' here, call its separate handler
+          return handleTidakHadirEdit(uuid, navigation);
+        default:
+          console.error('Invalid activeButton:', activeButton);
+          return;
+      }
+
+      const response = await apiClient.get(endpoint);
+      const data = response.data.data;
+
+      if (!data || !data.batas_atas || !data.batas_bawah || !data.potongan) {
+        console.error('Data tidak lengkap:', data);
+        console.log('Error', 'Data tidak valid untuk diedit.');
+        return;
+      }
+
+      console.log('Data edit yang di-fetch:', data);
+
+      navigation.navigate(navigateTo, {
+        initialPotongan: data.potongan,
+        initialBatasAtas: data.batas_atas,
+        initialBatasBawah: data.batas_bawah,
+        uuid: data.uuid,
+      });
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        'Terjadi kesalahan saat mengambil data.';
+      console.error('Error fetch data edit:', error.response || error);
+      console.log('Error', errorMessage);
+    }
+  };
+
+  const handleCreate = (navigation, type) => {
+    try {
+      // Tidak perlu memvalidasi atau mengirimkan data apa pun
+      console.log(`Navigasi ke ${type} untuk pembuatan data baru`);
+
+      // Navigasi ke halaman yang sesuai berdasarkan type
+      if (type === 'pulangAwal') {
+        navigation.navigate('TambahPa'); // Hanya arahkan, tanpa membawa data
+      } else if (type === 'telambat') {
+        navigation.navigate('TambahPa2'); // Hanya arahkan, tanpa membawa data
+      } else if (type === 'tidakHadir') {
+        navigation.navigate('TambahPa3'); // Hanya arahkan, tanpa membawa data
+      }
+    } catch (error) {
+      console.error('Error navigating to page:', error);
+      console.log(
+        'Error',
+        'Terjadi kesalahan saat mengarahkan ke halaman Tambah.',
+      );
+    }
+  };
+
+  const handlePress = async buttonName => {
+    try {
+      setIsLoading(true);
+      setActiveButton(buttonName);
+      setCurrentPage(1);
+
+      let endpoint = '';
+      switch (buttonName) {
+        case 'pulangAwal':
+          endpoint = '/pemotongan_pulang_awal/index';
+          break;
+        case 'telambat':
+          endpoint = '/pemotongan_terlambat/index';
+          break;
+        case 'tidakHadir':
+          endpoint = '/pemotongan_tidak_hadir/index';
+          break;
+      }
+
+      const response = await apiClient.post(endpoint, {
+        page: 1,
+        display: selectedDisplay,
+      });
+
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -58,106 +242,108 @@ export default function UangMakan() {
     }
   };
 
-  const handleEdit = async (uuid, navigation) => {
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchData(currentPage, selectedDisplay);
+    }, [currentPage, selectedDisplay, activeButton]), // Tidak ada activeButton di dependencies
+  );
+
+  const toggleExpand = id => {
+    setExpandedId(expandedId === id ? null : id);
+  };
+
+  const handleDelete = async uuid => {
     try {
-      // Validasi UUID
       if (!uuid || typeof uuid !== 'string') {
         console.error('UUID tidak valid:', uuid);
-        Alert.alert('Error', 'UUID tidak valid.');
+        console.log('Error', 'UUID tidak valid.');
         return;
       }
 
-      // Permintaan data dari API
-      const response = await apiClient.get(
-        `/pemotongan_pulang_awal/${uuid}/edit`,
-      );
-
-      const data = response.data.data;
-
-      // Validasi data yang diterima
-      if (!data || !data.batas_atas || !data.batas_bawah || !data.potongan) {
-        console.error('Data tidak lengkap:', data);
-        Alert.alert('Error', 'Data tidak valid untuk diedit.');
-        return;
+      let endpoint = '';
+      switch (activeButton) {
+        case 'pulangAwal':
+          endpoint = `/pemotongan_pulang_awal/${uuid}/delete`;
+          break;
+        case 'telambat':
+          endpoint = `/pemotongan_terlambat/${uuid}/delete`;
+          break;
+        case 'tidakHadir':
+          endpoint = `/pemotongan_tidak_hadir/${uuid}/delete`;
+          break;
+        default:
+          console.error('Invalid activeButton:', activeButton);
+          return;
       }
 
-      console.log('Data edit yang di-fetch:', data);
-
-      // Navigasi ke halaman edit dengan parameter data
-      navigation.navigate('EditPa', {
-        initialPotongan: data.potongan,
-        initialBatasAtas: data.batas_atas,
-        initialBatasBawah: data.batas_bawah,
-        uuid: data.uuid,
-      });
+      // Menjalankan request API untuk menghapus data
+      const response = await apiClient.delete(endpoint);
+      if (response.status === 200) {
+        console.log('Data berhasil dihapus');
+        // Update data di UI setelah penghapusan
+        handlePress(activeButton); // Memperbarui data di UI
+      }
     } catch (error) {
-      // Menangani error permintaan API
-      const errorMessage =
-        error.response?.data?.message ||
-        'Terjadi kesalahan saat mengambil data.';
-      console.error('Error fetch data edit:', error.response || error);
-      Alert.alert('Error', errorMessage);
+      console.error('Error deleting data:', error);
+      console.log('Error', 'Terjadi kesalahan saat menghapus data.');
     }
   };
 
-  const handleCreate = async (navigation, potongan, batasAtas, batasBawah) => {
-    try {
-      // Validasi data yang akan dikirim
-      if (!potongan || !batasAtas || !batasBawah) {
-        console.error('Data tidak valid:', {potongan, batasAtas, batasBawah});
-        Alert.alert('Error', 'Pastikan semua data telah diisi.');
-        return;
-      }
-
-      // Data default yang akan digunakan untuk halaman TambahPa
-      const payload = {
-        potongan,
-        batas_atas: batasAtas,
-        batas_bawah: batasBawah,
-      };
-
-      console.log('Navigasi ke TambahPa dengan data:', payload);
-
-      // Navigasi ke halaman TambahPa dengan parameter
-      navigation.navigate('TambahPa', {
-        initialPotongan: payload.potongan,
-        initialBatasAtas: payload.batas_atas,
-        initialBatasBawah: payload.batas_bawah,
-      });
-    } catch (error) {
-      console.error('Error navigating to TambahPa:', error);
-      Alert.alert(
-        'Error',
-        'Terjadi kesalahan saat mengarahkan ke halaman Tambah.',
-      );
-    }
-  };
-
-  const submitHapus = async () => {
-    try {
-      await apiClient.delete(`/pemotongan_pulang_awal/${selectedUuid}/delete`);
-      Alert.alert('Berhasil', 'Data berhasil dihapus.');
-      setHapusModalVisible(false);
-      fetchData(currentPage);
-    } catch (error) {
-      console.error('Error during delete:', error);
-      if (error.response) {
-        console.error('Response:', error.response);
-        Alert.alert(
-          'Error',
-          `Gagal menghapus data: ${error.response.data.message}`,
-        );
-      } else {
-        Alert.alert('Error', 'Gagal menghapus data.');
-      }
-    }
-  };
-
-  const handleHapus = uuid => {
+  const handleHapusPress = uuid => {
     setSelectedUuid(uuid);
-    setHapusModalVisible(true); // Menampilkan modal konfirmasi hapus
+    setSelectedAction('hapus'); // Tandai bahwa ini aksi hapus
+    setModalVisible(true);
   };
 
+  const confirmDelete = () => {
+    if (selectedUuid && selectedAction === 'hapus') {
+      // Determine the type for deletion (this could be based on activeButton or another method)
+      handleDelete(selectedUuid, activeButton);
+    }
+    setModalVisible(false); // Close the modal
+  };
+
+  const handleDeleteTidakHadir = async uuid => {
+    try {
+      if (!uuid || typeof uuid !== 'string') {
+        console.error('UUID tidak valid:', uuid);
+        console.log('Error', 'UUID tidak valid.');
+        return;
+      }
+
+      // Konfirmasi sebelum menghapus
+      Alert.alert(
+        'Konfirmasi',
+        'Apakah Anda yakin ingin menghapus data ini?',
+        [
+          {text: 'Batal', style: 'cancel'},
+          {
+            text: 'Hapus',
+            onPress: async () => {
+              try {
+                const response = await apiClient.delete(`/pemotongan_tidak_hadir/${uuid}/delete`);
+                console.log('Berhasil menghapus:', response.data);
+
+                // Perbarui tampilan setelah penghapusan berhasil
+                fetchData(); // Pastikan `fetchData` ada untuk me-refresh data
+                console.log('Sukses', 'Data berhasil dihapus.');
+              } catch (error) {
+                const errorMessage =
+                  error.response?.data?.message ||
+                  'Terjadi kesalahan saat menghapus data.';
+                console.error('Error delete:', error.response || error);
+                console.log('Error', errorMessage);
+              }
+            },
+          },
+        ],
+        {cancelable: true},
+      );
+    } catch (error) {
+      console.error('Error handleDeleteTidakHadir:', error);
+      console.log('Error', 'Terjadi kesalahan yang tidak terduga.');
+    }
+  };
 
   const display = [
     {label: '5', value: 1},
@@ -167,133 +353,279 @@ export default function UangMakan() {
     {label: '100', value: 5},
   ];
 
-  const toggleExpand = id => {
-    setExpandedId(expandedId === id ? null : id);
-  };
-
-  const TableHeader = () => (
-    <View>
-      <View style={styles.tambahContainer}>
-        <TouchableOpacity
-          style={styles.tambahButton}
-          onPress={() => handleCreate(navigation, '10%', '18:00', '08:00')}>
-          <FontAwesome name="plus" size={20} color="#fff" style={styles.icon} />
-          <Text style={styles.tambahText}>Tambah</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.filterContainer}>
-        <View style={styles.displayContainer}>
-          <Text style={styles.displayText}>Display</Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={display}
-            labelField="label"
-            valueField="value"
-            placeholder="10"
-            value={selectedDisplay}
-            onChange={item => setSelectedDisplay(item.value)}
-            renderItem={item => (
-              <Text style={[styles.dropdownItem, styles.customFont]}>
-                {item.label}
+  const TableHeader = () => {
+    return (
+      <View>
+        <View style={styles.headerContainer}>
+          {/* Toggle Buttons Container */}
+          <View style={styles.toggleContainer}>
+            <Pressable
+              style={({pressed}) => [
+                styles.toggleButton,
+                pressed && styles.buttonPressed,
+                activeButton === 'pulangAwal' && styles.buttonActive,
+              ]}
+              onPress={() => handlePress('pulangAwal')}>
+              <Text
+                style={[
+                  GlobalStyle.SemiBold,
+                  styles.buttonText,
+                  activeButton === 'pulangAwal' && styles.textActive,
+                ]}>
+                Pulang Awal
               </Text>
-            )}
-          />
+            </Pressable>
+
+            <Pressable
+              style={({pressed}) => [
+                styles.toggleButton,
+                pressed && styles.buttonPressed,
+                activeButton === 'telambat' && styles.buttonActive,
+              ]}
+              onPress={() => handlePress('telambat')}>
+              <Text
+                style={[
+                  GlobalStyle.SemiBold,
+                  styles.buttonText,
+                  activeButton === 'telambat' && styles.textActive,
+                ]}>
+                Telambat
+              </Text>
+            </Pressable>
+
+            <Pressable
+              style={({pressed}) => [
+                styles.toggleButton,
+                pressed && styles.buttonPressed,
+                activeButton === 'tidakHadir' && styles.buttonActive,
+              ]}
+              onPress={() => handlePress('tidakHadir')}>
+              <Text
+                style={[
+                  GlobalStyle.SemiBold,
+                  styles.buttonText,
+                  activeButton === 'tidakHadir' && styles.textActive,
+                ]}>
+                Tidak Hadir
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Search and Add Button Container */}
+          <View style={styles.bottomContainer}>
+            <View style={styles.searchContainer}>
+              <Ionicons
+                name="search"
+                size={18}
+                color="#888"
+                style={styles.searchIcon}
+              />
+              <TextInput
+                style={[GlobalStyle.SemiBold, styles.searchBar]}
+                placeholder="Search"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholderTextColor="#888"
+              />
+            </View>
+            <TouchableOpacity
+              style={styles.tambahButton}
+              onPress={() => handleCreate(navigation, activeButton)}>
+              <Ionicons name="add" size={18} color="#fff" style={styles.icon} />
+              <Text style={[GlobalStyle.SemiBold, styles.tambahText]}>
+                Tambah
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchBar}
-            placeholder="Search"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
+
+        <View style={styles.tableHeader}>
+          <Text
+            style={[
+              GlobalStyle.SemiBold,
+              styles.headerCell,
+              styles.numberCell,
+            ]}>
+            NO
+          </Text>
+          <Text
+            style={[
+              GlobalStyle.SemiBold,
+              styles.headerCell,
+              styles.reasonCell,
+            ]}>
+            JENIS CUTI
+          </Text>
+          <Text
+            style={[
+              GlobalStyle.SemiBold,
+              styles.headerCell,
+              styles.toleranceCell,
+            ]}>
+            BATAS TOLERANSI
+          </Text>
+          <Text
+            style={[
+              GlobalStyle.SemiBold,
+              styles.headerCell,
+              styles.deductionCell,
+            ]}>
+            POTONGAN
+          </Text>
+          <View style={styles.expandIconCell} />
         </View>
+        <View style={styles.headerLine} />
       </View>
-      <View style={styles.tableHeader}>
-        <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
-        <Text style={[styles.headerCell, styles.nameCell]}>Batas Bawah</Text>
-        <Text style={[styles.headerCell, styles.tableStatusCell]}>
-          Batas Atas
-        </Text>
-        <Text style={[styles.headerCell, styles.discountCell]}>Potongan</Text>
-        <View style={styles.expandIconCell} />
-      </View>
-    </View>
-  );
+    );
+  };
 
   const renderItem = ({item, index}) => {
     const isExpanded = expandedId === item.id;
+    const rowBackgroundColor = index % 2 === 0 ? '#F7F8FC' : '#FFFFFF';
 
-    return (
-      <View style={styles.tableRow}>
-        <TouchableOpacity
-          style={styles.rowHeader}
-          onPress={() => toggleExpand(item.id)}>
-          <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
-          <Text
-            style={[styles.tableCell, styles.nameCell]}
-            numberOfLines={1}
-            ellipsizeMode="tail">
-            {item.batas_bawah || '-'}
-          </Text>
-          <Text style={[styles.tableCell, styles.statusCell]}>
-            {item.batas_atas || '-'}
-          </Text>
-          <Text style={[styles.tableCell, styles.discountCell]}>
-            {item.potongan || '-'}
-          </Text>
-          <View style={styles.expandIconCell}>
-            <Ionicons
-              name={isExpanded ? 'chevron-up' : 'chevron-down'}
-              size={20}
-              color="#333"
-            />
-          </View>
-        </TouchableOpacity>
-        {isExpanded && (
-          <View style={styles.expandedContent}>
-            <Text style={styles.expandedText}>
-              Batas Bawah: {item.batas_bawah || '-'}
+    if (activeButton === 'tidakHadir') {
+      return (
+        <View style={styles.tableRow}>
+          <TouchableOpacity
+            style={[styles.rowHeader, {backgroundColor: rowBackgroundColor}]}
+            onPress={() => toggleExpand(item.id)}>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.tableCell,
+                styles.numberCell,
+              ]}>
+              {index + 1}
             </Text>
-            <Text style={styles.expandedText}>
-              Batas Atas: {item.batas_atas || '-'}
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.tableCell,
+                styles.reasonCell,
+              ]}>
+              {item.jenis_alasan || '-'}
             </Text>
-            <Text style={styles.expandedText}>
-              Potongan: {item.potongan || '-'}
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.tableCell,
+                styles.toleranceCell,
+              ]}>
+              {item.batas_toleransi || '-'}
             </Text>
-            <View style={styles.actionContainer}>
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => handleEdit(item.uuid, navigation)}>
-                <FontAwesome name="pencil" size={20} color="white" />
-                <Text style={styles.customFont}>Edit</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.declineButton}
-                onPress={() => handleHapus(item.uuid)}>
-                <Ionicons name="trash" size={20} color="white" />
-                <Text style={styles.customFont}>Hapus</Text>
-              </TouchableOpacity>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.tableCell,
+                styles.deductionCell,
+              ]}>
+              {item.potongan || '-'}
+            </Text>
+            <View style={styles.expandIconCell}>
+              <Ionicons
+                name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#BEC2D5"
+              />
             </View>
-          </View>
-        )}
-      </View>
-    );
+          </TouchableOpacity>
+
+          {isExpanded && (
+            <View style={styles.expandedContent}>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Jenis Cuti: {item.jenis_alasan || '-'}
+              </Text>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Batas Toleransi: {item.batas_toleransi || '-'}
+              </Text>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Potongan: {item.potongan || '-'}
+              </Text>
+              <View style={styles.actionContainer}>
+                <TouchableOpacity
+                  style={[styles.iconButton, styles.blueButton]}
+                  onPress={() => handleTidakHadirEdit(item.uuid, navigation)}>
+                  <Ionicons name="pencil" size={20} color="white" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.iconButton, styles.redButton]}
+                  onPress={() => handleDeleteTidakHadir(item.uuid)}>
+                  <Ionicons name="trash-outline" size={20} color="white" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </View>
+      );
+    } else {
+      return (
+        <View style={styles.tableRow}>
+          <TouchableOpacity
+            style={[styles.rowHeader, {backgroundColor: rowBackgroundColor}]}
+            onPress={() => toggleExpand(item.id)}>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.tableCell,
+                styles.numberCell,
+              ]}>
+              {index + 1}
+            </Text>
+            <Text
+              style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}>
+              {item.batas_bawah || '-'}
+            </Text>
+            <Text
+              style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}>
+              {item.batas_atas || '-'}
+            </Text>
+            <Text
+              style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}>
+              {item.potongan || '-'}
+            </Text>
+            <View style={styles.expandIconCell}>
+              <Ionicons
+                name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#BEC2D5"
+              />
+            </View>
+          </TouchableOpacity>
+
+          {isExpanded && (
+            <View style={styles.expandedContent}>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Batas Bawah: {item.batas_bawah || '-'}
+              </Text>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Batas Atas: {item.batas_atas || '-'}
+              </Text>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Potongan: {item.potongan || '-'}
+              </Text>
+              <View style={styles.actionContainer}>
+                <TouchableOpacity
+                  style={[styles.iconButton, styles.blueButton]}
+                  onPress={() => handleEdit(item.uuid, navigation)}>
+                  <Ionicons name="pencil" size={20} color="white" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.iconButton, styles.redButton]}
+                  onPress={() => handleDelete(item.uuid)}>
+                  <Ionicons name="trash-outline" size={20} color="white" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </View>
+      );
+    }
   };
 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}></View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
-          <TouchableOpacity style={styles.iconWrapper}>
-            <Ionicons name="person-circle-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <Header title="Pemotongan" />
       {/* Loading Indicator */}
       {isLoading ? (
         // Loading Indicator
@@ -306,99 +638,98 @@ export default function UangMakan() {
           data={data}
           renderItem={renderItem}
           keyExtractor={item => item.id.toString()}
-          contentContainerStyle={styles.card}
+          contentContainerStyle={{flexGrow: 1, padding: '10'}}
+          style={{flex: 1}}
+          showsVerticalScrollIndicator={false}
           ListFooterComponent={
-            <View>
-              <Text style={styles.pageInfo}>
-                Showing page {currentPage} of {lastPage}
+            <View style={styles.paginationContainer}>
+              <Text style={[GlobalStyle.SemiBold, styles.pageInfo]}>
+                {currentPage} of {lastPage}
               </Text>
-              <View style={styles.paginationContainer}>
-                <View style={styles.paginationButtons}>
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === 1 && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === 1}
-                    onPress={() =>
-                      setCurrentPage(prev => Math.max(prev - 1, 1))
-                    }>
-                    <Text style={styles.pageButtonText}>Previous</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === lastPage && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === lastPage}
-                    onPress={() =>
-                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
-                    }>
-                    <Text style={styles.pageButtonText}>Next</Text>
-                  </TouchableOpacity>
-                </View>
+
+              <View style={styles.paginationButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.pageButton,
+                    currentPage === 1 && styles.disabledButton,
+                  ]}
+                  disabled={currentPage === 1}
+                  onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
+                  <Ionicons
+                    name="chevron-back"
+                    size={20}
+                    color={currentPage === 1 ? '#ccc' : '#BEC2D5'}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.pageButton,
+                    currentPage === lastPage && styles.disabledButton,
+                  ]}
+                  disabled={currentPage === lastPage}
+                  onPress={() =>
+                    setCurrentPage(prev => Math.min(prev + 1, lastPage))
+                  }>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={currentPage === lastPage ? '#ccc' : '#BEC2D5'}
+                  />
+                </TouchableOpacity>
               </View>
             </View>
           }
         />
       )}
-
-      {/* Hapus Uang Makan Modal */}
-      <Modal
-        visible={isHapusModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setHapusModalVisible(false)}>
+    </View>
+  );
+}
+{
+  modalVisible && (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={modalVisible}
+      onRequestClose={() => setModalVisible(false)}>
+      <View style={styles.modalBackground}>
         <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Hapus Data</Text>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setHapusModalVisible(false)}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.submitButton, styles.approveButton]}
-                onPress={submitHapus}>
-                <Text style={styles.buttonText}>Setujui</Text>
-              </TouchableOpacity>
-            </View>
+          <Text style={styles.modalText}>
+            Apakah Anda yakin ingin menghapus?
+          </Text>
+          <View style={styles.modalButtons}>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={confirmDelete}>
+              <Text style={styles.modalButtonText}>Ya</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setModalVisible(false)}>
+              <Text style={styles.modalButtonText}>Tidak</Text>
+            </TouchableOpacity>
           </View>
         </View>
-      </Modal>
-    </View>
+      </View>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F8FB',
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 15,
-    margin: 12,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    backgroundColor: '#fff',
   },
   tableHeader: {
+    marginTop: 15,
     flexDirection: 'row',
-    backgroundColor: '#E0E0E0',
     paddingVertical: 10,
     paddingHorizontal: 15,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
   },
   headerCell: {
-    fontFamily: 'Poppins-SemiBold',
     fontSize: 13,
-    color: '#333',
+    color: '#9196B5',
   },
   tableRow: {
     backgroundColor: '#FFFFFF',
@@ -408,22 +739,21 @@ const styles = StyleSheet.create({
   rowHeader: {
     flexDirection: 'row',
     padding: 15,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: '#F7F8FC',
     alignItems: 'center',
   },
   tableCell: {
-    fontFamily: 'Poppins-Regular',
     flexWrap: 'wrap',
+    color: '#313131',
     fontSize: 14,
   },
   tableStatusCell: {
     textAlign: 'center',
-    flex: 1,
-    paddingLeft: -5,
-    width: 20,
+    flex: 0,
+    paddingLeft: 0,
   },
   numberCell: {
-    width: 35,
+    width: 45,
   },
   nameCell: {
     flex: 1,
@@ -440,23 +770,15 @@ const styles = StyleSheet.create({
     width: 40,
     alignItems: 'flex-end',
   },
-  discountCell: {
-    textAlign: 'right',
-    flex: 1,
-    paddingHorizontal: -10,
-    paddingLeft: 5,
+  headerLine: {
+    height: 2,
+    backgroundColor: '#D3D3D3', // Garis horizontal bawah header
+    marginBottom: 5,
   },
-  approvedStatus: {
-    color: '#4CAF50',
-  },
-  rejectedStatus: {
-    color: '#F44336',
-  },
-  pendingStatus: {
-    color: '#FFC107',
-  },
-  defaultStatus: {
-    color: '#9E9E9E',
+  verticalLine: {
+    height: 2, // Tinggi garis horizontal
+    backgroundColor: '#D3D3D3', // Warna abu-abu mirip header line
+    marginBottom: 10, // Jarak atas & bawah agar tidak menempel
   },
   expandedContent: {
     padding: 15,
@@ -465,172 +787,111 @@ const styles = StyleSheet.create({
   expandedText: {
     marginBottom: 5,
     fontSize: 14,
-  },
-  expandedLinkText: {
-    color: 'blue',
-    marginBottom: 5,
-    fontSize: 14,
-  },
-  filetext: {
-    flexDirection: 'row',
+    color: '#313131',
   },
   actionContainer: {
     flexDirection: 'row',
     marginTop: 10,
     justifyContent: 'flex-end',
     alignItems: 'center',
-    gap: 10,
-  },
-  actionButton: {
-    padding: 8,
-    backgroundColor: '#F0F0F0',
-    borderRadius: 5,
-  },
-  approveButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#4CAF50',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  declineButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F44336',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
   },
   paginationButtons: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
   pageButton: {
-    padding: 10,
-    backgroundColor: '#007bff',
+    padding: 8, // Padding agar tombol lebih mudah diklik
     borderRadius: 5,
-    marginHorizontal: 5,
   },
   pageButtonText: {
-    fontFamily: 'Poppins-Regular',
     fontSize: 13,
     color: '#fff',
   },
+  reasonCell: {
+    flex: 2,
+    paddingHorizontal: 10,
+  },
+  toleranceCell: {
+    flex: 1,
+    paddingHorizontal: 10,
+    textAlign: 'center',
+  },
+  deductionCell: {
+    flex: 1,
+    paddingHorizontal: 10,
+    textAlign: 'center',
+  },
   disabledButton: {
-    backgroundColor: '#CCCCCC',
+    opacity: 0.5, // Efek disabled lebih jelas
   },
   paginationText: {
     color: 'white',
     fontWeight: 'bold',
   },
   pageInfo: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 13,
+    fontSize: 14,
+    color: '#888', // Warna abu-abu sesuai tampilan gambar
+    marginRight: 10, // Jarak antara teks dan tombol navigasi
   },
   paginationContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 10,
-  },
-  header: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    elevation: 4,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  logo: {
-    width: 140,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  headerRight: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    flex: 1,
+    paddingVertical: 10,
   },
-  iconWrapper: {
-    marginLeft: 12,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  headerContainer: {
+    flexDirection: 'column', // Supaya tersusun vertikal
+    alignItems: 'stretch', // Mengisi lebar parent
     marginBottom: 10,
   },
-  modalLabel: {
-    fontSize: 14,
-    marginBottom: 5,
-  },
-  modalInput: {
-    borderWidth: 1,
+
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F7F8FC',
     borderColor: '#ccc',
     borderRadius: 5,
-    padding: 10,
-    minHeight: 10,
-    marginBottom: 15,
-    textAlignVertical: 'top',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  cancelButton: {
-    backgroundColor: '#ccc',
-    padding: 10,
-    borderRadius: 5,
-    marginRight: 10,
-  },
-  submitButton: {
-    backgroundColor: '#F44336',
-    padding: 10,
-    borderRadius: 5,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  searchContainer: {
-    width: 150,
-    backgroundColor: '#FFFFFF',
-  },
-  searchBar: {
-    height: 40,
-    borderColor: '#CCCCCC',
-    borderWidth: 1,
-    borderRadius: 5,
     paddingHorizontal: 12,
+    height: 42, // **Tinggi sama dengan tombol tambah**
+    flex: 1,
+    maxWidth: '60%', // **Agar fleksibel di berbagai layar**
   },
+
+  searchIcon: {
+    marginRight: 10,
+    fontSize: 14, // **Agar proporsional dengan teks**
+    alignSelf: 'center',
+  },
+
+  searchBar: {
+    flex: 1,
+    fontSize: 12, // **Agar lebih proporsional**
+    color: '#BEC2D5',
+    textAlignVertical: 'center', // **Pastikan teks sejajar secara vertikal**
+    paddingVertical: 0, // **Hapus padding default agar tidak terlalu tinggi**
+  },
+
+  tambahButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#3699FE',
+    paddingHorizontal: 15,
+    height: 40, // **Samakan tinggi dengan search bar**
+    borderRadius: 5,
+    marginLeft: 12,
+  },
+
+  icon: {
+    fontSize: 14, // **Ukuran disesuaikan agar sejajar dengan teks**
+  },
+
+  tambahText: {
+    color: '#fff',
+    marginLeft: 5,
+    fontSize: 12, // **Lebih proporsional**
+    textAlignVertical: 'center',
+  },
+
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -643,7 +904,6 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   displayText: {
-    fontFamily: 'Poppins-Regular',
     fontSize: 13,
     marginRight: 8,
     textAlign: 'center',
@@ -661,56 +921,134 @@ const styles = StyleSheet.create({
   },
   dropdownItem: {
     padding: 10,
-    fontSize: 16,
+    fontSize: 12,
     color: '#333',
   },
-  customFont: {
-    fontFamily: 'Poppins-Regular',
-  },
-  tambahContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  tambahButton: {
-    flexDirection: 'row',
-    backgroundColor: '#3699FF',
-    width: 90,
-    height: 40,
+
+  iconButton: {
+    padding: 10, // Ukuran tombol lebih besar
+    marginHorizontal: 5,
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tambahText: {
-    marginTop: 1,
-    fontFamily: 'Poppins-Regular',
-    color: 'white',
-    marginLeft: 5,
-    lineHeight: 20,
-    fontSize: 13,
-    textAlignVertical: 'center',
+
+  blueButton: {
+    backgroundColor: '#3699FE', // Warna biru untuk reset & edit
   },
-  editButton: {
-    gap: 5,
+  redButton: {
+    backgroundColor: '#FF536D', // Warna merah untuk hapus
+  },
+
+  switchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#3699FF',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
+    justifyContent: 'space-between',
+    marginVertical: 10,
   },
-  customFont: {
-    color: 'white',
-    fontFamily: 'Poppins-Regular',
+  switchLabel: {
+    fontSize: 16,
+    color: '#333',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContainer: {
+    width: 300,
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginHorizontal: 5,
+    backgroundColor: '#000',
+  },
+  cancelButton: {
+    borderWidth: 1,
+    borderColor: '#3498db',
+    backgroundColor: '#fff',
+  },
+  cancelText: {
+    color: '#0A3D62',
+  },
+  confirmButton: {
+    backgroundColor: '#3498db',
+  },
+  confirmText: {
+    color: '#fff',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  bulanContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start', // Posisi ke kiri
+    gap: 10,
+    marginBottom: 20, // Beri jarak antara tombol Bulan & Tahun dengan Search Bar
+  },
+  toggleButton: {
+    height: 40,
+    paddingHorizontal: 15,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  buttonPressed: {
+    backgroundColor: '#fff',
+  },
+
+  buttonActive: {
+    borderBottomWidth: 3,
+    borderBottomColor: '#A463FC',
+  },
+
+  buttonText: {
+    fontSize: 14,
+    color: 'grey',
+  },
+
+  textActive: {
+    color: '#A463FC',
+  },
+
+  searchAddContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start', // Posisi ke kiri
+    gap: 10,
+    marginBottom: 20, // Beri jarak antara tombol Bulan & Tahun dengan Search Bar
+  },
+  bottomContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between', // Search & Tambah sejajar
   },
 });

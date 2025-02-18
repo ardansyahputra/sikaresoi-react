@@ -58,6 +58,10 @@ import User from './screen/admin/master/user/ProfileScreen';
 import PemotonganScreen from './screen/admin/master/pemotongan/Pemotongan';
 import EditPA from './screen/admin/master/pemotongan/EditPA/EditPA';
 import TambahPA from './screen/admin/master/pemotongan/TambahPA/TambahPA';
+import EditPA2 from './screen/admin/master/pemotongan/EditPA/EditPA2';
+import TambahPA2 from './screen/admin/master/pemotongan/TambahPA/TambahPA2';
+import EditPA3 from './screen/admin/master/pemotongan/EditPA/EditPA3';
+import TambahPA3 from './screen/admin/master/pemotongan/TambahPA/TambahPA3';
 import UangMakanScreen from './screen/admin/master/uang_makan/Uang_makan';
 import TambahUangMakan from './screen/admin/master/uang_makan/Tambah';
 import EditUangMakan from './screen/admin/master/uang_makan/Edit';
@@ -612,6 +616,26 @@ function HomeStack() {
         options={{headerShown: false}}
         name="TambahPa"
         component={TambahPA}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditPa2"
+        component={EditPA2}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="TambahPa2"
+        component={TambahPA2}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditPa3"
+        component={EditPA3}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="TambahPa3"
+        component={TambahPA3}
       />
       <Stack.Screen
         options={{headerShown: false}}
