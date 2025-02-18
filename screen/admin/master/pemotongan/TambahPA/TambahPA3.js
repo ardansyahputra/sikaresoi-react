@@ -22,8 +22,8 @@ import Toast from 'react-native-toast-message';
 const TambahPage = ({navigation}) => {
   const [jenisAlasan, setJenisAlasan] = useState('');
   const [jenisCuti, setJenisCuti] = useState('');
-  const [batasToleransi, setBatasToleransi] = useState('');
-  const [potongan, setPotongan] = useState('');
+  const [batasToleransi, setBatasToleransi] = useState('0');
+  const [potongan, setPotongan] = useState('00.0');
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const apiClient = useApiClient();
   const [focusState, setFocusState] = useState({});
