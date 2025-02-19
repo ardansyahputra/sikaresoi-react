@@ -41,7 +41,7 @@ const Kumulatif = ({ navigation }) => {
           <Ionicons name="arrow-back" size={26} color="#000" />
         </TouchableOpacity>
         <Image
-          source={require('../../../assets/sikaresoi.png')}
+          source={require('../../assets/sikaresoi.png')}
           style={styles.headerImage}
         />
       </View>
