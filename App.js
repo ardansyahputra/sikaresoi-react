@@ -1,4 +1,4 @@
-import React from 'react';
+  import React from 'react';
 import {AuthProvider} from './screen/auth/AuthContext';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -15,7 +15,6 @@ import LoginScreen from './screen/auth/login/Login';
 import HomeScreen from './screen/BottomNavBar/Home/HomeScreen';
 import KontrakKinerjaScreen from './screen/BottomNavBar/KontrakKinerja/KontrakKinerjaScreen';
 import GetAktifCard from './screen/BottomNavBar/KontrakKinerja/GetAktif.js';
-import KirimKontrak from './screen/BottomNavBar/KontrakKinerja/KirimKontrak.js';
 import SettingJabatan from './screen/BottomNavBar/Menu/SettingJabatan/SettingJabatan';
 import FormJabatan from './screen/BottomNavBar/Menu/SettingJabatan/Form.js';
 import TeguranScreen from './screen/TeguranScreen.js';
@@ -27,7 +26,6 @@ import DataTable2 from './screen/DataTable2';
 import RemunerasiScreen from './screen/BottomNavBar/Home/Persetujuan/Renumerasi.js';
 import PencapaianKerja from './screen/PencapaianKerja.js';
 import Remunerasi from './screen/Remunerasi.js';
-// import KontrakKerja from './screen/KontrakKerja.js';
 import HistoryPresensi from './screen/HistoryPresensi';
 import ProfileScreen from './screen/BottomNavBar/Profile/ProfileScreen';
 import ProfileEdit from './screen/BottomNavBar/Profile/ProfileEdit';
@@ -38,6 +36,10 @@ import Bacascreen from './screen/Bacascreen.js';
 import Bacakontrak from './screen/Bacakontrak.js';
 import KontrakKerja from './screen/BottomNavBar/Menu/Laporan/KontrakKerja.js';
 import RealisasiNext from './screen/RealisasiNext.js';
+import MasterKinerja from './screen/BottomNavBar/KontrakKinerja/MasterKinerja.js';
+import AddUraian from './screen/BottomNavBar/KontrakKinerja/AddUraian.js';
+import SalinKontrak from './screen/BottomNavBar/KontrakKinerja/SalinKontrak.js';
+import Kumulatif from './screen/BottomNavBar/KontrakKinerja/Kumulatif.js';
 
 const Tab = createBottomTabNavigator();
 const styles = StyleSheet.create({
@@ -90,11 +92,7 @@ function HomeStack() {
       component={GetAktifCard}
       options={{headerShown: false}}
       />
-      <Stack.Screen
-      name="KirimKontrak"
-      component={GetAktifCard}
-      options={{headerShown: false}}
-      />
+    
       <Stack.Screen
         name="Profile"
         component={ProfileScreen}
@@ -190,6 +188,18 @@ function ProfileStack() {
   );
 }
 
+function Kontrakstack() {
+  return (
+    <Stack.Navigator screenOptions={{headerShown: false}}>
+      <Stack.Screen name="KontrakKinerja" component={KontrakKinerjaScreen}/>
+      <Stack.Screen name="MasterKinerja" component={MasterKinerja}/>
+      <Stack.Screen name="AddUraian" component={AddUraian}/>
+      <Stack.Screen name="SalinKontrak" component={SalinKontrak}/>
+      <Stack.Screen name="Kumulatif" component={Kumulatif}/>
+    </Stack.Navigator>
+  )
+}
+
 function AppTabs() {
   const {shouldShowTabNavigator} = useNavigationContext();
 
@@ -201,8 +211,8 @@ function AppTabs() {
 
           if (route.name === 'DASHBOARD') {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'KONTRAK KINERJA') {
-            iconName = focused ? 'documents' : 'documents-outline';
+          } else if (route.name === 'KONTRAK') {
+            iconName = focused ? 'document' : 'document-outline';
           } else if (route.name === 'PROFIL') {
             iconName = focused ? 'person' : 'person-outline';
           }
@@ -223,8 +233,8 @@ function AppTabs() {
         options={{headerShown: false}}
       />
       <Tab.Screen
-        name="KONTRAK KINERJA"
-        component={KontrakKinerjaScreen} // Pastikan Presensi sudah ada
+        name="KONTRAK"
+        component={Kontrakstack} 
         options={{headerShown: false}}
       />
       <Tab.Screen

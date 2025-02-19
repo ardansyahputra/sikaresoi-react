@@ -238,20 +238,17 @@ const FormJabatan = ({navigation, route}) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header1}>
-              <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                <Ionicons name="arrow-back" size={26} color="#000" />
-              </TouchableOpacity>
-              <Image
-                  source={require('../../../assets/images/sikaresoi.png')}
-                  style={styles.headerImage}
-              />
-            </View>
-      
       <View style={styles.formContainer}>
-        <Text style={styles.title}>
+        <View style={styles.backButtonContainer}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={26} color="#000" />
+            </TouchableOpacity>
+          </View>
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>
           {type === 'create' ? 'Tambah Data Jabatan' : 'Edit Data Jabatan'}
-        </Text>
+          </Text>
+        </View>
 
         {/* Dropdown Pimpinan */}
         <Text style={styles.label}>
@@ -366,9 +363,10 @@ const FormJabatan = ({navigation, route}) => {
           </Text>
           <Ionicons name="calendar-outline" size={20} color="#000" />
         </TouchableOpacity>
-
+          
         {/* Date Picker Modal */}
         {datePickerVisible && (
+          <View style={styles.datePickerContainer}>  
           <View style={styles.datePickerModal}>
             <DateRangePicker
               selected={
@@ -407,7 +405,9 @@ const FormJabatan = ({navigation, route}) => {
               </TouchableOpacity>
             </View>
           </View>
+          </View>
         )}
+          
 
         {/* Switch Dosen */}
         <View style={styles.switchContainer}>
@@ -437,6 +437,7 @@ const FormJabatan = ({navigation, route}) => {
 
 const styles = StyleSheet.create({
   container: {
+    padding: 10,
     backgroundColor: '#F7F8FB',
     flexGrow: 1,
   },
@@ -477,14 +478,8 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     alignSelf: 'center',
   },
-  backButton: {
-    marginTop:1,
-    marginLeft:3,
-    marginRight:1,
-    opacity: 0.4,
-  },
   formContainer: {
-    marginTop: 30,
+    marginTop: 0,
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     padding: 30,
@@ -499,12 +494,23 @@ const styles = StyleSheet.create({
     height: 40,
     resizeMode: 'contain',
   },
+  titleContainer:{
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
   title: {
     fontSize: 18,
     fontFamily: "Poppins-Bold",
     marginBottom: 20,
     textAlign: 'center',
     color: '#333',
+  },
+  backButton: {
+    opacity: 0.4,
+  },
+  backButtonContainer: {
+    marginTop: -15,
+    marginLeft: -15,
   },
   label: {
     fontSize: 14,
@@ -535,7 +541,6 @@ const styles = StyleSheet.create({
   },
   datePickerContainer: {
     backgroundColor: '#fff',
-    padding: 20,
     borderRadius: 10,
     elevation: 5,
     shadowColor: '#000',
@@ -564,14 +569,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 20,
   },
-  datePickerContainer: {
-    backgroundColor: '#fff',
+  datePickerModal: {
     padding: 20,
-    borderRadius: 10,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
   },
   datePickerButtons: {
     flexDirection: 'row',
@@ -615,7 +614,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   saveButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#3699ff',
     padding: 15,
     borderRadius: 5,
     flex: 1,

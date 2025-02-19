@@ -95,6 +95,8 @@ const LoginScreen = ({navigation}) => {
         const token = response.headers.authorization;
         await Keychain.setGenericPassword('token', token);
 
+        console.log(token);
+
         const userData = await fetchUser(token);
         if (userData) {
           login(userData, token);
@@ -105,6 +107,9 @@ const LoginScreen = ({navigation}) => {
       }
     } catch (error) {
       console.error('Login error:', error);
+      if (axios.isAxiosError(error)) {
+        console.log(error.toJSON());
+      }
       Alert.alert(
         'Error',
         error.response?.data?.message || 'An error occurred during login.',
