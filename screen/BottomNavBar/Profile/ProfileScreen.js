@@ -79,10 +79,18 @@ const ProfileScreen = ({navigation}) => {
                   }
                 }}>
                 <View style={styles.menuItemLeft}>
-                  <Icon name={item.icon} size={40} color="#000" />
-                  <Text style={styles.menuItemText}>{item.label}</Text>
+                  <Icon name={item.icon} size={40} color="#333a47" />
+                  <View>
+                    <Text style={styles.menuItemText}>{item.label}</Text>
+                    {item.label === 'Profil Saya' && (
+                      <Text style={styles.menuItemSubText}>Ubah Profil</Text>
+                    )}
+                    {item.label === 'Password' && (
+                      <Text style={styles.menuItemSubText}>Ubah Password</Text>
+                    )}
+                    </View>
                 </View>
-                <Icon name="chevron-right" size={24} color="#000" />
+                <Icon name="chevron-right" size={24} color="#727375" />
               </TouchableOpacity>
             ))}
           </View>
@@ -93,7 +101,7 @@ const ProfileScreen = ({navigation}) => {
 };
 
 const menuItems = [
-  {label: 'Edit Profile', icon: 'person', navigateTo: 'ProfileEdit'},
+  {label: 'Profil Saya', icon: 'person', navigateTo: 'ProfileEdit'},
   {label: 'Password', icon: 'lock', navigateTo: 'Password'},
   {label: 'Log out', icon: 'logout'},
 ];
@@ -188,8 +196,15 @@ const styles = StyleSheet.create({
   },
   menuItemText: {
     marginLeft: 15,
-    fontSize: 19,
+    fontSize: 16,
     fontFamily: 'Poppins-SemiBold',
+  },
+  menuItemSubText: {
+    marginLeft: 14,
+    marginTop: -2,
+    fontSize: 13,
+    fontFamily: 'Poppins-Regular',
+    color: '#666',
   },
 });
 
