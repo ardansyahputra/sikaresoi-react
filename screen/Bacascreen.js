@@ -4,7 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
+  ScrollView,
   Image,
   ActivityIndicator,
   FlatList,
@@ -154,7 +154,7 @@ const AttendanceForm = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Image
@@ -222,7 +222,7 @@ const AttendanceForm = () => {
           </View>
         </>
       )}
-    </SafeAreaView>
+    </ScrollView>
   );
 };
 
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   logo: {
-    width: 140,
+    width: 150,
     height: 40,
     resizeMode: 'contain',
   },

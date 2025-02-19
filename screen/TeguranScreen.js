@@ -191,6 +191,10 @@ export default function Teguranscreen({ navigation }) {
           </TouchableOpacity>
         </View>
       </View>
+      <View>
+        <Text style={styles.headerTitle}>Teguran</Text>
+        <Text style={styles.headerSubtitle}>User • Teguran</Text>
+      </View>
 
       {/* Loading Indicator */}
       {loading ? (
@@ -415,7 +419,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   logo: {
-    width: 140,
+    width: 150,
     height: 40,
     resizeMode: 'contain',
   },
@@ -428,6 +432,20 @@ const styles = StyleSheet.create({
   iconWrapper: {
     marginLeft: 12,
   },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000",
+    marginLeft: 20,
+    marginBottom: 4, 
+    marginTop: 10,
+  },
+  headerSubtitle: {
+    color: "#000",
+    marginLeft: 20,
+    marginBottom: 4,
+  },
+
   modalContainer: {
     flex: 1,
     justifyContent: 'center',

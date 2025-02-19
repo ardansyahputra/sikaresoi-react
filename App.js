@@ -13,12 +13,15 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import LoginScreen from './screen/auth/login/Login';
 import HomeScreen from './screen/BottomNavBar/Home/HomeScreen';
 import KontrakKinerjaScreen from './screen/BottomNavBar/KontrakKinerja/KontrakKinerjaScreen';
+import GetAktifCard from './screen/BottomNavBar/KontrakKinerja/GetAktif.js';
+import KirimKontrak from './screen/BottomNavBar/KontrakKinerja/KirimKontrak.js';
 import SettingJabatan from './screen/BottomNavBar/Menu/SettingJabatan/SettingJabatan';
 import FormJabatan from './screen/BottomNavBar/Menu/SettingJabatan/Form.js';
 import TeguranScreen from './screen/TeguranScreen.js';
 import RealisasiKinerja from './screen/BottomNavBar/Menu/RealisasiKinerja/RealisasiKinerja';
 import PresensiScreen from './screen/PresensiScreen';
 import Allmenu from './screen/Allmenu';
+import Persetujuan from './screen/Persetujuan';
 import DataTable from './screen/DataTable';
 import DataTable2 from './screen/DataTable2';
 import RemunerasiScreen from './screen/BottomNavBar/Home/Persetujuan/Renumerasi.js';
@@ -29,12 +32,13 @@ import ProfileScreen from './screen/BottomNavBar/Profile/ProfileScreen';
 import ProfileEdit from './screen/BottomNavBar/Profile/ProfileEdit';
 import Password from './screen/BottomNavBar/Profile/Password';
 import PersetujuanRealisasi from './screen/PersetujuanRealisasi';
-import Persetujuan from './screen/Persetujuan.js';
 import Bacascreen from './screen/Bacascreen.js';
 import Bacakontrak from './screen/Bacakontrak.js';
 import KontrakKerja from './screen/BottomNavBar/Menu/Laporan/KontrakKerja';
 import LaporanKontrakKerja from './screen/BottomNavBar/Menu/Laporan/KontrakKerja';
 import RealisasiNext from './screen/RealisasiNext.js';
+import TargetPersetujuan from './screen/TargetPersetujuan.js';
+import MasterKinerja from './screen/BottomNavBar/Menu/RealisasiKinerja/MasterKinerja.js';
 
 const Tab = createBottomTabNavigator();
 
@@ -75,6 +79,16 @@ function HomeStack() {
         name="KontrakKinerja"
         component={KontrakKinerjaScreen}
         options={{headerShown: false}}
+      />
+      <Stack.Screen
+      name="GetAktif"
+      component={GetAktifCard}
+      options={{headerShown: false}}
+      />
+      <Stack.Screen
+      name="KirimKontrak"
+      component={GetAktifCard}
+      options={{headerShown: false}}
       />
       <Stack.Screen
         name="Profile"
@@ -142,6 +156,11 @@ function HomeStack() {
         options={{headerShown: false}}
       />
       <Stack.Screen
+        name="TargetPersetujuan"
+        component={TargetPersetujuan}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
         name="Remunerasi"
         component={Remunerasi}
         options={{headerShown: false}}
@@ -156,6 +175,11 @@ function HomeStack() {
         component={RealisasiNext}
         options={{headerShown: false}}
       />
+      <Stack.Screen
+        name="MasterKinerja"
+        component={MasterKinerja}
+        options={{headerShown: false}}
+      />
     </Stack.Navigator>
   );
 }
@@ -168,6 +192,16 @@ function ProfileStack() {
       <Stack.Screen name="Password" component={Password} />
     </Stack.Navigator>
   );
+}
+
+function Kontrakstack() {
+  return (
+    <Stack.Navigator screenOptions={{headerShown: false}}>
+      <Stack.Screen name="KontrakKinerja" component={KontrakKinerjaScreen}/>
+      <Stack.Screen name="MasterKinerja" component={MasterKinerja}/>
+      <Stack.Screen name="AddUraian" component={AddUraian}/>
+    </Stack.Navigator>
+  )
 }
 
 function AppTabs() {

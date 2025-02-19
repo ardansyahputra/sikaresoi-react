@@ -11,8 +11,6 @@ import {
   Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import axios from 'axios';
-import { useNavigation } from '@react-navigation/native';
 import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../src/api/apiClient';
 
@@ -22,12 +20,10 @@ export default function Persetujuan({navigation}) {
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [selectedItem, setSelectedItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDisplay, setSelectedDisplay] = useState(10);
-  const [selectedTahun, setSelectedTahun] = useState(null);
   const [tahunOptions, setTahunOptions] = useState([]);
-  const [pickUraianOptions, setPickUraianOptions] = useState([]);
+  const [pickUraianOptions, setPickUraianOptions] = useState(6);
   const apiClient = useApiClient();
 
   useEffect(() => {
@@ -37,42 +33,37 @@ export default function Persetujuan({navigation}) {
 
   const fetchTahun = async () => {
     try {
-      const response = await apiClient.get(
-        '/tahun/show',
-      
-      );
+      const response = await apiClient.get('/tahun/show');
 
-      // Pastikan response.data.data adalah array
       if (Array.isArray(response.data.data)) {
         setTahunOptions(
           response.data.data.map(item => ({
-            label: item.tahun ? item.tahun : 'Unknown', // Pastikan item.tahun ada
-            value: item.id ? item.id : 'Unknown', // Pastikan item.id ada
+            label: item.tahun ? item.tahun : 'Unknown',
+            value: item.id ? item.id : 'Unknown',
           })),
         );
-      } else {
-        // console.error('Data yang diterima bukan array:', response.data.data);
-        // Alert.alert('Error', 'Format data tidak valid.');
       }
     } catch (error) {
-      // console.error('Error fetching tahun options:', error);
-      // Alert.alert('Error', 'Gagal memuat data tahun.');
+      console.error('Error fetching tahun options:', error);
     }
   };
 
-  const fetchData = async () => {
+  const fetchData = async tahun_id => {
     try {
       setLoading(true);
-      const response = await apiClient.post(
-        '/user/kinerja/azril',
-        {
-          page: currentPage,
-          tahun_id: pickUraianOptions,
-          per: selectedDisplay,
-          search: searchQuery,
-        },
-        {
-        },);
+      console.log('Aku ngirim ini 💕😘👌', {
+        page: currentPage,
+        tahun_id: tahun_id ?? pickUraianOptions,
+        per: selectedDisplay,
+        search: searchQuery,
+      });
+      const response = await apiClient.post('/user/kinerja/azril', {
+        page: currentPage,
+        tahun_id: tahun_id ?? pickUraianOptions,
+        per: selectedDisplay,
+        search: searchQuery,
+      });
+
       console.log(response.data);
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
@@ -88,8 +79,8 @@ export default function Persetujuan({navigation}) {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const handleApprove = uuid => {
-    navigation.navigate('Bacakontrak', {uuid});
+  const handleApprove = (userJabatanId, tahunId) => {
+    navigation.navigate('Bacakontrak', {userJabatanId, tahunId});
   };
 
   const getStatusStyle = status => {
@@ -124,12 +115,12 @@ export default function Persetujuan({navigation}) {
               data={tahunOptions}
               labelField="label"
               valueField="value"
-              placeholder="Pilih Tahun"
-              placeholderStyle={{color: '#B6B9CA'}}
+              placeholder="2025"
               value={pickUraianOptions}
               onChange={item => {
-                setPickUraianOptions(item.value);
-                fetchData();
+                console.log('Dropdown 😊👌😁👍🙌❤️', item);
+                setPickUraianOptions(_ => item.value);
+                fetchData(item.value);
               }}
               renderItem={item => (
                 <Text
@@ -170,7 +161,12 @@ export default function Persetujuan({navigation}) {
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
-          <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+          <Ionicons
+            name="search"
+            size={20}
+            color="#888"
+            style={styles.searchIcon}
+          />
         </View>
       </View>
 
@@ -231,13 +227,7 @@ export default function Persetujuan({navigation}) {
               Periode: {item.user_jabatan?.periode || '-'}
             </Text>
             <Text
-              style={[
-                styles.expandedText,
-                item.status_class === 'DISETUJUI'
-                  ? styles.approved
-                  : styles.notApproved,
-              ]}
-            >
+              style={[styles.expandedText, item.status_class === 'DISETUJUI']}>
               Status: {item.status_class || '-'}
             </Text>
 
@@ -247,7 +237,9 @@ export default function Persetujuan({navigation}) {
             <View style={styles.actionContainer}>
               <TouchableOpacity
                 style={styles.approveButton}
-                onPress={() => handleApprove(item.uuid)}>
+                onPress={() =>
+                  handleApprove(item.user_jabatan_id, item.tahun_id)
+                }>
                 <Ionicons name="eye" size={20} color="white" />
               </TouchableOpacity>
             </View>
@@ -273,6 +265,10 @@ export default function Persetujuan({navigation}) {
             <Ionicons name="person-circle-outline" size={24} color="#333" />
           </TouchableOpacity>
         </View>
+      </View>
+      <View>
+        <Text style={styles.headerTitle}>Persetujuan</Text>
+        <Text style={styles.headerSubtitle}>User • Persetujuan</Text>
       </View>
 
       {/* Loading Indicator */}
@@ -379,6 +375,19 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     flex: 1,
   },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+    marginLeft: 20,
+    marginBottom: 4,
+    marginTop: 10,
+  },
+  headerSubtitle: {
+    color: '#000',
+    marginLeft: 20,
+    marginBottom: 4,
+  },
   searchContainer: {
     width: 150,
     height: 40,
@@ -400,9 +409,9 @@ const styles = StyleSheet.create({
   },
   searchIcon: {
     position: 'absolute',
-    right: 10, 
+    right: 10,
     top: '50%',
-    transform: [{ translateY: -10 }],
+    transform: [{translateY: -10}],
   },
   displayContainer: {
     flexDirection: 'row',
@@ -672,18 +681,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
   },
-  approved: {
-    backgroundColor: 'green',
-    color: 'white',
-  },
-  notApproved: {
-    backgroundColor: 'red',
-    color: 'white',
-  },
   approveButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#11aff2',
+    backgroundColor: '#3699ff',
     paddingVertical: 10,
     paddingHorizontal: 10,
     borderRadius: 10,
@@ -693,5 +694,4 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
   },
- 
 });

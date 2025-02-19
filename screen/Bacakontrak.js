@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -6,187 +6,296 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
+  ActivityIndicator,
+  Image,
+  RefreshControl,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Icon from 'react-native-vector-icons/Ionicons';
+import useApiClient from '../src/api/apiClient';
+import {useNavigation} from '@react-navigation/native';
 
-const Card = ({ children, style }) => (
-  <View style={[styles.card, style]}>
-    {children}
-  </View>
-);
+export default function PerformanceTableScreen({route}) {
+  const [data, setData] = useState([]);
+  const {userJabatanId, tahunId} = route.params;
 
-const PerformanceTable = ({ data = [], onSaveKinerja, onDelete }) => {
-  const [listKinerja, setListKinerja] = useState(data);
-
-  const renderPerformanceCard = (item, index) => (
-    <Card key={index} style={styles.performanceCard}>
-      <View style={styles.cardHeader}>
-        <View style={styles.numberBadge}>
-          <Text style={styles.numberText}>{item.angka}</Text>
-        </View>
-        <Text style={styles.cardTitle} numberOfLines={2}>
-          {item.uraian?.nm_uraian}
-        </Text>
-      </View>
-
-      <View style={styles.cardContent}>
-        <View style={styles.infoRow}>
-          <Text style={styles.label}>Biaya:</Text>
-          <View style={styles.currencyContainer}>
-            <Text style={styles.currencyPrefix}>Rp</Text>
-            <Text style={styles.currencyValue}>
-              {item.uraian?.biaya?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.infoRow}>
-          <Text style={styles.label}>Angka Kredit:</Text>
-          <Text style={styles.value}>{item.uraian?.angka_kredit}</Text>
-        </View>
-
-        <View style={styles.inputSection}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Kuantitas</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                value={item.kuantitas?.toString()}
-                onChangeText={(value) => {
-                  const updatedItem = { ...item, kuantitas: value };
-                  onSaveKinerja(updatedItem);
-                }}
-                keyboardType="numeric"
-                placeholder="0"
-                placeholderTextColor="#999"
-              />
-              <Text style={styles.inputSuffix}>{item.uraian?.satuan}</Text>
-            </View>
-            {item.kuantitas <= 0 && (
-              <Text style={styles.errorText}>Tidak boleh 0</Text>
-            )}
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Kualitas</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                value={item.kualitas?.toString()}
-                onChangeText={(value) => {
-                  const updatedItem = { ...item, kualitas: value };
-                  onSaveKinerja(updatedItem);
-                }}
-                keyboardType="numeric"
-                placeholder="0"
-                placeholderTextColor="#999"
-              />
-              <Text style={styles.inputSuffix}>%</Text>
-            </View>
-            {item.kualitas <= 0 && (
-              <Text style={styles.errorText}>Tidak boleh 0</Text>
-            )}
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Waktu</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                value={item.waktu?.toString()}
-                onChangeText={(value) => {
-                  const updatedItem = { ...item, waktu: value };
-                  onSaveKinerja(updatedItem);
-                }}
-                keyboardType="numeric"
-                placeholder="0"
-                placeholderTextColor="#999"
-              />
-              <Text style={styles.inputSuffix}>BULAN</Text>
-            </View>
-            {item.waktu <= 0 && (
-              <Text style={styles.errorText}>Tidak boleh 0</Text>
-            )}
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Bobot</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                value={item.bobot?.toString()}
-                onChangeText={(value) => {
-                  const updatedItem = { ...item, bobot: value };
-                  onSaveKinerja(updatedItem);
-                }}
-                keyboardType="numeric"
-                placeholder="0"
-                placeholderTextColor="#999"
-              />
-            </View>
-            {item.bobot <= 0 && (
-              <Text style={styles.errorText}>Tidak boleh 0</Text>
-            )}
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>WPT</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                value={item.wpt?.toString()}
-                onChangeText={(value) => {
-                  const updatedItem = { ...item, wpt: value };
-                  onSaveKinerja(updatedItem);
-                }}
-                keyboardType="numeric"
-                placeholder="0"
-                placeholderTextColor="#999"
-              />
-            </View>
-            {item.wpt <= 0 && (
-              <Text style={styles.errorText}>Tidak boleh 0</Text>
-            )}
-          </View>
-        </View>
-
-        <View style={styles.statusSection}>
-          {item.kuantitas <= 0 || item.kualitas <= 0 || item.waktu <= 0 || item.bobot <= 0 || item.wpt <= 0 ? (
-            <View style={styles.statusBadgeDanger}>
-              <Icon name="alert" size={16} color="white" />
-              <Text style={styles.statusText}>LENGKAPI DATA</Text>
-            </View>
-          ) : item.total_target === null ? (
-            <View style={styles.statusBadgeWarning}>
-              <Icon name="clock-alert" size={16} color="white" />
-              <Text style={styles.statusText}>BELUM BREAKDOWN</Text>
-            </View>
-          ) : (
-            <View style={styles.statusBadgeSuccess}>
-              <Icon name="check-circle" size={16} color="white" />
-              <Text style={styles.statusText}>LENGKAP</Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.editButton]}
-            onPress={() => {/* Handle edit */}}
-          >
-            <Icon name="pencil" size={20} color="white" />
-            <Text style={styles.buttonText}>Edit</Text>
-          </TouchableOpacity>
-
-          
-        </View>
-      </View>
-    </Card>
-  );
+  const handleSaveKinerja = updatedItem => {
+    console.log('Saved:', updatedItem);
+    setData(prevData =>
+      prevData.map(item =>
+        item.uuid === updatedItem.uuid ? updatedItem : item,
+      ),
+    );
+  };
 
   return (
+    <PerformanceTable
+      data={data}
+      onSaveKinerja={handleSaveKinerja}
+      userJabatanId={userJabatanId}
+      tahunId={tahunId}
+    />
+  );
+}
+
+const PerformanceTable = ({data, onSaveKinerja, userJabatanId, tahunId}) => {
+  const [listKinerja, setListKinerja] = useState(data);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const apiClient = useApiClient();
+  const navigation = useNavigation();
+
+  // Fetch Data
+  const fetchKinerjaData = async () => {
+    try {
+      const response = await apiClient.post('user/kinerja/list/index', {
+        tahun_id: tahunId,
+        user_jabatan_id: userJabatanId,
+      });
+
+      if (!response.data || !response.data.kinerja || !Array.isArray(response.data.data)) {
+        throw new Error('Invalid data structure');
+      }
+
+      setListKinerja(response.data.data);
+      setError(null);
+    } catch (err) {
+      setError(`Gagal memuat data. Silakan coba lagi. Error: ${err.message}`);
+      console.error('Error fetching data:', err.toJSON());
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchKinerjaData();
+  };
+
+  useEffect(() => {
+    fetchKinerjaData();
+  }, []);
+
+  // Save Data
+  const handleSaveKinerja = async updatedItem => {
+    try {
+      const response = await apiClient.put(
+        `user/kinerja/update/${updatedItem.uuid}`,
+        updatedItem,
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to update data');
+      }
+
+      fetchKinerjaData();
+    } catch (error) {
+      console.error('Error saving data:', error.toJSON());
+    }
+  };
+
+  // Components
+  const Card = ({children, style}) => (
+    <View style={[styles.card, style]}>{children}</View>
+  );
+
+  const InputField = ({
+    label,
+    value,
+    onChange,
+    suffix,
+    keyboardType = 'numeric',
+  }) => (
+    <View style={styles.inputGroup}>
+      <Text style={styles.inputLabel}>{label}</Text>
+      <View style={styles.inputWrapper}>
+        <TextInput
+          style={styles.input}
+          value={value?.toString()}
+          onChangeText={onChange}
+          keyboardType={keyboardType}
+          placeholder="0"
+          placeholderTextColor="#999"
+        />
+        {suffix && <Text style={styles.inputSuffix}>{suffix}</Text>}
+      </View>
+      {value <= 0 && <Text style={styles.errorText}>Tidak boleh 0</Text>}
+    </View>
+  );
+
+  const StatusBadge = ({type, icon, text}) => {
+    const badgeStyles = {
+      danger: styles.statusBadgeDanger,
+      warning: styles.statusBadgeWarning,
+      success: styles.statusBadgeSuccess,
+    };
+
+    return (
+      <View style={badgeStyles[type]}>
+        <Icon name={icon} size={16} color="white" />
+        <Text style={styles.statusText}>{text}</Text>
+      </View>
+    );
+  };
+
+  const PerformanceCard = ({item, index}) => {
+    const getStatus = () => {
+      if (
+        item.kuantitas <= 0 ||
+        item.kualitas <= 0 ||
+        item.waktu <= 0 ||
+        item.bobot <= 0 ||
+        item.wpt <= 0
+      ) {
+        return {
+          type: 'danger',
+          icon: 'alert-circle',
+          text: 'LENGKAPI DATA',
+        };
+      }
+      if (item.total_target === null) {
+        return {
+          type: 'warning',
+          icon: 'time',
+          text: 'BELUM BREAKDOWN',
+        };
+      }
+      return {
+        type: 'success',
+        icon: 'checkmark-circle',
+        text: 'LENGKAP',
+      };
+    };
+
+    const {type, icon, text} = getStatus();
+
+    return (
+      <Card style={styles.performanceCard}>
+        <View style={styles.cardHeader}>
+          <View style={styles.numberBadge}>
+            <Text style={styles.numberText}>{index + 1}</Text>
+          </View>
+          <Text style={styles.cardTitle} numberOfLines={2}>
+            {item.uraian?.nm_uraian}
+          </Text>
+        </View>
+
+        <View style={styles.cardContent}>
+          <View style={styles.infoRow}>
+            <Text style={styles.label}>Biaya:</Text>
+            <View style={styles.currencyContainer}>
+              <Text style={styles.currencyPrefix}>Rp</Text>
+              <Text style={styles.currencyValue}>
+                {item.uraian?.biaya
+                  ?.toString()
+                  .replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.label}>Angka Kredit:</Text>
+            <Text style={styles.value}>{item.uraian?.angka_kredit}</Text>
+          </View>
+
+          <View style={styles.inputSection}>
+            <InputField
+              label="Kuantitas"
+              value={item.kuantitas}
+              onChange={value => handleInputChange('kuantitas', value)}
+              suffix={item.list?.uraian?.satuan}
+            />
+            <InputField
+              label="Kualitas"
+              value={item.kualitas}
+              onChange={value => handleInputChange('kualitas', value)}
+              suffix="%"
+            />
+            <InputField
+              label="Waktu"
+              value={item.waktu}
+              onChange={value => handleInputChange('waktu', value)}
+              suffix="BULAN"
+            />
+            <InputField
+              label="Bobot"
+              value={item.bobot}
+              onChange={value => handleInputChange('bobot', value)}
+            />
+            <InputField
+              label="WPT"
+              value={item.wpt}
+              onChange={value => handleInputChange('wpt', value)}
+            />
+          </View>
+
+          <View style={styles.statusSection}>
+            <StatusBadge type={type} icon={icon} text={text} />
+          </View>
+
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.editButton]}
+              onPress={() => navigation.navigate('TargetPersetujuan')}>
+              <Icon name="pencil" size={20} color="white" />
+              <Text style={styles.buttonText}>Edit</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Card>
+    );
+  };
+
+  // Loading State
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4C6FFF" />
+        <Text style={styles.loadingText}>Loading data...</Text>
+      </View>
+    );
+  }
+
+  // Error State
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Icon name="alert-circle" size={48} color="#E53E3E" />
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchKinerjaData}>
+          <Text style={styles.retryButtonText}>Coba Lagi</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Main Render
+  return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <Image
+            source={require('./assets/images/sikaresoi.png')}
+            style={styles.logo}
+          />
+        </View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.iconWrapper}>
+            <Icon name="person-circle-outline" size={24} color="#333" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#4C6FFF']}
+          />
+        }>
         {listKinerja.length === 0 ? (
           <Card>
             <View style={styles.emptyState}>
@@ -195,18 +304,35 @@ const PerformanceTable = ({ data = [], onSaveKinerja, onDelete }) => {
             </View>
           </Card>
         ) : (
-          listKinerja.map((item, index) => renderPerformanceCard(item, index))
+          listKinerja.map((item, index) => (
+            <PerformanceCard
+              key={item.uuid}
+              item={item}
+              index={index}
+              onSaveKinerja={onSaveKinerja}
+            />
+          ))
         )}
       </ScrollView>
 
       <Card style={styles.summaryCard}>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Total WPT:</Text>
-          <Text style={styles.summaryValue}>XX Jam (xx%)</Text>
+          <Text style={styles.summaryValue}>
+            {listKinerja.reduce(
+              (total, item) => total + (Number(item.wpt) || 0),
+              0,
+            )}{' '}
+            Jam
+          </Text>
         </View>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Total Angka Kredit:</Text>
-          <Text style={styles.summaryValue}>XX</Text>
+          <Text style={styles.summaryLabel}>Total Bobot:</Text>
+          <Text style={styles.summaryValue}>
+            {listKinerja
+              .reduce((total, item) => total + (Number(item.bobot) || 0), 0)
+              .toFixed(2)}
+          </Text>
         </View>
       </Card>
     </View>
@@ -227,7 +353,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -379,9 +505,6 @@ const styles = StyleSheet.create({
   editButton: {
     backgroundColor: '#4C6FFF',
   },
-  deleteButton: {
-    backgroundColor: '#E53E3E',
-  },
   buttonText: {
     color: 'white',
     marginLeft: 8,
@@ -414,73 +537,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#718096',
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  logo: {
+    width: 140,
+    height: 40,
+    resizeMode: 'contain',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconWrapper: {
+    marginLeft: 16,
+  },
 });
 
-const sampleData = [
-  {
-    uuid: '1',
-    angka: 1,
-    uraian: {
-      nm_uraian: 'Menerima dan mencatat surat masuk maupun surat keluar',
-      biaya: 0,
-      angka_kredit: 3.5,
-      satuan: 'Unit',
-    },
-    kuantitas: 10,
-    kualitas: 90,
-    waktu: 6,
-    bobot: 20,
-    wpt: 12,
-    total_target: 100,
-  },
-  {
-    uuid: '2',
-    angka: 2,
-    uraian: {
-      nm_uraian: 'Mengurangi Biaya Operasional',
-      biaya: 7500000,
-      angka_kredit: 2.5,
-      satuan: 'Unit',
-    },
-    kuantitas: 5,
-    kualitas: 80,
-    waktu: 4,
-    bobot: 15,
-    wpt: 8,
-    total_target: null,
-  },
-  {
-    uuid: '3',
-    angka: 3,
-    uraian: {
-      nm_uraian: 'Meningkatkan Kepuasan Pelanggan',
-      biaya: 10000000,
-      angka_kredit: 4.0,
-      satuan: 'Unit',
-    },
-    kuantitas: 8,
-    kualitas: 85,
-    waktu: 5,
-    bobot: 25,
-    wpt: 10,
-    total_target: 90,
-  },
-];
-
-export default function App() {
-  const handleSaveKinerja = (updatedItem) => {
-    console.log('Saved:', updatedItem);
-  };
-
-  const handleDeleteKinerja = (uuid) => {
-    console.log('Deleted item with uuid:', uuid);
-  };
-
-  return (
-    <PerformanceTable
-      data={sampleData}
-      onSaveKinerja={handleSaveKinerja}
-      onDelete={handleDeleteKinerja}
-    />
-  );
-}
+  
