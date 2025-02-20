@@ -82,6 +82,7 @@ export default function BulanTahun() {
         activeButton === 'bulan'
           ? `/bulan/${selectedUuid}/delete`
           : `/tahun/${selectedUuid}/delete`;
+          
 
       await apiClient.delete(endpoint);
 
