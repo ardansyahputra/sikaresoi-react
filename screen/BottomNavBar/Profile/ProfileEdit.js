@@ -110,7 +110,7 @@ const ProfileEdit = ({navigation}) => {
             source={
               profileImage
                 ? {uri: profileImage}
-                : require('../../assets/images/sikaresoi.png')
+                : require('../../assets/sikaresoi.png')
             }
             style={styles.profileImage}
           />

@@ -85,9 +85,7 @@ const SettingJabatan = ({ navigation }) => {
     navigation.navigate('FormJabatan', { type: 'create' });
   };
 
-  const handleEdit = (item) => {
-    navigation.navigate('FormJabatan', { type: 'edit', item });
-  };
+  2
   
   const handleChangeAktif = async (item) => {
     try {

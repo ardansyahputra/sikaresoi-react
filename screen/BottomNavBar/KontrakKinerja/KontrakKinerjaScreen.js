@@ -582,10 +582,7 @@ const KontrakKinerjaScreen = () => {
         </View>
       </Modal>
 
-      {/* Loading Indicator */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : (
+
         <FlatList
           scrollEnabled={false}
           ListHeaderComponent={TableHeader}
@@ -595,6 +592,7 @@ const KontrakKinerjaScreen = () => {
           contentContainerStyle={styles.card}
           ListFooterComponent={
             <View>
+              {loading && <ActivityIndicator size="large" color="#0000ff" />}            
               <Text style={styles.pageInfo}>
                 Showing page {currentPage} of {lastPage}
               </Text>
@@ -629,7 +627,6 @@ const KontrakKinerjaScreen = () => {
             </View>
           }
         />
-      )}
     </ScrollView>
   );
 };

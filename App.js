@@ -39,7 +39,7 @@ import RealisasiNext from './screen/RealisasiNext.js';
 import MasterKinerja from './screen/BottomNavBar/KontrakKinerja/MasterKinerja.js';
 import AddUraian from './screen/BottomNavBar/KontrakKinerja/AddUraian.js';
 import SalinKontrak from './screen/BottomNavBar/KontrakKinerja/SalinKontrak.js';
-import Kumulatif from './screen/BottomNavBar/KontrakKinerja/Kumulatif.js';
+import TargetKinerja from './screen/BottomNavBar/KontrakKinerja/TargetKinerja.js';
 
 const Tab = createBottomTabNavigator();
 const styles = StyleSheet.create({
@@ -195,7 +195,7 @@ function Kontrakstack() {
       <Stack.Screen name="MasterKinerja" component={MasterKinerja}/>
       <Stack.Screen name="AddUraian" component={AddUraian}/>
       <Stack.Screen name="SalinKontrak" component={SalinKontrak}/>
-      <Stack.Screen name="Kumulatif" component={Kumulatif}/>
+      <Stack.Screen name="TargetKinerja" component={TargetKinerja}/>
     </Stack.Navigator>
   )
 }
