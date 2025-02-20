@@ -19,10 +19,11 @@ const AddUraian = ({ navigation, route }) => {
   const [dropdownLoading, setDropdownLoading] = useState(true);
 
   const [formData, setFormData] = useState({
-    nm_satuan: '',
+    nm_uraian: '',
+    satuan: '',
     wpt: 0,
-    jabatan_id: null, // Will be populated from userJabatanData
-    tgs_tambahan: '', // Added tugas tambahan field
+    jabatan_id: 0,
+    tgs_tambahan: '',
   });
 
   const [dropdownOptions, setDropdownOptions] = useState({
@@ -42,8 +43,8 @@ const AddUraian = ({ navigation, route }) => {
       if (response?.data?.data) {
         setFormData(prev => ({
           ...prev,
-          jabatan_id: response.data.data.jabatan_id,
-          tgs_tambahan: response.data.data.tgs_tambahan || '', // Populate tugas tambahan from the response
+          jabatan_id: response.data.jabatan?.id,
+          tgs_tambahan: response.data.data.tgsTambahan || '',
         }));
       }
     } catch (error) {
@@ -58,7 +59,7 @@ const AddUraian = ({ navigation, route }) => {
       const response = await apiClient.get('satuan/show');
       const satuanOptions = (response.data?.data || []).map(item => ({
         label: item.nm_satuan || 'Unknown',
-        value: item.satuan, // Use the label as the value since backend expects a string
+        value: item.satuan,
       }));
       setDropdownOptions({ satuan: satuanOptions });
     } catch (error) {
@@ -79,20 +80,10 @@ const AddUraian = ({ navigation, route }) => {
       return;
     }
 
-    console.log('payload:', formData);
-
     setLoading(true);
     try {
-      const url = '/uraian/create';
-      const method = 'post';
-
-      await apiClient({
-        method,
-        url,
-        data: formData,
-      });
-
-      Alert.alert('Sukses', `Data berhasil ditambahkan`);
+      await apiClient.post('/uraian/create', formData);
+      Alert.alert('Sukses', 'Data berhasil ditambahkan');
       navigation.goBack();
     } catch (error) {
       console.error('Error saving data:', error.response?.data || error.message);
@@ -104,34 +95,28 @@ const AddUraian = ({ navigation, route }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Image
-            source={require('../../assets/sikaresoi.png')}
-            style={styles.logo}
-          />
-        </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconWrapper}>
-            <Ionicons name="person-circle-outline" size={24} color="#333" />
+      <View style={styles.formContainer}>
+
+        <View style={styles.backButtonContainer}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={26} color="#000" />
           </TouchableOpacity>
         </View>
-      </View>
-      
-      <View style={styles.formContainer}>
-        <Text style={[styles.customFont, styles.headerTitle]}></Text>
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>
+            Tambah Indikator
+          </Text>
+        </View>
 
         <Text style={styles.label}>
           Indikator Kinerja: <Text style={styles.required}>*</Text>
         </Text>
         <TextInput
-          style={styles.dropdown}
-          placeholder="Nama Uraian"
-          data={dropdownOptions.satuan}
+          style={styles.input}
           placeholderStyle={styles.placeholderStyle}
-          selectedTextStyle={styles.selectedTextStyle}
-          value={formData.nm_satuan}
-          onChangeText={text => setField('nm_satuan', text)}
+          placeholder="Nama Uraian"
+          value={formData.nm_uraian}
+          onChangeText={text => setField('nm_uraian', text)}
         />
 
         <Text style={styles.label}>
@@ -139,29 +124,29 @@ const AddUraian = ({ navigation, route }) => {
         </Text>
         <Dropdown
           loading={dropdownLoading}
-          style={styles.dropdown}
+          style={styles.input}
           placeholderStyle={styles.placeholderStyle}
           selectedTextStyle={styles.selectedTextStyle}
           data={dropdownOptions.satuan}
           labelField="label"
           valueField="value"
-          value={formData.nm_satuan}
-          onChange={item => setField('satuan', item.value)} // Store the label (string) in formData
+          placeholder="Pilih Satuan"
+          value={formData.satuan}
+          onChange={item => setField('satuan', item.value)}
         />
 
         <Text style={styles.label}>
           WPT: <Text style={styles.required}>*</Text>
-          </Text>
+        </Text>
         <TextInput
-          style={styles.dropdown}
-          placeholder="Nama Uraian"
+          style={styles.input}
           placeholderStyle={styles.placeholderStyle}
-          selectedTextStyle={styles.selectedTextStyle}
+          placeholder="WPT"
+          keyboardType="numeric"
           value={formData.wpt.toString()}
-          onChangeText={text => setField('wpt', item.value)}
+          onChangeText={text => setField('wpt', parseInt(text, 10))}
         />
 
-        {/* Button Save dan Cancel */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
             {loading ? (
@@ -172,7 +157,7 @@ const AddUraian = ({ navigation, route }) => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.cancelButton}
-            onPress={() => navigation.goBack({refresh: true})}>
+            onPress={() => navigation.goBack()}>
             <Text style={styles.cancelButtonText}>Batal</Text>
           </TouchableOpacity>
         </View>
@@ -183,7 +168,7 @@ const AddUraian = ({ navigation, route }) => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    padding: 10,
     backgroundColor: '#F7F8FB',
     flexGrow: 1,
   },
@@ -204,7 +189,7 @@ const styles = StyleSheet.create({
     zIndex: 10, // Memberikan prioritas rendering agar header tidak tertutup oleh konten
   },
   formContainer: {
-    marginTop: 50,
+    marginTop: 0,
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     padding: 20,
@@ -214,19 +199,26 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
-  logo: {
-    width: 140,
-    height: 40,
-    resizeMode: 'contain',
+  titleContainer:{
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: "Poppins-Bold",
     marginBottom: 20,
     textAlign: 'center',
     color: '#333',
   },
+  backButton: {
+    opacity: 0.4,
+  },
+  backButtonContainer: {
+    marginTop: -8,
+    marginLeft:-8,
+  },
   label: {
+    fontFamily: 'Poppins-SemiBold',
     fontSize: 14,
     marginBottom: 5,
     color: '#333',
@@ -234,7 +226,7 @@ const styles = StyleSheet.create({
   required: {
     color: 'red',
   },
-  dropdown: {
+  input: {
     borderColor: '#CCCCCC',
     borderWidth: 1,
     borderRadius: 5,
@@ -244,11 +236,10 @@ const styles = StyleSheet.create({
   },
   placeholderStyle: {
     fontSize: 16,
-    color: '#999999',
+    opacity: 0.3,
   },
   selectedTextStyle: {
     fontSize: 16,
-    color: '#333333',
   },
   datePickerContainer: {
     backgroundColor: '#fff',

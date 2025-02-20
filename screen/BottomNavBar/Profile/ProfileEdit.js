@@ -159,7 +159,7 @@ const ProfileEdit = ({navigation}) => {
         <TouchableOpacity
           style={styles.updateButton}
           onPress={handleUpdateProfile}>
-          <Text style={styles.updateButtonText}>Kirim</Text>
+          <Text style={styles.updateButtonText}>SIMPAN</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
