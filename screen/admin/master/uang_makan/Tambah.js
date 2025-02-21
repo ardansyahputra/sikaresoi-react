@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Dimensions,
   ScrollView,
 } from 'react-native';
@@ -35,7 +34,6 @@ const TambahUangMakan = ({navigation}) => {
         golongan: selectedGolongan,
         nominal: selectedNominal,
       });
-      fetchData(currentPage); // Refresh data
       navigation.goBack();
     } catch (error) {
       Toast.show({

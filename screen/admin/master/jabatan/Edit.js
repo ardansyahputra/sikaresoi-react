@@ -13,9 +13,10 @@ import Header from '../../../components/Header';
 import GlobalStyle from '../../../../src/utils/GlobalStyle';
 import {BarIndicator} from 'react-native-indicators';
 const {width} = Dimensions.get('window');
+import Toast from 'react-native-toast-message';
 
 const EditJabatan = ({navigation, route}) => {
-  const {uuid} = route.params; // Mendapatkan UUID dari parameter navigasi
+  const {uuid} = route.params;
   const apiClient = useApiClient();
   const [editData, setEditData] = useState({});
   const [focusState, setFocusState] = useState({});
@@ -23,7 +24,7 @@ const EditJabatan = ({navigation, route}) => {
 
   useEffect(() => {
     if (uuid) {
-      fetchEditData(uuid); // Panggil fungsi untuk fetch data edit berdasarkan UUID
+      fetchEditData(uuid);
     }
   }, [uuid]);
 
@@ -48,7 +49,6 @@ const EditJabatan = ({navigation, route}) => {
         jv: editData.jv,
       });
       navigation.goBack();
-      fetchData(currentPage);
     } catch (error) {
       Toast.show({
         type: 'error',

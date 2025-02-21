@@ -1,21 +1,27 @@
-
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Modal, StyleSheet } from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  Modal,
+  StyleSheet,
+} from 'react-native';
 import useApiClient from '../../../../src/api/apiClient'; // Custom API hook for making requests
+import Header from '../../../components/Header';
 
-
-export default function IndexRupiah({ navigation }) {
+export default function IndexRupiah({navigation}) {
   const [pir, setPir] = useState(0);
   const [updatedAt, setUpdatedAt] = useState('-');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
-  const apiClient = useApiClient();  // Your custom hook to handle API requests
+  const apiClient = useApiClient(); // Your custom hook to handle API requests
 
   useEffect(() => {
     const getPir = async () => {
       try {
         const response = await apiClient(`/pir/edit`);
-        const data = response.data || await response.json();
+        const data = response.data || (await response.json());
         if (data && data.res.code === 200) {
           setPir(data.data.pir);
           setUpdatedAt(data.data.updated_at);
@@ -37,7 +43,7 @@ export default function IndexRupiah({ navigation }) {
     }
 
     try {
-      const response = await apiClient.post(`/pir/update`, { pir });
+      const response = await apiClient.post(`/pir/update`, {pir});
       if (response.data && response.data.res.code === 200) {
         setPir(response.data.data.pir);
         setUpdatedAt(response.data.data.updated_at);
@@ -52,11 +58,11 @@ export default function IndexRupiah({ navigation }) {
 
   return (
     <View style={styles.container}>
-              <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                  <Text style={styles.headerTitle}></Text>
-                </TouchableOpacity>
-              </View>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Text style={styles.headerTitle}></Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.card}>
         <Text style={styles.title}>Poin Indeks Rupiah</Text>
         <View style={styles.inputContainer}>
@@ -65,7 +71,9 @@ export default function IndexRupiah({ navigation }) {
             style={styles.input}
             value={String(pir)}
             keyboardType="numeric"
-            onChangeText={text => setPir(text.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1'))}
+            onChangeText={text =>
+              setPir(text.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1'))
+            }
             placeholder="PIR"
           />
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
@@ -91,11 +99,11 @@ export default function IndexRupiah({ navigation }) {
           </View>
         </View>
       </Modal>
-              <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                  <Text style={styles.headerTitle}></Text>
-                </TouchableOpacity>
-              </View>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Text style={styles.headerTitle}></Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.card}>
         <Text style={styles.title}>Poin Indeks Rupiah</Text>
         <View style={styles.inputContainer}>
@@ -104,7 +112,9 @@ export default function IndexRupiah({ navigation }) {
             style={styles.input}
             value={String(pir)}
             keyboardType="numeric"
-            onChangeText={text => setPir(text.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1'))}
+            onChangeText={text =>
+              setPir(text.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1'))
+            }
             placeholder="PIR"
           />
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
@@ -157,7 +167,7 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
   },
-  headerTitle: { textAlign: 'center', fontSize: 20, fontWeight: 'bold' },
+  headerTitle: {textAlign: 'center', fontSize: 20, fontWeight: 'bold'},
   cardContainer: {
     backgroundColor: '#FFFF',
     paddingVertical: 20,
@@ -236,7 +246,7 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
   },
-  headerTitle: { textAlign: 'center', fontSize: 20, fontWeight: 'bold' },
+  headerTitle: {textAlign: 'center', fontSize: 20, fontWeight: 'bold'},
   cardContainer: {
     backgroundColor: '#FFFF',
     paddingVertical: 20,

@@ -6,17 +6,13 @@ import {
   TouchableOpacity,
   Keyboard,
   StyleSheet,
-  Platform,
   Dimensions,
   ScrollView,
 } from 'react-native';
-import {TimerPicker} from 'react-native-timer-picker';
-import LinearGradient from 'react-native-linear-gradient';
 import useApiClient from '../../../../../src/api/apiClient';
 import {BarIndicator} from 'react-native-indicators';
 import GlobalStyle from '../../../../../src/utils/GlobalStyle';
 import Header from '../../../../components/Header';
-import {Dropdown} from 'react-native-element-dropdown';
 const {width} = Dimensions.get('window');
 
 const EditPage = ({navigation, route}) => {
@@ -76,7 +72,11 @@ const EditPage = ({navigation, route}) => {
         : selectedBatasBawah;
 
     if (!selectedPotongan || !finalBatasAtas || !finalBatasBawah) {
-      console.log('Error', 'Please fill in all fields before saving.');
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal',
+        text2: 'Please fill in all fields before saving.',
+      });
       setIsLoading(false);
       return;
     }
@@ -106,11 +106,19 @@ const EditPage = ({navigation, route}) => {
         navigation.goBack();
       } else {
         console.error('Failed to update ', response.status);
-        console.log('Error', 'Failed to update data. Please try again.');
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal',
+          text2: 'Failed to update data. Please try again.',
+        });
       }
     } catch (error) {
       console.error('Error during API request:', error);
-      console.log('Error', 'Failed to update data.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to update data.',
+      });
     } finally {
       setIsLoading(false);
     }

@@ -4,64 +4,90 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  Keyboard,
   StyleSheet,
   Alert,
-  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
+  Dimensions,
 } from 'react-native';
-import useApiClient from '../../../../src/api/apiClient';
-import Header from '../../../components/Header';
-import GlobalStyle from '../../../../src/utils/GlobalStyle';
-const {width} = Dimensions.get('window');
+import useApiClient from '../../../../../src/api/apiClient';
+import Header from '../../../../components/Header';
+import GlobalStyle from '../../../../../src/utils/GlobalStyle';
 import {BarIndicator} from 'react-native-indicators';
+const {width} = Dimensions.get('window');
 import Toast from 'react-native-toast-message';
 
-const EditNoWhatsapp = ({navigation, route}) => {
-  const {uuid} = route.params; // Mendapatkan UUID dari parameter navigasi
+const TambahPage = ({navigation}) => {
+  const [selectedPotongan, setSelectedPotongan] = useState('');
+  const [selectedBatasAtas, setSelectedBatasAtas] = useState('00:00:00');
+  const [selectedBatasBawah, setSelectedBatasBawah] = useState('00:00:00');
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
   const apiClient = useApiClient();
-  const [editData, setEditData] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
   const [focusState, setFocusState] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (uuid) {
-      fetchEditData(uuid); // Panggil fungsi untuk fetch data edit berdasarkan UUID
-    }
-  }, [uuid]);
+    setTimeout(() => setIsLoading(false), 1000);
 
-  const submitEdit = async () => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => setKeyboardOpen(true),
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => setKeyboardOpen(false),
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
+
+  const handleSave = async () => {
     setIsLoading(true);
+
+    if (!selectedPotongan || !selectedBatasAtas || !selectedBatasBawah) {
+      console.log('Error', 'Please fill in all fields before saving.');
+      setIsLoading(false);
+      return;
+    }
+
+    const payload = {
+      batas_bawah: selectedBatasBawah,
+      batas_atas: selectedBatasAtas,
+      potongan: selectedPotongan,
+    };
+
     try {
-      await apiClient.post(`/nowa/${editData.uuid}/update`, {
-        nm_no_wa: editData.nm_no_wa,
-        nomor: editData.nomor,
-      });
-      console.log('Berhasil', 'Data berhasil diperbarui.');
-      navigation.goBack();
+      const response = await apiClient.post(
+        '/pemotongan_terlambat/create',
+        payload,
+      );
+
+      if (response.status === 200 && response.data.status) {
+        console.log('Success', 'Data has been created successfully.');
+        navigation.goBack();
+      } else {
+        console.log('Error', 'Failed to create data. Please try again.');
+      }
     } catch (error) {
       Toast.show({
         type: 'error',
         text1: 'Gagal',
-        text2: 'Gagal memperbarui data.',
+        text2: 'Gagal menambahkan data.',
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const fetchEditData = async uuid => {
-    setIsLoading(true);
-    try {
-      const response = await apiClient.get(`/nowa/${uuid}/edit`);
-      setEditData(response.data.data); // Simpan data edit di state
-    } catch (error) {
-      console.error('Error fetching edit data:', error);
-      console.log('Error', 'Gagal mengambil data untuk diedit.');
-    } finally {
-      setIsLoading(false);
-    }
+  const handleTextChange = (text, setState) => {
+    const filteredText = text.replace(/[^0-9:]/g, '');
+    setState(filteredText);
   };
-
   const handleFocus = inputName => {
     setFocusState(prevState => ({...prevState, [inputName]: true}));
   };
@@ -72,7 +98,7 @@ const EditNoWhatsapp = ({navigation, route}) => {
 
   return (
     <View style={styles.rootContainer}>
-      <Header title="Edit No WhatsApp" />
+      <Header title="Tambah PA 2" />
       <View style={styles.container}>
         {isLoading ? (
           // Loading Indicator
@@ -83,46 +109,65 @@ const EditNoWhatsapp = ({navigation, route}) => {
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}>
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>Potongan</Text>
+            <TextInput
+              style={[
+                GlobalStyle.SemiBold,
+                styles.input,
+                focusState.selectedPotongan && styles.inputFocused,
+                selectedPotongan && styles.inputFilled,
+              ]}
+              value={selectedPotongan}
+              onChangeText={text => handleTextChange(text, setSelectedPotongan)}
+              keyboardType="default"
+              placeholder="Masukkan Potongan (angka atau ':')"
+              placeholderTextColor="#B0B0B0"
+              onFocus={() => handleFocus('selectedPotongan')}
+              onBlur={() => handleBlur('selectedPotongan')}
+            />
+
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>Batas Atas</Text>
+            <TextInput
+              style={[
+                GlobalStyle.SemiBold,
+                styles.input,
+                focusState.selectedBatasAtas && styles.inputFocused,
+                selectedBatasAtas && styles.inputFilled,
+              ]}
+              value={selectedBatasAtas}
+              onChangeText={text =>
+                handleTextChange(text, setSelectedBatasAtas)
+              }
+              keyboardType="default"
+              placeholder="Masukkan Batas Atas (angka atau ':')"
+              placeholderTextColor="#B0B0B0"
+              onFocus={() => handleFocus('selectedBatasAtas')}
+              onBlur={() => handleBlur('selectedBatasAtas')}
+            />
+
             <Text style={[GlobalStyle.SemiBold, styles.label]}>
-              Nama Whatsapp
+              Batas Bawah
             </Text>
             <TextInput
               style={[
                 GlobalStyle.SemiBold,
                 styles.input,
-                focusState.nm_no_wa && styles.inputFocused,
-                editData.nm_no_wa && styles.inputFilled,
+                focusState.selectedBatasBawah && styles.inputFocused,
+                selectedBatasBawah && styles.inputFilled,
               ]}
-              placeholder="Nama Whatsapp"
-              value={editData.nm_no_wa || ''} // Pastikan menggunakan default kosong jika null
+              value={selectedBatasBawah}
               onChangeText={text =>
-                setEditData(prev => ({...prev, nm_no_wa: text}))
+                handleTextChange(text, setSelectedBatasBawah)
               }
+              keyboardType="default"
+              placeholder="Masukkan Batas Bawah (angka atau ':')"
               placeholderTextColor="#B0B0B0"
-              onFocus={() => handleFocus('nm_no_wa')}
-              onBlur={() => handleBlur('nm_no_wa')}
+              onFocus={() => handleFocus('selectedBatasBawah')}
+              onBlur={() => handleBlur('selectedBatasBawah')}
             />
-            <Text style={[GlobalStyle.SemiBold, styles.label]}>
-              Nomor Whatsapp
-            </Text>
-            <TextInput
-              style={[
-                GlobalStyle.SemiBold,
-                styles.input,
-                focusState.nomor && styles.inputFocused,
-                editData.nomor && styles.inputFilled,
-              ]}
-              placeholder="Nomor Whatsapp"
-              value={editData.nomor || ''} // Pastikan menggunakan default kosong jika null
-              onChangeText={text =>
-                setEditData(prev => ({...prev, nomor: text}))
-              }
-              placeholderTextColor="#B0B0B0"
-              onFocus={() => handleFocus('nomor')}
-              onBlur={() => handleBlur('nomor')}
-            />
+
             <View style={styles.buttons}>
-              <TouchableOpacity style={styles.saveButton} onPress={submitEdit}>
+              <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
                 <Text style={[GlobalStyle.SemiBold, styles.buttonText]}>
                   Simpan
                 </Text>
@@ -146,7 +191,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: width * 0.05,
     paddingTop: 10,
   },
-
   cardContainer: {
     backgroundColor: '#FFFF',
     paddingVertical: 20,
@@ -229,4 +273,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EditNoWhatsapp;
+export default TambahPage;

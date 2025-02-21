@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Dimensions,
   ScrollView,
 } from 'react-native';
@@ -17,7 +16,7 @@ const {width} = Dimensions.get('window');
 import Toast from 'react-native-toast-message';
 
 const EditUangMakan = ({navigation, route}) => {
-  const {uuid} = route.params; // Mendapatkan UUID dari parameter navigasi
+  const {uuid} = route.params;
   const apiClient = useApiClient();
   const [editData, setEditData] = useState({});
   const [focusState, setFocusState] = useState({});
@@ -25,18 +24,18 @@ const EditUangMakan = ({navigation, route}) => {
 
   useEffect(() => {
     if (uuid) {
-      setIsLoading(true);
-      fetchEditData(uuid); // Panggil fungsi untuk fetch data edit berdasarkan UUID
+      fetchEditData(uuid);
     }
   }, [uuid]);
 
   const fetchEditData = async uuid => {
+    setIsLoading(true);
     try {
       const response = await apiClient.get(`/uang_makan/${uuid}/edit`);
       setEditData(response.data.data); // Simpan data edit di state
     } catch (error) {
       console.error('Error fetching edit data:', error);
-      Alert.alert('Error', 'Gagal mengambil data untuk diedit.');
+      console.log('Error', 'Gagal mengambil data untuk diedit.');
     } finally {
       setIsLoading(false);
     }
@@ -49,7 +48,7 @@ const EditUangMakan = ({navigation, route}) => {
         golongan: editData.golongan,
         nominal: editData.nominal,
       });
-      fetchData(currentPage); // Refresh data
+      navigation.goBack();
     } catch (error) {
       Toast.show({
         type: 'error',
