@@ -13,7 +13,7 @@ import {
   Dimensions,
 } from 'react-native';
 import useApiClient from '../../../../../src/api/apiClient';
-import Header from '../../../components/Header';
+import Header from '../../../../components/Header';
 import GlobalStyle from '../../../../../src/utils/GlobalStyle';
 import {BarIndicator} from 'react-native-indicators';
 const {width} = Dimensions.get('window');
@@ -47,30 +47,32 @@ const TambahPage = ({navigation}) => {
     };
   }, []);
 
-
   const handleSave = async () => {
     console.log('Jenis Cuti:', jenisCuti);
     console.log('Batas Toleransi:', batasToleransi);
     console.log('Potongan:', potongan);
-  
+
     setIsLoading(true);
-  
+
     if (!jenisCuti || !batasToleransi || !potongan) {
       console.log('Error', 'Please fill in all fields before saving.');
       setIsLoading(false);
       return;
     }
-  
+
     // Update payload field names to match the API expectations
     const payload = {
-      jenis_alasan: jenisCuti,  // change from jenis_cuti to jenis_alasan
+      jenis_alasan: jenisCuti, // change from jenis_cuti to jenis_alasan
       batas_toleransi: batasToleransi,
       potongan: potongan,
     };
-  
+
     try {
-      const response = await apiClient.post('/pemotongan_tidak_hadir/create', payload);
-  
+      const response = await apiClient.post(
+        '/pemotongan_tidak_hadir/create',
+        payload,
+      );
+
       if (response.status === 200 && response.data.status) {
         console.log('Success', 'Data has been created successfully.');
         navigation.goBack();
@@ -88,7 +90,12 @@ const TambahPage = ({navigation}) => {
       setIsLoading(false);
     }
   };
-  
+
+  const handleTextChange = (text, setState) => {
+    const filteredText = text.replace(/[^0-9:]/g, '');
+    setState(filteredText);
+  };
+
   const handleFocus = inputName => {
     setFocusState(prevState => ({...prevState, [inputName]: true}));
   };
@@ -99,7 +106,7 @@ const TambahPage = ({navigation}) => {
 
   return (
     <View style={styles.rootContainer}>
-      <Header title="Tambah Potongan Tidak Hadir" />
+      <Header title="Tambah PA 3" />
       <View style={styles.container}>
         {isLoading ? (
           <View style={styles.loadingContainer}>
@@ -126,7 +133,9 @@ const TambahPage = ({navigation}) => {
               onBlur={() => handleBlur('jenisCuti')}
             />
 
-            <Text style={[GlobalStyle.SemiBold, styles.label]}>Batas Toleransi</Text>
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>
+              Batas Toleransi
+            </Text>
             <TextInput
               style={[
                 GlobalStyle.SemiBold,
@@ -143,7 +152,9 @@ const TambahPage = ({navigation}) => {
               onBlur={() => handleBlur('batasToleransi')}
             />
 
-            <Text style={[GlobalStyle.SemiBold, styles.label]}>Potongan (%)</Text>
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>
+              Potongan (%)
+            </Text>
             <TextInput
               style={[
                 GlobalStyle.SemiBold,
@@ -162,7 +173,9 @@ const TambahPage = ({navigation}) => {
 
             <View style={styles.buttons}>
               <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                <Text style={[GlobalStyle.SemiBold, styles.buttonText]}>Simpan</Text>
+                <Text style={[GlobalStyle.SemiBold, styles.buttonText]}>
+                  Simpan
+                </Text>
               </TouchableOpacity>
             </View>
           </ScrollView>

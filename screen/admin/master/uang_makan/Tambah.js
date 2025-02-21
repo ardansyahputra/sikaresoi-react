@@ -1,96 +1,136 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
+  Dimensions,
+  ScrollView,
 } from 'react-native';
 import useApiClient from '../../../../src/api/apiClient';
+import GlobalStyle from '../../../../src/utils/GlobalStyle';
+import Header from '../../../components/Header';
+import {BarIndicator} from 'react-native-indicators';
+const {width} = Dimensions.get('window');
+import Toast from 'react-native-toast-message';
 
 const TambahUangMakan = ({navigation}) => {
   const [selectedGolongan, setSelectedGolongan] = useState(null);
   const [selectedNominal, setSelectedNominal] = useState(null);
   const apiClient = useApiClient();
+  const [focusState, setFocusState] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulasi proses awal sebelum input bisa diisi
+    setTimeout(() => setIsLoading(false), 500);
+  }, []);
 
   const submitTambah = async () => {
+    setIsLoading(true);
     try {
       await apiClient.post('/uang_makan/create', {
         golongan: selectedGolongan,
         nominal: selectedNominal,
       });
-      Alert.alert('Berhasil', 'Data berhasil ditambahkan.');
-      fetchData(currentPage); // Refresh data
+      navigation.goBack();
     } catch (error) {
-      Alert.alert('Error', 'Gagal menambahkan data.');
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal',
+        text2: 'Gagal menambahkan data.',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const handleFocus = inputName => {
+    setFocusState(prevState => ({...prevState, [inputName]: true}));
+  };
+
+  const handleBlur = inputName => {
+    setFocusState(prevState => ({...prevState, [inputName]: false}));
+  };
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.headerTitle}>Tambah Data</Text>
-        </TouchableOpacity>
-      </View>
+    <View style={styles.rootContainer}>
+      <Header title="Tambah Uang Makan" />
+      <View style={styles.container}>
+        {isLoading ? (
+          // Loading Indicator
+          <View style={styles.loadingContainer}>
+            <BarIndicator color="#D4C6C6" count={5} size={24} />
+          </View>
+        ) : (
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}>
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>Grade</Text>
+            <TextInput
+              style={[
+                GlobalStyle.SemiBold,
+                styles.input,
+                focusState.selectedGolongan && styles.inputFocused,
+                selectedGolongan && styles.inputFilled,
+              ]}
+              value={selectedGolongan}
+              onChangeText={setSelectedGolongan}
+              placeholder="Golongan"
+              placeholderTextColor="#B0B0B0"
+              onFocus={() => handleFocus('selectedGolongan')}
+              onBlur={() => handleBlur('selectedGolongan')}
+            />
 
-      <View style={styles.cardContainer}>
-        <Text style={styles.label}>Grade</Text>
-        <TextInput
-          style={styles.input}
-          value={selectedGolongan}
-          onChangeText={setSelectedGolongan}
-          placeholder="Golongan"
-        />
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>Nominal</Text>
+            <TextInput
+              style={[
+                GlobalStyle.SemiBold,
+                styles.input,
+                focusState.selectedNominal && styles.inputFocused,
+                selectedNominal && styles.inputFilled,
+              ]}
+              value={selectedNominal}
+              onChangeText={setSelectedNominal}
+              keyboardType="numeric"
+              placeholder="Nominal"
+              placeholderTextColor="#B0B0B0"
+              onFocus={() => handleFocus('selectedNominal')}
+              onBlur={() => handleBlur('selectedNominal')}
+            />
 
-        <Text style={styles.label}>Nominal</Text>
-        <TextInput
-          style={styles.input}
-          value={selectedNominal}
-          onChangeText={setSelectedNominal}
-          keyboardType="numeric"
-          placeholder="Nominal"
-        />
-
-        <View style={styles.buttons}>
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => navigation.goBack()}>
-            <Text style={styles.buttonText}>Batal</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.saveButton} onPress={submitTambah}>
-            <Text style={styles.buttonText}>Simpan</Text>
-          </TouchableOpacity>
-        </View>
+            <View style={styles.buttons}>
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={submitTambah}>
+                <Text style={[GlobalStyle.SemiBold, styles.buttonText]}>
+                  Simpan
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        )}
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: '#E7E9F1', paddingTop: 20}, // Menambahkan padding top agar header tidak terpotong
-  header: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center', // Mengatur agar judul header berada di tengah
-    elevation: 4,
-    borderBottomLeftRadius: 15,
-    borderBottomRightRadius: 15,
-    position: 'absolute', // Menetapkan header tetap di atas
-    top: 0,
-    left: 0,
-    right: 0, // Menjaga agar header tetap lebar penuh
-    zIndex: 10, // Memberikan prioritas rendering agar header tidak tertutup oleh konten
+  rootContainer: {
+    flex: 1,
+    backgroundColor: '#FFF',
   },
-  headerTitle: {textAlign: 'center', fontSize: 20, fontWeight: 'bold'}, // Mengubah agar text header tetap berada di tengah
+  container: {
+    flex: 1,
+    backgroundColor: '#FFF',
+    paddingHorizontal: width * 0.05,
+    paddingTop: 10,
+  },
   cardContainer: {
     backgroundColor: '#FFFF',
     paddingVertical: 20,
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
     borderRadius: 10,
     elevation: 4,
     marginVertical: 20,
@@ -98,16 +138,33 @@ const styles = StyleSheet.create({
     shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.1,
     shadowRadius: 10,
-    marginHorizontal: 20,
+    width: '100%',
+
     marginTop: 37, // Memberikan margin agar konten tidak tumpang tindih dengan header
   },
-  label: {fontSize: 16, marginTop: 10},
+  label: {fontSize: 14, color: '#313131'},
   input: {
-    borderWidth: 1,
-    borderColor: '#CCC',
     padding: 10,
-    borderRadius: 5,
-    marginVertical: 10,
+    fontSize: 14,
+    borderRadius: 5, // Default border radius
+    marginBottom: 20,
+    backgroundColor: '#F0ECEC', // Default background color
+    borderWidth: 1,
+    borderColor: 'transparent', // Default border color (tidak terlihat)
+    color: '#313131',
+  },
+  inputFocused: {
+    borderRadius: 5, // Border radius saat fokus
+    borderColor: '#75BAFF',
+    borderWidth: 1.5,
+  },
+  inputFilled: {
+    backgroundColor: '#F2F8FF', // Background lebih gelap saat terisi
+    borderRadius: 5, // Hilangkan border radius
+    padding: 10,
+  },
+  scrollContent: {
+    paddingBottom: 10, // Tambahkan padding bawah agar tidak terpotong
   },
   dropdown: {
     position: 'absolute',
@@ -129,9 +186,27 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 20,
   },
-  cancelButton: {backgroundColor: '#CCC', padding: 15, borderRadius: 5},
-  saveButton: {backgroundColor: '#007BFF', padding: 15, borderRadius: 5},
-  buttonText: {color: '#FFF', fontWeight: 'bold'},
+  cancelButton: {backgroundColor: '#187DE4', padding: 15, borderRadius: 5},
+  saveButton: {
+    width: '100%',
+    height: 48,
+    backgroundColor: '#3699FE',
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  buttonText: {color: '#fff', fontSize: 14},
+  dropdownItem: {
+    padding: 10,
+    fontSize: 14,
+    color: '#313131',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
 
 export default TambahUangMakan;

@@ -14,7 +14,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import useApiClient from '../../../../src/api/apiClient';
 import {useNavigation} from '@react-navigation/native';
 import {BarIndicator} from 'react-native-indicators';
-import Header from '../../components/Header';
+import Header from '../../../components/Header';
 import GlobalStyle from '../../../../src/utils/GlobalStyle';
 import Toast from 'react-native-toast-message';
 
@@ -82,7 +82,6 @@ export default function BulanTahun() {
         activeButton === 'bulan'
           ? `/bulan/${selectedUuid}/delete`
           : `/tahun/${selectedUuid}/delete`;
-          
 
       await apiClient.delete(endpoint);
 
@@ -501,6 +500,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between', // Search & Tambah sejajar
   },
+  searchTambahContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
+
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',

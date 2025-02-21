@@ -6,16 +6,19 @@ import {
   Image,
   TouchableOpacity,
   ImageBackground,
+  Modal,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {useAuth} from '../../../auth/AuthContext';
 import useApiClient from '../../../../src/api/apiClient';
+import GlobalStyle from '../../../../src/utils/GlobalStyle';
 
 const ProfileScreen = ({navigation}) => {
   const {user, pangkatItems, logout} = useAuth();
   const [pangkat, setPangkat] = useState(null);
   const apiClient = useApiClient();
   const [profileImage, setProfileImage] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     if (user && pangkatItems.length > 0) {
@@ -36,10 +39,47 @@ const ProfileScreen = ({navigation}) => {
   // Menambahkan console log untuk memverifikasi data user
   console.log('User data:', user);
 
+  const handleLogout = () => {
+    setModalVisible(false);
+    logout();
+    navigation.replace('Login');
+  };
+
   return (
     <ImageBackground
       source={require('../../assets/images/poltekpol-barombong-bg.jpg')} // Replace with your desired background image
       style={[styles.container, styles.backgroundStyle]}>
+      {/* Modal Logout */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={[GlobalStyle.SemiBold, styles.modalText]}>
+              Apa kamu yakin ingin keluar?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.button, styles.cancelButton]}
+                onPress={() => setModalVisible(false)}>
+                <Text style={[GlobalStyle.SemiBold, styles.cancelText]}>
+                  Tidak
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, styles.confirmButton]}
+                onPress={handleLogout}>
+                <Text style={[GlobalStyle.SemiBold, styles.confirmText]}>
+                  Ya
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* App Bar */}
       <View style={styles.header}>
         <Image
@@ -73,8 +113,7 @@ const ProfileScreen = ({navigation}) => {
                   if (item.navigateTo) {
                     navigation.navigate(item.navigateTo);
                   } else if (item.label === 'Log out') {
-                    logout(); // Fungsi logout
-                    navigation.replace('Login'); // Navigasi ke layar login
+                    setModalVisible(true);
                   }
                 }}>
                 <View style={styles.menuItemLeft}>
@@ -105,6 +144,50 @@ const styles = StyleSheet.create({
   },
   backgroundStyle: {
     marginBottom: 500,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContainer: {
+    width: 300,
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginHorizontal: 5,
+  },
+  cancelButton: {
+    borderWidth: 1,
+    borderColor: '#3498db',
+    backgroundColor: '#fff',
+  },
+  cancelText: {
+    color: '#0A3D62',
+  },
+  confirmButton: {
+    backgroundColor: '#3498db',
+  },
+  confirmText: {
+    color: '#fff',
   },
   headerImage: {
     width: '50%',

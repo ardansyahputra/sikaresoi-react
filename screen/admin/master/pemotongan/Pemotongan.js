@@ -8,16 +8,17 @@ import {
   Pressable,
   Modal,
   TextInput,
+  modalVisible,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../../src/api/apiClient';
 import {BarIndicator} from 'react-native-indicators';
-import Header from '../../components/Header';
+import Header from '../../../components/Header';
 import Toast from 'react-native-toast-message';
 import GlobalStyle from '../../../../src/utils/GlobalStyle';
-
+import {Alert} from 'react-native';
 
 export default function UangMakan() {
   const navigation = useNavigation();
@@ -38,7 +39,6 @@ export default function UangMakan() {
   const [selectedGolongan, setSelectedGolongan] = useState('');
   const [selectedNominal, setSelectedNominal] = useState('');
   const [selectedType, setSelectedType] = useState(null);
-
 
   const apiClient = useApiClient();
 
@@ -253,78 +253,77 @@ export default function UangMakan() {
   };
 
   const handleHapusPress = (uuid, type) => {
-    console.log("UUID diterima:", uuid);
-    console.log("Type diterima:", type);
+    console.log('UUID diterima:', uuid);
+    console.log('Type diterima:', type);
 
     if (!uuid || typeof uuid !== 'string') {
-        console.error("UUID yang diterima bukan string:", uuid);
-        return;
+      console.error('UUID yang diterima bukan string:', uuid);
+      return;
     }
 
     setSelectedUuid(uuid);
     setSelectedType(type);
     setModalVisible(true);
-};
+  };
 
-
-const handleConfirmAction = async (uuid, type) => {
-  if (!selectedUuid || typeof selectedUuid !== 'string') {
-    console.error('UUID tidak valid:', uuid);
+  const handleConfirmAction = async (uuid, type) => {
+    if (!uuid || typeof uuid !== 'string') {
+      console.error('UUID tidak valid:', uuid);
       Toast.show({
-          type: 'error',
-          text1: 'Gagal',
-          text2: 'UUID tidak valid.',
+        type: 'error',
+        text1: 'Gagal',
+        text2: 'UUID tidak valid.',
       });
       return;
-  }
+    }
 
-  try {
+    try {
       let endpoint = '';
-      
+
       // Menentukan endpoint berdasarkan jenis pemotongan
       switch (type) {
-          case 'pulangAwal':
-              endpoint = `/pemotongan_pulang_awal/${uuid}/delete`;
-              break;
-          case 'terlambat':
-              endpoint = `/pemotongan_terlambat/${uuid}/delete`;
-              break;
-          case 'tidakHadir':
-              endpoint = `/pemotongan_tidak_hadir/${uuid}/delete`;
-              break;
-          default:
-              console.error('Invalid type:', type);
-              return;
+        case 'pulangAwal':
+          endpoint = `/pemotongan_pulang_awal/${uuid}/delete`;
+          break;
+        case 'terlambat':
+          endpoint = `/pemotongan_terlambat/${uuid}/delete`;
+          break;
+        case 'tidakHadir':
+          endpoint = `/pemotongan_tidak_hadir/${uuid}/delete`;
+          break;
+        default:
+          console.error('Invalid type:', type);
+          return;
       }
 
       const response = await apiClient.delete(endpoint);
       if (response.status === 200) {
-          console.log('Data berhasil dihapus');
-          
-          // Tampilkan toast sukses
-          Toast.show({
-              type: 'success',
-              text1: 'Sukses',
-              text2: 'Data berhasil dihapus.',
-          });
+        console.log('Data berhasil dihapus');
 
-          // Perbarui tampilan setelah penghapusan  
-          fetchData(currentPage, selectedDisplay);
-          
-          // Tutup modal setelah selesai
-          setModalVisible(false);
+        // Tampilkan toast sukses
+        Toast.show({
+          type: 'success',
+          text1: 'Sukses',
+          text2: 'Data berhasil dihapus.',
+        });
+
+        // Perbarui tampilan setelah penghapusan
+        fetchData(currentPage, selectedDisplay);
+
+        // Tutup modal setelah selesai
+        setModalVisible(false);
       }
-  } catch (error) {
+    } catch (error) {
       console.error('Error deleting ', error);
       Toast.show({
-          type: 'error',
-          text1: 'Gagal',
-          text2: 'Terjadi kesalahan saat menghapus data.',
+        type: 'error',
+        text1: 'Gagal',
+        text2: 'Terjadi kesalahan saat menghapus data.',
       });
       // Tutup modal jika terjadi error
       setModalVisible(false);
-  }
-};
+    }
+  };
 
   const TableHeader = () => {
     const renderHeaders = () => {
@@ -337,13 +336,13 @@ const handleConfirmAction = async (uuid, type) => {
                 styles.headerCell,
                 styles.numberCell,
               ]}>
-              #
+              NO
             </Text>
             <Text
               style={[
                 GlobalStyle.SemiBold,
                 styles.headerCell,
-                styles.numberCell,
+                styles.nameCell,
               ]}>
               Batas Bawah
             </Text>
@@ -351,15 +350,15 @@ const handleConfirmAction = async (uuid, type) => {
               style={[
                 GlobalStyle.SemiBold,
                 styles.headerCell,
-                styles.reasonCell,
+                styles.nameCell,
               ]}>
               Batas Atas
             </Text>
             <Text
               style={[
                 GlobalStyle.SemiBold,
-                styles.headerCellpot,
-                styles.deductionCell,
+                styles.headerCell,
+                styles.nameCell,
               ]}>
               Potongan
             </Text>
@@ -381,112 +380,79 @@ const handleConfirmAction = async (uuid, type) => {
               style={[
                 GlobalStyle.SemiBold,
                 styles.headerCell,
-                styles.reasonCell,
+                styles.nameCell,
               ]}>
               JENIS CUTI
             </Text>
             <Text
-              style={[
-                GlobalStyle.SemiBold,
-                styles.headerCell,
-                styles.toleranceCell,
-              ]}>
+              style={[GlobalStyle.SemiBold, styles.headerCell, styles.khusus]}>
               BATAS TOLERANSI
             </Text>
-            <Text
-              style={[
-                GlobalStyle.SemiBold,
-                styles.headerCell,
-                styles.deductionCell,
-              ]}>
+            <Text style={[GlobalStyle.SemiBold, styles.headerCell]}>
               POTONGAN
             </Text>
           </>
         );
       }
     };
-  
+
     return (
       <View>
         <View style={styles.headerContainer}>
           {/* Toggle Buttons Container */}
           <View style={styles.toggleContainer}>
-      {/** PULANG AWAL */}
-      <Pressable
-        style={({ pressed }) => [
-          styles.toggleButton,
-          pressed && styles.buttonPressed,
-          activeButton === 'pulangAwal' && styles.buttonActive,
-        ]}
-        onPress={() => handlePress('pulangAwal')}
-      >
-        <Ionicons
-          name="cut-outline"
-          size={20}
-          style={styles.icon}
-          color={activeButton === 'pulangAwal' ? '#3699ff' : '#000'}
-        />
-        <Text
-          style={[
-            styles.buttonText,
-            activeButton === 'pulangAwal' && styles.textActive,
-          ]}
-        >
-          Pulang Awal
-        </Text>
-      </Pressable>
+            <Pressable
+              style={({pressed}) => [
+                styles.toggleButton,
+                pressed && styles.buttonPressed,
+                activeButton === 'pulangAwal' && styles.buttonActive,
+              ]}
+              onPress={() => handlePress('pulangAwal')}>
+              <Text
+                style={[
+                  GlobalStyle.SemiBold,
+                  styles.buttonText,
+                  activeButton === 'pulangAwal' && styles.textActive,
+                ]}>
+                Pulang Awal
+              </Text>
+            </Pressable>
 
-      {/** TERLAMBAT */}
-      <Pressable
-        style={({ pressed }) => [
-          styles.toggleButton,
-          pressed && styles.buttonPressed,
-          activeButton === 'telambat' && styles.buttonActive,
-        ]}
-        onPress={() => handlePress('telambat')}
-      >
-        <Ionicons
-          name="cut-outline"
-          size={20}
-          style={styles.icon}
-          color={activeButton === 'telambat' ? '#3699ff' : '#000'}
-        />
-        <Text
-          style={[
-            styles.buttonText,
-            activeButton === 'telambat' && styles.textActive,
-          ]}
-        >
-          Terlambat
-        </Text>
-      </Pressable>
+            <Pressable
+              style={({pressed}) => [
+                styles.toggleButton,
+                pressed && styles.buttonPressed,
+                activeButton === 'telambat' && styles.buttonActive,
+              ]}
+              onPress={() => handlePress('telambat')}>
+              <Text
+                style={[
+                  GlobalStyle.SemiBold,
+                  styles.buttonText,
+                  activeButton === 'telambat' && styles.textActive,
+                ]}>
+                Terlambat
+              </Text>
+            </Pressable>
 
-      {/** TIDAK HADIR */}
-      <Pressable
-        style={({ pressed }) => [
-          styles.toggleButton,
-          pressed && styles.buttonPressed,
-          activeButton === 'tidakHadir' && styles.buttonActive,
-        ]}
-        onPress={() => handlePress('tidakHadir')}
-      >
-        <Ionicons
-          name="cut-outline"
-          size={20}
-          style={styles.icon}
-          color={activeButton === 'tidakHadir' ? '#3699ff' : '#000'}
-        />
-        <Text
-          style={[
-            styles.buttonText,
-            activeButton === 'tidakHadir' && styles.textActive,
-          ]}
-        >
-          Tidak Hadir
-        </Text>
-      </Pressable>
-    </View>
-  
+            <Pressable
+              style={({pressed}) => [
+                styles.toggleButton,
+                pressed && styles.buttonPressed,
+                activeButton === 'tidakHadir' && styles.buttonActive,
+              ]}
+              onPress={() => handlePress('tidakHadir')}>
+              <Text
+                style={[
+                  GlobalStyle.SemiBold,
+                  styles.buttonText,
+                  activeButton === 'tidakHadir' && styles.textActive,
+                ]}>
+                Tidak Hadir
+              </Text>
+            </Pressable>
+          </View>
+
           {/* Search and Add Button Container */}
           <View style={styles.bottomContainer}>
             <View style={styles.searchContainer}>
@@ -514,7 +480,7 @@ const handleConfirmAction = async (uuid, type) => {
             </TouchableOpacity>
           </View>
         </View>
-  
+
         {/* Table Header */}
         <View style={styles.tableHeader}>
           {renderHeaders()}
@@ -524,7 +490,6 @@ const handleConfirmAction = async (uuid, type) => {
       </View>
     );
   };
-  
 
   const renderItem = ({item, index}) => {
     const isExpanded = expandedId === item.id;
@@ -545,27 +510,17 @@ const handleConfirmAction = async (uuid, type) => {
               {index + 1}
             </Text>
             <Text
-              style={[
-                GlobalStyle.SemiBold,
-                styles.tableCell,
-                styles.reasonCell,
-              ]}>
+              style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}
+              numberOfLines={2} // Batasi teks agar tidak wrapping
+              ellipsizeMode="tail">
               {item.jenis_alasan || '-'}
             </Text>
             <Text
-              style={[
-                GlobalStyle.SemiBold,
-                styles.tableCell,
-                styles.toleranceCell,
-              ]}>
+              style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}>
               {item.batas_toleransi || '-'}
             </Text>
             <Text
-              style={[
-                GlobalStyle.SemiBold,
-                styles.tableCell,
-                styles.deductionCell,
-              ]}>
+              style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}>
               {item.potongan || '-'}
             </Text>
             <View style={styles.expandIconCell}>
@@ -660,7 +615,8 @@ const handleConfirmAction = async (uuid, type) => {
                   style={[styles.iconButton, styles.redButton]}
                   onPress={() => {
                     // Ubah activeButton menjadi type yang sesuai
-                    const type = activeButton === 'telambat' ? 'terlambat' : 'pulangAwal';
+                    const type =
+                      activeButton === 'telambat' ? 'terlambat' : 'pulangAwal';
                     handleHapusPress(item.uuid, type);
                   }}>
                   <Ionicons name="trash-outline" size={20} color="white" />
@@ -762,12 +718,10 @@ const handleConfirmAction = async (uuid, type) => {
             </View>
           </View>
         </View>
-        
       </Modal>
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -777,22 +731,14 @@ const styles = StyleSheet.create({
   tableHeader: {
     marginTop: 15,
     flexDirection: 'row',
-    backgroundColor: '#F7F8FC',
     paddingVertical: 10,
+    paddingHorizontal: 15,
     borderTopLeftRadius: 6,
     borderTopRightRadius: 6,
-    alignItems: 'center', // Menyamakan tinggi header dengan isi tabel
-    paddingHorizontal: 10,
   },
   headerCell: {
     fontSize: 13,
     color: '#9196B5',
-    marginright: 10,
-  },
-  headerCellpot: {
-    fontSize: 13,
-    color: '#9196B5',
-    marginright: 20,
   },
   tableRow: {
     backgroundColor: '#FFFFFF',
@@ -816,11 +762,21 @@ const styles = StyleSheet.create({
     paddingLeft: 0,
   },
   numberCell: {
-    width: 45,
+    width: 35,
   },
   nameCell: {
     flex: 1,
     overflow: 'hidden',
+    flexShrink: 1, // Memungkinkan teks agar tidak memaksa ruang lebih
+    paddingHorizontal: 8, // Memberi jarak antar teks
+    minWidth: 75,
+  },
+  khusus: {
+    flex: 1,
+    overflow: 'hidden',
+    flexShrink: 1, // Memungkinkan teks agar tidak memaksa ruang lebih
+    paddingHorizontal: 0, // Memberi jarak antar teks
+    minWidth: 85,
   },
   statusCellContainer: {
     width: 100,
@@ -997,6 +953,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   blueButton: {
     backgroundColor: '#007AFF',
   },
@@ -1071,7 +1028,6 @@ const styles = StyleSheet.create({
     marginBottom: 20, // Beri jarak antara tombol Bulan & Tahun dengan Search Bar
   },
   toggleButton: {
-    flexDirection: 'row', // Bikin ikon dan teks sejajar
     height: 40,
     paddingHorizontal: 15,
     backgroundColor: '#fff',
@@ -1079,9 +1035,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  icon: {
-    marginRight: 5, // Jarak antara ikon dan teks
-  },
+
   buttonPressed: {
     backgroundColor: '#fff',
   },
@@ -1109,9 +1063,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start', // Posisi ke kiri
-    gap: 2,
+    gap: 10,
     marginBottom: 20, // Beri jarak antara tombol Bulan & Tahun dengan Search Bar
-    marginRight: 10,
   },
   bottomContainer: {
     flexDirection: 'row',

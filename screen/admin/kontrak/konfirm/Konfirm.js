@@ -14,8 +14,6 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../../../../src/api/apiClient';
-import Header from '../../components/Header';
-
 
 export default function BelumKontrak() {
   const apiClient = useApiClient();
@@ -297,8 +295,14 @@ export default function BelumKontrak() {
   return (
     <View style={styles.container}>
       <View>
-      <Header title="" />
-
+        <View style={styles.header}>
+          <View style={styles.headerRight}>
+            <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
+            <TouchableOpacity style={styles.iconWrapper}>
+              <Ionicons name="person-circle-outline" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
 
       <View style={styles.card}>

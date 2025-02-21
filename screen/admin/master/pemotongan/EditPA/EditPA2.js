@@ -12,7 +12,7 @@ import {
 import useApiClient from '../../../../../src/api/apiClient';
 import {BarIndicator} from 'react-native-indicators';
 import GlobalStyle from '../../../../../src/utils/GlobalStyle';
-import Header from '../../../components/Header';
+import Header from '../../../../components/Header';
 const {width} = Dimensions.get('window');
 
 const EditPage = ({navigation, route}) => {
@@ -120,7 +120,7 @@ const EditPage = ({navigation, route}) => {
       console.error('Error data:', error.response?.data);
       console.error('Error message:', error.message);
       console.error('Full error object:', error);
-      
+
       // Specific handling for 500 error
       if (error.response?.status === 500) {
         console.error('=== Server Error (500) Details ===');
@@ -128,7 +128,7 @@ const EditPage = ({navigation, route}) => {
         console.error('Server Error Stack:', error.response?.data?.stack);
         console.error('Request URL:', `/pemotongan_terlambat/${uuid}/update`);
         console.error('Request Payload:', payload);
-        
+
         Toast.show({
           type: 'error',
           text1: 'Server Error (500)',

@@ -13,7 +13,7 @@ import {
   Dimensions,
 } from 'react-native';
 import useApiClient from '../../../../../src/api/apiClient';
-import Header from '../../../components/Header';
+import Header from '../../../../components/Header';
 import GlobalStyle from '../../../../../src/utils/GlobalStyle';
 import {BarIndicator} from 'react-native-indicators';
 const {width} = Dimensions.get('window');
@@ -98,7 +98,7 @@ const TambahPage = ({navigation}) => {
 
   return (
     <View style={styles.rootContainer}>
-      <Header title="Tambah Potongan Terlambat" />
+      <Header title="Tambah PA 2" />
       <View style={styles.container}>
         {isLoading ? (
           // Loading Indicator

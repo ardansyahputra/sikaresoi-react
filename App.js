@@ -11,6 +11,8 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 //login screens
 import LoginScreen from './screen/auth/login/Login';
+import Toast from 'react-native-toast-message';
+import customToastConfig from './screen/components/toastConfig';
 
 // Import screens
 import Home from './screen/admin/home/home';
@@ -30,7 +32,7 @@ import UserScreen from './screen/admin/user/user';
 import SuratTugasScreen from './screen/admin/surattugas/Surat_tugas';
 import PotonganLainScreen from './screen/admin/potongan_lain/Potongan_lain';
 import LockScreen from './screen/admin/lock/lock';
-import LainnyaScreen from './screen/admin/lainnya/Lainnya';
+import LainnyaScreen from './screen/admin/lainnya/lainnya';
 
 //ciruclar Screens
 import BelumKirimKontrakScreen from './screen/admin/kontrak/kirim/Kirim';
@@ -48,6 +50,7 @@ import TunjanganTambahanScreen from './screen/admin/laporan/tunjangan_tambahan/T
 import EditUserScreen from './screen/admin/user/Edituser';
 import UserGroupScreen from './screen/admin/master/user_group/User_group';
 import PersentaseKegiatanScreen from './screen/admin/master/persentase_kegiatan/Persentase_kegiatan';
+import TambahUser from './screen/admin/user/Tambahuser';
 
 //profile
 import ProfileEdit from './screen/admin/master/user/ProfileEdit';
@@ -190,6 +193,11 @@ function HomeStack() {
         options={{headerShown: false}}
         name="Edituser"
         component={EditUserScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="Tambahuser"
+        component={TambahUser}
       />
       <Stack.Screen
         options={{headerShown: false}}
@@ -727,6 +735,7 @@ export default function App() {
       <NavigationProvider>
         <NavigationContainer>
           <RootStack />
+          <Toast config={customToastConfig} />
         </NavigationContainer>
       </NavigationProvider>
     </AuthProvider>

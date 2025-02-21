@@ -10,6 +10,7 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({children, navigation}) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [userMenu, setUserMenu] = useState([]);
   const [loading, setLoading] = useState(false); // For loading state
   const [error, setError] = useState(null); // For error handling
   const [pangkatItems, setPangkatItems] = useState([]);
@@ -19,6 +20,10 @@ export const AuthProvider = ({children, navigation}) => {
     if (credentials) {
       setToken(credentials.password); // Set token from Keychain if it exists
     }
+  };
+
+  const setMenuAccess = menu => {
+    setUserMenu(menu);
   };
 
   // Fungsi untuk fetch data pangkat
@@ -55,7 +60,13 @@ export const AuthProvider = ({children, navigation}) => {
   };
 
   useEffect(() => {
-    loadTokenFromKeychain(); // Load token when app starts
+    const loadTokenFromKeychain = async () => {
+      const credentials = await Keychain.getGenericPassword();
+      if (credentials) {
+        setToken(credentials.password);
+      }
+    };
+    loadTokenFromKeychain();
   }, []);
 
   useEffect(() => {
@@ -64,19 +75,17 @@ export const AuthProvider = ({children, navigation}) => {
     }
   }, [token]);
 
-  const login = (userData, token) => {
+  const login = async (userData, newToken) => {
     setUser(userData);
-    setToken(token);
-    Keychain.setGenericPassword('token', token); // Store token securely
+    setToken(newToken);
+    await Keychain.setGenericPassword('token', newToken);
   };
 
-  const logout = navigation => {
+  const logout = () => {
     setUser(null);
     setToken(null);
-    Keychain.resetGenericPassword(); // Remove token from Keychain
-    if (navigation) {
-      navigation.replace('Login');
-    }
+    setUserMenu([]);
+    Keychain.resetGenericPassword();
   };
 
   // Fungsi untuk refresh token
@@ -95,12 +104,11 @@ export const AuthProvider = ({children, navigation}) => {
           await Keychain.setGenericPassword('token', newToken);
           setToken(newToken);
           return newToken;
-        } else {
-          logout(navigation);
         }
       }
     } catch (error) {
-      logout(navigation);
+      console.error('Error refreshing token:', error);
+      logout();
     }
     return null;
   };
@@ -110,6 +118,8 @@ export const AuthProvider = ({children, navigation}) => {
       value={{
         user,
         token,
+        userMenu,
+        setUserMenu: setMenuAccess,
         login,
         logout,
         fetchPangkat,

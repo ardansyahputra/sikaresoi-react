@@ -12,7 +12,7 @@ import {
 import useApiClient from '../../../../../src/api/apiClient';
 import {BarIndicator} from 'react-native-indicators';
 import GlobalStyle from '../../../../../src/utils/GlobalStyle';
-import Header from '../../../components/Header';
+import Header from '../../../../components/Header';
 import Toast from 'react-native-toast-message';
 const {width} = Dimensions.get('window');
 

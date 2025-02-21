@@ -12,7 +12,7 @@ import {
 import useApiClient from '../../../../../src/api/apiClient';
 import {BarIndicator} from 'react-native-indicators';
 import GlobalStyle from '../../../../../src/utils/GlobalStyle';
-import Header from '../../../components/Header';
+import Header from '../../../../components/Header';
 const {width} = Dimensions.get('window');
 
 const EditPage = ({navigation, route}) => {
@@ -138,7 +138,7 @@ const EditPage = ({navigation, route}) => {
 
   return (
     <View style={styles.rootContainer}>
-      <Header title="Edit PA tok" />
+      <Header title="Edit PA" />
       <View style={styles.container}>
         {isLoading ? (
           // Loading Indicator

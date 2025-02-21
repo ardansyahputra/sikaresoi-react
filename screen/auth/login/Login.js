@@ -8,45 +8,79 @@ import {
   Alert,
   Image,
   ImageBackground,
+  Dimensions,
 } from 'react-native';
 import * as Keychain from 'react-native-keychain';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useAuth} from '../AuthContext';
 import axios from 'axios';
 import useApiClient from '../../../src/api/apiClient';
+import FastImage from 'react-native-fast-image';
+import {BarIndicator} from 'react-native-indicators';
+
+const {height} = Dimensions.get('window');
 
 const LoginScreen = ({navigation}) => {
   const [nip, setNip] = useState('');
   const [password, setPassword] = useState('');
-  const {login, token, refreshToken} = useAuth();
+  const [error, setError] = useState({nip: '', password: ''});
+  const {login, token, refreshToken, setUserMenu} = useAuth();
   const apiClient = useApiClient();
+  const [isLoading, setIsLoading] = useState(false);
+  const [backgroundImage, setBackgroundImage] = useState(null);
+  const [logoImage, setLogoImage] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const isValid = nip.length >= 8 && password.length >= 8;
+  const [isPageLoading, setIsPageLoading] = useState(true); // Tambahkan ini
 
   useEffect(() => {
-    const checkLoginStatus = async () => {
+    const initializeApp = async () => {
       try {
-        const credentials = await Keychain.getGenericPassword();
-        if (credentials) {
-          const storedToken = credentials.password;
+        setIsPageLoading(true);
 
-          // Verifikasi token dengan endpoint user
+        // Fetch Token dan Setting secara bersamaan
+        const [credentials, settingsResponse] = await Promise.all([
+          Keychain.getGenericPassword(),
+          apiClient.get('setting'),
+        ]);
+
+        // Proses Token Login
+        if (credentials?.password) {
+          const storedToken = credentials.password;
           const userData = await fetchUser(storedToken);
           if (userData) {
             login(userData, storedToken);
             navigation.replace('AppTabs');
           }
         }
+
+        // Preload Images
+        if (settingsResponse.data?.status) {
+          const {backgrounddir, logowhitedir} = settingsResponse.data.data;
+
+          FastImage.preload([
+            {uri: backgrounddir, priority: FastImage.priority.high},
+            {uri: logowhitedir, priority: FastImage.priority.high},
+          ]);
+
+          setBackgroundImage(backgrounddir);
+          setLogoImage(logowhitedir);
+        }
       } catch (error) {
-        console.error('Error checking login status:', error);
+        console.error('Error during initialization:', error);
+      } finally {
+        setIsPageLoading(false);
       }
     };
-    checkLoginStatus();
+
+    initializeApp();
   }, []);
 
   useEffect(() => {
-    // Axios interceptor untuk menambahkan header Authorization
     const requestInterceptor = axios.interceptors.request.use(
       async config => {
-        if (!config.headers.Authorization && token) {
+        if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
@@ -57,14 +91,18 @@ const LoginScreen = ({navigation}) => {
     const responseInterceptor = axios.interceptors.response.use(
       response => response,
       async error => {
-        // Jika token expired, refresh token
-        if (error.response?.status === 401) {
+        if (!error.response) {
+          console.error('Network error, please check your connection.');
+          return Promise.reject(error);
+        }
+
+        if (error.response.status === 401) {
           const newToken = await refreshToken();
           if (newToken) {
             error.config.headers.Authorization = `Bearer ${newToken}`;
-            return axios(error.config); // Retry request dengan token baru
+            return axios(error.config);
           } else {
-            navigation.replace('Login'); // Logout jika refresh gagal
+            logout();
           }
         }
         return Promise.reject(error);
@@ -78,120 +116,180 @@ const LoginScreen = ({navigation}) => {
   }, [token, refreshToken]);
 
   const loginHandler = async () => {
-    console.log('Login handler triggered.');
-  
-    if (!nip || !password) {
-      console.warn('Validation failed: Missing nip or password.');
-      Alert.alert('Error', 'Please fill in all fields.');
-      return;
-    }
-  
-    // Log baseURL dan endpoint lengkap
-    const baseURL = apiClient.defaults.baseURL || 'Base URL not set';
-    const endpoint = '/auth/login';
-    const fullURL = `${baseURL}${endpoint}`;
-    console.log('Full API URL:', fullURL); // Log endpoint lengkap
-  
-    console.log('Attempting login with:', { nip, password });
-  
+    if (!isValid) return;
+
+    setIsLoading(true);
+    setError({nip: '', password: ''});
+
     try {
-      const response = await apiClient.post(endpoint, {
-        nip,
-        password,
-      });
-  
-      console.log('Login response:', response);
-  
-      if (response.status === 200 && response.headers.authorization) {
-        const token = response.headers.authorization;
-        console.log('Token received:', token);
+      const response = await apiClient.post('/auth/login', {nip, password});
+
+      if (response.status === 200 && response.headers['authorization']) {
+        const token = response.headers['authorization'];
         await Keychain.setGenericPassword('token', token);
-  
-        console.log('Fetching user data with token.');
+
         const userData = await fetchUser(token);
-        console.log('User data fetched:', userData);
-  
+
         if (userData) {
-          console.log('Login successful. Navigating to Home.');
           login(userData, token);
+
+          // **Tambahkan: Ambil akses menu setelah login berhasil**
+          try {
+            const menuResponse = await apiClient.get('/routes/access', {
+              headers: {Authorization: `Bearer ${token}`},
+            });
+
+            if (menuResponse.data?.status) {
+              setUserMenu(menuResponse.data.data); // Simpan ke state/context
+              console.log(menuResponse);
+              console.log('setUserMenu:', setUserMenu);
+            }
+          } catch (menuError) {
+            console.error('Gagal mengambil akses menu:', menuError);
+          }
+
+          // Navigasi ke halaman utama
           navigation.replace('AppTabs');
+        } else {
+          setError({
+            nip: 'Invalid NIP or password',
+            password: 'Invalid NIP or password',
+          });
         }
       } else {
-        console.warn('Response does not contain a token:', response);
-        Alert.alert('Error', 'Token not found in response.');
+        setError({
+          nip: 'Invalid NIP or password',
+          password: 'Invalid NIP or password',
+        });
       }
     } catch (error) {
-      console.error('Login error:', error);
-      console.error(
-        'Detailed error response:',
-        error.response?.data || 'No response data.',
-      );
-      Alert.alert(
-        'Error',
-        error.response?.data?.message || 'An error occurred during login.',
-      );
+      setError({
+        nip: 'Invalid NIP or password',
+        password: 'Invalid NIP or password',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
-  
 
   const fetchUser = async token => {
     try {
       const response = await apiClient.get('/auth/user', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: {Authorization: `Bearer ${token}`}, // Pastikan token dikirim dalam header Authorization
       });
-
-      if (response.status === 200) {
-        return response.data.data;
-      } else {
-        Alert.alert('Error', 'Failed to fetch user data.');
-        return null;
-      }
+      console.log('Fetched user data:', response.data);
+      return response.data?.data || null;
     } catch (error) {
       console.error('Fetch user error:', error);
-      Alert.alert('Error', 'An error occurred while fetching user data.');
       return null;
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
     <View style={styles.container}>
-      <ImageBackground
-        source={require('../../admin/assets/images/poltekpol-barombong-bg.jpg')}
-        style={styles.background}
-      />
-      <View style={styles.formContainer}>
-        <Image
-          source={require('../../admin/assets/images/logo-default.png')}
-          style={styles.logo}
-        />
-        <Text style={styles.title}>Masuk</Text>
-        <View style={styles.inputContainer}>
-          <Icon name="user" size={20} color="#7f8c8d" style={styles.icon} />
-          <TextInput
-            style={styles.input}
-            placeholder="NIP"
-            placeholderTextColor="#BCC7CA"
-            value={nip}
-            onChangeText={setNip}
-          />
+      {isPageLoading ? (
+        // Loading sebelum semuanya muncul (termasuk background)
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingBox}>
+            <BarIndicator color="black" size={24} count={5} />
+            <Text style={styles.loadingText}>Memuat...</Text>
+          </View>
         </View>
-        <View style={styles.inputContainer}>
-          <Icon name="lock" size={20} color="#7f8c8d" style={styles.icon} />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#BCC7CA"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+      ) : (
+        <>
+          <View style={styles.background}>
+            <FastImage
+              source={{uri: backgroundImage, priority: FastImage.priority.high}}
+              style={StyleSheet.absoluteFill} // Full screen
+              resizeMode={FastImage.resizeMode.cover}
+            />
+            <View style={styles.overlay} />
+          </View>
+
+          <View style={styles.formContainer}>
+            <FastImage
+              source={{uri: logoImage, priority: FastImage.priority.high}}
+              style={styles.logo}
+              resizeMode={FastImage.resizeMode.contain}
+            />
+
+            {/* Input NIP */}
+            <View
+              style={[styles.inputContainer, error.nip && styles.inputError]}>
+              <Ionicons
+                name={'person'}
+                color="#7f8c8d"
+                size={15}
+                style={styles.icon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="NIP"
+                placeholderTextColor="#BCC7CA"
+                value={nip}
+                onChangeText={setNip}
+              />
+              {error.nip && <Text style={styles.errorText}>{error.nip}</Text>}
+            </View>
+
+            {/* Input Password */}
+            <View
+              style={[
+                styles.inputContainer,
+                error.password && styles.inputError,
+              ]}>
+              <Ionicons
+                name={'lock-closed'}
+                color="#7f8c8d"
+                size={15}
+                style={styles.icon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor="#BCC7CA"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+              />
+              {error.password && (
+                <Text style={styles.errorText}>{error.password}</Text>
+              )}
+              <TouchableOpacity
+                onPress={togglePasswordVisibility}
+                style={styles.eyeIcon}>
+                <Ionicons
+                  name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                  size={18}
+                  color="#7f8c8d"
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Tombol Login */}
+            <TouchableOpacity
+              style={[styles.button, !isValid && styles.buttonDisabled]}
+              onPress={loginHandler}
+              disabled={!isValid || isLoading}>
+              <Text style={styles.buttonText}>Masuk</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
+
+      {/* Loading saat tombol login ditekan */}
+      {isLoading && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingBox}>
+            <BarIndicator color="black" size={24} count={5} />
+            <Text style={styles.loadingText}>Memuat...</Text>
+          </View>
         </View>
-        <TouchableOpacity style={styles.button} onPress={loginHandler}>
-          <Text style={styles.buttonText}>Masuk</Text>
-        </TouchableOpacity>
-      </View>
+      )}
     </View>
   );
 };
@@ -199,40 +297,36 @@ const LoginScreen = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'flex-end',
+    position: 'relative',
   },
   background: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
     width: '100%',
-    height: '70%',
+    height: height * 0.8,
+    position: 'absolute',
+    resizeMode: 'cover',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.2)', // Efek overlay jika ingin ditambahkan
   },
   formContainer: {
+    position: 'absolute',
+    bottom: 0,
     width: '100%',
     backgroundColor: '#fff',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    paddingVertical: 10,
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    paddingVertical: 30,
     paddingHorizontal: 30,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: -4},
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 6,
+    gap: 10,
+    zIndex: 5,
   },
   logo: {
-    width: 200,
-    height: 100,
+    width: 180,
+    height: 90,
     resizeMode: 'contain',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 20,
-    color: '#34495e',
-    textAlign: 'center',
+    marginBottom: 10,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -241,11 +335,18 @@ const styles = StyleSheet.create({
     height: 48,
     backgroundColor: '#f2f3f5',
     borderRadius: 10,
-    marginBottom: 20,
-    fontSize: 16,
-    color: '#34495e',
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: '#dcdcdc',
+  },
+  inputError: {
+    borderColor: 'red',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    fontFamily: 'Poppins-Regular',
+    marginRight: 10,
   },
   icon: {
     marginLeft: 15,
@@ -254,8 +355,9 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 48,
     paddingHorizontal: 15,
-    fontSize: 16,
+    fontSize: 12,
     color: '#34495e',
+    fontFamily: 'Poppins-Regular',
   },
   button: {
     width: '100%',
@@ -264,13 +366,54 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginTop: 10,
+    marginBottom: 10,
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(54, 54, 54, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  loadingBox: {
+    width: '70%',
+    maxWidth: 200,
+    height: 120,
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 6,
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'black',
+    marginTop: 12,
+  },
+
+  eyeIcon: {
+    paddingRight: 10,
   },
 });
 
-export default LoginScreen;
+export default React.memo(LoginScreen);

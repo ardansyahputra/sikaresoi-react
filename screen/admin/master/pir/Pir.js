@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import useApiClient from '../../../../src/api/apiClient'; // Custom API hook for making requests
+import Header from '../../../components/Header';
 
 export default function IndexRupiah({navigation}) {
   const [pir, setPir] = useState(0);
@@ -102,6 +103,25 @@ export default function IndexRupiah({navigation}) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.headerTitle}></Text>
         </TouchableOpacity>
+      </View>
+      <View style={styles.card}>
+        <Text style={styles.title}>Poin Indeks Rupiah</Text>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Poin Indeks Rupiah</Text>
+          <TextInput
+            style={styles.input}
+            value={String(pir)}
+            keyboardType="numeric"
+            onChangeText={text =>
+              setPir(text.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1'))
+            }
+            placeholder="PIR"
+          />
+          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+            <Text style={styles.buttonText}>Simpan</Text>
+          </TouchableOpacity>
+          <Text style={styles.updatedAt}>Last Update: {updatedAt}</Text>
+        </View>
       </View>
 
       {/* Modal for showing error/success messages */}

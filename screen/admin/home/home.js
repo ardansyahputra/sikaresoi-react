@@ -14,6 +14,7 @@ import {useNavigation} from '@react-navigation/native';
 import {useAuth} from '../../auth/AuthContext';
 import axios from 'axios';
 import useApiClient from '../../../src/api/apiClient';
+import GlobalStyle from '../../../src/utils/GlobalStyle';
 
 const Home = () => {
   const navigation = useNavigation();
@@ -151,8 +152,12 @@ const Home = () => {
               style={styles.cardIcon}
             />
             <View>
-              <Text style={styles.cardTitle}>{item.title}</Text>
-              <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+              <Text style={[GlobalStyle.SemiBold, styles.cardTitle]}>
+                {item.title}
+              </Text>
+              <Text style={[GlobalStyle.Regular, styles.cardSubtitle]}>
+                {item.subtitle}
+              </Text>
             </View>
           </View>
         </LinearGradient>
@@ -178,7 +183,7 @@ const Home = () => {
         <LinearGradient
           colors={['#1D56C0', '#4A90E2']} // Gradasi biru tua ke biru terang
           style={styles.circularButtonsContainer}>
-          <Text style={styles.buttonsTitle}></Text>
+          <Text style={[GlobalStyle.SemiBold, styles.buttonsTitle]}></Text>
           <View style={styles.buttonsContainer}>
             {/* Circular Buttons */}
             {[
@@ -228,8 +233,12 @@ const Home = () => {
                 >
                   <Ionicons name={item.icon} size={35} color="#fff" />
                 </TouchableOpacity>
-                <Text style={styles.buttonLabel}>{item.title}</Text>
-                <Text style={styles.buttonSubtitle}>{item.subtitle}</Text>
+                <Text style={[GlobalStyle.SemiBold, styles.buttonLabel]}>
+                  {item.title}
+                </Text>
+                <Text style={[GlobalStyle.Regular, styles.buttonSubtitle]}>
+                  {item.subtitle}
+                </Text>
               </View>
             ))}
           </View>
@@ -265,7 +274,9 @@ const Home = () => {
                     <Ionicons name={item.icon} size={30} color="#213376" />
                   </TouchableOpacity>
                 </View>
-                <Text style={styles.menuText}>{item.title}</Text>
+                <Text style={[GlobalStyle.Regular, styles.menuText]}>
+                  {item.title}
+                </Text>
               </View>
             ))}
           </View>
@@ -333,9 +344,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 15,
-    fontSize: 15,
     color: '#fff',
-    fontWeight: 'bold',
   },
   cardSubtitle: {
     fontSize: 14,
@@ -403,7 +412,7 @@ const styles = StyleSheet.create({
     height: '120%',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 16, // Ensure same as menuButton
+    borderRadius: 16,
   },
   menuText: {
     color: '#333',
@@ -424,7 +433,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   buttonsTitle: {
-    fontWeight: 'bold',
     color: '#fff', // Agar sesuai dengan latar belakang biru
     marginBottom: 10,
     textAlign: 'center',
@@ -464,7 +472,6 @@ const styles = StyleSheet.create({
   },
   buttonLabel: {
     fontSize: 16, // Menambah ukuran teks untuk keterbacaan yang lebih baik
-    fontWeight: 'bold', // Membuat teks lebih tebal
     color: '#fff', // Warna teks tetap putih agar kontras dengan tombol
     marginTop: 8, // Memberikan jarak yang lebih besar antara tombol dan teks
     textAlign: 'center', // Memastikan teks tetap rata tengah
@@ -472,12 +479,9 @@ const styles = StyleSheet.create({
   },
   buttonSubtitle: {
     fontSize: 11, // Ukuran yang lebih kecil untuk subjudul
-    fontSize: 11, // Ukuran yang lebih kecil untuk subjudul
     color: '#fff', // Menjaga warna teks tetap putih
     textAlign: 'center', // Memastikan teks tetap rata tengah
     marginTop: 6, // Memberikan jarak antara label dan subtitle
-    fontStyle: 'Bold', // Memberikan efek miring untuk subtitle
-    fontStyle: 'Bold', // Memberikan efek miring untuk subtitle
   },
   bottomNavbar: {
     flexDirection: 'row',
