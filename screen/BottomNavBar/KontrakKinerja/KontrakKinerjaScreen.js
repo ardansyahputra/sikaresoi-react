@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import useApiClient from '../../../src/api/apiClient';
 import GetAktifCard from './GetAktif';
 import KirimKontrak from './KirimKontrak';
@@ -50,6 +50,16 @@ const KontrakKinerjaScreen = () => {
   const [listKinerja, setListKinerja] = useState([]);
   const [totalBobot, setTotalBobot] = useState(0);
   const [totalWpt, setTotalWpt] = useState(0);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchYears();
+      fetchUserJabatanData();
+      if (selectedYear) {
+        fetchKontrak(currentPage, selectedYear, selectedDisplay);
+      }
+    }, [currentPage, selectedYear, selectedDisplay]),
+  );
 
   useEffect(() => {
     fetchYears();
@@ -114,17 +124,18 @@ const KontrakKinerjaScreen = () => {
         setCurrentPage(response.data.current_page);
         setLastPage(response.data.last_page);
 
-        // Update kinerja and listKinerja
-        setKinerja(response.data.kinerja || {
-          totalak: 0,
-          totalwpt: 0,
-          totalbobot: 0,
-          tahun_id: year,
-          user_jabatan_id: userJabatanData?.id,
-          alert: {
-            show: false,
+        setKinerja(
+          response.data.kinerja || {
+            totalak: 0,
+            totalwpt: 0,
+            totalbobot: 0,
+            tahun_id: year,
+            user_jabatan_id: userJabatanData?.id,
+            alert: {
+              show: false,
+            },
           },
-        });
+        );
         setListKinerja(response.data.data);
 
         // Calculate totalBobot and totalWpt
@@ -201,6 +212,10 @@ const KontrakKinerjaScreen = () => {
     }
   };
 
+  const handleKumulatif = item => {
+    navigation.navigate('Kumulatif', {type: 'edit', item});
+  };
+
   const confirmDelete = item => {
     setSelectedItem(item);
     setModalVisible(true);
@@ -250,7 +265,9 @@ const KontrakKinerjaScreen = () => {
             <FontAwesome name="plus" size={15} color="white" />
             <Text style={styles.buttonText}>LIST KINERJA</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.salinkontrakButton}>
+          <TouchableOpacity
+            style={styles.salinkontrakButton}
+            onPress={() => navigation.navigate('SalinKontrak')}>
             <FontAwesome name="copy" size={15} color="white" />
             <Text style={styles.buttonText}>SALIN KONTRAK</Text>
           </TouchableOpacity>
@@ -301,20 +318,20 @@ const KontrakKinerjaScreen = () => {
               {/* Kolom kiri */}
               <View style={styles.leftColumn}>
                 <Text style={styles.expandedText}>Biaya: </Text>
-                <View style={styles.inputWrapper} pointerEvents='none'>
+                <View style={styles.inputWrapper} pointerEvents="none">
                   <Text style={styles.inputSuffixBiaya}>Rp.</Text>
-                  <TextInput 
+                  <TextInput
                     style={styles.input}
-                    value= {item.uraian.biaya.toString()}
-                  />  
+                    value={item.uraian.biaya.toString()}
+                  />
                 </View>
 
                 <Text style={styles.expandedText}>AK: </Text>
-                <View style={styles.inputWrapper} pointerEvents='none'>
-                  <TextInput 
+                <View style={styles.inputWrapper} pointerEvents="none">
+                  <TextInput
                     style={styles.input}
-                    value= {item.uraian.angka_kredit.toString()}
-                  />  
+                    value={item.uraian.angka_kredit.toString()}
+                  />
                 </View>
 
                 <Text style={styles.expandedText}>Kuantitas: </Text>
@@ -474,8 +491,7 @@ const KontrakKinerjaScreen = () => {
                   {item.kuantitas <= 0 ||
                   item.kualitas <= 0 ||
                   item.waktu <= 0 ||
-                  item.bobot <= 0
-                  ? (
+                  item.bobot <= 0 ? (
                     <View style={styles.statusBadgeDanger}>
                       <Ionicons name="alert-circle" size={16} color="white" />
                       <Text style={styles.statusText}> LENGKAPI DATA</Text>
@@ -487,7 +503,11 @@ const KontrakKinerjaScreen = () => {
                     </View>
                   ) : (
                     <View style={styles.statusBadgeSuccess}>
-                      <Ionicons name="checkmark-circle" size={16} color="white" />
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={16}
+                        color="white"
+                      />
                       <Text style={styles.statusText}> LENGKAP</Text>
                     </View>
                   )}
@@ -498,7 +518,7 @@ const KontrakKinerjaScreen = () => {
             <View style={styles.actionContainer}>
               <TouchableOpacity
                 style={styles.editButton}
-                onPress={() => handleEdit(item)}>
+                onPress={() => handleKumulatif(item)}>
                 <Ionicons name="create" size={20} color="white" />
               </TouchableOpacity>
               <TouchableOpacity
@@ -535,7 +555,7 @@ const KontrakKinerjaScreen = () => {
       <View>
         <Text style={styles.headerTitle}>Kontrak Kinerja</Text>
         <Text style={styles.headerSubtitle}>User • Kontrak Kinerja</Text>
-              
+              
       </View>
 
       {userJabatanData && <GetAktifCard data={userJabatanData} />}
@@ -547,6 +567,7 @@ const KontrakKinerjaScreen = () => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}> Peringatan </Text>
+            <Ionicons name="alert-circle-outline" size={100} color="#ffab09" />
             <Text style={styles.modalText}>
               Apakah Anda yakin ingin menghapus data ini?
             </Text>
@@ -583,7 +604,6 @@ const KontrakKinerjaScreen = () => {
                 Showing page {currentPage} of {lastPage}
               </Text>
               <View style={styles.paginationContainer}>
-                
                 <View style={styles.paginationButtons}>
                   <TouchableOpacity
                     style={[
@@ -629,7 +649,7 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 14,
     color: '#333',
-    textAlign: 'center',
+    textAlign: 'left',
   },
   container: {
     flex: 1,
@@ -989,24 +1009,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 5,
   },
-  modalInput: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    minHeight: 10,
-    marginBottom: 15,
+  modalActions: {
+    flexDirection: 'column',
     textAlignVertical: 'top',
   },
-  modalButtons: {
+  modalButton: {
+    flex: 1,
+    maxWidth: 10,
+    alignContent: 'center',
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
   },
   cancelButton: {
     backgroundColor: '#ccc',
     padding: 10,
     borderRadius: 5,
-    marginRight: 10,
+    marginRight: 120,
   },
   submitButton: {
     backgroundColor: '#F44336',

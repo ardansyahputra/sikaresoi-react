@@ -125,27 +125,37 @@ export default function PersetujuanRealisasi({ navigation }) {
       <View style={styles.filterHeader}>
         <View style={styles.yearMonthContainer}>
           <View style={styles.yearContainer}>
-            <Text style={styles.displayText}>Tahun</Text>
+            <Text style={styles.displayText}>Tahun :</Text>
             <Dropdown
-              style={styles.dropdownTahun}
+              style={styles.dropdown}
               data={tahunOptions}
               labelField="label"
               valueField="value"
-              placeholder="Select Year"
+              placeholder="-- PILIH TAHUN --"
               value={selectedYear}
               onChange={item => setSelectedYear(item.value)}
+              labelStyle={styles.dropdownLabel} // Label font Poppins
+              selectedTextStyle={styles.dropdownText} // Font Poppins untuk teks yang dipilih
+              placeholderStyle={styles.dropdownPlaceholder} // Placeholder dengan font Poppins
+              itemTextStyle={styles.dropdownItemText} // Font Poppins untuk teks opsi
+              itemStyle={styles.dropdownItemText}
             />
           </View>
           <View style={styles.monthContainer}>
-            <Text style={styles.displayText}>Bulan</Text>
+            <Text style={styles.displayText}>Bulan :</Text>
             <Dropdown
-              style={styles.dropdownBulan}
+              style={styles.dropdown}
               data={bulanOptions}
               labelField="label"
               valueField="value"
-              placeholder="Select Month"
+              placeholder="-- PILIH BULAN --"
               value={selectedMonth}
               onChange={item => setSelectedMonth(item.value)}
+              labelStyle={styles.dropdownLabel}
+              selectedTextStyle={styles.dropdownText} // Font Poppins untuk teks yang dipilih
+              placeholderStyle={styles.dropdownPlaceholder} // Placeholder dengan font Poppins
+              itemTextStyle={styles.dropdownItemText} // Font Poppins untuk teks opsi
+              itemStyle={styles.dropdownItemText}
             />
           </View>
         </View>
@@ -260,21 +270,22 @@ export default function PersetujuanRealisasi({ navigation }) {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={26} color="#000" />
-        </TouchableOpacity>
-        <Image
-          source={require('./assets/images/sikaresoi.png')}
-          style={styles.headerImage}
-        />
-      </View>
-      <View>
-        <Text style={styles.headerTitle}>Persetujuan Realisasi</Text>
-        <Text style={styles.headerSubtitle}>User • Persetujuan • Realisasi</Text>
-      </View>
+                  <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <Ionicons name="arrow-back" size={26} color="#000" />
+                  </TouchableOpacity>
+                  <Image
+                    source={require('./assets/images/sikaresoi.png')}
+                    style={styles.headerImage}
+                  />
+                </View>
+      <View style={styles.headerTextContainer}>
+                  <Text style={styles.headerTitle}>Persetujuan Realisasi</Text>
+                  <Text style={styles.separatorText}> • </Text>
+                  <Text style={styles.headerSubtitle}>Realisasi</Text>
+                </View>
       {/* Loading Indicator */}
       {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#0000ff" style={styles.loader}/>
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
@@ -318,7 +329,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F7F8FB',
   },
-
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    elevation: 5,
+  },
+  headerImage: {
+    width: '50%',
+    height: undefined,
+    aspectRatio: 5,
+    marginRight: 190,
+    resizeMode: 'contain',
+    alignSelf: 'center',
+  },
+  backButton: {
+    marginTop:1,
+    marginLeft:3,
+    marginRight:1,
+    opacity: 0.4,
+  },
   yearMonthContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -410,7 +446,7 @@ const styles = StyleSheet.create({
 
   statusCell: {
     textAlign: 'center',
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
   },
 
   expandIconCell: {
@@ -442,12 +478,14 @@ const styles = StyleSheet.create({
   expandedText: {
     marginBottom: 5,
     fontSize: 14,
+    fontFamily: 'Poppins-Regular',
   },
 
   expandedLinkText: {
     color: 'blue',
     marginBottom: 5,
     fontSize: 14,
+    fontFamily: 'Poppins-SemiBold',
   },
 
   filetext: {
@@ -536,34 +574,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     marginTop: 10,
   },
-
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    paddingHorizontal: 16,
-    paddingVertical: 18,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    elevation: 5,
-  },
-
-  backButton: {
-    marginRight: 16,
-  },
-
-  headerImage: {
-    width: '45%',
-    height: undefined,
-    aspectRatio: 5,
-    marginRight: 190,
-    resizeMode: 'contain',
-    alignSelf: 'center',
-    marginBottom: 10,
-  },
-
   headerTitle: {
     fontSize: 18,
     fontWeight: "bold",
@@ -610,8 +620,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingHorizontal: 5,
     backgroundColor: '#fff',
-    maxWidth: '60%', // Batas lebar maksimal
-    marginLeft: 'auto', // Sejajar ke kanan jika diperlukan
+    maxWidth: '60%',
+    marginLeft: 'auto', 
   },
   searchIcon: {
     marginRight: 10,
@@ -621,6 +631,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     fontSize: 16,
     color: '#000',
+    fontFamily: 'Poppins-Regular',
   },
   
   filterHeader: {
@@ -635,16 +646,16 @@ const styles = StyleSheet.create({
 
   displayContainer: {
     flex: 1,
-    maxWidth: '20%', // Sesuaikan lebar maksimal untuk Display
+    maxWidth: '20%',
     marginRight: 10,
   },
 
   displayText: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Poppins-SemiBold',
     fontSize: 16,
-    textAlign: 'left', // Teks sejajar kiri
+    textAlign: 'left',
     color: '#000',
-    width: '100%', // Isi lebar penuh kontainer
+    width: '100%',
   },
 
    dropdown: {
@@ -652,6 +663,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 5,
     padding: 5,
+    fontFamily: 'Poppins-SemiBold',
   },
   dropdownTahun: {
     borderWidth: 1,
@@ -690,5 +702,53 @@ const styles = StyleSheet.create({
   customFont: {
     color: 'white',
     fontFamily: 'Poppins-Regular',
+  },
+  headerTextContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 20, 
+    marginTop: 20, 
+  },
+
+  headerTitle: {
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 17,
+    color: "#000",
+  },
+
+  separatorText: {
+    fontSize: 20,
+    color: "#000",
+    marginBottom: 3,
+  },
+
+  headerSubtitle: {
+    fontFamily: "Poppins-Regular",
+    fontSize: 14,
+    color: "#000",
+    marginLeft: 0,
+  },
+  dropdownItemText: {
+    fontFamily: 'Poppins-Regular', // Poppins untuk teks item
+    fontSize: 14,
+  },
+  dropdownPlaceholder: {
+    fontFamily: 'Poppins-Regular', // Placeholder font Poppins
+    fontSize: 14,
+  },
+  
+  dropdownLabel: {
+    fontFamily: 'Poppins-SemiBold', // Label font Poppins
+    fontSize: 16,
+  },
+  dropdownText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+  },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
   },
 });

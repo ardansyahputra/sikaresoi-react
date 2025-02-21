@@ -323,8 +323,33 @@ export default function Persetujuan({navigation}) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
     backgroundColor: '#F7F8FB', // Tetap sesuai dengan warna default Anda
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    elevation: 5,
+  },
+  headerImage: {
+    width: '50%',
+    height: undefined,
+    aspectRatio: 5,
+    marginRight: 190,
+    resizeMode: 'contain',
+    alignSelf: 'center',
+  },
+  backButton: {
+    marginTop: 7,
+    marginLeft: 3,
+    marginRight: 1,
+    opacity: 0.4,
   },
   card: {
     backgroundColor: '#FFFFFF',

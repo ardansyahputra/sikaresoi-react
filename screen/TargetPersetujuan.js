@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -6,32 +6,78 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { Card, Button } from 'react-native-paper';
+import {Card, Button} from 'react-native-paper';
+import axios from 'axios';
+import useApiClient from '../src/api/apiClient';
 
-const PerformanceBreakdown = ({ onBack }) => {
-  const kinerja = {
-    uuid: '12345',
-    uraian: {
-      nm_uraian: 'Contoh Kegiatan Tugas Jabatan',
-      sub_unsur: {
-        nm_sub_unsur: 'Contoh Sub Unsur',
-      },
-      angka_kredit: '10',
-      point: '5',
-      wpt: '40',
-    },
-    kt_satuan: '10',
-    kl_persen: '90%',
-    waktu_bulan: '12',
-    kuantitas: '100',
-    target: Array.from({ length: 12 }, (_, i) => ({
-      bulan: new Date(0, i).toLocaleString('id-ID', { month: 'long' }),
-      kuantitas: '8.33',
-    })),
-    total_target: '100.00',
+// Konfigurasi base URL untuk axios
+const api = axios.create({
+  baseURL: 'https://your-api-url', // Ganti dengan base URL API Anda
+  timeout: 10000, // Timeout 10 detik
+  headers: {
+    'Content-Type': 'application/json',
+    // Tambahkan header lain jika diperlukan
+    // 'Authorization': 'Bearer your-token'
+  },
+});
+
+const PerformanceBreakdown = ({onBack, uuid}) => {
+  const [kinerja, setKinerja] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const apiClient = useApiClient();
+
+  const fetchKinerjaData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await api.get(`/kinerja/${uuid}`);
+      setKinerja(response.data);
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          'Terjadi kesalahan saat mengambil data',
+      );
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchKinerjaData();
+  }, [uuid]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007bff" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Error: {error}</Text>
+        <Button mode="contained" onPress={fetchKinerjaData}>
+          Coba Lagi
+        </Button>
+      </View>
+    );
+  }
+
+  if (!kinerja) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Data tidak ditemukan</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -45,9 +91,18 @@ const PerformanceBreakdown = ({ onBack }) => {
           )}
         />
         <Card.Content>
-          <DetailRow label="Sub Unsur" value={kinerja.uraian?.sub_unsur?.nm_sub_unsur} />
-          <DetailRow label="Kegiatan Tugas Jabatan" value={kinerja.uraian?.nm_uraian} />
-          <DetailRow label="Angka Kredit" value={kinerja.uraian?.angka_kredit} />
+          <DetailRow
+            label="Sub Unsur"
+            value={kinerja.uraian?.sub_unsur?.nm_sub_unsur}
+          />
+          <DetailRow
+            label="Kegiatan Tugas Jabatan"
+            value={kinerja.uraian?.nm_uraian}
+          />
+          <DetailRow
+            label="Angka Kredit"
+            value={kinerja.uraian?.angka_kredit}
+          />
           <DetailRow label="Kuantitas" value={kinerja.kt_satuan} />
           <DetailRow label="Kualitas" value={kinerja.kl_persen} />
           <DetailRow label="Waktu (Bulan)" value={kinerja.waktu_bulan} />
@@ -91,7 +146,7 @@ const PerformanceBreakdown = ({ onBack }) => {
   );
 };
 
-const DetailRow = ({ label, value }) => (
+const DetailRow = ({label, value}) => (
   <View style={styles.detailRow}>
     <Text style={styles.label}>{label}</Text>
     <Text style={styles.value}>{value || '-'}</Text>
@@ -103,6 +158,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
     padding: 10,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 16,
+    marginBottom: 10,
+    textAlign: 'center',
   },
   card: {
     marginBottom: 15,

@@ -8,20 +8,19 @@ import {
   useNavigationContext,
 } from './src/navigation/NavigationContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {StyleSheet} from 'react-native';
 
 //login screens
 import LoginScreen from './screen/auth/login/Login';
 import HomeScreen from './screen/BottomNavBar/Home/HomeScreen';
 import KontrakKinerjaScreen from './screen/BottomNavBar/KontrakKinerja/KontrakKinerjaScreen';
 import GetAktifCard from './screen/BottomNavBar/KontrakKinerja/GetAktif.js';
-import KirimKontrak from './screen/BottomNavBar/KontrakKinerja/KirimKontrak.js';
 import SettingJabatan from './screen/BottomNavBar/Menu/SettingJabatan/SettingJabatan';
 import FormJabatan from './screen/BottomNavBar/Menu/SettingJabatan/Form.js';
 import TeguranScreen from './screen/TeguranScreen.js';
 import RealisasiKinerja from './screen/BottomNavBar/Menu/RealisasiKinerja/RealisasiKinerja';
 import PresensiScreen from './screen/PresensiScreen';
 import Allmenu from './screen/Allmenu';
-import Persetujuan from './screen/Persetujuan';
 import DataTable from './screen/DataTable';
 import DataTable2 from './screen/DataTable2';
 import RemunerasiScreen from './screen/BottomNavBar/Home/Persetujuan/Renumerasi.js';
@@ -35,22 +34,35 @@ import PersetujuanRealisasi from './screen/PersetujuanRealisasi';
 import Bacascreen from './screen/Bacascreen.js';
 import Bacakontrak from './screen/Bacakontrak.js';
 import KontrakKerja from './screen/BottomNavBar/Menu/Laporan/KontrakKerja';
+import Teguranscreen from './screen/TeguranScreen.js';
+import Persetujuan from './screen/Persetujuan.js';
 import LaporanKontrakKerja from './screen/BottomNavBar/Menu/Laporan/KontrakKerja';
 import RealisasiNext from './screen/RealisasiNext.js';
 import TargetPersetujuan from './screen/TargetPersetujuan.js';
-import MasterKinerja from './screen/BottomNavBar/Menu/RealisasiKinerja/MasterKinerja.js';
+import MasterKinerjaRealisasi from './screen/BottomNavBar/Menu/RealisasiKinerja/MasterKinerjaRealisasi.js';
+import MasterKinerja from './screen/BottomNavBar/KontrakKinerja/MasterKinerja.js';
+import AddUraian from './screen/BottomNavBar/KontrakKinerja/AddUraian.js';
+import SalinKontrak from './screen/BottomNavBar/KontrakKinerja/SalinKontrak.js';
+import Kumulatif from './screen/BottomNavBar/KontrakKinerja/Kumulatif.js';
+import realisasi from './screen/BottomNavBar/Menu/RealisasiKinerja/realisasi.js';
 
 const Tab = createBottomTabNavigator();
-
+const styles = StyleSheet.create({
+  tabLabel: {
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 11,
+    opacity: 0.6,
+  },
+});
 // Stack Navigator untuk Menu
 const Stack = createNativeStackNavigator();
 
 function RootStack() {
   return (
     <Stack.Navigator screenOptions={{headerShown: false}}>
-    <Stack.Screen name="Login" component={LoginScreen} />
-    <Stack.Screen name="Allmenu" component={Allmenu} />
-    <Stack.Screen name="AppTabs" component={AppTabs} />
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Allmenu" component={Allmenu} />
+      <Stack.Screen name="AppTabs" component={AppTabs} />
     </Stack.Navigator>
   );
 }
@@ -81,15 +93,11 @@ function HomeStack() {
         options={{headerShown: false}}
       />
       <Stack.Screen
-      name="GetAktif"
-      component={GetAktifCard}
-      options={{headerShown: false}}
+        name="GetAktif"
+        component={GetAktifCard}
+        options={{headerShown: false}}
       />
-      <Stack.Screen
-      name="KirimKontrak"
-      component={GetAktifCard}
-      options={{headerShown: false}}
-      />
+
       <Stack.Screen
         name="Profile"
         component={ProfileScreen}
@@ -180,6 +188,16 @@ function HomeStack() {
         component={MasterKinerja}
         options={{headerShown: false}}
       />
+      <Stack.Screen
+        name="MasterKinerjaRealisasi"
+        component={MasterKinerjaRealisasi}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="realisasi"
+        component={realisasi}
+        options={{headerShown: false}}
+      />
     </Stack.Navigator>
   );
 }
@@ -197,11 +215,15 @@ function ProfileStack() {
 function Kontrakstack() {
   return (
     <Stack.Navigator screenOptions={{headerShown: false}}>
-      <Stack.Screen name="KontrakKinerja" component={KontrakKinerjaScreen}/>
-      <Stack.Screen name="MasterKinerja" component={MasterKinerja}/>
-      <Stack.Screen name="AddUraian" component={AddUraian}/>
+      <Stack.Screen name="KontrakKinerja" component={KontrakKinerjaScreen} />
+      <Stack.Screen name="MasterKinerja" component={MasterKinerja} />
+      <Stack.Screen
+        name="MasterKinerjaRealisasi"
+        component={MasterKinerjaRealisasi}
+      />
+      <Stack.Screen name="AddUraian" component={AddUraian} />
     </Stack.Navigator>
-  )
+  );
 }
 
 function AppTabs() {
@@ -213,9 +235,9 @@ function AppTabs() {
         tabBarIcon: ({focused, color, size}) => {
           let iconName;
 
-          if (route.name === 'Dashboard') {
+          if (route.name === 'DASHBOARD') {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'KontrakKinerja') {
+          } else if (route.name === 'Kontrak') {
             iconName = focused ? 'document' : 'document-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
@@ -229,19 +251,20 @@ function AppTabs() {
           backgroundColor: 'white',
           display: shouldShowTabNavigator ? 'flex' : 'none',
         },
+        tabBarLabelStyle: styles.tabLabel, // Menggunakan style yang sudah dibuat
       })}>
       <Tab.Screen
-        name="Dashboard"
+        name="DASHBOARD"
         component={HomeStack}
         options={{headerShown: false}}
       />
       <Tab.Screen
-        name="KontrakKinerja"
-        component={KontrakKinerjaScreen} // Pastikan Presensi sudah ada
+        name="Kontrak"
+        component={Kontrakstack}
         options={{headerShown: false}}
       />
       <Tab.Screen
-        name="Profile"
+        name="PROFIL"
         component={ProfileStack}
         options={{headerShown: false}}
       />

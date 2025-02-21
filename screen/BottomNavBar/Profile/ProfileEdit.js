@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -8,96 +8,110 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
-  ScrollView,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
+import ImagePicker from 'react-native-image-crop-picker';
 import DropDownPicker from 'react-native-dropdown-picker';
-import axios from 'axios';
-import { launchImageLibrary } from 'react-native-image-picker';
+import useApiClient from '../../../src/api/apiClient';
+import { useAuth } from '../../auth/AuthContext';
 
-const ProfileEdit = ({ navigation }) => {
-  const [name, setName] = useState('19750615 199808 1 001');
-  const [email, setEmail] = useState('BUDIAWAN, S.Si.T, MT');
-  const [profileImage, setProfileImage] = useState(null);
+const ProfileEdit = ({navigation}) => {
+  const {user, login, token, fetchPangkat, pangkatItems} = useAuth();
+  const [nip, setNip] = useState(user?.nip || '');
+  const [name, setName] = useState(user?.name || '');
+  const [pangkat, setPangkat] = useState(user?.pangkat_id || '');
+  const [profileImage, setProfileImage] = useState(user?.photo_url || null);
+  const apiClient = useApiClient();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [dropdownValue, setDropdownValue] = useState(null);
+  const [dropdownValue, setDropdownValue] = useState(user?.pangkat_id || null);
   const [dropdownItems, setDropdownItems] = useState([]);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchPangkatData();
+    console.log('user data saya', user);
+    fetchPangkat();
   }, []);
 
-  const fetchPangkatData = async () => {
-    setLoading(true);
+  const openGallery = async () => {
     try {
-      const response = await axios.get('http://192.168.60.176:8000/api/v1/pangkat/show', {
-        headers: {
-          Authorization:
-            'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE3Njo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2ODIwMjUyLCJleHAiOjE3MzY4MjYyMDMsIm5iZiI6MTczNjgyMjYwMywianRpIjoiY1NoUDZhclZtVlY1elZhayIsInN1YiI6OCwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.esERNPZQFUFe-9yllVw3BnPPx4kIBULo-Ehqfv_vABw',
-        },
+      await ImagePicker.openPicker({
+        width: 300,
+        height: 400,
+        cropping: true,
+      }).then(image => {
+        console.log(image, 'image');
+        setProfileImage(image.path);
       });
-
-      console.log('API Response:', response.data); // Debugging log
-
-      if (response.data && Array.isArray(response.data.data)) {
-        const formattedData = response.data.data.map((item) => ({
-          label: `${item.nm_pangkat} - ${item.golongan}/${item.ruang}`,
-          value: item.id,
-        }));
-        setDropdownItems(formattedData);
-
-        // Set default value (optional)
-        if (formattedData.length > 0) {
-          setDropdownValue(formattedData[0].value);
-        }
-      } else {
-        console.error('Unexpected response format:', response.data);
-      }
     } catch (error) {
-      console.error('Error fetching pangkat data:', error);
-    } finally {
-      setLoading(false);
+      console.log(error, 'error');
     }
   };
 
-  const pickImage = () => {
-    launchImageLibrary(
-      {
-        mediaType: 'photo',
-        quality: 0.5,
-        includeBase64: false,
-      },
-      (response) => {
-        if (response.didCancel) {
-          console.log('User cancelled image picker');
-        } else if (response.errorCode) {
-          console.log('ImagePicker Error: ', response.errorMessage);
-        } else if (response.assets && response.assets.length > 0) {
-          setProfileImage(response.assets[0].uri);
-        }
-      }
-    );
+  const handleUpdateProfile = () => {
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('nip', nip);
+    formData.append('pangkat_id', dropdownValue);
+
+    if (profileImage && profileImage !== user?.photo_url) {
+      formData.append('photo', {
+        uri: profileImage,
+        type: 'image/jpeg',
+        name: profileImage.split('/').pop(),
+      });
+    }
+
+    apiClient
+      .post('/user/update_profile', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+      .then(response => {
+        console.log('Profile updated successfully:', response.data);
+
+        // Update user data in AuthContext
+        const updatedUser = {
+          ...user,
+          name,
+          nip,
+          pangkat_id: dropdownValue, // pastikan pangkat_id terbaru digunakan
+          photo_url: profileImage,
+        };
+        login(updatedUser, token);
+
+        // Show success message or navigate
+        navigation.goBack(); // Optionally go back to the profile page
+      })
+      .catch(error => {
+        console.log(
+          'Error updating profile:',
+          error.response?.data?.message || error.message,
+        );
+      });
   };
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}>
           <Ionicons name="arrow-back" size={26} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Edit Profile</Text>
       </View>
 
       <View style={styles.profileImageContainer}>
-        <TouchableOpacity onPress={pickImage}>
+        <TouchableOpacity onPress={openGallery}>
           <Image
-            source={profileImage ? { uri: profileImage } : require('../../assets/sikaresoi.png')}
+            source={
+              profileImage
+                ? {uri: profileImage}
+                : require('../../assets/images/sikaresoi.png')
+            }
             style={styles.profileImage}
           />
           <View style={styles.cameraIconContainer}>
@@ -110,38 +124,42 @@ const ProfileEdit = ({ navigation }) => {
         <Text style={styles.label}>NIP / NRP</Text>
         <TextInput
           style={styles.input}
-          value={name}
-          onChangeText={setName}
+          value={nip}
+          editable={false}
+          onChangeText={setNip}
         />
 
         <Text style={styles.label}>Nama</Text>
         <TextInput
           style={styles.input}
-          value={email}
-          onChangeText={setEmail}
+          value={name}
+          onChangeText={setName}
           keyboardType="email-address"
         />
 
         <Text style={styles.label}>Pangkat / Gol.Ruang</Text>
-        {loading ? (
-          <ActivityIndicator size="small" color="#FF3D00" />
-        ) : (
-          <DropDownPicker
-            open={dropdownOpen}
-            value={dropdownValue}
-            items={dropdownItems}
-            setOpen={setDropdownOpen}
-            setValue={setDropdownValue}
-            setItems={setDropdownItems}
-            placeholder="Pilih Pangkat"
-            style={styles.dropdown}
-            dropDownContainerStyle={styles.dropdownContainer}
-            nestedScrollEnabled
-          />
-        )}
+        <DropDownPicker
+          open={dropdownOpen}
+          value={dropdownValue}
+          items={pangkatItems}
+          setOpen={setDropdownOpen}
+          setValue={setDropdownValue}
+          setItems={setDropdownItems}
+          placeholder="Pilih Pangkat"
+          style={styles.dropdown}
+          labelStyle={styles.dropdownLabel} // Label font Poppins
+          selectedTextStyle={styles.selectedTextStyle} // Font Poppins untuk teks yang dipilih
+                placeholderStyle={styles.dropdownPlaceholder} // Placeholder dengan font Poppins
+                itemTextStyle={styles.dropdownItemText} // Font Poppins untuk teks opsi
+                itemStyle={styles.dropdownItemText} // Gaya untuk item dalam dropdown
+          dropDownContainerStyle={styles.dropdownContainer}
+        />
 
-        <TouchableOpacity style={styles.updateButton}>
-          <Text style={styles.updateButtonText}>Kirim / Update</Text>
+        {/* Kirim / Update Button */}
+        <TouchableOpacity
+          style={styles.updateButton}
+          onPress={handleUpdateProfile}>
+          <Text style={styles.updateButtonText}>Kirim</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -157,20 +175,21 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 20,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
     color: 'black',
-    marginLeft: 120,
+    marginRight: 150,
   },
   profileImageContainer: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 30, // Increased space below profile image
   },
   profileImage: {
-    width: 120,
+    width: 120, // Larger size for profile image
     height: 120,
     borderRadius: 60,
   },
@@ -183,35 +202,37 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   formContainer: {
-    marginTop: 20,
+    marginTop: 20, // Increased margin for better spacing
   },
   label: {
     fontSize: 16,
     marginBottom: 5,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
   },
   input: {
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
     paddingHorizontal: 10,
-    paddingVertical: 12,
+    paddingVertical: 12, // Increased padding for better spacing
     fontSize: 14,
-    marginBottom: 20,
+    fontFamily: 'Poppins-Regular',
+    marginBottom: 20, // Increased margin bottom for spacing between fields
     backgroundColor: '#f9f9f9',
   },
   updateButton: {
     backgroundColor: '#FF3D00',
     paddingVertical: 12,
     borderRadius: 12,
-    marginTop: 25,
+    marginTop: 25, // Space above the button
     alignItems: 'center',
   },
   updateButtonText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
   },
+
   dropdown: {
     borderWidth: 1,
     borderColor: '#ddd',
@@ -224,6 +245,28 @@ const styles = StyleSheet.create({
   dropdownContainer: {
     borderWidth: 1,
     borderColor: '#ddd',
+  },
+  dropdownItemText: {
+    fontFamily: 'Poppins-Regular', // Poppins untuk teks item
+    fontSize: 14,
+  },
+  dropdownPlaceholder: {
+    fontFamily: 'Poppins-Regular', // Placeholder font Poppins
+    fontSize: 14,
+  },
+  dropdownLabel: {
+    fontFamily: 'Poppins-Regular', // Label font Poppins
+    fontSize: 15,
+  },
+  selectedTextStyle: {
+    fontSize: 16,
+    fontFamily: "Poppins-Regular",
+    color: '#333333',
+  },
+  placeholderStyle: {
+    fontSize: 16,
+    fontFamily: "Poppins-Regular",
+    color: '#999999',
   },
 });
 

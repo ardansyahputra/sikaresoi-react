@@ -37,6 +37,8 @@ const RealisasiKinerja = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [monthOptions, setMonthOptions] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(null);
+  const [showDetail, setShowDetail] = useState(null);
+
   
 
   const apiClient = useApiClient();
@@ -183,8 +185,13 @@ const RealisasiKinerja = () => {
   };
 
   const handleTugastambahan = (userJabatanId, tahunId, item) => {
-    navigation.navigate('MasterKinerja', {userJabatanId, tahunId, item});
+    navigation.navigate('MasterKinerjaRealisasi', {userJabatanId, tahunId, item});
   };
+
+  const handleEdit = (item) => {
+    setShowDetail(showDetail === item.id ? null : item.id);
+  };
+  
 
   const onSaveKinerja = async updatedItem => {
     try {
@@ -232,10 +239,7 @@ const RealisasiKinerja = () => {
     }
   };
 
-  const confirmDelete = item => {
-    setSelectedItem(item);
-    setModalVisible(true);
-  };
+ 
 
   const Footer = () => (
     <View style={styles.footer}>
@@ -283,7 +287,7 @@ const RealisasiKinerja = () => {
             onChange={item => setSelectedMonth(item.value)}
           />
         </View>
-
+        </View>
         {/*Button Kinerja */}
         <View style={styles.buttonRightContainer}>
           <TouchableOpacity
@@ -298,7 +302,7 @@ const RealisasiKinerja = () => {
             <Text style={styles.buttonText}>UBAH ATASAN</Text>
           </TouchableOpacity>
         </View>
-      </View>
+     
       <View style={styles.tableHeader}>
         <Text style={[styles.headerCell, styles.numberCell]} align="center">
           Nomor
@@ -364,7 +368,7 @@ const RealisasiKinerja = () => {
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={styles.input}
-                    value={item.kuantitas.toString()}
+                    value={item.target?.kuantitas.toString()}
                     onChangeText={value => {
                       const numericValue = parseInt(value) || 1;
                       const updatedItem = {...item, kuantitas: numericValue};
@@ -482,16 +486,108 @@ const RealisasiKinerja = () => {
   
             <View style={styles.actionContainer}>
               <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => handleEdit(item)}>
-                <Ionicons name="create" size={20} color="white" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => confirmDelete(item)}>
-                <Ionicons name="trash" size={20} color="white" />
+                style={[styles.editButton, {
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }]}
+                onPress={() => setShowDetail(showDetail === item.id ? null : item.id)}>
+                <Ionicons name="checkmark-done-sharp" size={20} color="white" />
+                <Text style={{
+                  color: 'white',
+                  marginTop: 2,
+                  fontSize: 12
+                }}>Realisasi</Text>
               </TouchableOpacity>
             </View>
+            {showDetail === item.id && (
+  <View style={styles.detailContainer}>
+    {/* First Row */}
+    <View style={styles.rowContainer}>
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>
+          USULAN KUANTITAS <Text style={styles.requiredStar}>*</Text>
+        </Text>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.inputs}
+            value={item.usulanKuantitas || '0,00'}
+            onChangeText={(text) => onSaveKinerja({...item, usulanKuantitas: text})}
+            keyboardType="numeric"
+          />
+          <TouchableOpacity>
+            <Text style={styles.laporanLink}>Laporan</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>
+          USULAN KUALITAS <Text style={styles.requiredStar}>*</Text>
+        </Text>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.inputs}
+            value={item.usulanKualitas || '0,00'}
+            onChangeText={(text) => onSaveKinerja({...item, usulanKualitas: text})}
+            keyboardType="numeric"
+          />
+          <Text style={styles.percentageText}>%</Text>
+        </View>
+      </View>
+    </View>
+
+    {/* Second Row */}
+    <View style={styles.rowContainer}>
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>
+          PERSETUJUAN KUANTITAS <Text style={styles.requiredStar}>*</Text>
+        </Text>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.inputs}
+            value={item.persetujuanKuantitas || '0,00'}
+            onChangeText={(text) => onSaveKinerja({...item, persetujuanKuantitas: text})}
+            keyboardType="numeric"
+          />
+          <TouchableOpacity>
+            <Text style={styles.laporanLink}>Laporan</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>
+          PERSETUJUAN KUALITAS <Text style={styles.requiredStar}>*</Text>
+        </Text>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.inputs}
+            value={item.persetujuanKualitas || '0,00'}
+            onChangeText={(text) => onSaveKinerja({...item, persetujuanKualitas: text})}
+            keyboardType="numeric"
+          />
+          <Text style={styles.percentageText}>%</Text>
+        </View>
+      </View>
+    </View>
+
+    {/* Dokumen Link */}
+    <View style={styles.dokumenContainer}>
+      <TouchableOpacity>
+        <Text style={styles.dokumenText}>+ Dokumen</Text>
+      </TouchableOpacity>
+    </View>
+
+    {/* Save Button */}
+    <View style={styles.buttonContainer}>
+      <TouchableOpacity style={styles.saveButton} onPress={() => onSaveKinerja(item)}>
+        <Text style={styles.buttonText}>SIMPAN</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+)}
+
           </View>
         )}
       </View>
@@ -1014,7 +1110,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   filterContainer: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     justifyContent: 'space-between',
     marginBottom: 10,
   },
@@ -1098,7 +1194,7 @@ const styles = StyleSheet.create({
     gap: 5,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#3699FF',
+    backgroundColor: '#1bc5bd',
     paddingVertical: 10,
     paddingHorizontal: 10,
     borderRadius: 10,
@@ -1182,6 +1278,67 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+  detailContainer: {
+    padding: 15,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  detailTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    color: '#333',
+  },
+  rowContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  inputGroup: {
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  label: {
+    fontSize: 14,
+    marginBottom: 5,
+    color: '#666',
+    fontWeight: '500',
+  },
+  inputs: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 9,
+    padding: 10,
+    color: '#333',
+    height: 40,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 15,
+  },
+  saveButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+    marginLeft: 10,
+  },
+  cancelButton: {
+    backgroundColor: '#f44336',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+    marginLeft: 10,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
 });
+
 
 export default RealisasiKinerja;

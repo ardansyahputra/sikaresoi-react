@@ -19,9 +19,9 @@ const Allmenu = ({ navigation }) => { // Menambahkan navigation sebagai prop
         <Text style={styles.sectionTitle}>MENU</Text>
 
         <View style={styles.iconGrid}>
-          {renderIcon('Setting Jabatan', 'settings', () => navigation.navigate('SettingJabatan'))}
+          {renderIcon('Setting Jabatan', 'settings-outline', () => navigation.navigate('SettingJabatan'))}
           {renderIcon('Realisasi Kinerja', 'add-circle-outline', () => navigation.navigate('RealisasiKinerja'))}
-          {renderIcon('Persetujuan Kontrak Kinerja', 'shield-checkmark', () => navigation.navigate('Persetujuan'))}
+          {renderIcon('Persetujuan Kontrak Kinerja', 'shield-checkmark-outline', () => navigation.navigate('Persetujuan'))}
           {renderIcon('Persetujuan Realisasi', 'documents-outline', () => navigation.navigate('PersetujuanRealisasi'))}
         </View>
 
@@ -29,8 +29,8 @@ const Allmenu = ({ navigation }) => { // Menambahkan navigation sebagai prop
         <Text style={styles.sectionTitle}>LAPORAN</Text>
         <View style={styles.iconGrid}>
           {renderIcon('Kontrak Kerja', 'bag-check-outline', () => navigation.navigate('KontrakKerja'))}
-          {renderIcon('Pencapaian Kerja', 'gift-outline', () => navigation.navigate('PencapaianKerja'))}
-          {renderIcon('Remunerasi', 'checkmark-done-circle', () => navigation.navigate('Remunerasi'))}
+          {renderIcon('Capaian Kerja', 'gift-outline', () => navigation.navigate('PencapaianKerja'))}
+          {renderIcon('Remunerasi', 'checkmark-done-circle-outline', () => navigation.navigate('Remunerasi'))}
         </View>
       </ScrollView>
     </View>

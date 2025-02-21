@@ -8,7 +8,6 @@ import {
   FlatList,
   Image,
   Alert,
-  ScrollView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
@@ -19,6 +18,7 @@ const HistoryPresensi = ({ navigation }) => {
   const [data, setData] = useState([]);
   const [isLoading, setLoading] = useState(false);
   const apiClient = useApiClient();
+  let inputSearchValue = "";
 
   const fetchData = async (page = 1) => {
     try {
@@ -26,12 +26,9 @@ const HistoryPresensi = ({ navigation }) => {
       const response = await apiClient.post(
         '/user/absensi/index',
         { page },
-        {
-        }
       );
 
       console.log('API Response:', response.data); // Debugging log
-
 
       const apiData = response.data.data.map((item) => ({
         id: item.id,
@@ -62,85 +59,85 @@ const HistoryPresensi = ({ navigation }) => {
   );
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Image
-          source={require('./assets/images/sikaresoi.png')}
-          style={styles.headerImage}
-        />
-      </View>
-
-      {/* Content */}
-      <View style={styles.content}>
-        <View style={styles.historyHeader}>
-          <Text style={styles.title}>History Presensi</Text>
-          <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.fetchButton} onPress={() => fetchData()}>
-              <Icon name="cloud-download" size={18} color="#fff" style={styles.buttonIcon} />
-              <Text style={styles.buttonText}>Fetch</Text>
+    <FlatList
+      style={styles.container}
+      ListHeaderComponent={() => (
+        <>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+              <Icon name="arrow-back" size={24} color="#000" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.resetButton} onPress={() => setSearch('')}>
-              <Icon name="refresh" size={18} color="#fff" style={styles.buttonIcon} />
-              <Text style={styles.buttonText}>Reset</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search..."
-            placeholderTextColor="#888"
-            value={search}
-            onChangeText={setSearch}
-          />
-          <Icon name="search" size={20} color="#888" />
-        </View>
-
-        {/* Table */}
-        <View style={styles.tableContainer}>
-          <View style={styles.tableHeader}>
-            <Text style={styles.tableHeaderText}>Tanggal</Text>
-            <Text style={styles.tableHeaderText}>Jam Masuk</Text>
-            <Text style={styles.tableHeaderText}>Jam Keluar</Text>
-            <Text style={styles.tableHeaderText}>Type</Text>
-            <Text style={styles.tableHeaderText}>Pemotongan</Text>
-          </View>
-          {isLoading ? (
-            <Text style={styles.emptyText}>Loading...</Text>
-          ) : (
-            <FlatList
-              data={filteredData}
-              keyExtractor={(item) => item.id.toString()}
-              ListEmptyComponent={
-                <Text style={styles.emptyText}>No result found</Text>
-              }
-              renderItem={({ item }) => (
-                <View style={styles.tableRow}>
-                  <Text style={styles.tableCell}>{item.tanggal}</Text>
-                  <Text style={styles.tableCell}>{item.jam_masuk}</Text>
-                  <Text style={styles.tableCell}>{item.jam_keluar}</Text>
-                  <Text style={styles.tableCell}>{item.type}</Text>
-                  <Text style={styles.tableCell}>{item.pemotongan}</Text>
-                </View>
-              )}
+            <Image
+              source={require('./assets/images/sikaresoi.png')}
+              style={styles.headerImage}
             />
-          )}
-        </View>
+          </View>
 
-        {/* Pagination */}
+          {/* Content */}
+          <View style={styles.content}>
+            <View style={styles.historyHeader}>
+              <Text style={styles.title}>History Presensi</Text>
+              <View style={styles.actionButtons}>
+                <TouchableOpacity style={styles.fetchButton} onPress={() => fetchData()}>
+                  <Icon name="cloud-download" size={18} color="#fff" style={styles.buttonIcon} />
+                  <Text style={styles.buttonText}>Fetch</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.resetButton} onPress={() => setSearch('')}>
+                  <Icon name="refresh" size={18} color="#fff" style={styles.buttonIcon} />
+                  <Text style={styles.buttonText}>Reset</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Search Bar */}
+            <View style={styles.searchContainer}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search..."
+                placeholderTextColor="#888"
+                onChangeText={(value) => inputSearchValue = value}
+                onEndEditing={() => setSearch(inputSearchValue)}
+                defaultValue={search}
+              />
+              <Icon name="search" size={20} color="#888" />
+            </View>
+
+            {/* Table */}
+            <View style={styles.tableContainer}>
+              <View style={styles.tableHeader}>
+                <Text style={styles.tableHeaderText}>Tanggal</Text>
+                <Text style={styles.tableHeaderText}>Jam Masuk</Text>
+                <Text style={styles.tableHeaderText}>Jam Keluar</Text>
+                <Text style={styles.tableHeaderText}>Type</Text>
+                <Text style={styles.tableHeaderText}>Pemotongan</Text>
+              </View>
+            </View>
+          </View>
+        </>
+      )}
+      data={filteredData}
+      keyExtractor={(item) => `${item.id.toString()}${item.tanggal}`}
+      nestedScrollEnabled={true}
+      ListEmptyComponent={<Text style={styles.emptyText}>No result found</Text>}
+      removeClippedSubviews={false}
+      renderItem={({ item }) => (
+        <View style={styles.tableRow}>
+          <Text style={styles.tableCell}>{item.tanggal}</Text>
+          <Text style={styles.tableCell}>{item.jam_masuk}</Text>
+          <Text style={styles.tableCell}>{item.jam_keluar}</Text>
+          <Text style={styles.tableCell}>{item.type}</Text>
+          <Text style={styles.tableCell}>{item.pemotongan}</Text>
+        </View>
+      )}
+      ListFooterComponent={
         <View style={styles.paginationContainer}>
           <Text style={styles.paginationText}>
             Showing {filteredData.length} of {data.length} entries
           </Text>
         </View>
-      </View>
-    </ScrollView>
+      }
+    />
   );
 };
 
@@ -157,7 +154,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   backButton: {
-    marginRight: 16,
+    marginTop:1,
+    marginLeft:3,
+    marginRight:8,
+    opacity: 0.4,
   },
   headerImage: {
     width: '45%',

@@ -248,28 +248,20 @@ const SettingJabatan = ({ navigation }) => {
   
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Image
+      <View style={styles.header1}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={26} color="#000" />
+        </TouchableOpacity>
+        <Image
             source={require('../../../assets/images/sikaresoi.png')}
-            style={styles.logo}
-          />
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#ddd" />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
-          <TouchableOpacity style={styles.iconWrapper}>
-            <Ionicons name="person-circle-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
+            style={styles.headerImage}
+        />
       </View>
-      <View>
-        <Text style={styles.headerTitle}>Setting Jabatan</Text>
-        <Text style={styles.headerSubtitle}>User • Setting Jabatan</Text>
-      </View>
-  
+        <View style={styles.headerTextContainer1}>
+          <Text style={styles.headerTitle1}>Setting Jabatan</Text>
+          <Text style={styles.separatorText1}> • </Text>
+          <Text style={styles.headerSubtitle1}>Jabatan</Text>
+        </View>
       <Modal
         animationType="slide"
         transparent={true}
@@ -298,9 +290,7 @@ const SettingJabatan = ({ navigation }) => {
         </View>
       </Modal>
   
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : (
+  
         <FlatList
           data={filteredData}
           keyExtractor={(item, index) => index.toString()}
@@ -309,6 +299,7 @@ const SettingJabatan = ({ navigation }) => {
           contentContainerStyle={styles.card}
           ListFooterComponent={
             <View>
+              {loading && <ActivityIndicator size="large" color="#0000ff" />}
               <Text style={styles.pageInfo}>
                 Showing page {currentPage} of {lastPage}
               </Text>
@@ -341,7 +332,6 @@ const SettingJabatan = ({ navigation }) => {
             </View>
           }
         />
-      )}
     </View>
   );
 }
@@ -350,8 +340,58 @@ const SettingJabatan = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
-    backgroundColor: '#F7F8FB', // Tetap sesuai dengan warna default Anda
+    backgroundColor: '#F7F8FB',
+  },
+  header1: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    elevation: 5,
+  },
+  headerImage: {
+    width: '50%',
+    height: undefined,
+    aspectRatio: 5,
+    marginRight: 190,
+    resizeMode: 'contain',
+    alignSelf: 'center',
+  },
+  backButton: {
+    marginTop:1,
+    marginLeft:3,
+    marginRight:1,
+    opacity: 0.4,
+  },
+  headerTextContainer1: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 13, // Menambahkan jarak ke kiri
+    marginTop: 20, 
+  },
+
+  headerTitle1: {
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 17,
+    color: "#000",
+  },
+
+  separatorText1: {
+    fontSize: 20,
+    color: "#000",
+    marginBottom: 3,
+  },
+
+  headerSubtitle1: {
+    fontFamily: "Poppins-Regular",
+    fontSize: 14,
+    color: "#000",
+    marginLeft: 0,
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -383,6 +423,7 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     flex: 1,
+    flexDirection: 'row',
   },
   logo: {
     width: 140,
@@ -397,7 +438,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontFamily: "Poppins-SemiBold",
     color: "#000",
     marginLeft: 20,
     marginBottom: 4, 
@@ -407,6 +448,7 @@ const styles = StyleSheet.create({
     color: "#000",
     marginLeft: 20,
     marginBottom: 4,
+    fontFamily: "Poppins-SemiBold",
   },
   filterContainer: {
     flexDirection: 'row',
@@ -456,6 +498,14 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingHorizontal: 8,
   },
+  dropdownItem: {
+    padding: 10,
+    fontSize: 15,
+    color: '#333',
+  },
+  customFont: {
+    fontFamily: 'Poppins-Regular',
+  },
   addContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -471,7 +521,7 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   addButtonText: { 
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
     color: 'white', 
     marginLeft: 8, 
   },
@@ -499,7 +549,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F0F0', // Memberi warna netral untuk header baris
   },
   headerCell: {
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
     fontSize: 14,
     color: '#333', // Warna teks header
   },
@@ -507,6 +557,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     flexWrap: 'wrap',
+    fontFamily: "Poppins-Regular",
   },
   numberCell: {
     flex: 1,
@@ -519,6 +570,7 @@ const styles = StyleSheet.create({
   detailCell: {
     flex: 1,
     textAlign: 'right',
+    fontFamily: "Poppins-SemiBold",
   },
   dateCell: {
     flex: 2,
@@ -539,10 +591,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
     marginBottom: 5,
+    fontFamily: "Poppins-Regular",
   },
   expandedTextDetail: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
     color: '#555', // Warna teks detail
     marginBottom: 5,
   },
@@ -550,6 +603,7 @@ const styles = StyleSheet.create({
     color: 'blue', // Teks berwarna biru untuk link
     fontSize: 14,
     marginBottom: 5,
+    fontFamily: "Poppins-SemiBold",
   },
   actionContainer: {
     flexDirection: 'row',
@@ -576,7 +630,7 @@ const styles = StyleSheet.create({
   },
   pageButtonText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
   },
   editButton: {
     flexDirection: 'row',
@@ -617,17 +671,18 @@ const styles = StyleSheet.create({
   },
   pageButtonText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
   },
   disabledButton: {
     backgroundColor: '#CCCCCC',
   },
   paginationText: {
     color: 'white',
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
   },
   pageInfo: {
     fontSize: 13,
+    fontFamily: "Poppins-Regular",
   },
   paginationContainer: {
     flexDirection: 'row',
@@ -659,13 +714,14 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
     marginBottom: 15,
     textAlign: 'center',
     color: '#333',
   },
   modalText: {
     fontSize: 16,
+    fontFamily: "Poppins-SemiBold",
     textAlign: 'center',
     color: '#555',
     marginBottom: 20,
@@ -692,7 +748,7 @@ const styles = StyleSheet.create({
   modalButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
     textAlign: 'center',
   },
 });
