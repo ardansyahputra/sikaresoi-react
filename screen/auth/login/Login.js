@@ -77,44 +77,6 @@ const LoginScreen = ({navigation}) => {
     initializeApp();
   }, []);
 
-  useEffect(() => {
-    const requestInterceptor = axios.interceptors.request.use(
-      async config => {
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      error => Promise.reject(error),
-    );
-
-    const responseInterceptor = axios.interceptors.response.use(
-      response => response,
-      async error => {
-        if (!error.response) {
-          console.error('Network error, please check your connection.');
-          return Promise.reject(error);
-        }
-
-        if (error.response.status === 401) {
-          const newToken = await refreshToken();
-          if (newToken) {
-            error.config.headers.Authorization = `Bearer ${newToken}`;
-            return axios(error.config);
-          } else {
-            logout();
-          }
-        }
-        return Promise.reject(error);
-      },
-    );
-
-    return () => {
-      axios.interceptors.request.eject(requestInterceptor);
-      axios.interceptors.response.eject(responseInterceptor);
-    };
-  }, [token, refreshToken]);
-
   const loginHandler = async () => {
     if (!isValid) return;
 

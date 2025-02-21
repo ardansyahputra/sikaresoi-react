@@ -92,16 +92,16 @@ export const AuthProvider = ({children, navigation}) => {
   const refreshToken = async () => {
     try {
       const credentials = await Keychain.getGenericPassword();
-      if (credentials) {
+      if (credentials && credentials.username === 'authToken') {
         const refreshToken = credentials.password;
 
-        const response = await axios.post(`${API_URL}auth/refresh`, {
-          refresh_token: refreshToken,
+        const response = await axios.get(`${API_URL}auth/refresh`, {
+          headers: {Authorization: `Bearer ${refreshToken}`},
         });
 
         if (response.status === 200) {
-          const newToken = response.data.token;
-          await Keychain.setGenericPassword('token', newToken);
+          const newToken = response.headers.authorization; // Ambil dari header
+          await Keychain.setGenericPassword('authToken', newToken);
           setToken(newToken);
           return newToken;
         }

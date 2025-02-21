@@ -41,7 +41,7 @@ const useApiClient = () => {
       }
 
       // Tangani status code 401 untuk refresh token
-      if (error.response && error.response.status === 401) {
+      if (error.response.status === 401) {
         const newToken = await refreshToken();
         if (newToken) {
           error.config.headers.Authorization = `Bearer ${newToken}`;

@@ -7,24 +7,19 @@ import {
   ScrollView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'; // Import Icon Library
+import GlobalStyle from '../../../src/utils/GlobalStyle';
+import Header from '../../components/Header';
 
 const Allmenu = ({navigation}) => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color="#FAFAFA" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Menu Cepat</Text>
-      </View>
+      <Header title="Menu Cepat" />
 
       {/* Body */}
       <ScrollView>
         {/* LAPORAN */}
-        <Text style={styles.sectionTitle}>Laporan</Text>
+        <Text style={[GlobalStyle.SemiBold, styles.sectionTitle]}>Laporan</Text>
         <View style={styles.iconGrid}>
           {renderIcon('Tugas Tambahan', 'clipboard-outline', () =>
             navigation.navigate('TugasTambahan'),
@@ -47,7 +42,7 @@ const Allmenu = ({navigation}) => {
         </View>
 
         {/* USER */}
-        <Text style={styles.sectionTitle}>User</Text>
+        <Text style={[GlobalStyle.SemiBold, styles.sectionTitle]}>User</Text>
         <View style={styles.iconGrid}>
           {renderIcon('User', 'person', () =>
             navigation.navigate('UserScreen'),
@@ -61,7 +56,7 @@ const Allmenu = ({navigation}) => {
         </View>
 
         {/* MASTER */}
-        <Text style={styles.sectionTitle}>Master</Text>
+        <Text style={[GlobalStyle.SemiBold, styles.sectionTitle]}>Master</Text>
         <View style={styles.iconGrid}>
           {renderIcon('Pemotongan', 'cut', () =>
             navigation.navigate('Pemotongan'),
@@ -123,7 +118,9 @@ const Allmenu = ({navigation}) => {
         </View>
 
         {/* FINGERPRINT */}
-        <Text style={styles.sectionTitle}>Fingerprint</Text>
+        <Text style={[GlobalStyle.SemiBold, styles.sectionTitle]}>
+          Fingerprint
+        </Text>
         <View style={styles.iconGrid}>
           {renderIcon('Jam Finger', 'time-outline', () =>
             navigation.navigate('JamFingerprint'),
@@ -133,7 +130,9 @@ const Allmenu = ({navigation}) => {
           )}
         </View>
 
-        <Text style={styles.sectionTitle}>Pengaturan Tambahan</Text>
+        <Text style={[GlobalStyle.SemiBold, styles.sectionTitle]}>
+          Pengaturan Tambahan
+        </Text>
         <View style={styles.iconGrid}>
           {renderIcon('Potongan Lain', 'cut-outline', () =>
             navigation.navigate('PotonganLain'),
@@ -200,15 +199,10 @@ const styles = StyleSheet.create({
     zIndex: -1,
     opacity: 0.2,
   },
-  headerTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
+
   sectionTitle: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
     marginTop: 20,
     marginLeft: 16,
   },
