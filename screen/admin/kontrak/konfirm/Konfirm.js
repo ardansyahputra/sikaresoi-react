@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -9,11 +9,13 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
-import { Pressable } from 'react-native';
+import {Pressable} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import { Dropdown } from 'react-native-element-dropdown';
+import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../../../../src/api/apiClient';
+import Header from '../../components/Header';
+
 
 export default function BelumKontrak() {
   const apiClient = useApiClient();
@@ -38,25 +40,27 @@ export default function BelumKontrak() {
     } else {
       fetchKontrakData(1);
     }
+    console.log('Data Updated:', data);
+
   }, [activeButton, selectedDisplay, selectedYear]);
 
   const fetchTahun = async () => {
     try {
       const response = await apiClient.get('/tahun/show');
       console.log('API Response:', response.data); // Debugging log
-  
+
       if (response.data && response.data.data) {
         // Filter tahun antara 2020-2025
         const filteredTahun = response.data.data.filter(item => {
           const tahun = parseInt(item.tahun);
           return tahun >= 2020 && tahun <= 2025;
         });
-  
+
         // Set options hanya untuk tahun yang terfilter
         setTahunOptions(
-          filteredTahun.map(item => ({ label: item.tahun, value: item.tahun }))
+          filteredTahun.map(item => ({label: item.tahun, value: item.tahun})),
         );
-  
+
         if (filteredTahun.length === 0) {
           Alert.alert('Error', 'Tidak ada data tahun dalam rentang 2020-2025');
         }
@@ -72,24 +76,22 @@ export default function BelumKontrak() {
   const fetchRealisasiData = async page => {
     // Log request details
     console.log('Fetching Realisasi Data');
-    console.log('Endpoint:', 'POST /realisasi/sudah_setuju');
+    console.log('Endpoint:', 'POST /realisasi/belum_setuju');
     console.log('Request Payload:', {
-    
-        
+      page,
       per: selectedDisplay,
       search: searchQuery,
       tahun: selectedYear,
     });
-  
+
     try {
       setLoading(true);
       const response = await apiClient.post('/kinerja/belum_setuju', {
-        
         per: selectedDisplay,
         search: searchQuery,
         tahun: selectedYear,
       });
-  
+
       // Log successful response
       console.log('Realisasi Response:', {
         current_page: response.data.current_page,
@@ -97,9 +99,9 @@ export default function BelumKontrak() {
         total_items: response.data.total,
         items_per_page: response.data.per_page,
         data_sample: response.data.data.slice(0, 1), // Log first item as sample
-        total_data_received: response.data.data.length
+        total_data_received: response.data.data.length,
       });
-  
+
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -114,75 +116,50 @@ export default function BelumKontrak() {
       setLoading(false);
     }
   };
-  
+
   const fetchKontrakData = async page => {
-    // Log request details
     console.log('Fetching Kontrak Data');
-    console.log('Endpoint:', 'POST /realisasi/sudah_setuju');
-    console.log('Request Payload:', {
-    
-      bulan_id: selectedMonth,
-      tahun_id: selectedYear,
-      per: selectedDisplay,
-      search: searchQuery,
-    });
-  
+    setLoading(true); // Pastikan loading di-set sebelum request API
+
     try {
-      setLoading(true);
       const response = await apiClient.post('/kinerja/sudah_setuju', {
         per: selectedDisplay,
         search: searchQuery,
         tahun: selectedYear,
       });
-    
-      // Log successful response
-      console.log('Kontrak Response:', {
-        current_page: response.data.current_page,
-        last_page: response.data.last_page,
-        total_items: response.data.total,
-        items_per_page: response.data.per_page,
-        data_sample: response.data.data.slice(0, 1), // Log first item as sample
-        total_data_received: response.data.data.length
-      });
-  
+
+      console.log('Kontrak Response:', response.data);
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
     } catch (error) {
-      // Log error details
-      console.error('Kontrak Error:', {
-        message: error.message,
-        status: error.response?.status,
-        error: error.response?.data,
-      });
+      console.error('Kontrak Error:', error);
     } finally {
       setLoading(false);
     }
-  };
+};
 
   const display = [
-    { label: '5', value: 5 },
-    { label: '10', value: 10 },
-    { label: '25', value: 25 },
-    { label: '50', value: 50 },
-    { label: '100', value: 100 },
+    {label: '5', value: 5},
+    {label: '10', value: 10},
+    {label: '25', value: 25},
+    {label: '50', value: 50},
+    {label: '100', value: 100},
   ];
 
   const toggleExpand = id => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-
   const handlePress = buttonName => {
     setActiveButton(buttonName);
     if (buttonName === 'kontrak') {
-      fetchRealisasiData(1);
+      fetchRealisasiData(1); // Load data yang belum disetujui
     } else {
-      fetchKontrakData(1);
+      fetchKontrakData(1); // Load data yang sudah disetujui
     }
   };
-
-
+  
   const TableHeader = () => (
     <View>
       <View style={styles.filterContainer}>
@@ -200,7 +177,7 @@ export default function BelumKontrak() {
             placeholderStyle={styles.dropdownPlaceholder}
           />
         </View>
-  
+
         {/* Display Dropdown */}
         <View style={styles.filterGroup}>
           <Text style={styles.filterLabel}>Display</Text>
@@ -221,7 +198,7 @@ export default function BelumKontrak() {
             placeholderStyle={styles.dropdownPlaceholder}
           />
         </View>
-  
+
         {/* Search Input */}
         <View style={styles.filterGroup}>
           <TextInput
@@ -233,7 +210,7 @@ export default function BelumKontrak() {
           />
         </View>
       </View>
-  
+
       <View style={styles.tableHeader}>
         <Text style={[styles.headerCell, styles.numberCell]}>#</Text>
         <Text style={[styles.headerCell, styles.nipCell]}>NIP/NRP</Text>
@@ -242,77 +219,86 @@ export default function BelumKontrak() {
       </View>
     </View>
   );
-  
 
-const renderItem = ({ item, index }) => {
-  const isExpanded = expandedId === item.id;
+  const renderItem = ({item, index}) => {
+    const isExpanded = expandedId === item.id;
 
-  const nameWithNip = `${item.user_jabatan?.user?.name || ''} ${item.kinerja?.user_jabatan?.user?.nip || ''}`;
-  const nips = `${item.user_jabatan?.user?.nip || ''} ${item.kinerja?.user_jabatan?.user?.nip || ''}`;
-  const tahun = `${item.tahun?.tahun || ''} ${item.kinerja?.tahun?.tahuna || ''}`;
-  const nipim = `${item.user_jabatan?.pimpinan?.name || ''} ${item.kinerja?.userjabatan?.pimpinan?.name || ''}`;
-  const nrpim = `${item.user_jabatan?.pimpinan?.nip || ''} ${item.kinerja?.userjabatan?.pimpinan?.name || ''}`;
-  const lasap = `${item.update || ''} ${item.kinerja?.userjabatan?.pimpinan?.name || ''}`;
+    const nameWithNip = `${item.user_jabatan?.user?.name || ''} ${
+      item.kinerja?.user_jabatan?.user?.nip || ''
+    }`;
+    const nips = `${item.user_jabatan?.user?.nip || ''} ${
+      item.kinerja?.user_jabatan?.user?.nip || ''
+    }`;
+    const tahun = `${item.tahun?.tahun || ''} ${
+      item.kinerja?.tahun?.tahuna || ''
+    }`;
+    const nipim = `${item.user_jabatan?.pimpinan?.name || ''} ${
+      item.kinerja?.userjabatan?.pimpinan?.name || ''
+    }`;
+    const nrpim = `${item.user_jabatan?.pimpinan?.nip || ''} ${
+      item.kinerja?.userjabatan?.pimpinan?.name || ''
+    }`;
+    const lasap = `${item.update || ''} ${
+      item.kinerja?.userjabatan?.pimpinan?.name || ''
+    }`;
 
-  return (
-    <View style={styles.tableRow}>
-      <TouchableOpacity
-        style={styles.rowHeader}
-        onPress={() => toggleExpand(item.id)}>
-        <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
-        <Text style={[styles.tableCell, styles.nipCell]}>
-          {nips || '-'}
-        </Text>
-        <Text style={[styles.tableCell, styles.nameCell]}>
-          {nameWithNip || '-'}
-        </Text>
-        <View style={styles.expandIconCell}>
-          <Ionicons
-            name={isExpanded ? 'chevron-up' : 'chevron-down'}
-            size={20}
-            color="#333"
-          />
-        </View>
-      </TouchableOpacity>
-      {isExpanded && (
-        <View style={styles.expandedContent}>
-          <Text style={styles.expandedText}>NIP/NRP: {nips|| '-'}</Text>
-          <Text style={styles.expandedText}>Nama: {nameWithNip || '-'}</Text>
-          <Text style={styles.expandedText}>Tahun: {tahun || '-'}</Text>
-          <Text style={styles.expandedText}>NIP/NRP Pimpinan: {nrpim || '-'}</Text>
-          <Text style={styles.expandedText}>Nama Pimpinan: {nipim || '-'}</Text>
-          <Text style={styles.expandedText}>Update Terakhir: {lasap || '-'}</Text>
-          <View style={styles.actionContainer}>
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => handleApprove(item.uuid)}>
-              <FontAwesome name="pencil" size={20} color="white" />
-              <Text style={styles.customFont}>Edit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.declineButton}
-              onPress={() => handleHapus(item.uuid)}>
-              <Ionicons name="trash" size={20} color="white" />
-              <Text style={styles.customFont}>Hapus</Text>
-            </TouchableOpacity>
+    return (
+      <View style={styles.tableRow}>
+        <TouchableOpacity
+          style={styles.rowHeader}
+          onPress={() => toggleExpand(item.id)}>
+          <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
+          <Text style={[styles.tableCell, styles.nipCell]}>{nips || '-'}</Text>
+          <Text style={[styles.tableCell, styles.nameCell]}>
+            {nameWithNip || '-'}
+          </Text>
+          <View style={styles.expandIconCell}>
+            <Ionicons
+              name={isExpanded ? 'chevron-up' : 'chevron-down'}
+              size={20}
+              color="#333"
+            />
           </View>
-        </View>
-      )}
-    </View>
-  );
-};
+        </TouchableOpacity>
+        {isExpanded && (
+          <View style={styles.expandedContent}>
+            <Text style={styles.expandedText}>NIP/NRP: {nips || '-'}</Text>
+            <Text style={styles.expandedText}>Nama: {nameWithNip || '-'}</Text>
+            <Text style={styles.expandedText}>Tahun: {tahun || '-'}</Text>
+            <Text style={styles.expandedText}>
+              NIP/NRP Pimpinan: {nrpim || '-'}
+            </Text>
+            <Text style={styles.expandedText}>
+              Nama Pimpinan: {nipim || '-'}
+            </Text>
+            <Text style={styles.expandedText}>
+              Update Terakhir: {lasap || '-'}
+            </Text>
+            <View style={styles.actionContainer}>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => handleApprove(item.uuid)}>
+                <FontAwesome name="pencil" size={20} color="white" />
+                <Text style={styles.customFont}>Edit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.declineButton}
+                onPress={() => handleHapus(item.uuid)}>
+                <Ionicons name="trash" size={20} color="white" />
+                <Text style={styles.customFont}>Hapus</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
       <View>
-        <View style={styles.header}>
-          <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
-            <TouchableOpacity style={styles.iconWrapper}>
-              <Ionicons name="person-circle-outline" size={24} color="#333" />
-            </TouchableOpacity>
-          </View>
-        </View>
+      <Header title="" />
+
       </View>
 
       <View style={styles.card}>
@@ -320,7 +306,7 @@ const renderItem = ({ item, index }) => {
           <TouchableOpacity style={styles.y}></TouchableOpacity>
           <View style={styles.kontrakContainer}>
             <Pressable
-              style={({ pressed }) => [
+              style={({pressed}) => [
                 styles.button,
                 pressed && styles.buttonPressed,
                 activeButton === 'kontrak' && styles.buttonActive,
@@ -344,7 +330,7 @@ const renderItem = ({ item, index }) => {
             </Pressable>
 
             <Pressable
-              style={({ pressed }) => [
+              style={({pressed}) => [
                 styles.button,
                 pressed && styles.buttonPressed,
                 activeButton === 'realisasi' && styles.buttonActive,
@@ -761,7 +747,7 @@ const styles = StyleSheet.create({
   },
   kontrakContainer: {
     flexDirection: 'row',
-    },
+  },
   kontrakButton: {
     flexDirection: 'row',
     gap: 5,

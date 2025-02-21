@@ -98,7 +98,7 @@ const TambahPage = ({navigation}) => {
 
   return (
     <View style={styles.rootContainer}>
-      <Header title="Tambah PA 2" />
+      <Header title="Tambah Potongan Terlambat" />
       <View style={styles.container}>
         {isLoading ? (
           // Loading Indicator

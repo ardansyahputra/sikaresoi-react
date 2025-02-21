@@ -15,6 +15,10 @@ import {Dropdown} from 'react-native-element-dropdown';
 import RNFS from 'react-native-fs';
 import useApiClient from '../../../../src/api/apiClient';
 import {APP_URL} from '@env';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import Header from '../../components/Header';
+
+
 
 export default function TunjanganTambahan({navigation}) {
   const [selectedMonth, setSelectedMonth] = useState(null);
@@ -180,11 +184,8 @@ export default function TunjanganTambahan({navigation}) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.headerTitle}></Text>
-        </TouchableOpacity>
-      </View>
+      <Header title="Tunjanga Tambahan" />
+
 
       <ScrollView
         style={styles.content}
@@ -294,36 +295,37 @@ export default function TunjanganTambahan({navigation}) {
       </ScrollView>
 
       {/* Konfirmasi Download Modal */}
-         <Modal
-             animationType="fade"
-             transparent={true}
-             visible={isConfirmationVisible}
-             onRequestClose={() => setIsConfirmationVisible(false)}>
-             <View style={styles.modalOverlay}>
-               <View style={styles.modalContent}>
-                 <View style={styles.modalHeader}>
-                   <Text style={styles.modalTitle}>Apakah Anda Yakin?</Text>
-                 </View>
-                 <View style={styles.modalBody}>
-                   <Text style={styles.modalText}>
-                     Anda Akan Mendownload Report Berformat Excel, Mungkin Membutuhkan Waktu Beberapa Detik!
-                   </Text>
-                 </View>
-                 <View style={styles.modalFooter}>
-                   <TouchableOpacity
-                     style={[styles.modalButton, styles.cancelButton]}
-                     onPress={() => setIsConfirmationVisible(false)}>
-                     <Text style={styles.modalButtonText}>Batal</Text>
-                   </TouchableOpacity>
-                   <TouchableOpacity
-                     style={[styles.modalButton, styles.confirmButton]}
-                     onPress={handleDownload}>
-                     <Text style={styles.modalButtonText}>Download</Text>
-                   </TouchableOpacity>
-                 </View>
-               </View>
-             </View>
-           </Modal>
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={isConfirmationVisible}
+        onRequestClose={() => setIsConfirmationVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Apakah Anda Yakin?</Text>
+            </View>
+            <View style={styles.modalBody}>
+              <Text style={styles.modalText}>
+                Anda Akan Mendownload Report Berformat Excel, Mungkin
+                Membutuhkan Waktu Beberapa Detik!
+              </Text>
+            </View>
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setIsConfirmationVisible(false)}>
+                <Text style={styles.modalButtonText}>Batal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={handleDownload}>
+                <Text style={styles.modalButtonText}>Download</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Loading Modal */}
       <Modal animationType="fade" transparent={true} visible={isLoading}>
@@ -360,7 +362,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#E7E9F1',
-    paddingTop: 20,
   },
   header: {
     backgroundColor: '#fff',
@@ -379,12 +380,10 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   headerTitle: {
-    textAlign: 'center',
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 16, // Ukuran lebih besar
+    textAlign: 'center', // Pusatkan teks
+    marginLeft: 205,
   },
-
-  // Card Styles
   cardContainer: {
     backgroundColor: '#FFFF',
     paddingVertical: 20,
@@ -392,7 +391,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     elevation: 4,
     marginHorizontal: 10,
-    marginTop: 60,
+    marginTop: 20,
     width: 387,
   },
   cardHeader: {
@@ -409,8 +408,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#ddd',
     marginVertical: 10,
   },
-
-  // Form Elements
   label: {
     fontSize: 16,
     marginBottom: 5,
@@ -435,8 +432,13 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontWeight: 'bold',
   },
-
-input: { borderWidth: 1, borderColor: '#E0E0E0', padding: 10, borderRadius: 8, marginBottom: 15 },
+  input: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 15,
+  },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',

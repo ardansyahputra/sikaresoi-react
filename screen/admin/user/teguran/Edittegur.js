@@ -167,7 +167,7 @@ const Edittegur = ({ route, navigation }) => {
           />
         )}
 
-        <Text style={styles.label}>Potongan%</Text>
+        <Text style={styles.label}>Potongan %</Text>
         <TextInput
           style={styles.input}
           value={potongan}

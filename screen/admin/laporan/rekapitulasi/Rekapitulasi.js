@@ -11,6 +11,8 @@ import {
 import {Dropdown} from 'react-native-element-dropdown';
 import RNFS from 'react-native-fs';
 import {APP_URL} from '@env';
+import Header from '../../components/Header';
+
 
 export default function Rekapitulasi({navigation}) {
   const [selectedMonth, setSelectedMonth] = useState(null);
@@ -130,15 +132,12 @@ export default function Rekapitulasi({navigation}) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.headerTitle}>Laporan Tugas Tambahan</Text>
-        </TouchableOpacity>
-      </View>
+      <Header title="Rekapitulasi" />
+
 
       <View style={styles.cardContainer}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Report Capaian Kinerja Pegawai</Text>
+          <Text style={styles.cardTitle}>Report Rekapitulasi Capaian Kinerja</Text>
         </View>
         <View style={styles.cardDivider}></View>
         <Text style={styles.label}>Pilih Bulan *</Text>
@@ -238,7 +237,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#E7E9F1',
-    paddingTop: 20,
   },
   header: {
     backgroundColor: '#fff',
@@ -256,13 +254,6 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
   },
-  headerTitle: {
-    textAlign: 'center',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-
-  // Card Styles
   cardContainer: {
     backgroundColor: '#FFFF',
     paddingVertical: 20,
@@ -270,7 +261,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     elevation: 4,
     marginHorizontal: 10,
-    marginTop: 60,
+    marginTop: 30,
     width: 387,
   },
   cardHeader: {

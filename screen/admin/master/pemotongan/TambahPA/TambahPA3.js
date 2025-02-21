@@ -89,12 +89,6 @@ const TambahPage = ({navigation}) => {
     }
   };
   
-
-  const handleTextChange = (text, setState) => {
-    const filteredText = text.replace(/[^0-9:]/g, '');
-    setState(filteredText);
-  };
-
   const handleFocus = inputName => {
     setFocusState(prevState => ({...prevState, [inputName]: true}));
   };
@@ -105,7 +99,7 @@ const TambahPage = ({navigation}) => {
 
   return (
     <View style={styles.rootContainer}>
-      <Header title="Tambah PA 3" />
+      <Header title="Tambah Potongan Tidak Hadir" />
       <View style={styles.container}>
         {isLoading ? (
           <View style={styles.loadingContainer}>

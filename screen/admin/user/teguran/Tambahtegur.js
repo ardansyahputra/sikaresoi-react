@@ -1,11 +1,19 @@
-import React, { useState, useEffect } from 'react'; 
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
-import { Dropdown } from 'react-native-element-dropdown';
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ScrollView,
+} from 'react-native';
+import {Dropdown} from 'react-native-element-dropdown';
 import DatePicker from 'react-native-modern-datepicker';
 import useApiClient from '../../../../src/api/apiClient';
 
-const TambahPa = ({ route, navigation }) => {
-  const [user, setUser] = useState(null);  // user object is now null initially
+const TambahPa = ({route, navigation}) => {
+  const [user, setUser] = useState(null); // user object is now null initially
   const [signatures, setSignatures] = useState([]);
   const [jenis, setJenis] = useState('');
   const [tanggalPelanggaran, setTanggalPelanggaran] = useState('');
@@ -14,17 +22,17 @@ const TambahPa = ({ route, navigation }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [rightSignature, setRightSignature] = useState(null);
   const apiClient = useApiClient();
-  const { uuid } = route.params || {};
+  const {uuid} = route.params || {};
 
   useEffect(() => {
     const fetchSignatures = async () => {
       try {
         const response = await apiClient(`/user_master/show`);
-        const data = response.data || await response.json();
+        const data = response.data || (await response.json());
         if (data && data.res.code === 200) {
           const signatureData = data.data.map(user => ({
             label: user.name,
-            value: user.id,  // Ensure correct mapping of the user id
+            value: user.id, // Ensure correct mapping of the user id
           }));
           setSignatures(signatureData);
         }
@@ -37,27 +45,38 @@ const TambahPa = ({ route, navigation }) => {
   }, []);
 
   const handleCreate = async () => {
-    console.log('user:', user);  // Debug log
-    console.log('jenis:', jenis);  // Debug log
-    console.log('tanggalPelanggaran:', tanggalPelanggaran);  // Debug log
-    console.log('potongan:', potongan);  // Debug log
-    console.log('keterangan:', keterangan);  // Debug log
-  
-    if (!user || !user.id || !jenis || !tanggalPelanggaran || !potongan || !keterangan) {
+    console.log('user:', user); // Debug log
+    console.log('jenis:', jenis); // Debug log
+    console.log('tanggalPelanggaran:', tanggalPelanggaran); // Debug log
+    console.log('potongan:', potongan); // Debug log
+    console.log('keterangan:', keterangan); // Debug log
+
+    if (
+      !user ||
+      !user.value ||
+      !jenis ||
+      !tanggalPelanggaran ||
+      !potongan ||
+      !keterangan
+    ) {
       Alert.alert('Error', 'Harap isi semua data sebelum menyimpan.');
       return;
     }
-  
+
     const payload = {
-      user_id: user.id,
+      user_id: user ? String(user.value) : null, // Ambil hanya ID
       jenis,
       tgl_pelanggaran: tanggalPelanggaran,
-      potongan,
+      potongan: String(potongan),
       pesan: keterangan,
     };
-  
+
+    console.log('Payload yang dikirim:', payload);
+
     try {
-      const response = await apiClient.post('http://192.168.18.94:8000/api/v1/teguran/create', payload);
+      const response = await apiClient.post('/teguran/create',
+        payload,
+      );
       if (response.status === 200 || response.status === 201) {
         Alert.alert('Sukses', 'Data berhasil disimpan.');
         navigation.goBack();
@@ -65,12 +84,15 @@ const TambahPa = ({ route, navigation }) => {
         Alert.alert('Error', 'Gagal menyimpan data.');
       }
     } catch (error) {
-      console.error('Error saving data:', error.response?.data || error.message);
+      console.error(
+        'Error saving data:',
+        error.response?.data || error.message,
+      );
       Alert.alert('Error', 'Terjadi kesalahan saat menyimpan data.');
     }
   };
 
-  const handleDateChange = (date) => {
+  const handleDateChange = date => {
     const [year, month, day] = date.split('/');
     const formattedDate = `${year}-${month}-${day}`;
     setTanggalPelanggaran(formattedDate);
@@ -78,7 +100,7 @@ const TambahPa = ({ route, navigation }) => {
   };
 
   const toggleDatePicker = () => {
-    setShowDatePicker((prev) => !prev); // Toggle visibility
+    setShowDatePicker(prev => !prev); // Toggle visibility
   };
 
   return (
@@ -96,14 +118,13 @@ const TambahPa = ({ route, navigation }) => {
           data={signatures}
           labelField="label"
           valueField="value"
-          placeholder={user ? user.name : "User"}
+          placeholder="Pilih User"
           search
           searchPlaceholder="Cari User"
-          value={user ? user.id : null}  // value harusnya id
+          value={user ? user.value : null} // Ambil ID sebagai value
           onChange={item => {
-            const selectedUser = signatures.find(s => s.value === item.value);
-            setUser(selectedUser);  // Update user dengan objek lengkap
-          }}  
+            setUser(item); // Simpan seluruh objek agar bisa diakses
+          }}
         />
 
         <Text style={styles.label}>Jenis</Text>
@@ -152,7 +173,9 @@ const TambahPa = ({ route, navigation }) => {
         />
 
         <View style={styles.buttons}>
-          <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => navigation.goBack()}>
             <Text style={styles.buttonText}>Batal</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.saveButton} onPress={handleCreate}>
@@ -165,81 +188,81 @@ const TambahPa = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: '#E7E9F1',
-    },
-    header: {
-      backgroundColor: '#fff',
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      elevation: 4,
-      borderBottomLeftRadius: 15,
-      borderBottomRightRadius: 15,
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      zIndex: 10,
-    },
-    headerTitle: {
-      textAlign: 'center',
-      fontSize: 20,
-      fontWeight: 'bold',
-    },
-    cardContainer: {
-      backgroundColor: '#FFFF',
-      paddingVertical: 20,
-      paddingHorizontal: 10,
-      borderRadius: 10,
-      elevation: 4,
-      marginVertical: 20,
-      marginHorizontal: 10,
-      marginTop: 60,
-      width: 387,
-    },
-    label: {
-      fontSize: 16,
-      marginTop: 10,
-    },
-    input: {
-      borderWidth: 1,
-      borderColor: '#CCC',
-      padding: 10,
-      borderRadius: 5,
-      marginVertical: 10,
-    },
-    dropdown: {
-      borderWidth: 1,
-      borderColor: '#CCC',
-      padding: 10,
-      borderRadius: 5,
-      marginBottom: 5,
-      marginTop: 10,
-      backgroundColor: '#F9F9F9',
-    },
-    buttons: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginTop: 20,
-    },
-    cancelButton: {
-      backgroundColor: '#CCC',
-      padding: 15,
-      borderRadius: 5,
-    },
-    saveButton: {
-      backgroundColor: '#007BFF',
-      padding: 15,
-      borderRadius: 5,
-    },
-    buttonText: {
-      color: '#FFF',
-      fontWeight: 'bold',
-    },
-  });
+  container: {
+    flex: 1,
+    backgroundColor: '#E7E9F1',
+  },
+  header: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    borderBottomLeftRadius: 15,
+    borderBottomRightRadius: 15,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+  },
+  headerTitle: {
+    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  cardContainer: {
+    backgroundColor: '#FFFF',
+    paddingVertical: 20,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    elevation: 4,
+    marginVertical: 20,
+    marginHorizontal: 10,
+    marginTop: 60,
+    width: 387,
+  },
+  label: {
+    fontSize: 16,
+    marginTop: 10,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#CCC',
+    padding: 10,
+    borderRadius: 5,
+    marginVertical: 10,
+  },
+  dropdown: {
+    borderWidth: 1,
+    borderColor: '#CCC',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 5,
+    marginTop: 10,
+    backgroundColor: '#F9F9F9',
+  },
+  buttons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  cancelButton: {
+    backgroundColor: '#CCC',
+    padding: 15,
+    borderRadius: 5,
+  },
+  saveButton: {
+    backgroundColor: '#007BFF',
+    padding: 15,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+  },
+});
 
 export default TambahPa;

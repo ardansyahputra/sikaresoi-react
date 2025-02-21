@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal,Linking, ActivityIndica
 import { Dropdown } from 'react-native-element-dropdown';
 import RNFS from 'react-native-fs';
 import {APP_URL} from '@env';import useApiClient from '../../../../src/api/apiClient';
+import Header from '../../components/Header';
 
 export default function TugasTambahan({ navigation }) {
   const [selectedMonth, setSelectedMonth] = useState(null);
@@ -160,11 +161,8 @@ const handleDownload = async () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.headerTitle}></Text>
-        </TouchableOpacity>
-      </View>
+      <Header title="Remunerasi" />
+
 
       <View style={styles.cardContainer}>
         <View style={styles.cardHeader}>
@@ -325,7 +323,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#E7E9F1',
-    paddingTop: 20,
   },
   header: {
     backgroundColor: '#fff',
@@ -357,7 +354,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     elevation: 4,
     marginHorizontal: 10,
-    marginTop: 60,
+    marginTop: 30,
     width: 387,
   },
   cardHeader: {
