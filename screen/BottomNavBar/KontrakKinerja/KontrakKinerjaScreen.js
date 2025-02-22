@@ -20,6 +20,7 @@ import useApiClient from '../../../src/api/apiClient';
 import GetAktifCard from './GetAktif';
 import KirimKontrak from './KirimKontrak';
 import axios from 'axios';
+import HomeScreen from '../Home/HomeScreen';
 
 const KontrakKinerjaScreen = () => {
   const navigation = useNavigation();
@@ -50,16 +51,6 @@ const KontrakKinerjaScreen = () => {
   const [listKinerja, setListKinerja] = useState([]);
   const [totalBobot, setTotalBobot] = useState(0);
   const [totalWpt, setTotalWpt] = useState(0);
-
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     fetchYears();
-  //     fetchUserJabatanData();
-  //     if (selectedYear) {
-  //       fetchKontrak(currentPage, selectedYear, selectedDisplay);
-  //     }
-  //   }, [currentPage, selectedYear, selectedDisplay])
-  // );
 
   useEffect(() => {
     fetchYears();
@@ -219,12 +210,18 @@ const KontrakKinerjaScreen = () => {
     setModalVisible(true);
   };
 
-  const Footer = () => (
+  const Footer = ({ kinerja, userJabatanData }) => (
     <View style={styles.footer}>
-      <Text style={styles.footerText}>
-        Total WPT Jenis Kegiatan Tupoksi = {totalWpt} Jam (xx %){'\n'}
-        <Text>Total Bobot = {totalBobot} %</Text>
-      </Text>
+      <View style={styles.footerContainer}>
+        <Text style={styles.footerText}>
+          Total WPT Jenis Kegiatan Tupoksi = {totalWpt} Jam (xx %){'\n'}
+          <Text>Total Bobot = {totalBobot} %</Text>
+        </Text>
+        <View style={styles.footerContainer2}>
+          {/* Include the KirimKontrak component here */}
+          <KirimKontrak kinerja={kinerja} dataAktif={userJabatanData} />
+        </View>
+      </View>
     </View>
   );
 
@@ -531,21 +528,13 @@ const KontrakKinerjaScreen = () => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="close" size={24} color="#000" />
-          </TouchableOpacity>
-          <Image
-            source={require('../../assets/sikaresoi.png')}
-            style={styles.logo}
-          />
-        </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
-          <TouchableOpacity style={styles.iconWrapper}>
-            <Ionicons name="person-circle-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity onPress={() => navigation.navigate('DASHBOARD')} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={26} color="#000" />
+        </TouchableOpacity>
+        <Image
+          source={require('../../assets/sikaresoi.png')}
+          style={styles.headerImage}
+        />
       </View>
       <View>
         <Text style={styles.headerTitle}>Kontrak Kinerja</Text>
@@ -583,84 +572,85 @@ const KontrakKinerjaScreen = () => {
       </Modal>
 
 
-        <FlatList
-          scrollEnabled={false}
-          ListHeaderComponent={TableHeader}
-          data={data}
-          renderItem={renderItem}
-          keyExtractor={item => item.id.toString()}
-          contentContainerStyle={styles.card}
-          ListFooterComponent={
-            <View>
-              {loading && <ActivityIndicator size="large" color="#0000ff" />}            
-              <Text style={styles.pageInfo}>
-                Showing page {currentPage} of {lastPage}
-              </Text>
-              <View style={styles.paginationContainer}>
-                
-                <View style={styles.paginationButtons}>
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === 1 && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === 1}
-                    onPress={() =>
-                      setCurrentPage(prev => Math.max(prev - 1, 1))
-                    }>
-                    <Text style={styles.pageButtonText}>Previous</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === lastPage && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === lastPage}
-                    onPress={() =>
-                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
-                    }>
-                    <Text style={styles.pageButtonText}>Next</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-              <Footer />
-            </View>
-          }
-        />
+      <FlatList
+  scrollEnabled={false}
+  ListHeaderComponent={TableHeader}
+  data={data}
+  renderItem={renderItem}
+  keyExtractor={item => item.id.toString()}
+  contentContainerStyle={styles.card}
+  ListFooterComponent={
+    <View>
+      {loading && <ActivityIndicator size="large" color="#0000ff" />}            
+      <Text style={styles.pageInfo}>
+        Showing page {currentPage} of {lastPage}
+      </Text>
+      <View style={styles.paginationContainer}>
+        <View style={styles.paginationButtons}>
+          <TouchableOpacity
+            style={[
+              styles.pageButton,
+              currentPage === 1 && styles.disabledButton,
+            ]}
+            disabled={currentPage === 1}
+            onPress={() =>
+              setCurrentPage(prev => Math.max(prev - 1, 1))
+            }>
+            <Text style={styles.pageButtonText}>Previous</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.pageButton,
+              currentPage === lastPage && styles.disabledButton,
+            ]}
+            disabled={currentPage === lastPage}
+            onPress={() =>
+              setCurrentPage(prev => Math.min(prev + 1, lastPage))
+            }>
+            <Text style={styles.pageButtonText}>Next</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      <Footer kinerja={kinerja} dataAktif={userJabatanData} />
+    </View>
+  }
+/>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   footer: {
+    flexDirection: 'row',
+
     padding: 10,
     backgroundColor: '#f1f1f1',
     borderTopWidth: 1,
     borderTopColor: '#ddd',
     marginTop: 10,
   },
+  footerContainer: {
+    width: '60%',
+  },
+  footerContainer2: {
+    marginVertical: 10,
+  },
   footerText: {
-    fontSize: 14,
-    color: '#333',
+    fontFamily: 'Poppins-Regular',
+    fontSize: 15,
     textAlign: 'left',
   },
   container: {
     flex: 1,
     backgroundColor: '#F7F8FB',
   },
-  headerLeft: {
-    flex: 1,
-  },
-  logo: {
-    width: 140,
-    height: 40,
+  headerImage: {
+    width: '50%',
+    height: undefined,
+    aspectRatio: 5,
+    marginRight: 190,
     resizeMode: 'contain',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    flex: 1,
+    alignSelf: 'center',
   },
   headerTitle: {
     fontFamily: "Poppins-SemiBold",

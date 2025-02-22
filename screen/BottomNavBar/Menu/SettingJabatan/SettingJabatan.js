@@ -85,7 +85,9 @@ const SettingJabatan = ({ navigation }) => {
     navigation.navigate('FormJabatan', { type: 'create' });
   };
 
-  2
+  const handleEdit = (item) => {
+    navigation.navigate('FormJabatan', { type: 'edit', item });
+  };
   
   const handleChangeAktif = async (item) => {
     try {
@@ -247,7 +249,7 @@ const SettingJabatan = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header1}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={26} color="#000" />
         </TouchableOpacity>
         <Image

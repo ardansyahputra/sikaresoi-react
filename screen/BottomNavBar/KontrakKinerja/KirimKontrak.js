@@ -1,12 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import useApiClient from '../../../src/api/apiClient'; // Adjust the import path
 
-const KirimKontrak = ({ kinerja, dataAktif }) => {
+const KirimKontrak = ({ kinerja, user }) => {
   const navigation = useNavigation();
   const apiClient = useApiClient();
   const [revisi, setRevisi] = useState('');
+  const [userJabatanData, setUserJabatanData] = useState(null);
+
+   useEffect(() => {
+      fetchUserJabatanData();
+    }, []);
+
+  const fetchUserJabatanData = async () => {
+    try {
+      const response = await apiClient.post('user/jabatan/aktif');
+      if (response?.data?.data) {
+        setUserJabatanData(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching user jabatan data:', error);
+    }
+  };
 
   const resendKinerja = async () => {
     try {
@@ -56,7 +72,7 @@ const KirimKontrak = ({ kinerja, dataAktif }) => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Card for Jabatan ID 1 */}
-      {kinerja.user_jabatan.jabatan_id === 1 && (
+      {kinerja.userJabatanData?.id === 1 && (
         <View style={styles.card}>
           <View style={styles.cardBody}>
             {kinerja.status === 2 && (
@@ -94,7 +110,7 @@ const KirimKontrak = ({ kinerja, dataAktif }) => {
                 <View style={styles.separator} />
                 <Text style={styles.noteText}>"{kinerja.note_dari_atasan}"</Text>
                 <Text style={styles.footerText}>
-                  {dataAktif.pimpinan.name}, {dataAktif.pimpinan.nip}
+                  {userJabatanData.pimpinan.name}, {userJabatanData.pimpinan.nip}
                 </Text>
               </View>
               <View style={styles.column}>
@@ -104,7 +120,7 @@ const KirimKontrak = ({ kinerja, dataAktif }) => {
                   <>
                     <Text style={styles.noteText}>"{kinerja.note_ke_atasan}"</Text>
                     <Text style={styles.footerText}>
-                      {dataAktif.pimpinan.name}, {dataAktif.pimpinan.nip}
+                      {userJabatanData.pimpinan.name}, {userJabatanData.pimpinan.nip}
                     </Text>
                     <View style={styles.separator} />
                   </>
@@ -136,17 +152,11 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
-    backgroundColor: '#fff',
     borderRadius: 8,
-    marginBottom: 16,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    marginBottom: 10,
   },
   cardBody: {
-    padding: 16,
+    padding: 0,
   },
   row: {
     flexDirection: 'row',
