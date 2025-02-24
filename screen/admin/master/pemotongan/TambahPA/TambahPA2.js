@@ -12,6 +12,7 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
+import {TimerPickerModal} from 'react-native-timer-picker';
 import useApiClient from '../../../../../src/api/apiClient';
 import Header from '../../../../components/Header';
 import GlobalStyle from '../../../../../src/utils/GlobalStyle';
@@ -21,6 +22,8 @@ import Toast from 'react-native-toast-message';
 
 const TambahPage = ({navigation}) => {
   const [selectedPotongan, setSelectedPotongan] = useState('');
+    const [isVisible, setIsVisible] = useState(false);
+    const [pickerMode, setPickerMode] = useState(null);
   const [selectedBatasAtas, setSelectedBatasAtas] = useState('00:00:00');
   const [selectedBatasBawah, setSelectedBatasBawah] = useState('00:00:00');
   const [keyboardOpen, setKeyboardOpen] = useState(false);
@@ -45,6 +48,35 @@ const TambahPage = ({navigation}) => {
       keyboardDidHideListener.remove();
     };
   }, []);
+
+
+  const formatTime = pickedDuration => {
+    const {hours, minutes, seconds} = pickedDuration;
+    // Mengembalikan format waktu tanpa label HMS
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
+      2,
+      '0',
+    )}:${String(seconds).padStart(2, '0')}`;
+  };
+
+  const showPicker = mode => {
+    setPickerMode(mode);
+    setIsVisible(true);
+  };
+
+  const handleBatal = () => {
+    setIsVisible(false);
+  };
+
+  const handlePilih = time => {
+    const formattedTime = formatTime(time);
+    if (pickerMode === 'batasAtas') {
+      setSelectedBatasAtas(formattedTime);
+    } else if (pickerMode === 'batasBawah') {
+      setSelectedBatasBawah(formattedTime);
+    }
+    setIsVisible(false);
+  };
 
   const handleSave = async () => {
     setIsLoading(true);
@@ -98,7 +130,7 @@ const TambahPage = ({navigation}) => {
 
   return (
     <View style={styles.rootContainer}>
-      <Header title="Tambah PA 2" />
+      <Header title="Tambah Pemotongan Terlambat" />
       <View style={styles.container}>
         {isLoading ? (
           // Loading Indicator
@@ -126,45 +158,89 @@ const TambahPage = ({navigation}) => {
               onBlur={() => handleBlur('selectedPotongan')}
             />
 
-            <Text style={[GlobalStyle.SemiBold, styles.label]}>Batas Atas</Text>
-            <TextInput
+<Text style={[GlobalStyle.SemiBold, styles.label]}>Batas Atas</Text>
+            <TouchableOpacity
               style={[
                 GlobalStyle.SemiBold,
                 styles.input,
-                focusState.selectedBatasAtas && styles.inputFocused,
                 selectedBatasAtas && styles.inputFilled,
               ]}
-              value={selectedBatasAtas}
-              onChangeText={text =>
-                handleTextChange(text, setSelectedBatasAtas)
-              }
-              keyboardType="default"
-              placeholder="Masukkan Batas Atas (angka atau ':')"
-              placeholderTextColor="#B0B0B0"
-              onFocus={() => handleFocus('selectedBatasAtas')}
-              onBlur={() => handleBlur('selectedBatasAtas')}
-            />
+              onPress={() => showPicker('batasAtas')}>
+              <Text style={styles.inputText}>
+                {selectedBatasAtas || 'Pilih Batas Atas ⏰'}
+              </Text>
+            </TouchableOpacity>
 
             <Text style={[GlobalStyle.SemiBold, styles.label]}>
               Batas Bawah
             </Text>
-            <TextInput
+            <TouchableOpacity
               style={[
                 GlobalStyle.SemiBold,
                 styles.input,
-                focusState.selectedBatasBawah && styles.inputFocused,
                 selectedBatasBawah && styles.inputFilled,
               ]}
-              value={selectedBatasBawah}
-              onChangeText={text =>
-                handleTextChange(text, setSelectedBatasBawah)
-              }
-              keyboardType="default"
-              placeholder="Masukkan Batas Bawah (angka atau ':')"
-              placeholderTextColor="#B0B0B0"
-              onFocus={() => handleFocus('selectedBatasBawah')}
-              onBlur={() => handleBlur('selectedBatasBawah')}
-            />
+              onPress={() => showPicker('batasBawah')}>
+              <Text style={styles.inputText}>
+                {selectedBatasBawah || 'Pilih Batas Bawah ⏰'}
+              </Text>
+            </TouchableOpacity>
+
+              <TimerPickerModal
+                visible={isVisible}
+                setIsVisible={setIsVisible}
+                hourLabel=""
+                minuteLabel=""
+                secondLabel=""
+                onConfirm={handlePilih}
+                onCancel={handleBatal}
+                modalTitle={
+                  pickerMode === 'batasAtas'
+                    ? 'Pilih Batas Atas'
+                    : 'Pilih Batas Bawah'
+                }
+                confirmButtonText="Simpan"
+                cancelButtonText="Batal"
+                modalProps={{
+                  animationType: 'fade',
+                }}
+                styles={{
+                  theme: 'light',
+                  container: {
+      backgroundColor: '#fff',
+      borderRadius: 12,
+      padding: 16,
+      shadowColor: '#000',
+      shadowOpacity: 0.1,
+      shadowRadius: 6,
+      elevation: 5,
+    },
+    contentContainer: {
+      alignItems: 'center',
+      padding: 10,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: '#333',
+      textAlign: 'center',
+      marginBottom: 10,
+    },
+                  cancelButton: {
+                    color: '#fff', // Warna merah untuk tombol batal
+                    backgroundColor: '#FF3B30',
+                    fontSize: 16,
+                    fontWeight: 'bold',
+                  },
+                  confirmButton: {
+                    color: '#fff', // Warna biru untuk tombol simpan
+                    backgroundColor: '#3699FE',
+                    fontSize: 16,
+                    fontWeight: 'bold',
+                  },
+                }}
+                hideSeconds={false}
+              />
 
             <View style={styles.buttons}>
               <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
