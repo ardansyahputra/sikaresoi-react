@@ -22,8 +22,8 @@ import Toast from 'react-native-toast-message';
 
 const TambahPage = ({navigation}) => {
   const [selectedPotongan, setSelectedPotongan] = useState('');
-    const [isVisible, setIsVisible] = useState(false);
-    const [pickerMode, setPickerMode] = useState(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [pickerMode, setPickerMode] = useState(null);
   const [selectedBatasAtas, setSelectedBatasAtas] = useState('00:00:00');
   const [selectedBatasBawah, setSelectedBatasBawah] = useState('00:00:00');
   const [keyboardOpen, setKeyboardOpen] = useState(false);
@@ -48,7 +48,6 @@ const TambahPage = ({navigation}) => {
       keyboardDidHideListener.remove();
     };
   }, []);
-
 
   const formatTime = pickedDuration => {
     const {hours, minutes, seconds} = pickedDuration;
@@ -158,7 +157,7 @@ const TambahPage = ({navigation}) => {
               onBlur={() => handleBlur('selectedPotongan')}
             />
 
-<Text style={[GlobalStyle.SemiBold, styles.label]}>Batas Atas</Text>
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>Batas Atas</Text>
             <TouchableOpacity
               style={[
                 GlobalStyle.SemiBold,
@@ -186,61 +185,64 @@ const TambahPage = ({navigation}) => {
               </Text>
             </TouchableOpacity>
 
-              <TimerPickerModal
-                visible={isVisible}
-                setIsVisible={setIsVisible}
-                hourLabel=""
-                minuteLabel=""
-                secondLabel=""
-                onConfirm={handlePilih}
-                onCancel={handleBatal}
-                modalTitle={
-                  pickerMode === 'batasAtas'
-                    ? 'Pilih Batas Atas'
-                    : 'Pilih Batas Bawah'
-                }
-                confirmButtonText="Simpan"
-                cancelButtonText="Batal"
-                modalProps={{
-                  animationType: 'fade',
-                }}
-                styles={{
-                  theme: 'light',
-                  container: {
-      backgroundColor: '#fff',
-      borderRadius: 12,
-      padding: 16,
-      shadowColor: '#000',
-      shadowOpacity: 0.1,
-      shadowRadius: 6,
-      elevation: 5,
-    },
-    contentContainer: {
-      alignItems: 'center',
-      padding: 10,
-    },
-    modalTitle: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      color: '#333',
-      textAlign: 'center',
-      marginBottom: 10,
-    },
-                  cancelButton: {
-                    color: '#fff', // Warna merah untuk tombol batal
-                    backgroundColor: '#FF3B30',
-                    fontSize: 16,
-                    fontWeight: 'bold',
-                  },
-                  confirmButton: {
-                    color: '#fff', // Warna biru untuk tombol simpan
-                    backgroundColor: '#3699FE',
-                    fontSize: 16,
-                    fontWeight: 'bold',
-                  },
-                }}
-                hideSeconds={false}
-              />
+            <TimerPickerModal
+              visible={isVisible}
+              setIsVisible={setIsVisible}
+              hourLabel="                 :"
+              minuteLabel="                 :"
+              secondLabel="                 "
+              onConfirm={handlePilih}
+              onCancel={handleBatal}
+              modalTitle={
+                pickerMode === 'batasAtas'
+                  ? 'Pilih Batas Atas'
+                  : 'Pilih Batas Bawah'
+              }
+              confirmButtonText="Simpan"
+              cancelButtonText="Batal"
+              modalProps={{
+                animationType: 'fade',
+              }}
+              styles={{
+                theme: 'light',
+                container: {
+                  backgroundColor: '#fff',
+                  borderRadius: 12,
+                  padding: 16,
+                  shadowColor: '#000',
+                  shadowOpacity: 0.1,
+                  shadowRadius: 6,
+                  elevation: 5,
+                },
+                contentContainer: {
+                  alignItems: 'center',
+                  padding: 10,
+                },
+                modalTitle: {
+                  fontSize: 18,
+                  fontWeight: 'bold',
+                  color: '#333',
+                  textAlign: 'center',
+                  marginBottom: 10,
+                },
+                cancelButton: {
+                  color: '#fff', // Warna merah untuk tombol batal
+                  backgroundColor: '#FF3B30',
+                  fontSize: 16,
+                  fontWeight: 'bold',
+                  borderColor: "#FF3B30",
+                  marginRight: 120,
+                },
+                confirmButton: {
+                  color: '#fff', // Warna biru untuk tombol simpan
+                  backgroundColor: '#3699FE',
+                  borderColor: "#3699FE",
+                  fontSize: 16,
+                  fontWeight: 'bold',
+                },
+              }}
+              hideSeconds={false}
+            />
 
             <View style={styles.buttons}>
               <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
