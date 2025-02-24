@@ -1,22 +1,24 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
+  Pressable,
   Modal,
   TextInput,
-  Alert,
+  modalVisible,
 } from 'react-native';
+import {useFocusEffect} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../../src/api/apiClient';
 import {BarIndicator} from 'react-native-indicators';
 import Header from '../../../components/Header';
-import GlobalStyle from '../../../../src/utils/GlobalStyle';
 import Toast from 'react-native-toast-message';
+import GlobalStyle from '../../../../src/utils/GlobalStyle';
+
 
 export default function UangMakan() {
   const navigation = useNavigation();
@@ -33,23 +35,204 @@ export default function UangMakan() {
   const [selectedDisplay, setSelectedDisplay] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedAction, setSelectedAction] = useState(null);
-
+  const [activeButton, setActiveButton] = useState('pulangAwal'); // New state for active button
   const [selectedGolongan, setSelectedGolongan] = useState('');
   const [selectedNominal, setSelectedNominal] = useState('');
+  const [selectedType, setSelectedType] = useState(null);
+
 
   const apiClient = useApiClient();
 
-  useEffect(() => {
-    fetchData(currentPage, selectedDisplay);
-  }, [currentPage, selectedDisplay]);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchData(currentPage, selectedDisplay);
+    }, [currentPage, selectedDisplay]),
+  );
 
   const fetchData = async (page, display) => {
     try {
+      if (!activeButton) return; // Prevent unnecessary API calls
+
       setIsLoading(true);
-      const response = await apiClient.post('/pemotongan_pulang_awal/index', {
+      let endpoint = '';
+      switch (activeButton) {
+        case 'pulangAwal':
+          endpoint = '/pemotongan_pulang_awal/index';
+          break;
+        case 'telambat':
+          endpoint = '/pemotongan_terlambat/index';
+          break;
+        case 'tidakHadir':
+          endpoint = '/pemotongan_tidak_hadir/index';
+          break;
+        default:
+          throw new Error('Invalid button type');
+      }
+
+      const response = await apiClient.post(endpoint, {
         page,
         display,
       });
+
+      if (!response.data) throw new Error('No data received');
+
+      setData(response.data.data);
+      setCurrentPage(response.data.current_page);
+      setLastPage(response.data.last_page);
+    } catch (error) {
+      console.error('Error fetching ', error);
+      // Optional: Show error toast to user
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to fetch data. Please try again.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTidakHadirEdit = async (uuid, navigation) => {
+    try {
+      if (!uuid || typeof uuid !== 'string') {
+        console.error('UUID tidak valid:', uuid);
+        console.log('Error', 'UUID tidak valid.');
+        return;
+      }
+
+      const endpoint = `/pemotongan_tidak_hadir/${uuid}/edit`;
+      const response = await apiClient.get(endpoint);
+      const data = response.data.data;
+
+      // Handle specific structure for 'tidakHadir'
+      if (
+        !data ||
+        data.batas_toleransi === undefined ||
+        data.potongan === undefined
+      ) {
+        console.error('Data tidak lengkap:', data);
+        console.log('Error', 'Data tidak valid untuk diedit.');
+        return;
+      }
+
+      console.log('Data edit yang di-fetch:', data);
+
+      navigation.push('EditPa3', {
+        jenisAlasan: data.jenis_alasan,
+        batasToleransi: data.batas_toleransi,
+        potongan: data.potongan,
+        uuid: data.uuid,
+      });
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        'Terjadi kesalahan saat mengambil data.';
+      console.error('Error fetch data edit:', error.response || error);
+      console.log('Error', errorMessage);
+    }
+  };
+
+  // Handle for 'pulangAwal' and 'telambat' (combined in the same function)
+  const handleEdit = async (uuid, navigation) => {
+    try {
+      if (!uuid || typeof uuid !== 'string') {
+        console.error('UUID tidak valid:', uuid);
+        console.log('Error', 'UUID tidak valid.');
+        return;
+      }
+
+      let endpoint = '';
+      let navigateTo = '';
+
+      switch (activeButton) {
+        case 'pulangAwal':
+          endpoint = `/pemotongan_pulang_awal/${uuid}/edit`;
+          navigateTo = 'EditPa'; // Assuming this is the correct screen for pulangAwal
+          break;
+        case 'telambat':
+          endpoint = `/pemotongan_terlambat/${uuid}/edit`;
+          navigateTo = 'EditPa2'; // Assuming this is the correct screen for telambat
+          break;
+        case 'tidakHadir':
+          // Do not handle 'tidakHadir' here, call its separate handler
+          return handleTidakHadirEdit(uuid, navigation);
+        default:
+          console.error('Invalid activeButton:', activeButton);
+          return;
+      }
+
+      const response = await apiClient.get(endpoint);
+      const data = response.data.data;
+
+      if (!data || !data.batas_atas || !data.batas_bawah || !data.potongan) {
+        console.error('Data tidak lengkap:', data);
+        console.log('Error', 'Data tidak valid untuk diedit.');
+        return;
+      }
+
+      console.log('Data edit yang di-fetch:', data);
+
+      navigation.navigate(navigateTo, {
+        initialPotongan: data.potongan,
+        initialBatasAtas: data.batas_atas,
+        initialBatasBawah: data.batas_bawah,
+        uuid: data.uuid,
+      });
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        'Terjadi kesalahan saat mengambil data.';
+      console.error('Error fetch data edit:', error.response || error);
+      console.log('Error', errorMessage);
+    }
+  };
+
+  const handleCreate = (navigation, type) => {
+    try {
+      // Tidak perlu memvalidasi atau mengirimkan data apa pun
+      console.log(`Navigasi ke ${type} untuk pembuatan data baru`);
+
+      // Navigasi ke halaman yang sesuai berdasarkan type
+      if (type === 'pulangAwal') {
+        navigation.navigate('TambahPa'); // Hanya arahkan, tanpa membawa data
+      } else if (type === 'telambat') {
+        navigation.navigate('TambahPa2'); // Hanya arahkan, tanpa membawa data
+      } else if (type === 'tidakHadir') {
+        navigation.navigate('TambahPa3'); // Hanya arahkan, tanpa membawa data
+      }
+    } catch (error) {
+      console.error('Error navigating to page:', error);
+      console.log(
+        'Error',
+        'Terjadi kesalahan saat mengarahkan ke halaman Tambah.',
+      );
+    }
+  };
+
+  const handlePress = async buttonName => {
+    try {
+      setIsLoading(true);
+      setActiveButton(buttonName);
+      setCurrentPage(1);
+
+      let endpoint = '';
+      switch (buttonName) {
+        case 'pulangAwal':
+          endpoint = '/pemotongan_pulang_awal/index';
+          break;
+        case 'telambat':
+          endpoint = '/pemotongan_terlambat/index';
+          break;
+        case 'tidakHadir':
+          endpoint = '/pemotongan_tidak_hadir/index';
+          break;
+      }
+
+      const response = await apiClient.post(endpoint, {
+        page: 1,
+        display: selectedDisplay,
+      });
+
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -60,176 +243,346 @@ export default function UangMakan() {
     }
   };
 
-  const handleEdit = async (uuid, navigation) => {
-    try {
-      // Validasi UUID
-      if (!uuid || typeof uuid !== 'string') {
-        console.error('UUID tidak valid:', uuid);
-        Alert.alert('Error', 'UUID tidak valid.');
-        return;
-      }
-
-      // Permintaan data dari API
-      const response = await apiClient.get(
-        `/pemotongan_pulang_awal/${uuid}/edit`,
-      );
-
-      const data = response.data.data;
-
-      // Validasi data yang diterima
-      if (!data || !data.batas_atas || !data.batas_bawah || !data.potongan) {
-        console.error('Data tidak lengkap:', data);
-        Alert.alert('Error', 'Data tidak valid untuk diedit.');
-        return;
-      }
-
-      console.log('Data edit yang di-fetch:', data);
-
-      // Navigasi ke halaman edit dengan parameter data
-      navigation.navigate('EditPa', {
-        initialPotongan: data.potongan,
-        initialBatasAtas: data.batas_atas,
-        initialBatasBawah: data.batas_bawah,
-        uuid: data.uuid,
-      });
-    } catch (error) {
-      // Menangani error permintaan API
-      const errorMessage =
-        error.response?.data?.message ||
-        'Terjadi kesalahan saat mengambil data.';
-      console.error('Error fetch data edit:', error.response || error);
-      Alert.alert('Error', errorMessage);
-    }
-  };
-
-  const handleCreate = async (navigation, potongan, batasAtas, batasBawah) => {
-    try {
-      // Validasi data yang akan dikirim
-      if (!potongan || !batasAtas || !batasBawah) {
-        console.error('Data tidak valid:', {potongan, batasAtas, batasBawah});
-        Alert.alert('Error', 'Pastikan semua data telah diisi.');
-        return;
-      }
-
-      // Data default yang akan digunakan untuk halaman TambahPa
-      const payload = {
-        potongan,
-        batas_atas: batasAtas,
-        batas_bawah: batasBawah,
-      };
-
-      console.log('Navigasi ke TambahPa dengan data:', payload);
-
-      // Navigasi ke halaman TambahPa dengan parameter
-      navigation.navigate('TambahPa', {
-        initialPotongan: payload.potongan,
-        initialBatasAtas: payload.batas_atas,
-        initialBatasBawah: payload.batas_bawah,
-      });
-    } catch (error) {
-      console.error('Error navigating to TambahPa:', error);
-      Alert.alert(
-        'Error',
-        'Terjadi kesalahan saat mengarahkan ke halaman Tambah.',
-      );
-    }
-  };
-
-  const handleHapusPress = uuid => {
-    setSelectedUuid(uuid);
-    setSelectedAction('hapus'); // Tandai bahwa ini aksi hapus
-    setModalVisible(true);
-  };
-
-  const handleConfirmAction = async () => {
-    if (!selectedUuid) return;
-
-    setModalVisible(false); // Tutup modal sebelum aksi dijalankan
-
-    try {
-      await apiClient.delete(`/pemotongan_pulang_awal/${selectedUuid}/delete`);
-      fetchData(currentPage);
-      Toast.show({
-        type: 'success',
-        text1: 'Berhasil',
-        text2: 'Data berhasil dihapus.',
-      });
-    } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Terjadi Kesalahan',
-        text2: 'Gagal menghapus data.',
-      });
-    }
-  };
-
-  const display = [
-    {label: '5', value: 1},
-    {label: '10', value: 2},
-    {label: '25', value: 3},
-    {label: '50', value: 4},
-    {label: '100', value: 5},
-  ];
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchData(currentPage, selectedDisplay);
+    }, [currentPage, selectedDisplay, activeButton]), // Tidak ada activeButton di dependencies
+  );
 
   const toggleExpand = id => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const TableHeader = () => (
-    <View>
-      <View style={styles.headerContainer}>
-        <View style={styles.searchContainer}>
-          <Ionicons
-            name="search"
-            size={18}
-            color="#888"
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={[GlobalStyle.SemiBold, styles.searchBar]}
-            placeholder="Search"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholderTextColor="#888"
-          />
-        </View>
-        <TouchableOpacity
-          style={styles.tambahButton}
-          onPress={() => handleCreate(navigation, '10%', '18:00', '08:00')}>
-          <Ionicons name="add" size={18} color="#fff" style={styles.icon} />
-          <Text style={[GlobalStyle.SemiBold, styles.tambahText]}>Tambah</Text>
-        </TouchableOpacity>
-      </View>
+  const handleHapusPress = (uuid, type) => {
+    console.log("UUID diterima:", uuid);
+    console.log("Type diterima:", type);
 
-      <View style={styles.tableHeader}>
-        <Text
-          style={[GlobalStyle.SemiBold, styles.headerCell, styles.numberCell]}>
-          {String('NO')}
-        </Text>
-        <Text
-          style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}>
-          {String('BAWAH')}
-        </Text>
-        <Text
-          style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}>
-          {String('ATAS')}
-        </Text>
-        <Text
-          style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}>
-          {String('POTONGAN')}
-        </Text>
-        <View style={styles.expandIconCell} />
+    if (!uuid || typeof uuid !== 'string') {
+        console.error("UUID yang diterima bukan string:", uuid);
+        return;
+    }
+
+    setSelectedUuid(uuid);
+    setSelectedType(type);
+    setModalVisible(true);
+};
+
+
+const handleConfirmAction = async (uuid, type) => {
+  if (!uuid || typeof uuid !== 'string') {
+      console.error('UUID tidak valid:', uuid);
+      Toast.show({
+          type: 'error',
+          text1: 'Gagal',
+          text2: 'UUID tidak valid.',
+      });
+      return;
+  }
+
+  try {
+      let endpoint = '';
+      
+      // Menentukan endpoint berdasarkan jenis pemotongan
+      switch (type) {
+          case 'pulangAwal':
+              endpoint = `/pemotongan_pulang_awal/${uuid}/delete`;
+              break;
+          case 'terlambat':
+              endpoint = `/pemotongan_terlambat/${uuid}/delete`;
+              break;
+          case 'tidakHadir':
+              endpoint = `/pemotongan_tidak_hadir/${uuid}/delete`;
+              break;
+          default:
+              console.error('Invalid type:', type);
+              return;
+      }
+
+      const response = await apiClient.delete(endpoint);
+      if (response.status === 200) {
+          console.log('Data berhasil dihapus');
+          
+          // Tampilkan toast sukses
+          Toast.show({
+              type: 'success',
+              text1: 'Sukses',
+              text2: 'Data berhasil dihapus.',
+          });
+
+          // Perbarui tampilan setelah penghapusan
+          fetchData(currentPage, selectedDisplay);
+          
+          // Tutup modal setelah selesai
+          setModalVisible(false);
+      }
+  } catch (error) {
+      console.error('Error deleting ', error);
+      Toast.show({
+          type: 'error',
+          text1: 'Gagal',
+          text2: 'Terjadi kesalahan saat menghapus data.',
+      });
+      // Tutup modal jika terjadi error
+      setModalVisible(false);
+  }
+};
+
+  const TableHeader = () => {
+    const renderHeaders = () => {
+      if (activeButton === 'pulangAwal' || activeButton === 'telambat') {
+        return (
+          <>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.headerCell,
+                styles.numberCell,
+              ]}>
+              #
+            </Text>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.headerCell,
+                styles.numberCell,
+              ]}>
+              Batas Bawah
+            </Text>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.headerCell,
+                styles.reasonCell,
+              ]}>
+              Batas Atas
+            </Text>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.headerCell,
+                styles.deductionCell,
+              ]}>
+              Potongan
+            </Text>
+          </>
+        );
+      } else {
+        // Default case for other buttons like 'tidakHadir'
+        return (
+          <>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.headerCell,
+                styles.numberCell,
+              ]}>
+              NO
+            </Text>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.headerCell,
+                styles.reasonCell,
+              ]}>
+              JENIS CUTI
+            </Text>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.headerCell,
+                styles.toleranceCell,
+              ]}>
+              BATAS TOLERANSI
+            </Text>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.headerCell,
+                styles.deductionCell,
+              ]}>
+              POTONGAN
+            </Text>
+          </>
+        );
+      }
+    };
+  
+    return (
+      <View>
+        <View style={styles.headerContainer}>
+          {/* Toggle Buttons Container */}
+          <View style={styles.toggleContainer}>
+            <Pressable
+              style={({pressed}) => [
+                styles.toggleButton,
+                pressed && styles.buttonPressed,
+                activeButton === 'pulangAwal' && styles.buttonActive,
+              ]}
+              onPress={() => handlePress('pulangAwal')}>
+              <Text
+                style={[
+                  GlobalStyle.SemiBold,
+                  styles.buttonText,
+                  activeButton === 'pulangAwal' && styles.textActive,
+                ]}>
+                Pulang Awal
+              </Text>
+            </Pressable>
+  
+            <Pressable
+              style={({pressed}) => [
+                styles.toggleButton,
+                pressed && styles.buttonPressed,
+                activeButton === 'telambat' && styles.buttonActive,
+              ]}
+              onPress={() => handlePress('telambat')}>
+              <Text
+                style={[
+                  GlobalStyle.SemiBold,
+                  styles.buttonText,
+                  activeButton === 'telambat' && styles.textActive,
+                ]}>
+                Terlambat
+              </Text>
+            </Pressable>
+  
+            <Pressable
+              style={({pressed}) => [
+                styles.toggleButton,
+                pressed && styles.buttonPressed,
+                activeButton === 'tidakHadir' && styles.buttonActive,
+              ]}
+              onPress={() => handlePress('tidakHadir')}>
+              <Text
+                style={[
+                  GlobalStyle.SemiBold,
+                  styles.buttonText,
+                  activeButton === 'tidakHadir' && styles.textActive,
+                ]}>
+                Tidak Hadir
+              </Text>
+            </Pressable>
+          </View>
+  
+          {/* Search and Add Button Container */}
+          <View style={styles.bottomContainer}>
+            <View style={styles.searchContainer}>
+              <Ionicons
+                name="search"
+                size={18}
+                color="#888"
+                style={styles.searchIcon}
+              />
+              <TextInput
+                style={[GlobalStyle.SemiBold, styles.searchBar]}
+                placeholder="Search"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholderTextColor="#888"
+              />
+            </View>
+            <TouchableOpacity
+              style={styles.tambahButton}
+              onPress={() => handleCreate(navigation, activeButton)}>
+              <Ionicons name="add" size={18} color="#fff" style={styles.icon} />
+              <Text style={[GlobalStyle.SemiBold, styles.tambahText]}>
+                Tambah
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+  
+        {/* Table Header */}
+        <View style={styles.tableHeader}>
+          {renderHeaders()}
+          <View style={styles.expandIconCell} />
+        </View>
+        <View style={styles.headerLine} />
       </View>
-      <View style={styles.headerLine} />
-    </View>
-  );
+    );
+  };
+  
 
   const renderItem = ({item, index}) => {
     const isExpanded = expandedId === item.id;
-    const rowBackgroundColor = index % 2 === 0 ? '#F7F8FC' : '#FFFFFF'; // Warna selang-seling
+    const rowBackgroundColor = index % 2 === 0 ? '#F7F8FC' : '#FFFFFF';
 
-    return (
-      <>
+    if (activeButton === 'tidakHadir') {
+      return (
+        <View style={styles.tableRow}>
+          <TouchableOpacity
+            style={[styles.rowHeader, {backgroundColor: rowBackgroundColor}]}
+            onPress={() => toggleExpand(item.id)}>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.tableCell,
+                styles.numberCell,
+              ]}>
+              {index + 1}
+            </Text>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.tableCell,
+                styles.reasonCell,
+              ]}>
+              {item.jenis_alasan || '-'}
+            </Text>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.tableCell,
+                styles.toleranceCell,
+              ]}>
+              {item.batas_toleransi || '-'}
+            </Text>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.tableCell,
+                styles.deductionCell,
+              ]}>
+              {item.potongan || '-'}
+            </Text>
+            <View style={styles.expandIconCell}>
+              <Ionicons
+                name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#BEC2D5"
+              />
+            </View>
+          </TouchableOpacity>
+
+          {isExpanded && (
+            <View style={styles.expandedContent}>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Jenis Cuti: {item.jenis_alasan || '-'}
+              </Text>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Batas Toleransi: {item.batas_toleransi || '-'}
+              </Text>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Potongan: {item.potongan || '-'}
+              </Text>
+              <View style={styles.actionContainer}>
+                <TouchableOpacity
+                  style={[styles.iconButton, styles.blueButton]}
+                  onPress={() => handleTidakHadirEdit(item.uuid, navigation)}>
+                  <Ionicons name="pencil" size={20} color="white" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.iconButton, styles.redButton]}
+                  onPress={() => handleHapusPress(item.uuid, activeButton)}>
+                  <Ionicons name="trash-outline" size={20} color="white" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </View>
+      );
+    } else {
+      return (
         <View style={styles.tableRow}>
           <TouchableOpacity
             style={[styles.rowHeader, {backgroundColor: rowBackgroundColor}]}
@@ -262,6 +615,7 @@ export default function UangMakan() {
               />
             </View>
           </TouchableOpacity>
+
           {isExpanded && (
             <View style={styles.expandedContent}>
               <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
@@ -279,51 +633,21 @@ export default function UangMakan() {
                   onPress={() => handleEdit(item.uuid, navigation)}>
                   <Ionicons name="pencil" size={20} color="white" />
                 </TouchableOpacity>
-
                 <TouchableOpacity
                   style={[styles.iconButton, styles.redButton]}
-                  onPress={() => handleHapusPress(item.uuid)}>
+                  onPress={() => {
+                    // Ubah activeButton menjadi type yang sesuai
+                    const type = activeButton === 'telambat' ? 'terlambat' : 'pulangAwal';
+                    handleHapusPress(item.uuid, type);
+                  }}>
                   <Ionicons name="trash-outline" size={20} color="white" />
                 </TouchableOpacity>
               </View>
-              <Modal
-                animationType="fade"
-                transparent={true}
-                visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}>
-                <View style={styles.modalOverlay}>
-                  <View style={styles.modalContainer}>
-                    <Text style={[GlobalStyle.SemiBold, styles.modalText]}>
-                      {selectedAction === 'hapus'
-                        ? 'Apakah Anda yakin ingin menghapus data ini?'
-                        : 'Apakah Anda yakin ingin mereset password pengguna ini?'}
-                    </Text>
-                    <View style={styles.modalButtons}>
-                      <TouchableOpacity
-                        style={[styles.button, styles.cancelButton]}
-                        onPress={() => setModalVisible(false)}>
-                        <Text style={[GlobalStyle.SemiBold, styles.cancelText]}>
-                          Tidak
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.button, styles.confirmButton]}
-                        onPress={handleConfirmAction}>
-                        <Text
-                          style={[GlobalStyle.SemiBold, styles.confirmText]}>
-                          Ya
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
-              </Modal>
             </View>
           )}
         </View>
-        {index === data.length - 1 && <View style={styles.verticalLine} />}
-      </>
-    );
+      );
+    }
   };
 
   return (
@@ -385,9 +709,41 @@ export default function UangMakan() {
           }
         />
       )}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={[GlobalStyle.SemiBold, styles.modalText]}>
+              {selectedAction === 'hapus'
+                ? 'Apakah Anda yakin ingin menghapus data ini?'
+                : 'Anda yakin akan menghapus data ini?'}
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.button, styles.cancelButton]}
+                onPress={() => setModalVisible(false)}>
+                <Text style={[GlobalStyle.SemiBold, styles.cancelText]}>
+                  Tidak
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, styles.confirmButton]}
+                onPress={() => handleConfirmAction(selectedUuid, selectedType)}>
+                <Text style={[GlobalStyle.SemiBold, styles.confirmText]}>
+                  Ya
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -482,6 +838,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#fff',
   },
+  reasonCell: {
+    flex: 2,
+    paddingHorizontal: 10,
+  },
+  toleranceCell: {
+    flex: 1,
+    paddingHorizontal: 10,
+    textAlign: 'center',
+  },
+  deductionCell: {
+    flex: 1,
+    paddingHorizontal: 10,
+    textAlign: 'center',
+  },
   disabledButton: {
     opacity: 0.5, // Efek disabled lebih jelas
   },
@@ -501,9 +871,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'column', // Supaya tersusun vertikal
+    alignItems: 'stretch', // Mengisi lebar parent
     marginBottom: 10,
   },
 
@@ -513,10 +882,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7F8FC',
     borderColor: '#ccc',
     borderRadius: 5,
-    paddingHorizontal: 12,
+    paddingHorizontal: 15,
     height: 42, // **Tinggi sama dengan tombol tambah**
     flex: 1,
     maxWidth: '60%', // **Agar fleksibel di berbagai layar**
+    marginLeft: 10,
   },
 
   searchIcon: {
@@ -537,14 +907,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#3699FE',
-    paddingHorizontal: 15,
+    paddingHorizontal: 20,
     height: 40, // **Samakan tinggi dengan search bar**
     borderRadius: 5,
-    marginLeft: 12,
+    marginRight: 10,
   },
 
   icon: {
-    fontSize: 14, // **Ukuran disesuaikan agar sejajar dengan teks**
+    fontSize: 20, // **Ukuran disesuaikan agar sejajar dengan teks**
+    fontWeight: 'bold',
   },
 
   tambahText: {
@@ -596,12 +967,11 @@ const styles = StyleSheet.create({
   },
 
   blueButton: {
-    backgroundColor: '#3699FE', // Warna biru untuk reset & edit
+    backgroundColor: '#007AFF',
   },
   redButton: {
-    backgroundColor: '#FF536D', // Warna merah untuk hapus
+    backgroundColor: '#FF3B30',
   },
-
   switchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -661,5 +1031,56 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  bulanContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start', // Posisi ke kiri
+    gap: 10,
+    marginBottom: 20, // Beri jarak antara tombol Bulan & Tahun dengan Search Bar
+  },
+  toggleButton: {
+    height: 40,
+    paddingHorizontal: 15,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  buttonPressed: {
+    backgroundColor: '#fff',
+  },
+
+  buttonActive: {
+    borderBottomWidth: 3,
+    borderBottomColor: '#3699ff',
+  },
+
+  buttonText: {
+    fontSize: 14,
+    color: 'grey',
+  },
+
+  textActive: {
+    color: '#3699ff',
+  },
+
+  searchAddContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start', // Posisi ke kiri
+    gap: 10,
+    marginBottom: 20, // Beri jarak antara tombol Bulan & Tahun dengan Search Bar
+  },
+  bottomContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between', // Search & Tambah sejajar
   },
 });

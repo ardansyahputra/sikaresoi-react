@@ -12,6 +12,8 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
+import RNFS from 'react-native-fs';
+import {API_URL} from '@env';
 import {Pressable} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -30,6 +32,9 @@ export default function PersetujuanSuratTugas() {
   const [selectedDisplay, setSelectedDisplay] = useState(null);
   const [activeButton, setActiveButton] = useState('direktur');
   const [isHapusModalVisible, setHapusModalVisible] = useState(false);
+  const [isConfirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
   const apiClient = useApiClient();
   const navigation = useNavigation();
 
@@ -44,12 +49,13 @@ export default function PersetujuanSuratTugas() {
   const fetchBulanData = async () => {
     try {
       setIsLoading(true);
-      const response = await apiClient.post('/surat-tugas/atasan-dua');
+      const response = await apiClient.post(`surat-tugas/atasan-dua`);
+
       setData(response.data.data); // Asumsi data langsung berupa array bulan
-      setIsLoading(false);
     } catch (error) {
       console.error('Error fetching bulan:', error);
       Alert.alert('Error', 'Gagal memuat data bulan.');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -67,47 +73,117 @@ export default function PersetujuanSuratTugas() {
     }
   };
 
-  const submitHapus = async () => {
+  const handleDownload = async uuid => {
     try {
-      const endpoint =
-        activeButton === 'direktur'
-          ? `/bulan/${selectedUuid}/delete`
-          : `/tahun/${selectedUuid}/delete`;
+      console.log('Mulai proses download...');
 
-      const response = await apiClient.delete(endpoint, {});
+      const response = await apiClient.post(
+        `surat-tugas/preview?uuid=${uuid}`,
+        {},
+        {
+          responseType: 'blob',
+        },
+      );
 
-      if (response.status === 200 || response.status === 204) {
-        // Operasi berhasil
-        Alert.alert('Berhasil', 'Data berhasil dihapus.');
-        setHapusModalVisible(false);
-        fetchBulanData(currentPage);
-        fetchTahunData(currentPage); // Refresh data
+      const contentType = response.headers['content-type'];
+      if (!contentType || !contentType.includes('application/pdf')) {
+        console.log('Response bukan PDF, menampilkan modal pesan...');
+        setModalMessage('Data kosong atau laporan tidak ditemukan.');
+        setIsModalVisible(true);
+        return;
+      }
+
+      console.log('File adalah PDF, melanjutkan proses download...');
+
+      const reader = new FileReader();
+      const blob = new Blob([response.data], {type: 'application/pdf'});
+
+      reader.onload = async () => {
+        try {
+          const base64data = reader.result.split(',')[1];
+          const filePath = `/storage/emulated/0/Download/surat-tugas.pdf`;
+
+          await RNFS.writeFile(filePath, base64data, 'base64');
+          console.log('File berhasil disimpan ke:', filePath);
+
+          // Open the file after successful download
+          const canOpen = await Linking.canOpenURL(`file://${filePath}`);
+          if (canOpen) {
+            await Linking.openURL(`file://${filePath}`);
+          } else {
+            // If direct opening fails, try with content URI
+            const fileUri = `content://com.android.providers.downloads.documents/document/raw:${filePath}`;
+            await Linking.openURL(fileUri);
+          }
+
+          setModalMessage('Laporan berhasil diunduh dan dibuka');
+        } catch (writeError) {
+          console.error('Error writing/opening file:', writeError);
+          setModalMessage(
+            'File berhasil diunduh tetapi gagal dibuka secara otomatis',
+          );
+        }
+      };
+
+      reader.onerror = error => {
+        console.error('Error reading file:', error);
+        setModalMessage('Gagal memproses file.');
+      };
+
+      reader.readAsDataURL(blob);
+    } catch (error) {
+      console.error('Terjadi kesalahan:', error);
+      if (error.response) {
+        console.log('Error Details:', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          headers: error.response.headers,
+          data: error.response.data,
+        });
       } else {
-        // Jika respons statusnya tidak seperti yang diharapkan
-        Alert.alert(
-          'Peringatan',
-          'Data mungkin sudah dihapus, tetapi respons tidak sesuai.',
-        );
+        console.log('Error Message:', error.message);
+      }
+      setModalMessage('Terjadi kesalahan saat mengunduh file.');
+    }
+
+    setIsModalVisible(true);
+  };
+
+  const submitConfirm = async () => {
+    try {
+      const response = await apiClient.post(
+        `/surat-tugas/${selectedUuid}/change`,
+        {
+          approval: 2,
+        },
+      );
+
+      if (response.status === 200) {
+        Alert.alert('Berhasil', 'Data berhasil disetujui');
+        setConfirmModalVisible(false);
+        // Refresh the data
+        if (activeButton === 'direktur') {
+          fetchBulanData(currentPage);
+        } else {
+          fetchTahunData(currentPage);
+        }
+      } else {
+        Alert.alert('Error', 'Gagal menyetujui data');
       }
     } catch (error) {
-      console.error('Error saat menghapus:', error);
-      Alert.alert('Error', 'Gagal menghapus data.');
+      console.error('Error saat menyetujui:', error);
+      Alert.alert('Error', 'Gagal menyetujui data');
     }
   };
 
-  const handleHapus = uuid => {
+  const handleConfirm = uuid => {
     setSelectedUuid(uuid);
-    setHapusModalVisible(true);
+    setConfirmModalVisible(true);
   };
 
-  const handleConfirm = uuid => {
-    
-  }
-
-  const handleTambah = () => {
-    const screenName =
-      activeButton === 'direktur' ? 'TambahBulan' : 'TambahTahun';
-    navigation.navigate(screenName);
+  const handleRevisi = uuid => {
+    setSelectedUuid(uuid);
+    navigation.navigate('RevisiSuratTugas', {uuid});
   };
 
   const handlePreviousPage = () => {
@@ -135,11 +211,6 @@ export default function PersetujuanSuratTugas() {
     {label: '50', value: 50},
     {label: '100', value: 100},
   ];
-
-  const handleEdit = (uuid, item) => {
-    const screenName = activeButton === 'direktur' ? 'EditBulan' : 'EditTahun';
-    navigation.navigate(screenName, {uuid});
-  };
 
   const handlePress = buttonName => {
     setActiveButton(buttonName); // Atur tombol aktif
@@ -217,7 +288,7 @@ export default function PersetujuanSuratTugas() {
                 styles.confirmButton,
                 pressed && styles.confirmButtonPressed,
               ]}
-              onPress={() => handleEdit(item.uuid)}>
+              onPress={() => handleDownload(item.uuid)}>
               <FontAwesome name="eye" size={16} color="#8950FC" />
             </Pressable>
             <Pressable
@@ -233,7 +304,7 @@ export default function PersetujuanSuratTugas() {
                 styles.revisiButton,
                 pressed && styles.revisiButtonPressed,
               ]}
-              onPress={() => handleEdit(item.uuid)}>
+              onPress={() => handleRevisi(item.uuid)}>
               <FontAwesome name="refresh" size={16} color="#F64E60" />
             </Pressable>
           </View>
@@ -247,28 +318,18 @@ export default function PersetujuanSuratTugas() {
       <View>
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.headerLeft}></View>
-          <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
-            <TouchableOpacity style={styles.iconWrapper}>
-              <Ionicons name="person-circle-outline" size={24} color="#333" />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Persetujuan Surat Tugas</Text>
         </View>
       </View>
 
       {/* Card untuk Tombol */}
       <View style={styles.card}>
         <View style={styles.tambahContainer}>
-          <TouchableOpacity style={styles.tambahButton} onPress={handleTambah}>
-            <FontAwesome
-              name="plus"
-              size={20}
-              color="#fff"
-              style={styles.icon}
-            />
-            <Text style={styles.tambahText}>TAMBAH</Text>
-          </TouchableOpacity>
           <View style={styles.bulanContainer}>
             <Pressable
               style={({pressed}) => [
@@ -374,19 +435,57 @@ export default function PersetujuanSuratTugas() {
         onRequestClose={() => setHapusModalVisible(false)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Setujui Data</Text>
+            <Text style={styles.modalTitle}>Lihat Data</Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={styles.cancelButton}
                 onPress={() => setHapusModalVisible(false)}>
+                <Text style={styles.buttonText}>Tutup</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Confirm Modal */}
+      <Modal
+        visible={isConfirmModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setConfirmModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Setujui Data</Text>
+            <Text style={styles.modalText}>Surat tugas akan disetujui.</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setConfirmModalVisible(false)}>
                 <Text style={styles.buttonText}>Batal</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.submitButton, styles.approveButton]}
-                onPress={submitHapus}>
+                style={[styles.submitButton, {backgroundColor: '#1BC5BD'}]}
+                onPress={submitConfirm}>
                 <Text style={styles.buttonText}>Setujui</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+      {/* Download Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={isModalVisible}
+        onRequestClose={() => setIsModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalMessage}>{modalMessage}</Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setIsModalVisible(false)}>
+              <Text style={styles.closeButtonText}>Tutup</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -602,33 +701,42 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '80%',
-    backgroundColor: '#fff',
+    width: 300,
     padding: 20,
+    backgroundColor: 'white',
     borderRadius: 10,
-    elevation: 5,
+    alignItems: 'center',
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
   },
-  modalLabel: {
-    fontSize: 14,
-    marginBottom: 5,
-  },
-  modalInput: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    minHeight: 40,
-    marginBottom: 15,
-    textAlignVertical: 'top',
+  modalText: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
   },
   modalButtons: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  cancelButton: {
+    padding: 10,
+    backgroundColor: 'red',
+    borderRadius: 5,
+    flex: 1,
+    marginRight: 10,
+  },
+  submitButton: {
+    padding: 10,
+    borderRadius: 5,
+    flex: 1,
+  },
+  buttonText: {
+    color: 'white',
+    textAlign: 'center',
   },
   dropdownModal: {
     height: 40,
@@ -637,17 +745,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingHorizontal: 10,
     marginBottom: 10,
-  },
-  cancelButton: {
-    backgroundColor: '#ccc',
-    padding: 10,
-    borderRadius: 5,
-    marginRight: 10,
-  },
-  submitButton: {
-    backgroundColor: '#F44336',
-    padding: 10,
-    borderRadius: 5,
   },
   searchContainer: {
     width: 180,
@@ -754,5 +851,24 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#FFF',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalMessage: {fontSize: 16, color: '#333'},
+  closeButton: {
+    backgroundColor: '#28c4ac',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
   },
 });

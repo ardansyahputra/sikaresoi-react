@@ -37,7 +37,7 @@ export default function Jabatan() {
   const fetchData = async page => {
     try {
       setLoading(true);
-      const response = await apiClient.post('/teguran/indexandro', {page});
+      const response = await apiClient.post('/teguran/index', {page});
       if (response?.data?.data) {
         setData(response.data.data);
         setCurrentPage(response.data.current_page);

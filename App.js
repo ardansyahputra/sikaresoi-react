@@ -132,6 +132,14 @@ import TambahPersentaseCapaian from './screen/admin/setting_persentase_capaian/T
 import SettingTugasTambahan from './screen/admin/setting_tugas_tambahan/Setting_tugas_tambahan';
 import EditSettingTugas from './screen/admin/setting_tugas_tambahan/Edit';
 import TambahSettingTugas from './screen/admin/setting_tugas_tambahan/Tambah';
+import TambahUserGroup from './screen/admin/master/user_group/Tambah';
+import EditUserGroup from './screen/admin/master/user_group/Edit';
+import UserGroupList from './screen/admin/master/user_group/List';
+import TambahPeta from './screen/admin/master/jabatan/TambahPeta';
+import UraianPeta from './screen/admin/master/jabatan/UraianPeta';
+import TambahUraianPeta from './screen/admin/master/jabatan/TambahUraian';
+import EditSuratTugas from './screen/admin/surattugas/Edit_surat';
+import RevisiSuratTugas from './screen/admin/surattugas/Revisi';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -217,6 +225,11 @@ function HomeStack() {
       />
       <Stack.Screen
         options={{headerShown: false}}
+        name="EditSuratTugas"
+        component={EditSuratTugas}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
         name="PotonganLain"
         component={PotonganLainScreen}
       />
@@ -274,6 +287,21 @@ function HomeStack() {
         options={{headerShown: false}}
         name="UserGroup"
         component={UserGroupScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="TambahUserGroup"
+        component={TambahUserGroup}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="EditUserGroup"
+        component={EditUserGroup}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="UserGroupList"
+        component={UserGroupList}
       />
       <Stack.Screen
         options={{headerShown: false}}
@@ -573,6 +601,21 @@ function HomeStack() {
       />
       <Stack.Screen
         options={{headerShown: false}}
+        name="TambahPeta"
+        component={TambahPeta}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="UraianPeta"
+        component={UraianPeta}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="TambahUraianPeta"
+        component={TambahUraianPeta}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
         name="Setting"
         component={SettingScreen}
       />
@@ -580,6 +623,11 @@ function HomeStack() {
         options={{headerShown: false}}
         name="VerifikasiSuratTugas"
         component={VerifikasiSuratTugas}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="RevisiSuratTugas"
+        component={RevisiSuratTugas}
       />
       <Stack.Screen
         options={{headerShown: false}}

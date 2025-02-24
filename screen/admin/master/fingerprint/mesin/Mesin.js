@@ -13,7 +13,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
-import axios from 'axios';
+import {BarIndicator} from 'react-native-indicators';
 import { useNavigation } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
 import useApiClient from '../../../../../src/api/apiClient';
@@ -42,20 +42,11 @@ export default function Mesin() {
 
   const fetchData = async (page, display) => {
     try {
-      setLoading(true); // Set loading state
+      setIsLoading(true); // Set loading state
       const response = await apiClient.post(
-        '/fingerprint_machine/indexandro', // API URL
+        '/fingerprint_machine/index', // API URL
         {page, display},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjE4Ljk0OjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzY5MDgwNDUsImV4cCI6MTczNjkzMTIzNCwibmJmIjoxNzM2OTI3NjM0LCJqdGkiOiJVVENITmt4MUN1eEY5M1NhIiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.LocW4Sk32906K41W9PoCrcHoRx1Za-aonestc-IJhng', // Token
-          },
-        },
       );
-      console.log('Full API Response:', response.data); // Log the full response to inspect all data
-
-      // Check if the expected fields are available in response
       const {data: fetchedData, current_page, last_page} = response.data;
       setData(fetchedData); // Update the state
       setCurrentPage(current_page);
