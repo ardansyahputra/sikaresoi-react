@@ -75,11 +75,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   userJabatanLabel: {
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
     width: 120,
   },
   userJabatanValue: {
-    
+    fontFamily: "Poppins-Regular",
   },
 });
 

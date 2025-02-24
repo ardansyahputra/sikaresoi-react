@@ -237,7 +237,7 @@ const PerformanceTable = ({data, onSaveKinerja, userJabatanId, tahunId}) => {
           <View style={styles.actionButtons}>
             <TouchableOpacity
               style={[styles.actionButton, styles.editButton]}
-              onPress={() => navigation.navigate('TargetPersetujuan')}>
+              onPress={() => navigation.navigate('TargetPersetujuan', { item })}>
               <Icon name="pencil" size={20} color="white" />
               <Text style={styles.buttonText}>Edit</Text>
             </TouchableOpacity>

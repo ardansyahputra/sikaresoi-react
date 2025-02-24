@@ -51,15 +51,15 @@ const KontrakKinerjaScreen = () => {
   const [totalBobot, setTotalBobot] = useState(0);
   const [totalWpt, setTotalWpt] = useState(0);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchYears();
-      fetchUserJabatanData();
-      if (selectedYear) {
-        fetchKontrak(currentPage, selectedYear, selectedDisplay);
-      }
-    }, [currentPage, selectedYear, selectedDisplay]),
-  );
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     fetchYears();
+  //     fetchUserJabatanData();
+  //     if (selectedYear) {
+  //       fetchKontrak(currentPage, selectedYear, selectedDisplay);
+  //     }
+  //   }, [currentPage, selectedYear, selectedDisplay])
+  // );
 
   useEffect(() => {
     fetchYears();
@@ -212,8 +212,8 @@ const KontrakKinerjaScreen = () => {
     }
   };
 
-  const handleKumulatif = item => {
-    navigation.navigate('Kumulatif', {type: 'edit', item});
+  const handleKumulatif = (item) => {
+    navigation.navigate('Kumulatif', { item });
   };
 
   const confirmDelete = item => {
@@ -670,14 +670,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
+    fontFamily: "Poppins-SemiBold",
     fontSize: 18,
-    fontWeight: 'bold',
     color: '#000',
     marginLeft: 20,
     marginBottom: 4,
     marginTop: 10,
   },
   headerSubtitle: {
+    fontFamily: "Poppins-Regular",
     color: '#000',
     marginLeft: 20,
     marginBottom: 4,
@@ -699,6 +700,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   listkinerjaButton: {
+    fontFamily: 'Poppins-Regular',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -709,6 +711,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   salinkontrakButton: {
+    fontFamily: 'Poppins-Regular',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

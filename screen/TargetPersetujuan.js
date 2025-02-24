@@ -1,131 +1,164 @@
-import React, {useState, useEffect} from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import {Card, Button} from 'react-native-paper';
-import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { Card, Button } from 'react-native-paper';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import useApiClient from '../src/api/apiClient';
+import GlobalStyle from '../src/utils/GlobalStyle';
 
-// Konfigurasi base URL untuk axios
-const api = axios.create({
-  baseURL: 'https://your-api-url', // Ganti dengan base URL API Anda
-  timeout: 10000, // Timeout 10 detik
-  headers: {
-    'Content-Type': 'application/json',
-    // Tambahkan header lain jika diperlukan
-    // 'Authorization': 'Bearer your-token'
-  },
-});
+const Kumulatif = ({ navigation, route }) => {
+  const { item } = route.params; // Use item from route.params
+  const [kinerja, setKinerja] = useState(item); // Initialize state with item
+  const [loading, setLoading] = useState(false);
+  const [errorCount, setErrorCount] = useState(false); // Track if total target exceeds kuantitas
 
-const PerformanceBreakdown = ({onBack, uuid}) => {
-  const [kinerja, setKinerja] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const apiClient = useApiClient();
 
-  const fetchKinerjaData = async () => {
+  // Fetch data from the backend
+   const fetchData = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      setError(null);
-
-      const response = await api.get(`/kinerja/${uuid}`);
-      setKinerja(response.data);
+      const response = await apiClient.get(`user/kinerja/list/${item.id}/edit`);
+      setKinerja(response.data.data);
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          err.message ||
-          'Terjadi kesalahan saat mengambil data',
-      );
+      console.error('Invalid data:', response);
+      setData([]);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchKinerjaData();
-  }, [uuid]);
+  // Save target data
+  const saveTarget = async () => {
+    setLoading(true);
+    try {
+      const response = await apiClient.post(`user/kinerja/list/target/${kinerja.id}/save`, kinerja.target);
+      console.log('Save target response:', response.data.data);
+      Alert.alert('Success', 'Data saved successfully');
+      fetchData(); // Refresh data after saving
+    } catch (err) {
+      console.error('Error', err.response?.data || err.message);
+      Alert.alert('Error', 'Failed to save data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Calculate average and update target values (Set Otomatis)
+  const hitungRerata = () => {
+    const hasil = item.kuantitas / item.waktu;
+    const updatedTargets = kinerja.target.map((target) => ({
+      ...target,
+      kuantitas: parseFloat(hasil).toFixed(2),
+    }));
+    setKinerja({ ...kinerja, target: updatedTargets });
+    countTarget(); // Update total target
+  };
+
+  // Calculate total target and check for errors
+  const countTarget = () => {
+    let totalTarget = 0;
+    kinerja.target.forEach((target) => {
+      if (target.kuantitas) {
+        totalTarget += parseFloat(target.kuantitas);
+      }
+    });
+
+    if (totalTarget.toFixed(2) > parseFloat(kinerja.kuantitas)) {
+      setErrorCount(true);
+    } else {
+      setErrorCount(false);
+    }
+
+    setKinerja({ ...kinerja, total_target: totalTarget.toFixed(2) });
+  };
+
+  // Handle input change for target values
+  const handleTargetChange = (index, value) => {
+    const updatedTargets = [...kinerja.target];
+    updatedTargets[index].kuantitas = value;
+    setKinerja({ ...kinerja, target: updatedTargets });
+    countTarget(); // Update total target
+  };
+
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Render loading state
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007bff" />
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Error: {error}</Text>
-        <Button mode="contained" onPress={fetchKinerjaData}>
-          Coba Lagi
-        </Button>
-      </View>
-    );
-  }
-
-  if (!kinerja) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Data tidak ditemukan</Text>
+        <ActivityIndicator size="large" color="#0000ff" />
       </View>
     );
   }
 
   return (
     <ScrollView style={styles.container}>
-      <Card style={styles.card}>
+      <Card style={[styles.customFont, styles.card]}>
         <Card.Title
-          title="Performance Breakdown"
+          title="Kumulatif"
+          titleStyle={GlobalStyle.Bold}
           left={() => (
-            <TouchableOpacity onPress={onBack}>
-              <Icon name="arrow-left" size={20} color="#000" />
+            <TouchableOpacity onPress={() => navigation.navigate('KontrakKinerja')}>
+              <Ionicons name="arrow-back" size={20} color="#000" />
             </TouchableOpacity>
           )}
         />
-        <Card.Content>
-          <DetailRow
-            label="Sub Unsur"
-            value={kinerja.uraian?.sub_unsur?.nm_sub_unsur}
-          />
-          <DetailRow
-            label="Kegiatan Tugas Jabatan"
-            value={kinerja.uraian?.nm_uraian}
-          />
-          <DetailRow
-            label="Angka Kredit"
-            value={kinerja.uraian?.angka_kredit}
-          />
-          <DetailRow label="Kuantitas" value={kinerja.kt_satuan} />
-          <DetailRow label="Kualitas" value={kinerja.kl_persen} />
-          <DetailRow label="Waktu (Bulan)" value={kinerja.waktu_bulan} />
+        <Card.Content style={styles.userJabatanRow}>
+          <View style={styles.userJabatanColumn}>
+            <View style={styles.userJabatanItem}>
+              <Text style={styles.userJabatanLabel}>Kegiatan Tugas Jabatan</Text>
+              <Text style={styles.userJabatanValue}>: {item.uraian?.nm_uraian}</Text>
+            </View>
+
+            <View style={styles.userJabatanItem}>
+              <Text style={styles.userJabatanLabel}>Angka Kredit</Text>
+              <Text style={styles.userJabatanValue}>: {item.uraian?.angka_kredit}</Text>
+            </View>
+          </View>
+          <View style={styles.userJabatanColumnR}>
+            <View style={styles.userJabatanItem}>
+              <Text style={styles.userJabatanLabel}>Kuantitas</Text>
+              <Text style={styles.userJabatanValue}>: {item.kt_satuan}</Text>
+            </View>
+
+            <View style={styles.userJabatanItem}>
+              <Text style={styles.userJabatanLabel}>Kualitas</Text>
+              <Text style={styles.userJabatanValue}>: {item.kl_persen}</Text>
+            </View>
+
+            <View style={styles.userJabatanItem}>
+              <Text style={styles.userJabatanLabel}>Waktu</Text>
+              <Text style={styles.userJabatanValue}>: {item.waktu_bulan}</Text>
+            </View>
+          </View>
         </Card.Content>
       </Card>
 
       <Card style={styles.card}>
         <Card.Content>
-          <Text style={styles.title}>Total Kuantitas</Text>
+          <Text style={[styles.customFont, styles.title]}>Total Kuantitas</Text>
           <TextInput
             style={styles.input}
             value={kinerja.total_target?.toString()}
             editable={false}
           />
-          <Button mode="contained" disabled={true} style={styles.button}>
-            SIMPAN
+          {errorCount && (
+            <Text style={styles.errorText}>
+              Maaf, Target Anda Tidak Boleh Lebih Dari {kinerja.kuantitas}
+            </Text>
+          )}
+          <Button mode="contained" onPress={saveTarget} style={styles.saveButton} disabled={errorCount}>
+            <Text style={styles.buttonText}>SIMPAN</Text>
           </Button>
         </Card.Content>
       </Card>
 
       <Card style={styles.card}>
         <Card.Content>
-          <Button mode="contained" disabled={true} style={styles.autoButton}>
+          <Button mode="contained" onPress={hitungRerata} style={styles.autoButton} disabled={errorCount}>
             SET OTOMATIS
           </Button>
           <View style={styles.targetGrid}>
@@ -135,7 +168,8 @@ const PerformanceBreakdown = ({onBack, uuid}) => {
                 <TextInput
                   style={styles.targetInput}
                   value={target.kuantitas?.toString()}
-                  editable={false}
+                  onChangeText={(value) => handleTargetChange(index, value)}
+                  keyboardType="numeric"
                 />
               </View>
             ))}
@@ -146,95 +180,144 @@ const PerformanceBreakdown = ({onBack, uuid}) => {
   );
 };
 
-const DetailRow = ({label, value}) => (
-  <View style={styles.detailRow}>
-    <Text style={styles.label}>{label}</Text>
-    <Text style={styles.value}>{value || '-'}</Text>
-  </View>
-);
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 10,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
+// Reusable DetailRow component
+  
+  const styles = StyleSheet.create({
+    header: {
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 16,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  card: {
-    marginBottom: 15,
-    borderRadius: 8,
-    elevation: 3,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 4,
-    padding: 10,
-    fontSize: 16,
-    textAlign: 'center',
     backgroundColor: '#fff',
-  },
-  button: {
-    marginTop: 10,
-    backgroundColor: '#007bff',
-  },
-  autoButton: {
-    backgroundColor: '#28a745',
-  },
-  detailRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    elevation: 5,
+    },
+    headerImage: {
+      width: '50%',
+      height: undefined,
+      aspectRatio: 5,
+      marginRight: 190,
+      resizeMode: 'contain',
+      alignSelf: 'center',
+    },
+    backButton: {
+      marginTop:1,
+      marginLeft:3,
+      marginRight:1,
+      opacity: 0.4,
+    },
+    container: {
+      flex: 1,
+      backgroundColor: '#f5f5f5',
+      padding: 10,
+    },
+    card: {
+      backgroundColor: '#fff',
+      marginBottom: 15,
+      borderRadius: 8,
+      elevation: 3,
+    },
+    title: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 10,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: '#ddd',
+      borderRadius: 4,
+      padding: 10,
+      fontSize: 16,
+      textAlign: 'center',
+      backgroundColor: '#fff',
+    },
+    saveButton: {
+      alignText: 'center',
+      justifyContent: 'space-between',
+      padding: 3,
+      backgroundColor: '#3699ff',
+      borderRadius: 5,
+      marginVertical: 10,
+    },
+    autoButton: {
+      alignText: 'center',
+      justifyContent: 'space-between',
+      padding: 3,
+      borderRadius: 5,
+      marginBottom: 15,
+      backgroundColor: '#28a745',
+    },
+    buttonText: {
+      fontFamily: 'Poppins-Regular',
+      fontWeight: 'bold',
+    },
+    detailRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 10,
+    },
+    label: {
+      fontSize: 14,
+      fontWeight: 'bold',
+    },
+    value: {
+      fontSize: 14,
+    },
+    targetGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+    },
+    targetItem: {
+      width: '48%',
+      marginBottom: 10,
+    },
+    targetLabel: {
+      fontSize: 14,
+      fontWeight: 'bold',
+    },
+    targetInput: {
+      borderWidth: 1,
+      borderColor: '#ddd',
+      borderRadius: 4,
+      padding: 8,
+      fontSize: 14,
+      backgroundColor: '#fff',
+    },
+    errorText: {
+      color: 'red',
+      fontSize: 12,
+      marginBottom: 8,
+    },
+    customFont: {
+    fontFamily: 'Poppins-Regular',
+    },
+    userJabatanRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  value: {
-    fontSize: 14,
-  },
-  targetGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  targetItem: {
-    width: '48%',
-    marginBottom: 10,
-  },
-  targetLabel: {
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  targetInput: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 4,
-    padding: 8,
-    fontSize: 14,
-    backgroundColor: '#fff',
-  },
-});
-
-export default PerformanceBreakdown;
+    },
+    userJabatanColumn: {
+      flex: 1,
+      marginHorizontal: 5,
+    },
+    userJabatanColumnR: {
+      flex: 1,
+      marginHorizontal: 5,
+    },
+    userJabatanItem: {
+      flexDirection: 'column',
+      marginBottom: 8,
+    },
+    userJabatanLabel: {
+      fontFamily: "Poppins-SemiBold",
+      width: 120,
+    },
+    userJabatanValue: {
+      fontFamily: "Poppins-Regular",
+    },
+  });
+  
+  export default Kumulatif;

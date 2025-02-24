@@ -222,6 +222,7 @@ function Kontrakstack() {
         component={MasterKinerjaRealisasi}
       />
       <Stack.Screen name="AddUraian" component={AddUraian} />
+      <Stack.Screen name="Kumulatif" component={Kumulatif} />
     </Stack.Navigator>
   );
 }
@@ -237,9 +238,9 @@ function AppTabs() {
 
           if (route.name === 'DASHBOARD') {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Kontrak') {
+          } else if (route.name === 'KONTRAK') {
             iconName = focused ? 'document' : 'document-outline';
-          } else if (route.name === 'Profile') {
+          } else if (route.name === 'PROFIL') {
             iconName = focused ? 'person' : 'person-outline';
           }
 
@@ -259,8 +260,8 @@ function AppTabs() {
         options={{headerShown: false}}
       />
       <Tab.Screen
-        name="Kontrak"
-        component={Kontrakstack}
+        name="KONTRAK"
+        component={Kontrakstack} 
         options={{headerShown: false}}
       />
       <Tab.Screen

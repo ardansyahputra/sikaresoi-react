@@ -89,12 +89,10 @@ const MasterKinerja = ({navigation}) => {
     try {
         setLoading(true);
         const response = await apiClient.post('uraian/indexAndro_user', {
-            per: selectedDisplay,
-            page: page,
             jabatan_id: userJabatanData?.id || null,
             kinerja_id: kinerja?.id || null,
             tgs_tambahan: tgsTambahan,
-            search: searchQuery,
+            
         });
 
         if (response?.data?.data) {
@@ -105,9 +103,9 @@ const MasterKinerja = ({navigation}) => {
 
             setCheckedItems(checkedIds);
             setData(fetchedData);
-            setCurrentPage(fetchedData.current_page);
-            setLastPage(fetchedData.last_page);
-            setListKinerja(response.data.data); 
+            setCurrentPage(response.data.current_page || []);
+            setLastPage(response.data.last_page || []);
+            setListKinerja(response.data.data || []); 
 
         console.log('Data fetched:', response.data);
       } else {
@@ -169,23 +167,6 @@ const MasterKinerja = ({navigation}) => {
     }
   };
 
-
-const handlePrevPage = () => {
-  if (currentPage > 1) {
-    const newPage = currentPage - 1;
-    setCurrentPage(newPage);
-    fetchListUraian(newPage);
-  }
-};
-
-const handleNextPage = () => {
-  if (currentPage < lastPage) {
-    const newPage = currentPage + 1;
-    setCurrentPage(newPage);
-    fetchListUraian(newPage);
-  }
-};
-
   const display = [
     {label: '5', value: 5},
     {label: '10', value: 10},
@@ -202,7 +183,7 @@ const handleNextPage = () => {
     <View>
       <View style={styles.filterContainer}>
         <View style={styles.displayContainer}>
-          <Text marginTop={-7} marginBottom={10} style={[styles.customFont]}>Uraian Kegiatan Tidak Ada?</Text>
+          <Text style={[styles.displayText, styles.customFont]}>Uraian Kegiatan Tidak Ada?</Text>
           <Dropdown
             style={styles.dropdown}
             data={display}
@@ -358,24 +339,33 @@ const handleNextPage = () => {
             <View>
               {loading && <ActivityIndicator size="large" color="#0000ff" />}
               <Text style={styles.pageInfo}>
-                Showing page {currentPage} of {lastPage}
-              </Text>
-              <View style={styles.paginationContainer}>
-                
-                <View style={styles.paginationButtons}>
-                  <TouchableOpacity
-                    style={[styles.pageButton, currentPage === 1 && styles.disabledButton]}
-                    disabled={currentPage === 1}
-                    onPress={handlePrevPage}>
-                    <Text style={styles.pageButtonText}>Previous</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={[styles.pageButton, currentPage === lastPage && styles.disabledButton]}
-                    disabled={currentPage === lastPage}
-                    onPress={handleNextPage}>
-                    <Text style={styles.pageButtonText}>Next</Text>
-                  </TouchableOpacity>
-                </View>
+                 Showing page {currentPage} of {lastPage}
+                 </Text>
+               <View style={styles.paginationContainer}>
+                 <View style={styles.paginationButtons}>
+                                   <TouchableOpacity
+                                     style={[
+                                       styles.pageButton,
+                                       currentPage === 1 && styles.disabledButton,
+                                     ]}
+                                     disabled={currentPage === 1}
+                                     onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                   >
+                                     <Text style={styles.pageButtonText}>Previous</Text>
+                                   </TouchableOpacity>
+                                   <TouchableOpacity
+                                     style={[
+                                       styles.pageButton,
+                                       currentPage === lastPage && styles.disabledButton,
+                                     ]}
+                                     disabled={currentPage === lastPage}
+                                     onPress={() =>
+                                       setCurrentPage(prev => Math.min(prev + 1, lastPage))
+                                     }
+                                   >
+                                     <Text style={styles.pageButtonText}>Next</Text>
+                                   </TouchableOpacity>
+                                 </View>
               </View>
             </View>
           }
@@ -794,6 +784,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   displayContainer: {
+    width: 150,
     flexDirection: 'column',
     justifyContent: 'center',
     // alignItems: 'center',
@@ -802,8 +793,8 @@ const styles = StyleSheet.create({
   displayText: {
     fontFamily: 'Poppins-Regular',
     fontSize: 13,
-    marginRight: 8,
-    textAlign: 'center',
+    marginTop: -10,
+    textAlign: 'left',
     color: 'black',
   },
   dropdown: {

@@ -12,6 +12,8 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import useApiClient from '../src/api/apiClient';
+import HomeScreen from './BottomNavBar/Home/HomeScreen';
+import Teguranscreen from './TeguranScreen';
 
 const initialFormState = {
   dari: '',
@@ -115,7 +117,7 @@ const AttendanceForm = () => {
   };
 
   const handleClose = () => {
-    navigation.goBack();
+    navigation.navigate('Teguran');
   };
 
   const handleRetry = () => {

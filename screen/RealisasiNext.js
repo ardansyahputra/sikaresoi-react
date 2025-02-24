@@ -11,11 +11,13 @@ import {
   Alert,
   Modal,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
 import useApiClient from '../src/api/apiClient';
 import DocumentPicker from 'react-native-document-picker';
+
 
 export default function RealisasiNext({ navigation }) {
   const [data, setData] = useState([]);
@@ -251,30 +253,30 @@ export default function RealisasiNext({ navigation }) {
                   <View key={index} style={styles.documentItem}>
                     <Text style={styles.documentText}>{doc.name}</Text>
                     <TouchableOpacity
-  style={styles.chooseFileButton}
-  onPress={async () => {
-    try {
-      const result = await DocumentPicker.pickSingle({
-        type: [DocumentPicker.types.allFiles], // Memungkinkan semua jenis file
-      });
+                      style={styles.chooseFileButton}
+                      onPress={async () => {
+                        try {
+                          const result = await DocumentPicker.pickSingle({
+                            type: [DocumentPicker.types.allFiles], // Memungkinkan semua jenis file
+                          });
 
-      if (result) {
-        const newDocuments = [...documents];
-        newDocuments[index] = { name: result.name, uri: result.uri };
-        setDocuments(newDocuments);
-      }
-    } catch (err) {
-      if (DocumentPicker.isCancel(err)) {
-        console.log('User cancelled the picker');
-      } else {
-        console.error('Document Picker Error:', err);
-        Alert.alert('Error', 'Gagal memilih dokumen.');
-      }
-    }
-  }}
->
-  <Text style={styles.chooseFileText}>Choose File</Text>
-</TouchableOpacity>
+                          if (result) {
+                            const newDocuments = [...documents];
+                            newDocuments[index] = { name: result.name, uri: result.uri };
+                            setDocuments(newDocuments);
+                          }
+                        } catch (err) {
+                          if (DocumentPicker.isCancel(err)) {
+                            console.log('User cancelled the picker');
+                          } else {
+                            console.error('Document Picker Error:', err);
+                            Alert.alert('Error', 'Gagal memilih dokumen.');
+                          }
+                        }
+                      }}
+                    >
+                      <Text style={styles.chooseFileText}>Choose File</Text>
+                    </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.deleteButton}
                       onPress={() => {
