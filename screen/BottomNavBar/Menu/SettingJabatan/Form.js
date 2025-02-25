@@ -15,6 +15,7 @@ import {Dropdown} from 'react-native-element-dropdown';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import useApiClient from '../../../../src/api/apiClient';
 import DatePickerComponent from './DatePicker'; // Import the new component
+import { toastConfig, Toast } from '../../../../src/utils/CustomToast';
 
 const convertDateFormat = date => {
   const year = String(date.getFullYear());
@@ -50,6 +51,13 @@ const FormJabatan = ({ navigation, route }) => {
   const [dropdownLoading, setDropdownLoading] = useState(true);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const apiClient = useApiClient();
+  const showToast = (type, text1, text2) => {
+        Toast.show({
+          type,
+          text1,
+          text2,
+        });
+      };
 
   useEffect(() => {
     fetchDropdownOptions();
@@ -170,7 +178,7 @@ const FormJabatan = ({ navigation, route }) => {
       !formData.jabatan_id ||
       !formData.unit_kerja_id
     ) {
-      Alert.alert('Validasi', 'Harap isi semua field yang diperlukan.');
+      showToast('info', 'Validasi', 'Lengkapi semua data');
       return;
     }
 
@@ -597,6 +605,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   dropdownPlaceholder: {
+    opacity: 0.3,
     fontFamily: 'Poppins-Regular', // Placeholder font Poppins
     fontSize: 14,
   },

@@ -13,11 +13,19 @@ import {
 import { Dropdown } from 'react-native-element-dropdown';
 import useApiClient from '../../../src/api/apiClient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Toast, toastConfig} from '../../../src/utils/CustomToast';
 
 const AddUraian = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
   const [dropdownLoading, setDropdownLoading] = useState(true);
-  const [tgsTambahan, setTgsTambahan] = useState(false);
+  const [tgsTambahan, setTgsTambahan] = useState(false); // Track toast visibility
+  const showToast = (type, text1, text2) => {
+    Toast.show({
+      type,
+      text1,
+      text2,
+    });
+  };
 
   const [formData, setFormData] = useState({
     nm_uraian: '',
@@ -85,7 +93,7 @@ const AddUraian = ({ navigation, route }) => {
       setDropdownOptions({ satuan: satuanOptions });
     } catch (error) {
       console.error('Error fetching dropdown options:', error.response?.data || error.message);
-      Alert.alert('Error', 'Terjadi kesalahan saat memuat opsi dropdown.');
+      showToast('error', 'Error', 'Gagal memuat data dropdown');
     } finally {
       setDropdownLoading(false);
     }
@@ -98,7 +106,7 @@ const AddUraian = ({ navigation, route }) => {
   const handleSave = async () => {
   console.log('Form Data Before Validation:', formData); // Log formData before validation
   if (!formData.nm_uraian || !formData.satuan || !formData.wpt || !formData.jabatan_id) {
-    Alert.alert('Validasi', 'Harap isi semua field yang diperlukan.');
+    showToast('info', 'Validasi', 'Harap isi semua field yang diperlukan.');
     return;
   }
 
@@ -111,11 +119,11 @@ const AddUraian = ({ navigation, route }) => {
     };
     console.log('Payload Being Sent:', payload); // Log the payload before API call
     await apiClient.post('/uraian/create', payload);
-    Alert.alert('Sukses', 'Data berhasil ditambahkan');
+    showToast('success', 'Sukses', 'Berhasil menambahkan data');
     navigation.navigate('MasterKinerja');
   } catch (error) {
     console.error('Error saving data:', error.response?.data || error.message);
-    Alert.alert('Error', 'Terjadi kesalahan saat menyimpan data.');
+    showToast('error', 'Error', 'Gagal menambahkan data');
   } finally {
     setLoading(false);
   }

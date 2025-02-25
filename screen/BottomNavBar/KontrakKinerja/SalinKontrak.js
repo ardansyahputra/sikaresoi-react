@@ -17,6 +17,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../../../src/api/apiClient';
 import axios from 'axios';
+import { toastConfig, Toast } from '../../../src/utils/CustomToast';
 
 const SalinKontrak = ({navigation}) => {
   const [data, setData] = useState([]);
@@ -36,6 +37,13 @@ const SalinKontrak = ({navigation}) => {
   const [selectedYear, setSelectedYear] = useState(null);
 
   const apiClient = useApiClient();
+  const showToast = (type, text1, text2) => {
+      Toast.show({
+        type,
+        text1,
+        text2,
+      });
+    };
 
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -90,7 +98,7 @@ const SalinKontrak = ({navigation}) => {
           setSelectedYear(defaultYear ? defaultYear.value : years[0]?.value);
         } else {
           console.error('Failed to load year options:', response);
-          Alert.alert('Error', 'Gagal memuat data tahun.');
+          showToast('erro','Error', 'Gagal memuat data tahun.');
         }
       } catch (error) {
         console.error('Error fetching years:', error);
@@ -877,7 +885,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontFamily: 'Poppins-Bold',
     fontSize: 18,
-    marginBottom: 15,
+    marginBottom: 0,
     textAlign: 'center',
     color: '#333',
   },

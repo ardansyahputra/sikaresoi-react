@@ -75,7 +75,7 @@ const ProfileScreen = ({navigation}) => {
                     navigation.navigate(item.navigateTo);
                   } else if (item.label === 'Log out') {
                     logout(); // Fungsi logout
-                    navigation.replace('Login'); // Navigasi ke layar login
+                    navigation.navigate('Login'); // Navigasi ke layar login
                   }
                 }}>
                 <View style={styles.menuItemLeft}>

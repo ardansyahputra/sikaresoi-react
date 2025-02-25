@@ -1,4 +1,4 @@
-  import React from 'react';
+import React from 'react';
 import {AuthProvider} from './screen/auth/AuthContext';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -9,6 +9,7 @@ import {
 } from './src/navigation/NavigationContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { StyleSheet } from 'react-native';
+import { Toast, toastConfig } from './src/utils/CustomToast.js';
 
 //login screens
 import LoginScreen from './screen/auth/login/Login';
@@ -252,6 +253,7 @@ export default function App() {
       <NavigationProvider>
         <NavigationContainer>
           <RootStack />
+          <Toast config={toastConfig} />
         </NavigationContainer>
       </NavigationProvider>
     </AuthProvider>
