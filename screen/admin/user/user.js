@@ -5,23 +5,19 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
-  Image,
-  Linking,
   Switch,
   Modal,
   TextInput,
   Alert,
-  SafeAreaView,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import useApiClient from '../../../src/api/apiClient';
 import * as Keychain from 'react-native-keychain';
 import {BarIndicator} from 'react-native-indicators';
+import Toast from 'react-native-toast-message';
 import GlobalStyle from '../../../src/utils/GlobalStyle';
 import Header from '../../components/Header';
-import Toast from 'react-native-toast-message';
 
 export default function User() {
   const [data, setData] = useState([]);
@@ -29,7 +25,6 @@ export default function User() {
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [isHapusModalVisible, setHapusModalVisible] = useState(false);
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);

@@ -5,68 +5,155 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
   TextInput,
   Alert,
 } from 'react-native';
 import {Pressable} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../../../../src/api/apiClient';
+import Header from '../../components/Header';
+import GlobalStyle from '../../../../src/utils/GlobalStyle';
+import {BarIndicator} from 'react-native-indicators';
 
-export default function Belumkontrak() {
+export default function BelumKontrak() {
   const apiClient = useApiClient();
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
-  const [selectedDisplay, setSelectedDisplay] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDisplay, setSelectedDisplay] = useState(10);
   const [activeButton, setActiveButton] = useState('kontrak');
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [tahunOptions, setTahunOptions] = useState([]);
+
+  useEffect(() => {
+    fetchTahun();
+  }, []);
 
   useEffect(() => {
     if (activeButton === 'kontrak') {
-      fetchKontrakData(1); // Reset to page 1 when display changes
+      fetchRealisasiData(1);
     } else {
-      fetchRealisasiData(1); // Reset to page 1 when display changes
+      fetchKontrakData(1);
     }
-  }, [activeButton, selectedDisplay]);
+    console.log('Data Updated:', data);
+  }, [activeButton, selectedDisplay, selectedYear]);
+
+  const fetchTahun = async () => {
+    try {
+      const response = await apiClient.get('/tahun/show');
+      console.log('API Response:', response.data); // Debugging log
+
+      if (response.data && response.data.data) {
+        // Filter tahun antara 2020-2025
+        const filteredTahun = response.data.data.filter(item => {
+          const tahun = parseInt(item.tahun);
+          return tahun >= 2020 && tahun <= 2025;
+        });
+
+        // Set options hanya untuk tahun yang terfilter
+        setTahunOptions(
+          filteredTahun.map(item => ({label: item.tahun, value: item.tahun})),
+        );
+
+        if (filteredTahun.length === 0) {
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Tidak ada data tahun dalam rentang 2020-2025',
+          });
+        }
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Data tahun tidak ditemukan.',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching tahun:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Gagal memuat data tahun.',
+      });
+    }
+  };
 
   const fetchRealisasiData = async page => {
+    setIsLoading(true);
+    console.log('Fetching Realisasi Data');
+    console.log('Endpoint:', 'POST /realisasi/belum_setuju');
+    console.log('Request Payload:', {
+      page,
+      per: selectedDisplay,
+      search: searchQuery,
+      tahun: selectedYear,
+    });
+
     try {
-      setLoading(true);
       const response = await apiClient.post('/kinerja/belum_setuju', {
-        page,
         per: selectedDisplay,
+        search: searchQuery,
+        tahun: selectedYear,
       });
-      console.log('Realisasi Data:', response.data); // Log data yang diterima
+
+      console.log('Realisasi Response:', {
+        current_page: response.data.current_page,
+        last_page: response.data.last_page,
+        total_items: response.data.total,
+        items_per_page: response.data.per_page,
+        data_sample: response.data.data.slice(0, 1), // Log first item as sample
+        total_data_received: response.data.data.length,
+      });
+
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
     } catch (error) {
-      console.error('Error fetching data', error);
+      console.error('Realisasi Error:', {
+        message: error.message,
+        status: error.response?.status,
+        error: error.response?.data,
+      });
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Gagal memuat data realisasi.',
+      });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const fetchKontrakData = async page => {
+    setIsLoading(true);
+    console.log('Fetching Kontrak Data');
+    setIsLoading(true); // Pastikan loading di-set sebelum request API
+
     try {
-      setLoading(true);
       const response = await apiClient.post('/kinerja/sudah_setuju', {
-        page,
         per: selectedDisplay,
+        search: searchQuery,
+        tahun: selectedYear,
       });
-      console.log('Kontrak Data:', response.data); // Log data yang diterima
+
+      console.log('Kontrak Response:', response.data);
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
     } catch (error) {
-      console.error('Error fetching data', error);
+      console.error('Kontrak Error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Gagal memuat data kontrak.',
+      });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -82,205 +169,50 @@ export default function Belumkontrak() {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const getStatusStyle = status => {
-    switch (status?.toUpperCase()) {
-      case 'DIBUKA':
-        return styles.approvedStatus;
-      case 'DITUTUP':
-        return styles.rejectedStatus;
-      default:
-        return styles.defaultStatus;
-    }
-  };
-
   const handlePress = buttonName => {
-    setActiveButton(buttonName); // Set active button
+    setActiveButton(buttonName);
     if (buttonName === 'kontrak') {
-      fetchKontrakData(1); // Fetch data when "Kontrak" button is selected
+      fetchRealisasiData(1); // Load data yang belum disetujui
     } else {
-      fetchRealisasiData(1); // Fetch data when "Realisasi" button is selected
+      fetchKontrakData(1); // Load data yang sudah disetujui
     }
   };
 
   const TableHeader = () => (
     <View>
-      <View style={styles.filterContainer}>
-        <View style={styles.displayContainer}>
-          <Text style={styles.displayText}>Display</Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={display}
-            labelField="label"
-            valueField="value"
-            placeholder="10"
-            value={selectedDisplay}
-            onChange={item => {
-              setSelectedDisplay(item.value);
-              fetchRealisasiData(currentPage);
-            }}
-            renderItem={item => (
-              <Text style={[styles.dropdownItem, styles.customFont]}>
-                {item.label}
-              </Text>
-            )}
-            placeholderStyle={styles.customFont}
-          />
-        </View>
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchBar}
-            placeholder="Search"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-      </View>
-      <View style={styles.tableHeader}>
-        <Text style={[styles.headerCell, styles.numberCell]}>#</Text>
-        <Text style={[styles.headerCell, styles.nameCell]}>NIP/NRP</Text>
-        <Text style={[styles.headerCell, styles.tableStatusCell]}>Nama</Text>
-        <Text style={[styles.headerCell, styles.tableStatusCell]}>Kontrak</Text>
-        <View style={styles.expandIconCell} />
-      </View>
-    </View>
-  );
-
-  const renderItem = ({item, index}) => {
-    const isExpanded = expandedId === item.id;
-
-    return (
-      <View style={styles.tableRow}>
-        <TouchableOpacity
-          style={styles.rowHeader}
-          onPress={() => toggleExpand(item.id)}>
-          <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
-          <Text
-            style={[styles.tableCell, styles.nameCell]}
-            numberOfLines={1}
-            ellipsizeMode="tail">
-            {item.nip || '-'}
-          </Text>
-          <View style={styles.statusCellContainer}>
-            <Text
-              style={[
-                styles.tableCell,
-                styles.statusCell,
-                getStatusStyle(item.name),
-              ]}>
-              {item.name || '-'}
-            </Text>
-          </View>
-          <View style={styles.statusCellContainer}>
-            <Text
-              style={[
-                styles.tableCell,
-                styles.statusCell,
-                getStatusStyle(item.contract),
-              ]}>
-              {item.contract || '-'}
-            </Text>
-          </View>
-          <View style={styles.expandIconCell}>
-            <Ionicons
-              name={isExpanded ? 'chevron-up' : 'chevron-down'}
-              size={20}
-              color="#333"
-            />
-          </View>
-        </TouchableOpacity>
-        {isExpanded && (
-          <View style={styles.expandedContent}>
-            <Text style={styles.expandedText}>NIP/NRP: {item.nip || '-'}</Text>
-            <Text style={styles.expandedText}>Nama: {item.name || '-'}</Text>
-            <Text style={styles.expandedText}>
-              NIP/NRP Pimpinan: {item.leaderNip || '-'}
-            </Text>
-            <Text style={styles.expandedText}>
-              Nama Pimpinan: {item.leaderName || '-'}
-            </Text>
-            <Text style={styles.expandedText}>
-              Update Terakhir: {item.lastUpdate || '-'}
-            </Text>
-            <View style={styles.actionContainer}>
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => handleApprove(item.uuid)}>
-                <FontAwesome name="pencil" size={20} color="white" />
-                <Text style={styles.customFont}>Edit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.declineButton}
-                onPress={() => handleHapus(item.uuid)}>
-                <Ionicons name="trash" size={20} color="white" />
-                <Text style={styles.customFont}>Hapus</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-      </View>
-    );
-  };
-
-  return (
-    <View style={styles.container}>
-      <View>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
-            <TouchableOpacity style={styles.iconWrapper}>
-              <Ionicons name="person-circle-outline" size={24} color="#333" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
-      {/* Card untuk Tombol */}
-      <View style={styles.card}>
-        <View style={styles.tambahContainer}>
-          <TouchableOpacity style={styles.y}></TouchableOpacity>
-          <View style={styles.kontrakContainer}>
+      <View style={styles.filterHeader}>
+        <View style={styles.bottomRow}>
+          <View style={styles.bulanContainer}>
             <Pressable
               style={({pressed}) => [
-                styles.button,
+                styles.buttonpress,
                 pressed && styles.buttonPressed,
                 activeButton === 'kontrak' && styles.buttonActive,
               ]}
               onPress={() => handlePress('kontrak')}>
-              <View style={styles.kontrakButton}>
-                <FontAwesome
-                  name="tint"
-                  size={24}
-                  color={activeButton === 'kontrak' ? '#A463FC' : 'gray'}
-                  style={styles.icon}
-                />
+              <View style={styles.bulanButton}>
                 <Text
                   style={[
+                    GlobalStyle.SemiBold,
                     styles.buttonText,
                     activeButton === 'kontrak' && styles.textActive,
                   ]}>
-                  Belum disetujui
+                  Belum Disetujui
                 </Text>
               </View>
             </Pressable>
 
             <Pressable
               style={({pressed}) => [
-                styles.button,
+                styles.buttonpress,
                 pressed && styles.buttonPressed,
                 activeButton === 'realisasi' && styles.buttonActive,
               ]}
               onPress={() => handlePress('realisasi')}>
-              <View style={styles.kontrakButton}>
-                <FontAwesome
-                  name="tint"
-                  size={24}
-                  color={activeButton === 'realisasi' ? '#A463FC' : 'gray'}
-                  style={styles.icon}
-                />
+              <View style={styles.bulanButton}>
                 <Text
                   style={[
+                    GlobalStyle.SemiBold,
                     styles.buttonText,
                     activeButton === 'realisasi' && styles.textActive,
                   ]}>
@@ -290,49 +222,200 @@ export default function Belumkontrak() {
             </Pressable>
           </View>
         </View>
-        <View style={styles.cardDivider}></View>
+        <View style={styles.separatorLine} />
+
+        {/* Dropdown Tahun dan Search Bar sejajar */}
+        <View style={styles.rowContainer}>
+          <View style={styles.searchContainer}>
+            <Ionicons
+              name="search"
+              size={18}
+              color="#888"
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={[GlobalStyle.SemiBold, styles.searchBar]}
+              placeholder="Search"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor="#888"
+            />
+          </View>
+          <View style={styles.yearContainer}>
+            <Dropdown
+              style={styles.dropdownTahun}
+              data={tahunOptions}
+              labelField="label"
+              valueField="value"
+              placeholder="2025"
+              value={selectedYear}
+              onChange={item => setSelectedYear(item.value)}
+              labelStyle={styles.dropdownLabel}
+              selectedTextStyle={styles.dropdownText}
+              placeholderStyle={styles.dropdownPlaceholder}
+              itemTextStyle={styles.dropdownItemText}
+            />
+          </View>
+        </View>
       </View>
 
-      {/* Tabel */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+      <View style={styles.tableHeader}>
+        <Text
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.numberCell]}>
+          NO
+        </Text>
+        <Text
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}
+          numberOfLines={2} // Bisa disesuaikan sesuai kebutuhan
+          ellipsizeMode="tail">
+          NIP/NRP
+        </Text>
+        <Text
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}
+          numberOfLines={2} // Bisa disesuaikan sesuai kebutuhan
+          ellipsizeMode="tail">
+          NAMA
+        </Text>
+        <View style={styles.expandIconCell} />
+      </View>
+      <View style={styles.headerLine} />
+    </View>
+  );
+
+  const renderItem = ({item, index}) => {
+    const isExpanded = expandedId === item.id;
+    const rowBackgroundColor = index % 2 === 0 ? '#F7F8FC' : '#FFFFFF'; // Warna selang-seling
+
+    const nameWithNip = `${item.user_jabatan?.user?.name || ''} ${
+      item.kinerja?.user_jabatan?.user?.nip || ''
+    }`;
+    const nips = `${item.user_jabatan?.user?.nip || ''} ${
+      item.kinerja?.user_jabatan?.user?.nip || ''
+    }`;
+    const tahun = `${item.tahun?.tahun || ''} ${
+      item.kinerja?.tahun?.tahuna || ''
+    }`;
+    const nipim = `${item.user_jabatan?.pimpinan?.name || ''} ${
+      item.kinerja?.userjabatan?.pimpinan?.name || ''
+    }`;
+    const nrpim = `${item.user_jabatan?.pimpinan?.nip || ''} ${
+      item.kinerja?.userjabatan?.pimpinan?.name || ''
+    }`;
+    const lasap = `${item.update || ''} ${
+      item.kinerja?.userjabatan?.pimpinan?.name || ''
+    }`;
+
+    return (
+      <>
+        <View style={styles.tableRow}>
+          <TouchableOpacity
+            style={[styles.rowHeader, {backgroundColor: rowBackgroundColor}]}
+            onPress={() => toggleExpand(item.id)}>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.tableCell,
+                styles.numberCell,
+              ]}>
+              {index + 1}
+            </Text>
+            <Text
+              style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}>
+              {nips || '-'}
+            </Text>
+            <Text
+              style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}>
+              {nameWithNip || '-'}
+            </Text>
+            <View style={styles.expandIconCell}>
+              <Ionicons
+                name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#BEC2D5"
+              />
+            </View>
+          </TouchableOpacity>
+          {isExpanded && (
+            <View style={styles.expandedContent}>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                NIP/NRP: {nips || '-'}
+              </Text>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Nama: {nameWithNip || '-'}
+              </Text>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Tahun: {tahun || '-'}
+              </Text>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                NIP/NRP Pimpinan: {nrpim || '-'}
+              </Text>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Nama Pimpinan: {nipim || '-'}
+              </Text>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Update Terakhir: {lasap || '-'}
+              </Text>
+            </View>
+          )}
+        </View>
+        {index === data.length - 1 && <View style={styles.verticalLine} />}
+      </>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <Header title="Kontrak" />
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
+        </View>
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
           data={data}
           renderItem={renderItem}
           keyExtractor={item => item.id.toString()}
-          contentContainerStyle={styles.card}
+          contentContainerStyle={{flexGrow: 1, padding: '10'}}
+          style={{flex: 1}}
+          showsVerticalScrollIndicator={false}
           ListFooterComponent={
-            <View>
-              <Text style={styles.pageInfo}>
-                Showing page {currentPage} of {lastPage}
+            <View style={styles.paginationContainer}>
+              <Text style={[GlobalStyle.SemiBold, styles.pageInfo]}>
+                {currentPage} of {lastPage}
               </Text>
-              <View style={styles.paginationContainer}>
-                <View style={styles.paginationButtons}>
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === 1 && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === 1}
-                    onPress={() =>
-                      setCurrentPage(prev => Math.max(prev - 1, 1))
-                    }>
-                    <Text style={styles.pageButtonText}>Previous</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === lastPage && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === lastPage}
-                    onPress={() =>
-                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
-                    }>
-                    <Text style={styles.pageButtonText}>Next</Text>
-                  </TouchableOpacity>
-                </View>
+
+              <View style={styles.paginationButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.pageButton,
+                    currentPage === 1 && styles.disabledButton,
+                  ]}
+                  disabled={currentPage === 1}
+                  onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
+                  <Ionicons
+                    name="chevron-back"
+                    size={20}
+                    color={currentPage === 1 ? '#ccc' : '#BEC2D5'}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.pageButton,
+                    currentPage === lastPage && styles.disabledButton,
+                  ]}
+                  disabled={currentPage === lastPage}
+                  onPress={() =>
+                    setCurrentPage(prev => Math.min(prev + 1, lastPage))
+                  }>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={currentPage === lastPage ? '#ccc' : '#BEC2D5'}
+                  />
+                </TouchableOpacity>
               </View>
             </View>
           }
@@ -345,267 +428,342 @@ export default function Belumkontrak() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F8FB',
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    padding: 15,
-    margin: -0,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    backgroundColor: '#fff',
   },
   tableHeader: {
+    marginTop: 15,
     flexDirection: 'row',
-    backgroundColor: '#E0E0E0',
     paddingVertical: 10,
     paddingHorizontal: 15,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
   },
+
+  yearMonthContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+
+  rowContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  yearContainer: {
+    flex: 1,
+    alignItems: 'flex-end',
+  },
+  monthContainer: {
+    flex: 1,
+  },
+
+  bottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
   headerCell: {
-    fontFamily: 'Poppins-SemiBold',
     fontSize: 13,
-    color: '#333',
+    color: '#9196B5',
   },
-  cardDivider: {
-    height: 1,
-    backgroundColor: '#ddd',
-    marginVertical: 10,
-  },
+
   tableRow: {
     backgroundColor: '#FFFFFF',
     overflow: 'hidden',
     elevation: 0,
   },
+
   rowHeader: {
     flexDirection: 'row',
     padding: 15,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: '#F7F8FC',
     alignItems: 'center',
   },
+
   tableCell: {
-    fontFamily: 'Poppins-Regular',
     flexWrap: 'wrap',
+    color: '#313131',
     fontSize: 14,
   },
+
   tableStatusCell: {
-    textAlign: 'center',
-    flex: 1,
-    paddingLeft: 0,
+    textAlign: 'center', // Teks di tengah
+    width: 100, // Sesuaikan lebar sesuai kebutuhan
   },
+
   numberCell: {
-    width: 50,
+    width: 45,
   },
+
   nameCell: {
     flex: 1,
     overflow: 'hidden',
+    flexShrink: 1, // Memungkinkan teks agar tidak memaksa ruang lebih
+    paddingHorizontal: 8,
+    minWidth: 80, // Mencegah terlalu kecil saat teks panjang
   },
+
   statusCellContainer: {
     width: 100,
   },
+
   statusCell: {
     textAlign: 'center',
     fontWeight: 'bold',
   },
+
   expandIconCell: {
     width: 40,
     alignItems: 'flex-end',
   },
-  approvedStatus: {
-    backgroundColor: '#C9F7F5',
-    color: '#4CAF50',
+
+  headerLine: {
+    height: 2,
+    backgroundColor: '#D3D3D3', // Garis horizontal bawah header
+    marginBottom: 5,
   },
-  rejectedStatus: {
-    borderRadius: 5,
-    backgroundColor: '#FFE2E5',
-    color: '#F44336',
+  verticalLine: {
+    height: 2, // Tinggi garis horizontal
+    backgroundColor: '#D3D3D3', // Warna abu-abu mirip header line
+    marginBottom: 10, // Jarak atas & bawah agar tidak menempel
   },
-  pendingStatus: {
-    color: '#FFC107',
-  },
-  defaultStatus: {
-    color: '#9E9E9E',
-  },
+
   expandedContent: {
     padding: 15,
     backgroundColor: '#FAFAFA',
   },
+
   expandedText: {
     marginBottom: 5,
     fontSize: 14,
+    color: '#313131',
   },
-  expandedLinkText: {
-    color: 'blue',
-    marginBottom: 5,
-    fontSize: 14,
-  },
-  filetext: {
-    flexDirection: 'row',
-  },
-  actionContainer: {
-    flexDirection: 'row',
-    marginTop: 10,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    gap: 10,
-  },
+
   paginationButtons: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
+
   pageButton: {
-    padding: 10,
-    backgroundColor: '#007bff',
+    padding: 8, // Padding agar tombol lebih mudah diklik
     borderRadius: 5,
-    marginHorizontal: 5,
   },
+
   pageButtonText: {
-    fontFamily: 'Poppins-Regular',
     fontSize: 13,
     color: '#fff',
   },
+
   disabledButton: {
-    backgroundColor: '#CCCCCC',
+    opacity: 0.5, // Efek disabled lebih jelas
   },
+
   paginationText: {
     color: 'white',
     fontWeight: 'bold',
   },
+
   pageInfo: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 13,
+    fontSize: 14,
+    color: '#888', // Warna abu-abu sesuai tampilan gambar
+    marginRight: 10, // Jarak antara teks dan tombol navigasi
   },
+
   paginationContainer: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'flex-end',
     marginTop: 10,
   },
-  header: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+  headerContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    elevation: 4,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    alignItems: 'center',
     marginBottom: 10,
   },
-  headerLeft: {
-    flex: 1,
-  },
-  logo: {
-    width: 140,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  headerRight: {
+
+  searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    backgroundColor: '#F7F8FC',
+    borderColor: '#ccc',
+    borderRadius: 5,
+    paddingHorizontal: 12,
+    height: 42, // **Tinggi sama dengan tombol tambah**
     flex: 1,
+    maxWidth: '60%', // **Agar fleksibel di berbagai layar**
   },
-  iconWrapper: {
-    marginLeft: 12,
+  searchIcon: {
+    marginRight: 10,
+    fontSize: 14, // **Agar proporsional dengan teks**
+    alignSelf: 'center',
   },
-  submitButton: {
-    backgroundColor: '#F44336',
-    padding: 10,
-    borderRadius: 5,
-  },
-  searchContainer: {
-    width: 180,
-    backgroundColor: '#FFFFFF',
-  },
+
   searchBar: {
-    height: 40,
-    borderColor: '#CCCCCC',
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
+    flex: 1,
+    fontSize: 12, // **Agar lebih proporsional**
+    color: '#BEC2D5',
+    textAlignVertical: 'center', // **Pastikan teks sejajar secara vertikal**
+    paddingVertical: 0, // **Hapus padding default agar tidak terlalu tinggi**
   },
+
+  icon: {
+    fontSize: 14, // **Ukuran disesuaikan agar sejajar dengan teks**
+  },
+
+  filterHeader: {
+    marginBottom: 10,
+    // borderWidth: 1,
+  },
+
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 15,
   },
+
   displayContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 20,
+    flex: 1,
+    maxWidth: '20%',
+    marginRight: 10,
   },
+
   displayText: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 13,
-    marginRight: 8,
-    textAlign: 'center',
-    color: '#3f4254',
+    fontSize: 14,
+    textAlign: 'left',
+    color: 'grey',
+    width: '100%',
   },
+
   dropdown: {
-    height: 40,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 5,
+    color: 'grey',
+    fontFamily: 'Poppins-SemiBold',
+  },
+  dropdownTahun: {
+    borderColor: '#ccc',
+    backgroundColor: '#F7F8FC',
+    borderRadius: 5,
+    padding: 5,
+    height: 42,
+    width: '60%',
+  },
+  // Style untuk dropdown display
+  dropdownDisplay: {
+    height: 42,
     borderColor: '#CCCCCC',
     borderWidth: 1,
     borderRadius: 5,
     paddingHorizontal: 10,
-    width: 75,
+    width: 80, // Lebar sesuai kebutuhan
+    justifyContent: 'center',
+  },
+
+  // Style untuk dropdown bulan
+  dropdownBulan: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 5,
+  },
+
+  dropdownItem: {
+    padding: 10,
+    fontSize: 16,
+    color: '#333',
+  },
+
+  button: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginHorizontal: 5,
+    backgroundColor: '#000',
+  },
+  cancelButton: {
+    borderWidth: 1,
+    borderColor: '#3498db',
+    backgroundColor: '#fff',
+  },
+  cancelText: {
+    color: '#0A3D62',
+  },
+  confirmButton: {
+    backgroundColor: '#3498db',
+  },
+  confirmText: {
+    color: '#fff',
+  },
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  dropdownItem: {
-    padding: 10,
-    fontSize: 13,
-    color: '#333',
+
+  separatorText: {
+    fontSize: 20,
+    color: '#000',
+    marginBottom: 3,
   },
-  customFont: {
-    color: 'white',
-    fontFamily: 'Poppins-Regular',
+
+  dropdownItemText: {
+    fontFamily: 'Poppins-SemiBold', // Poppins untuk teks item
+    fontSize: 14,
+    color: 'grey',
   },
-  tambahContainer: {
+  dropdownPlaceholder: {
+    fontFamily: 'Poppins-SemiBold', // Placeholder font Poppins
+    fontSize: 14,
+    color: 'grey',
+    paddingLeft: 5,
+  },
+
+  dropdownLabel: {
+    fontFamily: 'Poppins-SemiBold', // Label font Poppins
+    fontSize: 14,
+    color: 'grey',
+  },
+  dropdownText: {
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 14,
+    color: 'grey',
+    paddingLeft: 5,
+  },
+  bulanContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
+    alignItems: 'center',
+    justifyContent: 'flex-start', // Posisi ke kiri
+    gap: 10,
+    marginBottom: 20,
   },
-  tambahText: {
-    marginTop: 1,
-    fontFamily: 'Poppins-Regular',
-    color: 'white',
-    marginLeft: 5,
-    lineHeight: 20,
-    fontSize: 13,
-    textAlignVertical: 'center',
-  },
-  button: {
+  buttonpress: {
     height: 40,
-    width: 140,
-    backgroundColor: '#fff',
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: -0,
+    paddingHorizontal: 5,
   },
   buttonPressed: {
     backgroundColor: '#fff',
   },
   buttonActive: {
-    backgroundColor: '#E6E7F0',
+    borderBottomWidth: 3,
+    borderBottomColor: '#A463FC', // Warna sesuai desain
   },
   buttonText: {
-    fontFamily: 'Poppins-Regular',
     fontSize: 14,
     color: 'grey',
   },
   textActive: {
-    fontFamily: 'Poppins-Regular',
     color: '#A463FC',
   },
-  kontrakContainer: {
-    flexDirection: 'row',
-  },
-  kontrakButton: {
+  bulanButton: {
     flexDirection: 'row',
     gap: 5,
   },

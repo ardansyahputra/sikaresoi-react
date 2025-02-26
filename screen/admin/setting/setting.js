@@ -10,9 +10,10 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import GlobalStyle from '../../../src/utils/GlobalStyle';
 import Feather from 'react-native-vector-icons/Feather';
 import useApiClient from '../../../src/api/apiClient';
+import Header from '../components/Header';
 import ImagePicker from 'react-native-image-crop-picker';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -40,6 +41,8 @@ const Setting = ({navigation}) => {
     logo_dark: {width: 0, height: 0},
     logo_white: {width: 0, height: 0},
   });
+
+  const [focusState, setFocusState] = useState({});
 
   useEffect(() => {
     fetchSettingData(1);
@@ -193,6 +196,14 @@ const Setting = ({navigation}) => {
       });
   };
 
+  const handleFocus = inputName => {
+    setFocusState(prevState => ({...prevState, [inputName]: true}));
+  };
+
+  const handleBlur = inputName => {
+    setFocusState(prevState => ({...prevState, [inputName]: false}));
+  };
+
   const ImageSection = ({title, imageType, imageUrl}) => {
     const dimensions = imageDimensions[imageType];
     const imageStyle = dimensions
@@ -206,7 +217,7 @@ const Setting = ({navigation}) => {
 
     return (
       <View style={styles.imageSection}>
-        <Text style={styles.label}>{title}</Text>
+        <Text style={[GlobalStyle.SemiBold, styles.label]}>{title}</Text>
         <TouchableOpacity onPress={() => openImagePicker(imageType)}>
           <Image
             source={
@@ -229,65 +240,79 @@ const Setting = ({navigation}) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Website Settings</Text>
-      </View>
-
+      <Header title="Setting" />
       <ScrollView>
         <View style={styles.cardContainer}>
-          <Text style={styles.label}>Website Name</Text>
+          <Text style={[GlobalStyle.SemiBold, styles.label]}>Nama Website</Text>
           <TextInput
-            style={styles.input}
+            style={[
+              GlobalStyle.Regular,
+              styles.input,
+              focusState.name && styles.inputFocused,
+              settingData.name && styles.inputFilled,
+            ]}
             value={settingData.name}
             onChangeText={text =>
               setSettingData(prev => ({...prev, name: text}))
             }
             placeholder="Enter website name"
+            placeholderTextColor="#B0B0B0"
+            onFocus={() => handleFocus('name')}
+            onBlur={() => handleBlur('name')}
           />
 
-          <Text style={styles.label}>Description</Text>
+          <Text style={[GlobalStyle.SemiBold, styles.label]}>Deskripsi</Text>
           <TextInput
-            style={styles.multilineInput}
+            style={[
+              GlobalStyle.Regular,
+              styles.multilineInput,
+              focusState.description && styles.inputFocused,
+              settingData.description && styles.inputFilled,
+            ]}
             value={settingData.description}
             onChangeText={text =>
               setSettingData(prev => ({...prev, description: text}))
             }
             placeholder="Enter description"
+            placeholderTextColor="#B0B0B0"
             multiline
             numberOfLines={3}
+            onFocus={() => handleFocus('description')}
+            onBlur={() => handleBlur('description')}
           />
 
           <ImageSection
-            title="Background Image"
+            title="Background Login"
             imageType="background"
             imageUrl={settingData.backgrounddir}
           />
+          <Text style={[GlobalStyle.Regular, styles.allowed]}>
+            Allowed file types: png, jpg, jpeg.
+          </Text>
 
           <ImageSection
-            title="Dark Logo"
+            title="Logo Luar"
             imageType="logo_dark"
             imageUrl={settingData.logodarkdir}
           />
+          <Text style={[GlobalStyle.Regular, styles.allowed]}>
+            Allowed file types: png, jpg, jpeg.
+          </Text>
 
           <ImageSection
-            title="White Logo"
+            title="Logo Dalam"
             imageType="logo_white"
             imageUrl={settingData.logowhitedir}
           />
+          <Text style={[GlobalStyle.Regular, styles.allowed]}>
+            Allowed file types: png, jpg, jpeg.
+          </Text>
 
           <View style={styles.buttons}>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => navigation.goBack()}>
-              <Text style={styles.buttonText}>Cancel</Text>
-            </TouchableOpacity>
             <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
-              <Text style={styles.buttonText}>Save</Text>
+              <Text style={[GlobalStyle.SemiBold, styles.buttonText]}>
+                Simpan
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -319,33 +344,53 @@ const styles = StyleSheet.create({
     marginRight: 24,
   },
   cardContainer: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
+    backgroundColor: '#FFFF',
+    paddingVertical: 20,
+    paddingHorizontal: 20,
     borderRadius: 10,
-    margin: 20,
     elevation: 4,
+    marginVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    width: '100%',
   },
   label: {
     fontSize: 16,
     marginTop: 10,
     marginBottom: 5,
-    fontWeight: '500',
+    ...GlobalStyle.SemiBold,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#CCC',
     padding: 10,
-    borderRadius: 5,
-    marginBottom: 15,
+    fontSize: 14,
+    borderRadius: 5, // Default border radius
+    marginBottom: 20,
+    backgroundColor: '#F0ECEC', // Default background color
+    borderWidth: 1,
+    borderColor: 'transparent', // Default border color (tidak terlihat)
+    color: '#313131',
   },
   multilineInput: {
-    borderWidth: 1,
-    borderColor: '#CCC',
     padding: 10,
-    borderRadius: 5,
-    marginBottom: 15,
-    height: 100,
-    textAlignVertical: 'top',
+    fontSize: 14,
+    borderRadius: 5, // Default border radius
+    marginBottom: 20,
+    backgroundColor: '#F0ECEC', // Default background color
+    borderWidth: 1,
+    borderColor: 'transparent', // Default border color (tidak terlihat)
+    color: '#313131',
+  },
+  inputFocused: {
+    borderRadius: 5, // Border radius saat fokus
+    borderColor: '#75BAFF',
+    borderWidth: 1.5,
+  },
+  inputFilled: {
+    backgroundColor: '#F2F8FF', // Background lebih gelap saat terisi
+    borderRadius: 5, // Hilangkan border radius
+    padding: 10,
   },
   imageSection: {
     marginVertical: 10,
@@ -385,8 +430,13 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#FFF',
-    fontWeight: 'bold',
     textAlign: 'center',
+    ...GlobalStyle.SemiBold,
+  },
+  allowed: {
+    fontSize: 12,
+    color: '#B0B0B0',
+    marginTop: -15,
   },
 });
 

@@ -5,29 +5,30 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Switch,
+  Modal,
   Alert,
   Dimensions,
   ScrollView,
 } from 'react-native';
-import useApiClient from '../../../../src/api/apiClient';
+import useApiClient from '../../../src/api/apiClient';
 import {Dropdown} from 'react-native-element-dropdown';
 import Toast from 'react-native-toast-message';
 import {BarIndicator} from 'react-native-indicators';
+import CalendarPicker from 'react-native-calendar-picker';
 const {width} = Dimensions.get('window');
-import GlobalStyle from '../../../../src/utils/GlobalStyle';
-import Header from '../../../components/Header';
+import GlobalStyle from '../../../src/utils/GlobalStyle';
+import Header from '../../components/Header';
 
-const TambahDewas = ({navigation}) => {
-  const [selectedNIP, setSelectedNIP] = useState(null);
-  const [selectedNama, setSelectedNama] = useState(null);
-  const [selectedPersentase, setSelectedPersentase] = useState(null);
-  const [selectedNoRek, setSelectedNoRek] = useState(null);
+const TambahLock = ({navigation}) => {
   const [selectedPangkat, setSelectedPangkat] = useState(null);
-  const [selectedPtkp, setSelectedPtkp] = useState(null);
   const [pickJabatanOptions, setPickJabatanOptions] = useState(null);
-  const [ptkpOptions, setPtkpOptions] = useState([]);
-  const [pangkatOptions, setPangkatOptions] = useState([]);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [isCalendarRange, setCalendarRange] = useState(false);
+  const [selectedTahun, setSelectedTahun] = useState(null);
+  const [selectedBulan, setSelectedBulan] = useState(null);
+  const [tahunOptions, setTahunOptions] = useState([]);
+  const [bulanOptions, setBulanOptions] = useState([]);
   const [focusState, setFocusState] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const apiClient = useApiClient();
@@ -39,20 +40,19 @@ const TambahDewas = ({navigation}) => {
   const fetchAllOptions = async () => {
     setIsLoading(true);
     try {
-      const [pangkatResponse, ptkpResponse] = await Promise.all([
-        apiClient.get('/pangkat/show'),
-        apiClient.get('/pajak_ptkp/show'),
+      const [tahunResponse, bulanResponse] = await Promise.all([
+        apiClient.get('/tahun/show'),
+        apiClient.get('/bulan/show'),
       ]);
-
-      setPangkatOptions(
-        pangkatResponse.data.data.map(item => ({
-          label: `${item.nm_pangkat} - (${item.golongan}/${item.ruang})`,
+      setBulanOptions(
+        bulanResponse.data.data.map(item => ({
+          label: item.bulan,
           value: item.id,
         })),
       );
-      setPtkpOptions(
-        ptkpResponse.data.data.map(item => ({
-          label: item.ptkp,
+      setTahunOptions(
+        tahunResponse.data.data.map(item => ({
+          label: item.tahun,
           value: item.id,
         })),
       );
@@ -67,18 +67,16 @@ const TambahDewas = ({navigation}) => {
   const submitTambah = async () => {
     setIsLoading(true);
     try {
-      await apiClient.post('user/dewas/create', {
-        jabatan: pickJabatanOptions,
-        master_ptkp_id: selectedPtkp,
-        name: selectedNama,
-        nip: selectedNIP,
-        no_rek: selectedNoRek,
-        pangkat_id: selectedPangkat,
-        percent: selectedPersentase,
+      await apiClient.post('/lock/create', {
+        bulan_id: selectedBulan,
+        tahun_id: selectedTahun,
+        jenis: selectedPangkat,
+        tgl_pengisian: `${formatDateToString(startDate)}/${formatDateToString(
+          endDate,
+        )}`,
       });
       console.log('Berhasil', 'Data berhasil ditambahkan.');
       navigation.goBack();
-      fetchData(currentPage);
     } catch (error) {
       Toast.show({
         type: 'error',
@@ -90,6 +88,15 @@ const TambahDewas = ({navigation}) => {
     }
   };
 
+  const formatDateToString = date => {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0'); // Tambahkan '0' jika kurang dari 10
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const handleFocus = inputName => {
     setFocusState(prevState => ({...prevState, [inputName]: true}));
   };
@@ -98,15 +105,14 @@ const TambahDewas = ({navigation}) => {
     setFocusState(prevState => ({...prevState, [inputName]: false}));
   };
 
-  const jabatan = [
-    {label: 'KETUA DEWAN PENGAWAS', value: 'KETUA DEWAN PENGAWAS'},
-    {label: 'ANGGOTA', value: 'ANGGOTA'},
-    {label: 'SEKRETARIS', value: 'SEKRETARIS'},
+  const jenis = [
+    {label: 'kontrak', value: 'kontrak'},
+    {label: 'realisasi', value: 'realisasi'},
   ];
 
   return (
     <View style={styles.rootContainer}>
-      <Header title="Tambah Dewan Pengawas" />
+      <Header title="Tambah Lock" />
       <View style={styles.container}>
         {isLoading ? (
           // Loading Indicator
@@ -117,105 +123,7 @@ const TambahDewas = ({navigation}) => {
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}>
-            <Text style={[GlobalStyle.SemiBold, styles.label]}>NIP / NRP</Text>
-            <TextInput
-              style={[
-                GlobalStyle.SemiBold,
-                styles.input,
-                focusState.selectedNIP && styles.inputFocused,
-                selectedNIP && styles.inputFilled,
-              ]}
-              placeholder="NIP / NRP"
-              multiline
-              value={selectedNIP}
-              onChangeText={setSelectedNIP}
-              placeholderTextColor="#B0B0B0"
-              onFocus={() => handleFocus('selectedNIP')}
-              onBlur={() => handleBlur('selectedNIP')}
-            />
-
-            <Text style={[GlobalStyle.SemiBold, styles.label]}>Nama</Text>
-            <TextInput
-              style={[
-                GlobalStyle.SemiBold,
-                styles.input,
-                focusState.selectedNama && styles.inputFocused,
-                selectedNama && styles.inputFilled,
-              ]}
-              placeholder="Nama"
-              multiline
-              value={selectedNama}
-              onChangeText={setSelectedNama}
-              placeholderTextColor="#B0B0B0"
-              onFocus={() => handleFocus('selectedNama')}
-              onBlur={() => handleBlur('selectedNama')}
-            />
-            <Text style={[GlobalStyle.SemiBold, styles.label]}>Persentase</Text>
-            <TextInput
-              style={[
-                GlobalStyle.SemiBold,
-                styles.input,
-                focusState.selectedPersentase && styles.inputFocused,
-                selectedPersentase && styles.inputFilled,
-              ]}
-              placeholder="Persentase"
-              multiline
-              value={selectedPersentase}
-              onChangeText={setSelectedPersentase}
-              placeholderTextColor="#B0B0B0"
-              onFocus={() => handleFocus('selectedPersentase')}
-              onBlur={() => handleBlur('selectedPersentase')}
-            />
-            <Text style={[GlobalStyle.SemiBold, styles.label]}>
-              No. Rekening
-            </Text>
-            <TextInput
-              style={[
-                GlobalStyle.SemiBold,
-                styles.input,
-                focusState.selectedNoRek && styles.inputFocused,
-                selectedNoRek && styles.inputFilled,
-              ]}
-              placeholder="Ruang"
-              multiline
-              value={selectedNoRek}
-              onChangeText={setSelectedNoRek}
-              placeholderTextColor="#B0B0B0"
-              onFocus={() => handleFocus('selectedNoRek')}
-              onBlur={() => handleBlur('selectedNoRek')}
-            />
-            <Text style={[GlobalStyle.SemiBold, styles.modalLabel]}>
-              Jabatan
-            </Text>
-            <Dropdown
-              style={[
-                GlobalStyle.SemiBold,
-                styles.input,
-                focusState.pickJabatanOptions && styles.inputFocused,
-                pickJabatanOptions && styles.inputFilled,
-              ]}
-              data={jabatan}
-              labelField="label"
-              valueField="value"
-              placeholder="Pilih Jabatan"
-              onFocus={() => handleFocus('pickJabatanOptions')}
-              onBlur={() => handleBlur('pickJabatanOptions')}
-              placeholderStyle={{
-                ...GlobalStyle.SemiBold,
-                color: '#B0B0B0',
-                fontSize: 14,
-              }}
-              value={pickJabatanOptions}
-              onChange={item => setPickJabatanOptions(item.value)}
-              renderItem={item => (
-                <Text style={[GlobalStyle.SemiBold, styles.dropdownItem]}>
-                  {item.label}
-                </Text>
-              )}
-            />
-            <Text style={[GlobalStyle.SemiBold, styles.modalLabel]}>
-              Pangkat/Gol. Ruang
-            </Text>
+            <Text style={[GlobalStyle.SemiBold, styles.modalLabel]}>Jenis</Text>
             <Dropdown
               style={[
                 GlobalStyle.SemiBold,
@@ -223,10 +131,10 @@ const TambahDewas = ({navigation}) => {
                 focusState.selectedPangkat && styles.inputFocused,
                 selectedPangkat && styles.inputFilled,
               ]}
-              data={pangkatOptions} // Menggunakan array data
+              data={jenis} // Menggunakan array data
               labelField="label"
               valueField="value"
-              placeholder="Pilih Pangkat"
+              placeholder="Pilih Jenis"
               onFocus={() => handleFocus('selectedPangkat')}
               onBlur={() => handleBlur('selectedPangkat')}
               placeholderStyle={{
@@ -242,35 +150,106 @@ const TambahDewas = ({navigation}) => {
                 </Text>
               )}
             />
-            <Text style={[GlobalStyle.SemiBold, styles.modalLabel]}>
-              Status PTKP
-            </Text>
+            <Text style={[GlobalStyle.SemiBold, styles.modalLabel]}>Tahun</Text>
             <Dropdown
               style={[
                 GlobalStyle.SemiBold,
                 styles.input,
-                focusState.selectedPtkp && styles.inputFocused,
-                selectedPtkp && styles.inputFilled,
+                focusState.selectedTahun && styles.inputFocused,
+                selectedTahun && styles.inputFilled,
               ]}
-              data={ptkpOptions}
+              data={tahunOptions} // Menggunakan array data
               labelField="label"
               valueField="value"
-              placeholder="Pilih Status PTKP"
-              onFocus={() => handleFocus('selectedPtkp')}
-              onBlur={() => handleBlur('selectedPtkp')}
+              placeholder="Pilih Tahun"
+              onFocus={() => handleFocus('selectedTahun')}
+              onBlur={() => handleBlur('selectedTahun')}
               placeholderStyle={{
                 ...GlobalStyle.SemiBold,
                 color: '#B0B0B0',
                 fontSize: 14,
               }}
-              value={selectedPtkp} // Tambahkan state untuk menyimpan pilihan
-              onChange={item => setSelectedPtkp(item.value)} // Mengatur pilihan ke state
+              value={pickJabatanOptions}
+              onChange={item => setSelectedTahun(item.value)}
               renderItem={item => (
                 <Text style={[GlobalStyle.SemiBold, styles.dropdownItem]}>
                   {item.label}
                 </Text>
               )}
             />
+            <Text style={[GlobalStyle.SemiBold, styles.modalLabel]}>Bulan</Text>
+            <Dropdown
+              style={[
+                GlobalStyle.SemiBold,
+                styles.input,
+                focusState.selectedBulan && styles.inputFocused,
+                selectedBulan && styles.inputFilled,
+              ]}
+              data={bulanOptions} // Menggunakan array data
+              labelField="label"
+              valueField="value"
+              placeholder="Pilih Bulan"
+              onFocus={() => handleFocus('selectedBulan')}
+              onBlur={() => handleBlur('selectedBulan')}
+              placeholderStyle={{
+                ...GlobalStyle.SemiBold,
+                color: '#B0B0B0',
+                fontSize: 14,
+              }}
+              value={selectedBulan} // Tambahkan state untuk menyimpan pilihan
+              onChange={item => setSelectedBulan(item.value)} // Mengatur pilihan ke state
+              renderItem={item => (
+                <Text style={[GlobalStyle.SemiBold, styles.dropdownItem]}>
+                  {item.label}
+                </Text>
+              )}
+            />
+            <Text style={[GlobalStyle.SemiBold, styles.modalLabel]}>
+              Tanggal Pengisian
+            </Text>
+            <TouchableOpacity
+              style={styles.input}
+              onPress={() => setCalendarRange(true)}>
+              <Text style={GlobalStyle.Regular}>
+                {startDate && endDate
+                  ? `${formatDateToString(startDate)}/${formatDateToString(
+                      endDate,
+                    )}`
+                  : 'Pilih Tanggal'}
+              </Text>
+            </TouchableOpacity>
+            <Modal
+              visible={isCalendarRange}
+              transparent={true}
+              animationType="fade">
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <CalendarPicker
+                    startFromMonday={true}
+                    allowRangeSelection={true} // Mengaktifkan range selection
+                    minDate={new Date(2024, 0, 1)}
+                    maxDate={new Date(2025, 11, 31)}
+                    todayBackgroundColor="#ffcc00"
+                    selectedDayColor="#007bff"
+                    selectedDayTextColor="#FFFFFF"
+                    onDateChange={(date, type) => {
+                      if (type === 'START_DATE') {
+                        setStartDate(date);
+                        setEndDate(null);
+                      } else {
+                        setEndDate(date);
+                        setCalendarRange(false); // Tutup modal setelah memilih rentang tanggal
+                      }
+                    }}
+                  />
+                  <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={() => setCalendarRange(false)}>
+                    <Text style={styles.closeButtonText}>Tutup</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
 
             <View style={styles.buttons}>
               <TouchableOpacity
@@ -379,6 +358,58 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    width: '90%',
+    alignItems: 'center',
+  },
+  staticText: {
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  dynamicText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  calendarText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  todayText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#ffcc00',
+  },
+  calendarHeader: {
+    backgroundColor: '#007bff',
+    borderRadius: 10,
+    paddingVertical: 10,
+    marginBottom: 10,
+  },
+  selectedRange: {
+    backgroundColor: '#007bff',
+    borderRadius: 5,
+  },
+  selectedDate: {
+    fontSize: 15,
+    color: '#333',
+    marginTop: 1,
+    textAlign: 'left', // Ubah dari 'center' ke 'left'
+    alignSelf: 'flex-start', // Pastikan teks mengikuti layout ke kiri
+    marginLeft: 10, // Tambahkan sedikit margin jika diperlukan
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
 });
 
-export default TambahDewas;
+export default TambahLock;

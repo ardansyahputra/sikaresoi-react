@@ -11,7 +11,7 @@ import {
 import {Dropdown} from 'react-native-element-dropdown';
 import RNFS from 'react-native-fs';
 import {APP_URL} from '@env';
-import Header from '../../../components/Header';
+import Header from '../../components/Header';
 
 
 export default function TugasTambahan({navigation}) {

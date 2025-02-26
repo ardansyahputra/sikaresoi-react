@@ -62,6 +62,7 @@ export const AuthProvider = ({children}) => {
 
         const flattenedMenu = flattenMenu(response.data.data);
         setUserMenu(flattenedMenu);
+        console.log(flattenedMenu);
         console.log('Menu access updated successfully');
         return flattenedMenu;
       }
@@ -179,6 +180,7 @@ export const AuthProvider = ({children}) => {
         login,
         logout,
         refreshToken,
+        fetchPangkat,
         hasMenuAccess,
         getAccessibleRoutes,
         pangkatItems,

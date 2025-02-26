@@ -6,6 +6,7 @@ import {
   Modal,
   StyleSheet,
   Alert,
+  TextInput,
 } from 'react-native';
 import useApiClient from '../../../src/api/apiClient';
 import {Dropdown} from 'react-native-element-dropdown';
@@ -28,6 +29,8 @@ const EditSuratTugas = ({navigation, route}) => {
   const [tanggalSPT, setTanggalSPT] = useState(null);
   const [tanggalTugasStart, setTanggalTugasStart] = useState(null);
   const [tanggalTugasEnd, setTanggalTugasEnd] = useState(null);
+  const [dasar, setDasar] = useState('');
+  const [untuk, setUntuk] = useState('');
 
   useEffect(() => {
     if (uuid) {
@@ -63,12 +66,13 @@ const EditSuratTugas = ({navigation, route}) => {
       );
 
       const response = await apiClient.get(fullUrl);
-      setUserList(response.data.data.map(item => ({
-        label: item.name,
-        value: item.id,
-      })),
-    );
-      console.log("USER LIST NIH BOSSSSSSSSSSSSSSSSSSSSSSSSSSSS", userList)
+      setUserList(
+        response.data.data.map(item => ({
+          label: item.name,
+          value: item.id,
+        })),
+      );
+      console.log('USER LIST NIH BOSSSSSSSSSSSSSSSSSSSSSSSSSSSS', userList);
     } catch (error) {
       console.error(
         'Error fetching user ',
@@ -155,6 +159,8 @@ const EditSuratTugas = ({navigation, route}) => {
         start_date: formatDateToString(startDate),
         end_date: formatDateToString(endDate || startDate),
         user_id: selectedUser,
+        dasar: dasar, // Tambahkan dasar ke payload
+        untuk: untuk, // Tambahkan untuk ke payload
       };
 
       await apiClient.post(`/nowa/${editData.uuid}/update`, payload);
@@ -309,6 +315,24 @@ const EditSuratTugas = ({navigation, route}) => {
               jabatan_uuid: item.uuid,
             }));
           }}
+        />
+
+        <Text style={styles.label}>Dasar</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Masukkan Dasar"
+          value={dasar}
+          onChangeText={setDasar}
+          placeholderTextColor="#B0B0B0"
+        />
+
+        <Text style={styles.label}>Untuk</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Masukkan Untuk"
+          value={untuk}
+          onChangeText={setUntuk}
+          placeholderTextColor="#B0B0B0"
         />
 
         <View style={styles.buttons}>

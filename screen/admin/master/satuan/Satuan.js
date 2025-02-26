@@ -5,10 +5,6 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
-  Image,
-  Linking,
-  Switch,
   Modal,
   TextInput,
 } from 'react-native';
@@ -184,37 +180,6 @@ export default function Satuan() {
                 <Ionicons name="trash-outline" size={20} color="white" />
               </TouchableOpacity>
             </View>
-            <Modal
-              animationType="fade"
-              transparent={true}
-              visible={modalVisible}
-              onRequestClose={() => setModalVisible(false)}>
-              <View style={styles.modalOverlay}>
-                <View style={styles.modalContainer}>
-                  <Text style={[GlobalStyle.SemiBold, styles.modalText]}>
-                    {selectedAction === 'hapus'
-                      ? 'Apakah Anda yakin ingin menghapus data ini?'
-                      : 'Apakah Anda yakin ingin mereset password pengguna ini?'}
-                  </Text>
-                  <View style={styles.modalButtons}>
-                    <TouchableOpacity
-                      style={[styles.button, styles.cancelButton]}
-                      onPress={() => setModalVisible(false)}>
-                      <Text style={[GlobalStyle.SemiBold, styles.cancelText]}>
-                        Tidak
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.button, styles.confirmButton]}
-                      onPress={handleConfirmAction}>
-                      <Text style={[GlobalStyle.SemiBold, styles.confirmText]}>
-                        Ya
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            </Modal>
           </View>
         </View>
         {index === data.length - 1 && <View style={styles.verticalLine} />}
@@ -281,6 +246,37 @@ export default function Satuan() {
           }
         />
       )}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={[GlobalStyle.SemiBold, styles.modalText]}>
+              {selectedAction === 'hapus'
+                ? 'Apakah Anda yakin ingin menghapus data ini?'
+                : 'Apakah Anda yakin ingin mereset password pengguna ini?'}
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.button, styles.cancelButton]}
+                onPress={() => setModalVisible(false)}>
+                <Text style={[GlobalStyle.SemiBold, styles.cancelText]}>
+                  Tidak
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, styles.confirmButton]}
+                onPress={handleConfirmAction}>
+                <Text style={[GlobalStyle.SemiBold, styles.confirmText]}>
+                  Ya
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

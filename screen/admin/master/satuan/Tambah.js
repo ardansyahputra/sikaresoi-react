@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Switch,
   Dimensions,
   ScrollView,
 } from 'react-native';
@@ -14,6 +13,7 @@ import {BarIndicator} from 'react-native-indicators';
 const {width} = Dimensions.get('window');
 import Header from '../../../components/Header';
 import GlobalStyle from '../../../../src/utils/GlobalStyle';
+import Toast from 'react-native-toast-message';
 
 const TambahSatuan = ({navigation}) => {
   const [selectedNamaSatuan, setSelectedNamaSatuan] = useState('');
@@ -34,7 +34,6 @@ const TambahSatuan = ({navigation}) => {
       });
 
       navigation.goBack();
-      // Reset form setelah berhasil
       setSelectedNamaSatuan('');
     } catch (error) {
       Toast.show({

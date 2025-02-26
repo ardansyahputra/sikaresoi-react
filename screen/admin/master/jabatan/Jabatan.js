@@ -5,9 +5,6 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
-  Image,
-  Switch,
   Modal,
   TextInput,
 } from 'react-native';

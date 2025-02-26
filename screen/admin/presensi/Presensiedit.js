@@ -1,89 +1,81 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
-import { Dropdown } from 'react-native-element-dropdown';
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ScrollView,
+} from 'react-native';
+import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../../../src/api/apiClient';
 
-const TambahPa = ({ route, navigation }) => {
+const TambahPa = ({route, navigation}) => {
   const [jenisAlasan, setJenisAlasan] = useState([]);
   const [jenis, setJenis] = useState('');
-  const [tanggalPelanggaran, setTanggalPelanggaran] = useState('');
+  const [Tanggal, setTanggal] = useState(selectedDate || '');
   const [potongan, setPotongan] = useState('');
   const [keterangan, setKeterangan] = useState('');
-  const [userId, setUserId] = useState(null);
   const [name, setName] = useState('');
   const apiClient = useApiClient();
-  const { uuid } = route.params || {};
+  const {userId, userName, selectedDate} = route.params || {};
 
   useEffect(() => {
-    const fetchJenisAlasan = async () => {
-      try {
-        const response = await apiClient(`/pemotongan_tidak_hadir/show`);
-        const data = response.data || await response.json();
-        if (data && data.res.code === 200) {
-          const alasanData = data.data.map(item => ({
-            label: item.jenis_alasan,
-            value: item.id,
-          }));
-          setJenisAlasan(alasanData);
-        }
-      } catch (error) {
-        console.error('Error fetching jenis alasan data:', error);
-      }
-    };
-
     fetchJenisAlasan();
-  }, []);
+  });
 
-  useEffect(() => {
-    if (uuid) {
-      fetchData(uuid);
-    }
-  }, [uuid]);
-
-  const fetchData = async (uuid) => {
+  const fetchJenisAlasan = async () => {
     try {
-      const response = await apiClient.get(`/teguran/${uuid}/edit`);
-      if (response?.data?.data) {
-        const data = response.data.data;
-        setJenis(data.jenis || '');
-        setTanggalPelanggaran(data.tgl_pelanggaran || '');
-        setPotongan(data.potongan?.toString() || '');
-        setKeterangan(data.pesan || '');
-        setName(data.user?.name || '');
-        setUserId(data.user?.id || 2);
-      } else {
-        Alert.alert('Error', 'Data tidak ditemukan.');
+      const response = await apiClient(`/pemotongan_tidak_hadir/show`);
+      const data = response.data || (await response.json());
+      if (data && data.res.code === 200) {
+        const alasanData = data.data.map(item => ({
+          label: item.jenis_alasan,
+          value: item.id,
+        }));
+        setJenisAlasan(alasanData);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
-      Alert.alert('Error', 'Gagal memuat data.');
+      console.error('Error fetching jenis alasan data:', error);
     }
   };
 
   const handleSave = async () => {
-    if (!jenis || !tanggalPelanggaran || !potongan || !keterangan) {
-      Alert.alert('Error', 'Harap isi semua data sebelum menyimpan.');
-      return;
-    }
-
     const payload = {
-      name: name,
+      name: userName,
       pemotongan_tidak_hadir_id: jenis,
-      tanggal: tanggalPelanggaran,
+      tanggal: selectedDate,
       user_id: userId || 2,
     };
 
+    console.log('Payload to be sent:', payload);
+
     try {
       const response = await apiClient.post('/admin/absensi/change', payload);
+
+      console.log('API Response:', response);
 
       if (response.status === 200 || response.status === 201) {
         Alert.alert('Sukses', 'Data berhasil disimpan.');
         navigation.goBack();
       } else {
+        console.log('API Response Error:', response.data);
         Alert.alert('Error', 'Gagal menyimpan data.');
       }
     } catch (error) {
-      console.error('Error saving data:', error.response?.data || error.message);
+      if (error.response) {
+        // Error dengan respons dari server
+        console.error('API Error Response:', error.response.data);
+        console.log('API Error Status:', error.response.status);
+      } else if (error.request) {
+        // Error karena tidak ada respons dari server
+        console.error('API Error Request:', error.request);
+      } else {
+        // Error lainnya
+        console.error('General Error:', error.message);
+      }
+
+      console.error('Error Stack Trace:', error.stack);
       Alert.alert('Error', 'Terjadi kesalahan saat menyimpan data.');
     }
   };
@@ -98,7 +90,9 @@ const TambahPa = ({ route, navigation }) => {
 
       <View style={styles.cardContainer}>
         <View style={styles.nameContainer}>
-          <Text style={styles.userName}>{name || 'Nama Tidak Ditemukan'}</Text>
+          <Text style={styles.userName}>
+            {userName || 'Nama Tidak Ditemukan'}
+          </Text>
         </View>
         <Text style={styles.label}>Jenis Alasan *</Text>
         <Dropdown
@@ -114,7 +108,9 @@ const TambahPa = ({ route, navigation }) => {
         />
 
         <View style={styles.buttons}>
-          <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => navigation.goBack()}>
             <Text style={styles.buttonText}>Batal</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>

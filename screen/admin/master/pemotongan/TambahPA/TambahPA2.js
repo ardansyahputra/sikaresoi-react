@@ -94,7 +94,7 @@ const TambahPage = ({navigation}) => {
 
     try {
       const response = await apiClient.post(
-        '/pemotongan_pulang_awal/create',
+        '/pemotongan_terlambat/create',
         payload,
       );
 
@@ -129,7 +129,7 @@ const TambahPage = ({navigation}) => {
 
   return (
     <View style={styles.rootContainer}>
-      <Header title="Tambah Pemotongan Pulang awal" />
+      <Header title="Tambah Pemotongan Terlambat" />
       <View style={styles.container}>
         {isLoading ? (
           // Loading Indicator

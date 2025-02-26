@@ -41,32 +41,26 @@ export default function UserGroupList({navigation, route}) {
         const allMenus = menuResponse.data.data;
         const selectedMenuIds = selectedResponse.data.data.selectedMenu;
 
-        // Modified filter to include both master menus and root-level menus
-        const masterMenus = allMenus.filter(
-          menu =>
-            menu.sub_menu === '1' ||
-            (menu.sub_menu === '0' && menu.id_parent === '0'),
-        );
+        // Filter Master Menu (sub_menu: "1")
+        const masterMenus = allMenus.filter(menu => menu.sub_menu === '1');
 
-        console.log('Master and root-level menus:', masterMenus);
-
+        // Tambahkan Sub Menu ke dalam setiap Master Menu
         const structuredMenus = masterMenus.map(masterMenu => ({
           ...masterMenu,
           sub_menus: allMenus.filter(
             sub =>
               sub.sub_menu === '0' &&
-              String(sub.id_parent) === String(masterMenu.id),
+              parseInt(sub.id_parent, 10) === masterMenu.id,
           ),
         }));
 
         setMenus(structuredMenus);
         setSelectedMenus(selectedMenuIds);
-        setLocalSelection(selectedMenuIds);
+        setLocalSelection(selectedMenuIds); // Initialize local selection
       } else {
         setError('Gagal mengambil data');
       }
     } catch (err) {
-      console.error('Error fetching menus:', err);
       setError(err.message);
     } finally {
       setLoading(false);

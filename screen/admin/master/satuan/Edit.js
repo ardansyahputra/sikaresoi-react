@@ -7,16 +7,16 @@ import {
   StyleSheet,
   Dimensions,
   ScrollView,
-  Alert,
 } from 'react-native';
 import useApiClient from '../../../../src/api/apiClient';
 const {width} = Dimensions.get('window');
 import {BarIndicator} from 'react-native-indicators';
 import GlobalStyle from '../../../../src/utils/GlobalStyle';
 import Header from '../../../components/Header';
+import Toast from 'react-native-toast-message';
 
 const EditSatuan = ({navigation, route}) => {
-  const {uuid} = route.params; // Mendapatkan UUID dari parameter navigasi
+  const {uuid} = route.params;
   const apiClient = useApiClient();
   const [editData, setEditData] = useState({});
   const [isLoading, setIsLoading] = useState(true);
@@ -24,7 +24,7 @@ const EditSatuan = ({navigation, route}) => {
 
   useEffect(() => {
     if (uuid) {
-      fetchEditData(uuid); // Panggil fungsi untuk fetch data edit berdasarkan UUID
+      fetchEditData(uuid);
     }
   }, [uuid]);
 

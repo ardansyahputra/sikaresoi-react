@@ -6,17 +6,15 @@ import {
   TouchableOpacity,
   Keyboard,
   StyleSheet,
-  Platform,
   Dimensions,
   ScrollView,
+  Alert,
 } from 'react-native';
-import {TimerPicker} from 'react-native-timer-picker';
-import LinearGradient from 'react-native-linear-gradient';
+import {TimerPickerModal} from 'react-native-timer-picker';
 import useApiClient from '../../../../../src/api/apiClient';
 import {BarIndicator} from 'react-native-indicators';
 import GlobalStyle from '../../../../../src/utils/GlobalStyle';
 import Header from '../../../../components/Header';
-import {Dropdown} from 'react-native-element-dropdown';
 const {width} = Dimensions.get('window');
 
 const EditPage = ({navigation, route}) => {
@@ -30,13 +28,11 @@ const EditPage = ({navigation, route}) => {
   const [selectedBatasBawah, setSelectedBatasBawah] = useState(
     initialBatasBawah || '00:00:00',
   );
-  const [showDropdownAtas, setShowDropdownAtas] = useState(false);
-  const [showDropdownBawah, setShowDropdownBawah] = useState(false);
-  const [currentTimeType, setCurrentTimeType] = useState(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [pickerMode, setPickerMode] = useState(null);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
-  const [tempSelectedTime, setTempSelectedTime] = useState(null);
   const [focusState, setFocusState] = useState({});
-  const apiClient = useApiClient(); // Panggil useApiClient untuk mendapatkan instance
+  const apiClient = useApiClient();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -57,37 +53,52 @@ const EditPage = ({navigation, route}) => {
     };
   }, []);
 
-  const handleSave = async (
-    uuid,
-    selectedPotongan,
-    selectedBatasAtas,
-    selectedBatasBawah,
-    navigation,
-  ) => {
+  const formatTime = pickedDuration => {
+    const {hours, minutes, seconds} = pickedDuration;
+    // Mengembalikan format waktu tanpa label HMS
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
+      2,
+      '0',
+    )}:${String(seconds).padStart(2, '0')}`;
+  };
+
+  const showPicker = mode => {
+    setPickerMode(mode);
+    setIsVisible(true);
+  };
+
+  const handleBatal = () => {
+    setIsVisible(false);
+  };
+
+  const handlePilih = time => {
+    const formattedTime = formatTime(time);
+    if (pickerMode === 'batasAtas') {
+      setSelectedBatasAtas(formattedTime);
+    } else if (pickerMode === 'batasBawah') {
+      setSelectedBatasBawah(formattedTime);
+    }
+    setIsVisible(false);
+  };
+
+  const handleSave = async () => {
     setIsLoading(true);
 
-    const finalBatasAtas =
-      tempSelectedTime && currentTimeType === 'batasAtas'
-        ? tempSelectedTime
-        : selectedBatasAtas;
-    const finalBatasBawah =
-      tempSelectedTime && currentTimeType === 'batasBawah'
-        ? tempSelectedTime
-        : selectedBatasBawah;
-
-    if (!selectedPotongan || !finalBatasAtas || !finalBatasBawah) {
-      console.log('Error', 'Please fill in all fields before saving.');
+    if (!selectedPotongan || !selectedBatasAtas || !selectedBatasBawah) {
+      Alert.alert(
+        'Peringatan',
+        'Harap lengkapi semua field sebelum menyimpan.',
+        [{text: 'OK'}],
+      );
       setIsLoading(false);
       return;
     }
 
     const payload = {
-      batas_bawah: finalBatasBawah,
-      batas_atas: finalBatasAtas,
+      batas_bawah: selectedBatasBawah,
+      batas_atas: selectedBatasAtas,
       potongan: selectedPotongan,
     };
-
-    console.log('Sending Payload:', payload);
 
     try {
       const response = await apiClient.post(
@@ -96,30 +107,19 @@ const EditPage = ({navigation, route}) => {
       );
 
       if (response.status === 200 && response.data.status) {
-        console.log('Server Response:', response.data);
-
-        setSelectedPotongan(response.data.potongan || selectedPotongan);
-        setSelectedBatasAtas(response.data.batas_atas || finalBatasAtas);
-        setSelectedBatasBawah(response.data.batas_bawah || finalBatasBawah);
-
-        console.log('Success', 'Data has been updated successfully.');
-        navigation.goBack();
+        Alert.alert('Sukses', 'Data berhasil diperbarui', [
+          {text: 'OK', onPress: () => navigation.goBack()},
+        ]);
       } else {
-        console.error('Failed to update ', response.status);
-        console.log('Error', 'Failed to update data. Please try again.');
+        Alert.alert('Gagal', 'Gagal memperbarui data. Silakan coba lagi.');
       }
     } catch (error) {
-      console.error('Error during API request:', error);
-      console.log('Error', 'Failed to update data.');
+      Alert.alert('Error', 'Gagal memperbarui data.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleTextChange = (text, setState) => {
-    const filteredText = text.replace(/[^0-9:]/g, '');
-    setState(filteredText);
-  };
   const handleFocus = inputName => {
     setFocusState(prevState => ({...prevState, [inputName]: true}));
   };
@@ -130,10 +130,9 @@ const EditPage = ({navigation, route}) => {
 
   return (
     <View style={styles.rootContainer}>
-      <Header title="Edit PA" />
+      <Header title="Edit Pemotongan Pulang Awal" />
       <View style={styles.container}>
         {isLoading ? (
-          // Loading Indicator
           <View style={styles.loadingContainer}>
             <BarIndicator color="#D4C6C6" count={5} size={24} />
           </View>
@@ -150,65 +149,103 @@ const EditPage = ({navigation, route}) => {
                 selectedPotongan && styles.inputFilled,
               ]}
               value={selectedPotongan}
-              onChangeText={text => handleTextChange(text, setSelectedPotongan)}
-              keyboardType="default"
-              placeholder="Masukkan Potongan (angka atau ':')"
+              onChangeText={setSelectedPotongan}
+              keyboardType="number-pad"
+              placeholder="Masukkan Potongan"
               placeholderTextColor="#B0B0B0"
               onFocus={() => handleFocus('selectedPotongan')}
               onBlur={() => handleBlur('selectedPotongan')}
             />
 
             <Text style={[GlobalStyle.SemiBold, styles.label]}>Batas Atas</Text>
-            <TextInput
+            <TouchableOpacity
               style={[
                 GlobalStyle.SemiBold,
                 styles.input,
-                focusState.selectedBatasAtas && styles.inputFocused,
                 selectedBatasAtas && styles.inputFilled,
               ]}
-              value={selectedBatasAtas}
-              onChangeText={text =>
-                handleTextChange(text, setSelectedBatasAtas)
-              }
-              keyboardType="default"
-              placeholder="Masukkan Batas Atas (angka atau ':')"
-              placeholderTextColor="#B0B0B0"
-              onFocus={() => handleFocus('selectedBatasAtas')}
-              onBlur={() => handleBlur('selectedBatasAtas')}
-            />
+              onPress={() => showPicker('batasAtas')}>
+              <Text style={styles.inputText}>
+                {selectedBatasAtas || 'Pilih Batas Atas ⏰'}
+              </Text>
+            </TouchableOpacity>
 
             <Text style={[GlobalStyle.SemiBold, styles.label]}>
               Batas Bawah
             </Text>
-            <TextInput
+            <TouchableOpacity
               style={[
                 GlobalStyle.SemiBold,
                 styles.input,
-                focusState.selectedBatasBawah && styles.inputFocused,
                 selectedBatasBawah && styles.inputFilled,
               ]}
-              value={selectedBatasBawah}
-              onChangeText={text =>
-                handleTextChange(text, setSelectedBatasBawah)
+              onPress={() => showPicker('batasBawah')}>
+              <Text style={styles.inputText}>
+                {selectedBatasBawah || 'Pilih Batas Bawah ⏰'}
+              </Text>
+            </TouchableOpacity>
+
+            <TimerPickerModal
+              visible={isVisible}
+              setIsVisible={setIsVisible}
+              hourLabel="                 :"
+              minuteLabel="                 :"
+              secondLabel="                 "
+              onConfirm={handlePilih}
+              onCancel={handleBatal}
+              modalTitle={
+                pickerMode === 'batasAtas'
+                  ? 'Pilih Batas Atas'
+                  : 'Pilih Batas Bawah'
               }
-              keyboardType="default"
-              placeholder="Masukkan Batas Bawah (angka atau ':')"
-              placeholderTextColor="#B0B0B0"
-              onFocus={() => handleFocus('selectedBatasBawah')}
-              onBlur={() => handleBlur('selectedBatasBawah')}
+              confirmButtonText="Simpan"
+              cancelButtonText="Batal"
+              modalProps={{
+                animationType: 'fade',
+              }}
+              styles={{
+                theme: 'light',
+                container: {
+                  backgroundColor: '#fff',
+                  borderRadius: 12,
+                  padding: 16,
+                  shadowColor: '#000',
+                  shadowOpacity: 0.1,
+                  shadowRadius: 6,
+                  elevation: 5,
+                },
+                contentContainer: {
+                  alignItems: 'center',
+                  padding: 10,
+                },
+                modalTitle: {
+                  fontSize: 18,
+                  fontWeight: 'bold',
+                  color: '#333',
+                  textAlign: 'center',
+                  marginBottom: 10,
+                },
+                cancelButton: {
+                  color: '#fff', // Warna merah untuk tombol batal
+                  backgroundColor: '#FF3B30',
+                  fontSize: 16,
+                  fontWeight: 'bold',
+                  borderColor: "#FF3B30",
+                  marginRight: 120,
+                },
+                confirmButton: {
+                  color: '#fff', // Warna biru untuk tombol simpan
+                  backgroundColor: '#3699FE',
+                  borderColor: "#3699FE",
+                  fontSize: 16,
+                  fontWeight: 'bold',
+                },
+              }}
+              hideSeconds={false}
             />
+
             <View style={styles.buttons}>
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={() =>
-                  handleSave(
-                    uuid,
-                    selectedPotongan,
-                    selectedBatasAtas,
-                    selectedBatasBawah,
-                    navigation,
-                  )
-                }>
+              <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
                 <Text style={[GlobalStyle.SemiBold, styles.buttonText]}>
                   Simpan
                 </Text>
@@ -232,67 +269,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: width * 0.05,
     paddingTop: 10,
   },
-
-  cardContainer: {
-    backgroundColor: '#FFFF',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    elevation: 4,
-    marginVertical: 20,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    width: '100%',
-
-    marginTop: 37, // Memberikan margin agar konten tidak tumpang tindih dengan header
+  label: {
+    fontSize: 14,
+    color: '#313131',
   },
-  label: {fontSize: 14, color: '#313131'},
   input: {
     padding: 10,
     fontSize: 14,
-    borderRadius: 5, // Default border radius
+    borderRadius: 5,
     marginBottom: 20,
-    backgroundColor: '#F0ECEC', // Default background color
+    backgroundColor: '#F0ECEC',
     borderWidth: 1,
-    borderColor: 'transparent', // Default border color (tidak terlihat)
+    borderColor: 'transparent',
     color: '#313131',
   },
   inputFocused: {
-    borderRadius: 5, // Border radius saat fokus
+    borderRadius: 5,
     borderColor: '#75BAFF',
     borderWidth: 1.5,
   },
   inputFilled: {
-    backgroundColor: '#F2F8FF', // Background lebih gelap saat terisi
-    borderRadius: 5, // Hilangkan border radius
+    backgroundColor: '#F2F8FF',
+    borderRadius: 5,
     padding: 10,
   },
   scrollContent: {
-    paddingBottom: 10, // Tambahkan padding bawah agar tidak terpotong
-  },
-  dropdown: {
-    position: 'absolute',
-    top: 195, // Adjust this value to make sure dropdown is below the input field
-    left: 20,
-    right: 180,
-    backgroundColor: '#fff',
-    borderRadius: 5,
-    padding: 10,
-    zIndex: 5,
-    shadowColor: '#000', // Menambahkan bayangan
-    shadowOffset: {width: 0, height: 2}, // Menyesuaikan posisi bayangan
-    shadowOpacity: 0.3, // Menyesuaikan intensitas bayangan
-    shadowRadius: 5, // Menyesuaikan kelembutan bayangan
-    elevation: 5, // Memberikan bayangan di perangkat Android
+    paddingBottom: 10,
   },
   buttons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 20,
   },
-  cancelButton: {backgroundColor: '#187DE4', padding: 15, borderRadius: 5},
   saveButton: {
     width: '100%',
     height: 48,
@@ -302,16 +310,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  buttonText: {color: '#fff', fontSize: 14},
-  dropdownItem: {
-    padding: 10,
+  buttonText: {
+    color: '#fff',
     fontSize: 14,
-    color: '#313131',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  inputText: {
+    fontSize: 14,
+    color: '#313131',
   },
 });
 

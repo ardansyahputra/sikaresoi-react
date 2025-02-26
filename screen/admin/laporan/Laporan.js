@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, Modal, Image, ScrollView, TouchableOpacity
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import Header from '../components/Header';
 
 export default function Laporan({ navigation }) {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -10,28 +11,11 @@ export default function Laporan({ navigation }) {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Image
-            source={require('../assets/images/logo.png')}
-            style={styles.logo}
-          />
-        </View>
-      </View>
+      <Header title="Laporan" />
 
-      {/* Breadcrumbs */}
-      <View style={styles.breadcrumbsContainer}>
-        <Text style={styles.breadcrumbText}>
-          <Text style={styles.boldText}>Admin</Text> {'-'} Report
-        </Text>
-      </View>
 
       <View style={styles.containers}>
         <View style={styles.content}>
-          <Text style={styles.laporanjudul}>
-            Laporan
-          </Text>
-
           {/* Laporan Tugas Tambahan */}
           <View style={styles.dropdownWrapperTitle}>
             <TouchableOpacity
@@ -100,7 +84,6 @@ export default function Laporan({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* Laporan Remunerasi */}
           <View style={styles.dropdownWrapperTitle}>
             <TouchableOpacity
               onPress={() => navigation.navigate('Remunerasi')}
@@ -174,44 +157,24 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     margin: 12,
-    marginTop: 25,
+    marginTop: 20,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.5,
     shadowRadius: 4,
   },
-  logo: {
-    width: 140,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  breadcrumbsContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 8, 
-    backgroundColor: '#f5f5f5',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-    marginBottom: -15,
-  },
-  breadcrumbText: {
-    fontSize: 14  ,
-    color: '#333',
-  },
-  boldText: {
-    fontWeight: 'bold', 
-  },
-  laporanjudul: {
-    fontWeight: 'bold', 
-    fontSize: 24,
-    marginBottom:20,
-    marginTop:-20
-  },
-  content: {flex: 1, paddingHorizontal: 1, paddingVertical: 30},
+  content: {
+  flex: 1,
+  paddingHorizontal: -30, 
+  paddingVertical: 2,
+},
+
   dropdownWrapperTitle: {
+    marginTop: 5,
     backgroundColor: '#fff',
     borderRadius: 12,
-    marginBottom: 20,
+    marginBottom: 30,
     padding: 30,
     elevation: 5,
     shadowColor: '#000',
@@ -272,5 +235,6 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+    
   },
 });

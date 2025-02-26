@@ -5,13 +5,10 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
-  Image,
-  Linking,
   Modal,
   TextInput,
-  Alert,
 } from 'react-native';
+import {useFocusEffect} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../../src/api/apiClient';
@@ -35,9 +32,11 @@ export default function UangMakan() {
   const [selectedAction, setSelectedAction] = useState(null);
   const apiClient = useApiClient();
 
-  useEffect(() => {
-    fetchData(currentPage, selectedDisplay);
-  }, [currentPage, selectedDisplay]);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchData(currentPage, selectedDisplay);
+    }, [currentPage, selectedDisplay]),
+  );
 
   const fetchData = async page => {
     try {

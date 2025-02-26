@@ -65,7 +65,6 @@ export default function UserGroupScreen() {
 
   const handleHapusPress = uuid => {
     setSelectedUuid(uuid);
-    setSelectedAction('hapus'); // Tandai bahwa ini aksi hapus
     setModalVisible(true);
   };
 
@@ -197,9 +196,7 @@ export default function UserGroupScreen() {
               <View style={styles.modalOverlay}>
                 <View style={styles.modalContainer}>
                   <Text style={[GlobalStyle.SemiBold, styles.modalText]}>
-                    {selectedAction === 'hapus'
-                      ? 'Apakah Anda yakin ingin menghapus data ini?'
-                      : 'Apakah Anda yakin ingin mereset password pengguna ini?'}
+                    Apakah Anda yakin ingin menghapus data ini?
                   </Text>
                   <View style={styles.modalButtons}>
                     <TouchableOpacity
