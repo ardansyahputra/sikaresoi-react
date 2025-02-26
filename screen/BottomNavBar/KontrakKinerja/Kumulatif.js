@@ -45,13 +45,13 @@ const Kumulatif = ({ navigation, route }) => {
   const saveTarget = async () => {
     setLoading(true);
     try {
-      if (!item.target || !Array.isArray(item.target) || item.target.length === 0) {
+      if (!kinerja.target || !Array.isArray(kinerja.target) || kinerja.target.length === 0) {
        showToast('error','Error', 'Data target tidak ditemukan');
         return;
     }
 
     // Format ulang payload agar sesuai dengan yang diharapkan backend
-    const payload = item.target.map(target => ({
+    const payload = kinerja.target.map(target => ({
         id: target.id, // Jika update, gunakan id. Jika insert baru, mungkin id dibiarkan kosong/null
         uuid: target.uuid || null, // Jika data baru, backend mungkin akan generate UUID
         bulan_id: target.bulan_id,
@@ -63,28 +63,55 @@ const Kumulatif = ({ navigation, route }) => {
 
       console.log('Payload:', JSON.stringify(payload, null, 2)); // Debugging: Log the payload
 
-      const response = await apiClient.post(`user/kinerja/list/target/${item.uuid}/save`, payload);
+      const response = await apiClient.post(`user/kinerja/list/target/${kinerja.uuid}/save`, payload);
       console.log('Save target response:', response.data.data);
-      showToast('success', 'Success', 'Data saved successfully');
+      showToast('success', 'Success', response.data.data);
       fetchData(); // Refresh data after saving
     } catch (err) {
       console.error('Error', err.response?.data || err.message);
-      showToast('error', 'Error', 'Failed to save data');
+      showToast('error', 'Error', err.response?.data?.message);
     } finally {
       setLoading(false);
     }
   };
 
   // Calculate average and update target values (Set Otomatis)
-  const hitungRerata = () => {
-    const hasil = item.kuantitas / item.waktu;
-    const updatedTargets = kinerja.target.map((target) => ({
-      ...target,
-      kuantitas: parseFloat(hasil).toFixed(2),
-    }));
-    setKinerja({ ...kinerja, target: updatedTargets });
-    countTarget(); // Update total target
-  };
+const hitungRerata = () => {
+  // Use values from the current state
+  const hasil = kinerja.kuantitas / kinerja.waktu;
+  
+  // Create entirely new target objects to avoid modifying read-only properties
+  const updatedTargets = kinerja.target.map((target, index) => {
+    // Only update targets within the waktu range
+    if (index < kinerja.waktu) {
+      return {
+        ...target, // Spread all existing properties
+        kuantitas: parseFloat(hasil).toFixed(2) // Set new kuantitas value
+      };
+    }
+    // Keep targets outside the waktu range unchanged
+    return { ...target };
+  });
+  
+  // Calculate the new total
+  let totalTarget = 0;
+  updatedTargets.forEach((target) => {
+    if (target.kuantitas) {
+      totalTarget += parseFloat(target.kuantitas);
+    }
+  });
+  
+  // Update error state
+  const newErrorCount = totalTarget.toFixed(2) > parseFloat(kinerja.kuantitas);
+  setErrorCount(newErrorCount);
+  
+  // Update the state with new objects
+  setKinerja(prevState => ({
+    ...prevState,
+    target: updatedTargets,
+    total_target: totalTarget.toFixed(2)
+  }));
+};
 
   // Calculate total target and check for errors
   const countTarget = () => {
@@ -162,7 +189,7 @@ const Kumulatif = ({ navigation, route }) => {
 
       <Card style={styles.card}>
         <Card.Content>
-          <Text style={[styles.customFont, styles.title]}>Total Kuantitas</Text>
+          <Text style={ styles.title}>Total Kuantitas</Text>
           <TextInput
             style={styles.input}
             value={kinerja.total_target?.toString()}
@@ -170,7 +197,7 @@ const Kumulatif = ({ navigation, route }) => {
           />
           {errorCount && (
             <Text style={styles.errorText}>
-              Maaf, Target Anda Tidak Boleh Lebih Dari {kinerja.kuantitas}
+              Maaf, Target Anda Tidak Boleh Lebih Dari {item.kuantitas}
             </Text>
           )}
           <Button 
@@ -260,7 +287,7 @@ const Kumulatif = ({ navigation, route }) => {
     },
     title: {
       fontSize: 18,
-      fontWeight: 'bold',
+      fontFamily: 'Poppins-Bold',
       marginBottom: 10,
     },
     input: {

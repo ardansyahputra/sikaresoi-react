@@ -140,14 +140,14 @@ const SalinKontrak = ({navigation}) => {
       setModalVisible(false);
       try {
         await apiClient.post(`user/kinerja/${uuid}/salin`, {tahun_id: selectedYear});
-        Alert.alert('Sukses', 'Berhasil menyalin kontrak kinerja');
+        showToast('success', 'Sukses', 'Berhasil menyalin kontrak kinerja');
         fetchSalinKontrak(); // Refresh data setelah penghapusan
       } catch (error) {
         console.error(
           'Error deleting data',
           error.response?.data || error.message,
         );
-        Alert.alert('Gagal', 'Terjadi kesalahan saat menghapus data.');
+        showToast('error', 'Gagal', error.response?.data?.message);
       }
     };
   
