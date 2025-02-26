@@ -18,6 +18,7 @@ import Header from '../../../../components/Header';
 import GlobalStyle from '../../../../../src/utils/GlobalStyle';
 import {BarIndicator} from 'react-native-indicators';
 const {width} = Dimensions.get('window');
+import { BackHandler } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 const TambahPage = ({navigation}) => {
@@ -43,6 +44,7 @@ const TambahPage = ({navigation}) => {
       () => setKeyboardOpen(false),
     );
 
+    
     return () => {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
@@ -185,7 +187,7 @@ const TambahPage = ({navigation}) => {
               </Text>
             </TouchableOpacity>
 
-            <TimerPickerModal
+ <TimerPickerModal
               visible={isVisible}
               setIsVisible={setIsVisible}
               hourLabel="                 :"
@@ -201,44 +203,46 @@ const TambahPage = ({navigation}) => {
               confirmButtonText="Simpan"
               cancelButtonText="Batal"
               modalProps={{
-                animationType: 'fade',
+                animationType: 'slide', // Mengubah animasi menjadi slide (dari bawah)
+                presentationStyle: 'overFullScreen', // Memastikan modal menutupi layar sepenuhnya
               }}
               styles={{
                 theme: 'light',
                 container: {
-                  backgroundColor: '#fff',
-                  borderRadius: 12,
-                  padding: 16,
-                  shadowColor: '#000',
-                  shadowOpacity: 0.1,
-                  shadowRadius: 6,
-                  elevation: 5,
+                  backgroundColor: '#F0EFF5',
+                  borderRadius: 19,
+                  padding: 36,
+                  height: 395,
+                  marginTop: 545,
                 },
                 contentContainer: {
                   alignItems: 'center',
                   padding: 10,
                 },
                 modalTitle: {
-                  fontSize: 18,
+                  fontSize: 22,
                   fontWeight: 'bold',
                   color: '#333',
                   textAlign: 'center',
-                  marginBottom: 10,
                 },
                 cancelButton: {
                   color: '#fff', // Warna merah untuk tombol batal
                   backgroundColor: '#FF3B30',
                   fontSize: 16,
                   fontWeight: 'bold',
-                  borderColor: "#FF3B30",
-                  marginRight: 120,
+                  borderColor: '#FF3B30',
+                  marginRight: 130,
+                  marginTop: 30,
+                  marginBottom: 40,
                 },
                 confirmButton: {
                   color: '#fff', // Warna biru untuk tombol simpan
                   backgroundColor: '#3699FE',
-                  borderColor: "#3699FE",
+                  borderColor: '#3699FE',
                   fontSize: 16,
                   fontWeight: 'bold',
+                  marginTop: 30,
+                  marginBottom: 30,
                 },
               }}
               hideSeconds={false}

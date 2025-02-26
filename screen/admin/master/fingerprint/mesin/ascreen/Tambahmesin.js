@@ -10,7 +10,8 @@ import {
   Platform,
   FlatList,
 } from 'react-native';
-import axios from 'axios';
+import useApiClient from '../../../../../../src/api/apiClient';
+import Header from '../../../../components/Header';
 
 const Tambahmesin = ({ navigation, route }) => {
   const [namaMesin, setNamaMesin] = useState('');
@@ -20,6 +21,7 @@ const Tambahmesin = ({ navigation, route }) => {
   const [comkey, setComkey] = useState('');
   const [statusAktif, setStatusAktif] = useState('Aktif');
   const [isDropdownVisible, setDropdownVisible] = useState(false); // State untuk visibilitas dropdown
+  const apiClient = useApiClient();
 
 
   const handleSave = async () => {
@@ -37,12 +39,12 @@ const Tambahmesin = ({ navigation, route }) => {
       active: statusAktif === 'Aktif' ? '1' : '0',
     };
 
-    const requestUrl = `http://192.168.60.163:8000/api/v1/fingerprint_machine/create`;
+    const requestUrl = `/fingerprint_machine/create`;
     console.log('Request URL:', requestUrl);
     console.log('Payload:', payload);
 
     try {
-      const response = await axios.post(
+      const response = await apiClient.post(
         requestUrl,
         payload,
         {
@@ -88,11 +90,8 @@ const Tambahmesin = ({ navigation, route }) => {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.headerTitle}>Tambah Data</Text>
-          </TouchableOpacity>
-        </View>
+      <Header title="Tambah Mesin Fingerprint" />
+
         <View style={styles.cardContainer}>
           <Text style={styles.label}>Nama Mesin</Text>
           <TextInput
@@ -171,7 +170,7 @@ const Tambahmesin = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#E7E9F1', paddingTop: 20 },
+  container: { flex: 1, backgroundColor: '#E7E9F1'},
   header: {
     backgroundColor: '#fff',
     paddingHorizontal: 16,
@@ -188,7 +187,6 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
   },
-  headerTitle: { textAlign: 'center', fontSize: 20, fontWeight: 'bold' },
   cardContainer: {
     backgroundColor: '#FFFF',
     paddingVertical: 20,
@@ -197,7 +195,6 @@ const styles = StyleSheet.create({
     elevation: 4,
     marginVertical: 20,
     marginHorizontal: 10,
-    marginTop: 37,
     width: 387,
   },
   label: { fontSize: 16, marginBottom: 5, color: '#333' },

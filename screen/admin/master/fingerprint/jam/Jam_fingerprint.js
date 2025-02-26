@@ -10,10 +10,12 @@
     ScrollView,
     SafeAreaView,
   } from 'react-native';
-  import axios from 'axios';
+  import useApiClient from '../../../../../src/api/apiClient';
+  import Header from '../../../../components/Header';
+
+
   const Fingerprint = ({ navigation }) => {
     const [settingTimes, setSettingTimes] = useState([]);
-    const [token, setToken] = useState('Bearer YOUR_TOKEN');
     const [uuid, setUuid] = useState(null);
     const [masukStart, setMasukStart] = useState('');
     const [masukEnd, setMasukEnd] = useState('');
@@ -21,15 +23,16 @@
     const [pulangEnd, setPulangEnd] = useState('');
     const [createdAt, setCreatedAt] = useState('');
     const [updatedAt, setUpdatedAt] = useState('');
+    const apiClient = useApiClient();
+
   
     useEffect(() => {
       getSettingTime();
     }, []);
   
     const getSettingTime = () => {
-      axios
-        .get('http://192.168.60.163:8000/api/v1/fingerprint_machine/setting/show', {
-          headers: { Authorization: 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2Mjk5MDg2LCJleHAiOjE3MzYzMTEyMTEsIm5iZiI6MTczNjMwNzYxMSwianRpIjoiVVRiY1R3VVB6UDBrMG9wViIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.vDh8wJoEak04Zyvu-bILCQk0ycsOkAZNzE6dRaI0DkYa' },
+      apiClient
+        .get('/fingerprint_machine/setting/show', {
         })
         .then((response) => {
           if (response.data.status) {
@@ -61,8 +64,8 @@
         pulang_end: pulangEnd,
       };
   
-      axios
-        .post('http://192.168.60.163:8000/api/v1/fingerprint_machine/setting/save', payload, {
+      apiClient
+        .post('/fingerprint_machine/setting/save', payload, {
           headers: { Authorization: 'Bearer YOUR_TOKEN' },
         })
         .then((response) => {
@@ -84,14 +87,11 @@
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
             <View style={styles.container}>
-              <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                  <Text style={styles.headerTitle}>Fingerprint</Text>
-                </TouchableOpacity>
-              </View>
+            <Header title="Setting Jam Fingerprint" />
+
               <View style={styles.cardContainer}>
                 <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle}>Setting Jam Fingerprint</Text>
+                  <Text style={styles.cardTitle}>Jam Fingerprint</Text>
                 </View>
                 <View style={styles.cardDivider}></View>
                 <View style={styles.cardBody}>
@@ -167,7 +167,7 @@
       paddingHorizontal: 10,
       borderRadius: 10,
       elevation: 4,
-      marginTop: 65, // Adjust margin top to remove excess space
+      marginTop: 25, // Adjust margin top to remove excess space
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.1,

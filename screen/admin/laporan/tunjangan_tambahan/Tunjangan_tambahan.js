@@ -10,6 +10,7 @@ import {
   ScrollView,
   Linking,
   ActivityIndicator,
+  KeyboardAvoidingView,
 } from 'react-native';
 import {Dropdown} from 'react-native-element-dropdown';
 import RNFS from 'react-native-fs';
@@ -17,7 +18,6 @@ import useApiClient from '../../../../src/api/apiClient';
 import {APP_URL} from '@env';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Header from '../../components/Header';
-
 
 
 export default function TunjanganTambahan({navigation}) {
@@ -183,9 +183,10 @@ export default function TunjanganTambahan({navigation}) {
   };
 
   return (
-    <View style={styles.container}>
-      <Header title="Tunjanga Tambahan" />
-
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <Header title="Tunjangan Tambahan" />
 
       <ScrollView
         style={styles.content}
@@ -353,7 +354,7 @@ export default function TunjanganTambahan({navigation}) {
           </View>
         </View>
       </Modal>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

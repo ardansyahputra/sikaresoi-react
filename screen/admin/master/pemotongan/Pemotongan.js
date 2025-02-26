@@ -18,7 +18,6 @@ import {BarIndicator} from 'react-native-indicators';
 import Header from '../../../components/Header';
 import Toast from 'react-native-toast-message';
 import GlobalStyle from '../../../../src/utils/GlobalStyle';
-import {Alert} from 'react-native';
 
 export default function UangMakan() {
   const navigation = useNavigation();

@@ -212,7 +212,7 @@ export default function Jabatan() {
             color="#fff"
             style={styles.icon}
           />
-          <Text style={styles.downloadText}>Download Excel</Text>
+          <Text style={styles.downloadText}>Download Exce</Text>
         </TouchableOpacity>
       </View>
 

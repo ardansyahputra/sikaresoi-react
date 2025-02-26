@@ -5,7 +5,6 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  BarIndicator,
   Modal,
   TextInput,
   Alert,
@@ -13,14 +12,17 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
-import { useNavigation } from '@react-navigation/native';
-import { useFocusEffect } from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect} from '@react-navigation/native';
 import useApiClient from '../../../../../src/api/apiClient';
-
+import {BarIndicator} from 'react-native-indicators';
+import Header from '../../../../components/Header';
 
 export default function Mesin() {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -30,8 +32,6 @@ export default function Mesin() {
   const [selectedDisplay, setSelectedDisplay] = useState(null);
   const navigation = useNavigation();
   const apiClient = useApiClient();
-
-
 
   useFocusEffect(
     React.useCallback(() => {
@@ -45,12 +45,7 @@ export default function Mesin() {
       const response = await apiClient.post(
         '/fingerprint_machine/indexandro', // API URL
         {page, display},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjE4Ljk0OjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzY5MDgwNDUsImV4cCI6MTczNjkzMTIzNCwibmJmIjoxNzM2OTI3NjM0LCJqdGkiOiJVVENITmt4MUN1eEY5M1NhIiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.LocW4Sk32906K41W9PoCrcHoRx1Za-aonestc-IJhng', // Token
-          },
-        },
+        {},
       );
       console.log('Full API Response:', response.data); // Log the full response to inspect all data
 
@@ -226,8 +221,8 @@ export default function Mesin() {
             <Text style={styles.expandedText}>Port: {item.port || '-'}</Text>
 
             {/* Teks Status Aktif dengan ikon dan background */}
-            <Text style={styles.expandedText}>
-              Status Aktif:
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <Text style={styles.expandedText}>Status Aktif: </Text>
               <View
                 style={{
                   flexDirection: 'row',
@@ -235,19 +230,15 @@ export default function Mesin() {
                   backgroundColor: activeBackgroundColor,
                   paddingVertical: 1,
                   paddingHorizontal: 10,
-                  borderRadius: 5, // Menambahkan border radius
-                  transform: [
-                    {translateX: 10}, // Geser background ke kanan
-                    {translateY: 5}, // Geser background ke bawah
-                  ],
+                  borderRadius: 5,
                 }}>
                 <View style={{marginRight: -1}}>{activeIcon}</View>
               </View>
-            </Text>
+            </View>
 
             {/* Teks Status Terhubung dengan ikon dan background */}
-            <Text style={styles.expandedText}>
-              Status Terhubung:
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <Text style={styles.expandedText}>Status Terhubung: </Text>
               <View
                 style={{
                   flexDirection: 'row',
@@ -255,15 +246,11 @@ export default function Mesin() {
                   backgroundColor: connectedBackgroundColor,
                   paddingVertical: 1,
                   paddingHorizontal: 10,
-                  borderRadius: 5, // Menambahkan border radius
-                  transform: [
-                    {translateX: 10}, // Geser background ke kanan
-                    {translateY: 5}, // Geser background ke bawah
-                  ],
+                  borderRadius: 5,
                 }}>
                 <View style={{marginRight: -1}}>{connectedIcon}</View>
               </View>
-            </Text>
+            </View>
 
             <View style={styles.actionContainer}>
               <TouchableOpacity
@@ -289,15 +276,7 @@ export default function Mesin() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}></View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
-          <TouchableOpacity style={styles.iconWrapper}>
-            <Ionicons name="person-circle-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <Header title="Mesin Fingerprint" />
 
       {/* Loading Indicator */}
       {isLoading ? (

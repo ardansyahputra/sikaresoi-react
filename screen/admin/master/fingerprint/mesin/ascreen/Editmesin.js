@@ -10,7 +10,8 @@ import {
   Platform,
   FlatList,
 } from 'react-native';
-import axios from 'axios';
+import useApiClient from '../../../../../../src/api/apiClient';
+import Header from '../../../../components/Header';
 
 const EditMesin = ({ navigation, route }) => {
   const { uuid } = route.params;
@@ -21,18 +22,13 @@ const EditMesin = ({ navigation, route }) => {
   const [comkey, setComkey] = useState('');
   const [statusAktif, setStatusAktif] = useState('Aktif');
   const [isDropdownVisible, setDropdownVisible] = useState(false); // State untuk visibilitas dropdown
+  const apiClient = useApiClient();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const url = `http://192.168.60.163:8000/api/v1/fingerprint_machine/${uuid}/edit`;
-        const response = await axios.get(url, {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2Mzg1MzE0LCJleHAiOjE3MzYzOTg0NTgsIm5iZiI6MTczNjM5NDg1OCwianRpIjoiZVdzTWpWQ1F1WGY3SDVwcyIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.bhFOHbPIjAKT9U17r2YYRZXoxhT8H-oMXvu-vvzu2R0', // Pastikan token valid
-            Accept: 'application/json',
-          },
+        const url = `/fingerprint_machine/${uuid}/edit`;
+        const response = await apiClient.get(url, {
         });
 
         if (response.status === 200 && response.data) {
@@ -73,21 +69,16 @@ const EditMesin = ({ navigation, route }) => {
       active: statusAktif === 'Aktif' ? '1' : '0',
     };
 
-    const requestUrl = `http://192.168.60.163:8000/api/v1/fingerprint_machine/${uuid}/update`;
+    const requestUrl = `/fingerprint_machine/${uuid}/update`;
     console.log('Request URL:', requestUrl);
     console.log('Payload:', payload);
 
     try {
-      const response = await axios.post(
+      const response = await apiClient.post(
         requestUrl,
         payload,
         {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2Mzg1MzE0LCJleHAiOjE3MzYzOTg0NTgsIm5iZiI6MTczNjM5NDg1OCwianRpIjoiZVdzTWpWQ1F1WGY3SDVwcyIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.bhFOHbPIjAKT9U17r2YYRZXoxhT8H-oMXvu-vvzu2R0',
-            Accept: 'application/json',
-          },
+
         }
       );
 
@@ -107,9 +98,6 @@ const EditMesin = ({ navigation, route }) => {
     }
   };
 
-
-
-
   const toggleDropdown = () => {
     setDropdownVisible(!isDropdownVisible);
   };
@@ -124,11 +112,8 @@ const EditMesin = ({ navigation, route }) => {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.headerTitle}>Tambah Data</Text>
-          </TouchableOpacity>
-        </View>
+      <Header title="Edit Mesin Fingerprint" />
+
         <View style={styles.cardContainer}>
           <Text style={styles.label}>Nama Mesin</Text>
           <TextInput
@@ -207,7 +192,7 @@ const EditMesin = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#E7E9F1', paddingTop: 20 },
+  container: { flex: 1, backgroundColor: '#E7E9F1',},
   header: {
     backgroundColor: '#fff',
     paddingHorizontal: 16,

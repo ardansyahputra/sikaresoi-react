@@ -10,7 +10,9 @@ import {
   ScrollView,
   SafeAreaView,
 } from 'react-native';
-import axios from 'axios';
+import useApiClient from '../../../../src/api/apiClient';
+import Header from '../../../components/Header';
+
 
 const JamKerja = ({ navigation }) => {
   // Inisialisasi state
@@ -24,17 +26,17 @@ const JamKerja = ({ navigation }) => {
   const [name, setName] = useState('');
   const [id, setId] = useState('');
   const [activeId, setActiveId] = useState(null);
+  const apiClient = useApiClient();
+
 
   useEffect(() => {
     getSettingTime();
   }, []);
 
   const getSettingTime = () => {
-    axios
-      .get('http://192.168.60.163:8000/api/v1/admin/jamkerja/show', {
-        headers: {
-          Authorization: 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2NDcxNjczLCJleHAiOjE3MzY0ODA0MTgsIm5iZiI6MTczNjQ3NjgxOCwianRpIjoid2FhVnNtU1BBcW94NDlzRSIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.hVZ6SeS9RugyvvuLv53gK3-gc1IbTU_B-h87zoJaKkA', // Ganti dengan token yang sesuai
-        },
+apiClient
+      .get('/admin/jamkerja/show', {
+
       })
       .then((response) => {
         if (response.data.status) {
@@ -110,9 +112,8 @@ const JamKerja = ({ navigation }) => {
   
     console.log('Data to be saved:', payload);
   
-    axios
-      .post('http://192.168.60.163:8000/api/v1/admin/jamkerja/save', payload, {
-        headers: { Authorization: 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjE2Mzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM2NDcxNjczLCJleHAiOjE3MzY0ODA0MTgsIm5iZiI6MTczNjQ3NjgxOCwianRpIjoid2FhVnNtU1BBcW94NDlzRSIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.hVZ6SeS9RugyvvuLv53gK3-gc1IbTU_B-h87zoJaKkA' }, // Ganti dengan token yang sesuai
+    apiClient
+      .post('/admin/jamkerja/save', payload, {
       })
       .then((response) => {
         if (response.data.status) {
@@ -186,14 +187,11 @@ const JamKerja = ({ navigation }) => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.container}>
-            <View style={styles.header}>
-              <TouchableOpacity onPress={() => navigation.goBack()}>
-                <Text style={styles.headerTitle}>Jam Kerja</Text>
-              </TouchableOpacity>
-            </View>
+          <Header title="Setting Jam Kerja" />
+
             <View style={styles.cardContainer}>
               <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>Setting Jam Kerja</Text>
+                <Text style={styles.cardTitle}>Jam Kerja</Text>
               </View>
               <View style={styles.cardDivider}></View>
               <View style={styles.cardBody}>
@@ -243,7 +241,7 @@ const JamKerja = ({ navigation }) => {
       paddingHorizontal: 10,
       borderRadius: 10,
       elevation: 4,
-      marginTop: 65,
+      marginTop: 25,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.1,
@@ -290,8 +288,8 @@ const JamKerja = ({ navigation }) => {
       borderColor: '#CCC',
       backgroundColor: '#fff',
       padding: 4,
-      width: '15%',
-      fontSize: 10,
+      width: '17%',
+      fontSize: 11,
       paddingHorizontal: 8,
       borderRadius: 3,
       color: '#000', // Menetapkan warna teks menjadi hitam
@@ -303,14 +301,14 @@ const JamKerja = ({ navigation }) => {
       justifyContent: 'center',
       alignItems: 'center',
       width: '12%',
-      height: 30,
+      height: 40,
       borderRadius: 3,
+      marginLeft: 5,
     },
     buttonText: {
       color: '#FFF',
       fontWeight: 'bold',
-      fontSize: 8,
+      fontSize: 9,
     },
   });
-
   export default JamKerja;
