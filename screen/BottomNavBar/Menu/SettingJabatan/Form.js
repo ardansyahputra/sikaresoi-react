@@ -13,8 +13,9 @@ import {
 } from 'react-native';
 import {Dropdown} from 'react-native-element-dropdown';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import DateRangePicker from 'react-native-modern-datepicker';
 import useApiClient from '../../../../src/api/apiClient';
+import DatePickerComponent from './DatePicker'; // Import the new component
+import { toastConfig, Toast } from '../../../../src/utils/CustomToast';
 
 const convertDateFormat = date => {
   const year = String(date.getFullYear());
@@ -24,8 +25,8 @@ const convertDateFormat = date => {
   return `${year}-${month}-${day}`;
 };
 
-const FormJabatan = ({navigation, route}) => {
-  const {type, item} = route.params; // 'create' or 'edit', and the item to edit if 'edit'
+const FormJabatan = ({ navigation, route }) => {
+  const { type, item } = route.params; // 'create' or 'edit', and the item to edit if 'edit'
 
   const [formData, setFormData] = useState({
     pimpinan_id: '',
@@ -49,11 +50,15 @@ const FormJabatan = ({navigation, route}) => {
   const [loading, setLoading] = useState(false);
   const [dropdownLoading, setDropdownLoading] = useState(true);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
-  const [selectedStartDate, setSelectedStartDate] = useState(new Date());
-  const [selectedEndDate, setSelectedEndDate] = useState(new Date());
   const apiClient = useApiClient();
+  const showToast = (type, text1, text2) => {
+        Toast.show({
+          type,
+          text1,
+          text2,
+        });
+      };
 
-  
   useEffect(() => {
     fetchDropdownOptions();
     if (type === 'edit' && item?.uuid) {
@@ -65,8 +70,7 @@ const FormJabatan = ({navigation, route}) => {
     try {
       setLoading(true);
 
-      const response = await apiClient.get(`/user/jabatan/${uuid}/edit`, {
-      });
+      const response = await apiClient.get(`/user/jabatan/${uuid}/edit`, {});
 
       const data = response.data?.data;
       if (data) {
@@ -77,10 +81,7 @@ const FormJabatan = ({navigation, route}) => {
       console.error('Error fetching data for edit:', {
         response: error.response,
       });
-      Alert.alert(
-        'Error',
-        'Terjadi kesalahan saat memuat data untuk pengeditan.',
-      );
+      Alert.alert('Error', 'Terjadi kesalahan saat memuat data untuk pengeditan.');
     } finally {
       setLoading(false);
     }
@@ -90,23 +91,22 @@ const FormJabatan = ({navigation, route}) => {
     try {
       setDropdownLoading(true);
       const endpoints = [
-        {key: 'pimpinan', url: '/user_master/show'},
-        {key: 'jabatan_pimpinan', url: '/jabatan/show'},
-        {key: 'unit_kerja_pimpinan', url: '/unit_kerja/show'},
-        {key: 'jabatan', url: '/jabatan/show'},
-        {key: 'unit_kerja', url: '/unit_kerja/show'},
+        { key: 'pimpinan', url: '/user_master/show' },
+        { key: 'jabatan_pimpinan', url: '/jabatan/show' },
+        { key: 'unit_kerja_pimpinan', url: '/unit_kerja/show' },
+        { key: 'jabatan', url: '/jabatan/show' },
+        { key: 'unit_kerja', url: '/unit_kerja/show' },
       ];
 
       const requests = endpoints.map(endpoint =>
-        apiClient.get(`${endpoint.url}`, {
-        }),
+        apiClient.get(`${endpoint.url}`, {}),
       );
 
       const responses = await Promise.all(requests);
 
       const newOptions = {};
       responses.forEach((response, index) => {
-        const {key} = endpoints[index];
+        const { key } = endpoints[index];
         newOptions[key] = (response.data?.data || []).map(item => ({
           label:
             item.name || item.nm_jabatan || item.nm_unit_kerja || 'Unknown',
@@ -140,26 +140,18 @@ const FormJabatan = ({navigation, route}) => {
     });
   };
 
-
   const toggleDatePicker = () => {
     setDatePickerVisible(!datePickerVisible);
   };
 
   const handleDateChange = (field, date) => {
-    const updatedDate = date.replace(/\//g, '-');
-    if (field === 'batas_awal') {
-      setSelectedStartDate(updatedDate);
-    } else {
-      setSelectedEndDate(updatedDate);
-    }
+    setFormData(prevFormData => ({
+      ...prevFormData,
+      [field]: date,
+    }));
   };
 
   const handleAcceptDateRange = () => {
-    setFormData(prevFormData => ({
-      ...prevFormData,
-      batas_awal: new Date(selectedStartDate),
-      batas_akhir: new Date(selectedEndDate),
-    }));
     setDatePickerVisible(false);
   };
 
@@ -168,7 +160,7 @@ const FormJabatan = ({navigation, route}) => {
   };
 
   const setField = (fieldName, value) => {
-    setFormData(prev => ({...prev, [fieldName]: value}));
+    setFormData(prev => ({ ...prev, [fieldName]: value }));
   };
 
   const handleChangeAktif = async state => {
@@ -186,7 +178,7 @@ const FormJabatan = ({navigation, route}) => {
       !formData.jabatan_id ||
       !formData.unit_kerja_id
     ) {
-      Alert.alert('Validasi', 'Harap isi semua field yang diperlukan.');
+      showToast('info', 'Validasi', 'Lengkapi semua data');
       return;
     }
 
@@ -238,20 +230,17 @@ const FormJabatan = ({navigation, route}) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header1}>
-              <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                <Ionicons name="arrow-back" size={26} color="#000" />
-              </TouchableOpacity>
-              <Image
-                  source={require('../../../assets/images/sikaresoi.png')}
-                  style={styles.headerImage}
-              />
-            </View>
-      
       <View style={styles.formContainer}>
-        <Text style={styles.title}>
+        <View style={styles.backButtonContainer}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={26} color="#000" />
+            </TouchableOpacity>
+          </View>
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>
           {type === 'create' ? 'Tambah Data Jabatan' : 'Edit Data Jabatan'}
-        </Text>
+          </Text>
+        </View>
 
         {/* Dropdown Pimpinan */}
         <Text style={styles.label}>
@@ -361,7 +350,7 @@ const FormJabatan = ({navigation, route}) => {
         <TouchableOpacity onPress={toggleDatePicker} style={styles.datePicker}>
           <Text style={styles.dateText}>
             {formData.batas_awal
-              ? `${formData.batas_awal?.toLocaleDateString()} / ${formData.batas_akhir?.toLocaleDateString()}`
+              ? `${formData.batas_awal?.toLocaleDateString()}  -  ${formData.batas_akhir?.toLocaleDateString()}`
               : 'Pilih Tanggal'}
           </Text>
           <Ionicons name="calendar-outline" size={20} color="#000" />
@@ -369,46 +358,15 @@ const FormJabatan = ({navigation, route}) => {
           
         {/* Date Picker Modal */}
         {datePickerVisible && (
-          <View style={styles.datePickerContainer}>  
-          <View style={styles.datePickerModal}>
-            <DateRangePicker
-              selected={
-                formData.batas_awal
-                  ? formData.batas_awal.toLocaleDateString()
-                  : new Date().toLocaleDateString()
-              }
-              mode="calendar"
-              display="default"
-              onSelectedChange={date => {
-                handleDateChange('batas_awal', date);
-              }}
-            />
-            <DateRangePicker
-              selected={
-                formData.batas_akhir
-                  ? formData.batas_akhir.toLocaleDateString()
-                  : new Date().toLocaleDateString()
-              }
-              mode="calendar"
-              display="default"
-              onSelectedChange={date => {
-                handleDateChange('batas_akhir', date);
-              }}
-            />
-            <View style={styles.datePickerButtons}>
-              <TouchableOpacity
-                onPress={handleAcceptDateRange}
-                style={styles.saveButton}>
-                <Text style={styles.saveButtonText}>Accept</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleCancelDateRange}
-                style={styles.cancelButton}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-          </View>
+          
+          <DatePickerComponent
+            datePickerVisible={datePickerVisible}
+            handleAcceptDateRange={handleAcceptDateRange}
+            handleCancelDateRange={handleCancelDateRange}
+            formData={formData}
+            handleDateChange={handleDateChange}
+          />
+          
         )}
           
 
@@ -440,6 +398,7 @@ const FormJabatan = ({navigation, route}) => {
 
 const styles = StyleSheet.create({
   container: {
+    padding: 10,
     backgroundColor: '#F7F8FB',
     flexGrow: 1,
   },
@@ -480,14 +439,8 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     alignSelf: 'center',
   },
-  backButton: {
-    marginTop:1,
-    marginLeft:3,
-    marginRight:1,
-    opacity: 0.4,
-  },
   formContainer: {
-    marginTop: 30,
+    marginTop: 0,
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     padding: 30,
@@ -502,12 +455,23 @@ const styles = StyleSheet.create({
     height: 40,
     resizeMode: 'contain',
   },
+  titleContainer:{
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
   title: {
     fontSize: 18,
     fontFamily: "Poppins-Bold",
     marginBottom: 20,
     textAlign: 'center',
     color: '#333',
+  },
+  backButton: {
+    opacity: 0.4,
+  },
+  backButtonContainer: {
+    marginTop: -15,
+    marginLeft: -15,
   },
   label: {
     fontSize: 14,
@@ -611,7 +575,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   saveButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#3699ff',
     padding: 15,
     borderRadius: 5,
     flex: 1,
@@ -641,6 +605,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   dropdownPlaceholder: {
+    opacity: 0.3,
     fontFamily: 'Poppins-Regular', // Placeholder font Poppins
     fontSize: 14,
   },

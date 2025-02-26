@@ -13,16 +13,26 @@ import {
 import { Dropdown } from 'react-native-element-dropdown';
 import useApiClient from '../../../src/api/apiClient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Toast, toastConfig} from '../../../src/utils/CustomToast';
 
 const AddUraian = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
   const [dropdownLoading, setDropdownLoading] = useState(true);
+  const [tgsTambahan, setTgsTambahan] = useState(false); // Track toast visibility
+  const showToast = (type, text1, text2) => {
+    Toast.show({
+      type,
+      text1,
+      text2,
+    });
+  };
 
   const [formData, setFormData] = useState({
-    nm_satuan: '',
+    nm_uraian: '',
+    satuan: '',
     wpt: 0,
-    jabatan_id: null, // Will be populated from userJabatanData
-    tgs_tambahan: '', // Added tugas tambahan field
+    jabatan_id: 0,
+    tgs_tambahan: tgsTambahan,
   });
 
   const [dropdownOptions, setDropdownOptions] = useState({
@@ -34,16 +44,17 @@ const AddUraian = ({ navigation, route }) => {
   useEffect(() => {
     fetchDropdownOptions();
     fetchUserJabatanData();
+    fetchUraian();
   }, []);
 
   const fetchUserJabatanData = async () => {
     try {
       const response = await apiClient.post('user/jabatan/aktif');
+      console.log('Jabatan Id:', response.data.data.jabatan_id); // Log the API response
       if (response?.data?.data) {
         setFormData(prev => ({
           ...prev,
           jabatan_id: response.data.data.jabatan_id,
-          tgs_tambahan: response.data.data.tgs_tambahan || '', // Populate tugas tambahan from the response
         }));
       }
     } catch (error) {
@@ -52,18 +63,37 @@ const AddUraian = ({ navigation, route }) => {
     }
   };
 
+  const fetchUraian = async () => {
+    try {
+      const response = await apiClient.post('uraian/indexAndro_user');
+      console.log('tgs tambahan:', response.data.data.tgs_tambahan); // Debugging log
+  
+      if (response?.data?.data) {
+        // If you need to set tgs_tambahan based on some condition, do it here
+        setFormData(prev => ({
+          ...prev,
+          tgs_tambahan: false, // Set to false or based on some condition
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching uraian:', error);
+      Alert.alert('Error', 'Gagal memuat data Tugas Tambahan.');
+    }
+  };
+
+
   const fetchDropdownOptions = async () => {
     try {
       setDropdownLoading(true);
       const response = await apiClient.get('satuan/show');
       const satuanOptions = (response.data?.data || []).map(item => ({
         label: item.nm_satuan || 'Unknown',
-        value: item.satuan, // Use the label as the value since backend expects a string
+        value: item.satuan, // Ensure this matches the expected value
       }));
       setDropdownOptions({ satuan: satuanOptions });
     } catch (error) {
       console.error('Error fetching dropdown options:', error.response?.data || error.message);
-      Alert.alert('Error', 'Terjadi kesalahan saat memuat opsi dropdown.');
+      showToast('error', 'Error', 'Gagal memuat data dropdown');
     } finally {
       setDropdownLoading(false);
     }
@@ -74,64 +104,55 @@ const AddUraian = ({ navigation, route }) => {
   };
 
   const handleSave = async () => {
-    if (!formData.nm_uraian || !formData.satuan || !formData.wpt || !formData.jabatan_id) {
-      Alert.alert('Validasi', 'Harap isi semua field yang diperlukan.');
-      return;
-    }
+  console.log('Form Data Before Validation:', formData); // Log formData before validation
+  if (!formData.nm_uraian || !formData.satuan || !formData.wpt || !formData.jabatan_id) {
+    showToast('info', 'Validasi', 'Harap isi semua field yang diperlukan.');
+    return;
+  }
 
-    console.log('payload:', formData);
-
-    setLoading(true);
-    try {
-      const url = '/uraian/create';
-      const method = 'post';
-
-      await apiClient({
-        method,
-        url,
-        data: formData,
-      });
-
-      Alert.alert('Sukses', `Data berhasil ditambahkan`);
-      navigation.goBack();
-    } catch (error) {
-      console.error('Error saving data:', error.response?.data || error.message);
-      Alert.alert('Error', 'Terjadi kesalahan saat menyimpan data.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  try {
+    const payload = {
+      ...formData,
+      wpt: formData.wpt.toString(), // Ensure wpt is a string
+      tgs_tambahan: formData.tgs_tambahan, // Ensure tgs_tambahan is a boolean
+    };
+    console.log('Payload Being Sent:', payload); // Log the payload before API call
+    await apiClient.post('/uraian/create', payload);
+    showToast('success', 'Sukses', 'Berhasil menambahkan data');
+    navigation.navigate('MasterKinerja');
+  } catch (error) {
+    console.error('Error saving data:', error.response?.data || error.message);
+    showToast('error', 'Error', 'Gagal menambahkan data');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Image
-            source={require('../../assets/sikaresoi.png')}
-            style={styles.logo}
-          />
-        </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconWrapper}>
-            <Ionicons name="person-circle-outline" size={24} color="#333" />
+      <View style={styles.formContainer}>
+
+        <View style={styles.backButtonContainer}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={26} color="#000" />
           </TouchableOpacity>
         </View>
-      </View>
-      
-      <View style={styles.formContainer}>
-        <Text style={[styles.customFont, styles.headerTitle]}></Text>
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>
+            Tambah Indikator
+          </Text>
+        </View>
 
         <Text style={styles.label}>
           Indikator Kinerja: <Text style={styles.required}>*</Text>
         </Text>
         <TextInput
-          style={styles.dropdown}
-          placeholder="Nama Uraian"
-          data={dropdownOptions.satuan}
+          style={styles.input}
           placeholderStyle={styles.placeholderStyle}
-          selectedTextStyle={styles.selectedTextStyle}
-          value={formData.nm_satuan}
-          onChangeText={text => setField('nm_satuan', text)}
+          placeholder="Nama Uraian"
+          value={formData.nm_uraian}
+          onChangeText={text => setField('nm_uraian', text)}
         />
 
         <Text style={styles.label}>
@@ -139,29 +160,30 @@ const AddUraian = ({ navigation, route }) => {
         </Text>
         <Dropdown
           loading={dropdownLoading}
-          style={styles.dropdown}
+          style={styles.input}
           placeholderStyle={styles.placeholderStyle}
           selectedTextStyle={styles.selectedTextStyle}
           data={dropdownOptions.satuan}
           labelField="label"
           valueField="value"
-          value={formData.nm_satuan}
-          onChange={item => setField('satuan', item.value)} // Store the label (string) in formData
+          placeholder="Pilih Satuan"
+          value={formData.satuan} 
+          onChange={item => setField('satuan', item.label) }
+          
         />
 
         <Text style={styles.label}>
           WPT: <Text style={styles.required}>*</Text>
-          </Text>
+        </Text>
         <TextInput
-          style={styles.dropdown}
-          placeholder="Nama Uraian"
+          style={styles.input}
           placeholderStyle={styles.placeholderStyle}
-          selectedTextStyle={styles.selectedTextStyle}
-          value={formData.wpt.toString()}
-          onChangeText={text => setField('wpt', item.value)}
+          placeholder="WPT"
+          value={formData.wpt}
+          onChangeText={text => setField('wpt', text.replace(/\D/g, ''))} // Ensure only numbers are entered
+          keyboardType="numeric"
         />
 
-        {/* Button Save dan Cancel */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
             {loading ? (
@@ -172,7 +194,7 @@ const AddUraian = ({ navigation, route }) => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.cancelButton}
-            onPress={() => navigation.goBack({refresh: true})}>
+            onPress={() => navigation.goBack()}>
             <Text style={styles.cancelButtonText}>Batal</Text>
           </TouchableOpacity>
         </View>
@@ -183,7 +205,7 @@ const AddUraian = ({ navigation, route }) => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    padding: 10,
     backgroundColor: '#F7F8FB',
     flexGrow: 1,
   },
@@ -204,7 +226,7 @@ const styles = StyleSheet.create({
     zIndex: 10, // Memberikan prioritas rendering agar header tidak tertutup oleh konten
   },
   formContainer: {
-    marginTop: 50,
+    marginTop: 0,
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     padding: 20,
@@ -214,19 +236,26 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
-  logo: {
-    width: 140,
-    height: 40,
-    resizeMode: 'contain',
+  titleContainer:{
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: "Poppins-Bold",
     marginBottom: 20,
     textAlign: 'center',
     color: '#333',
   },
+  backButton: {
+    opacity: 0.4,
+  },
+  backButtonContainer: {
+    marginTop: -8,
+    marginLeft:-8,
+  },
   label: {
+    fontFamily: 'Poppins-SemiBold',
     fontSize: 14,
     marginBottom: 5,
     color: '#333',
@@ -234,7 +263,7 @@ const styles = StyleSheet.create({
   required: {
     color: 'red',
   },
-  dropdown: {
+  input: {
     borderColor: '#CCCCCC',
     borderWidth: 1,
     borderRadius: 5,
@@ -244,11 +273,10 @@ const styles = StyleSheet.create({
   },
   placeholderStyle: {
     fontSize: 16,
-    color: '#999999',
+    opacity: 0.3,
   },
   selectedTextStyle: {
     fontSize: 16,
-    color: '#333333',
   },
   datePickerContainer: {
     backgroundColor: '#fff',

@@ -1,113 +1,224 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Image,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { Card, Button } from 'react-native-paper';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import useApiClient from '../../../src/api/apiClient';
+import GlobalStyle from '../../../src/utils/GlobalStyle';
+import { toastConfig, Toast } from '../../../src/utils/CustomToast';
 
-const Kumulatif = ({ navigation }) => {
-    const kinerja = {
-      uuid: '12345',
-      uraian: {
-        nm_uraian: 'Contoh Kegiatan Tugas Jabatan',
-        sub_unsur: {
-          nm_sub_unsur: 'Contoh Sub Unsur',
-        },
-        angka_kredit: '10',
-        point: '5',
-        wpt: '40',
-      },
-      kt_satuan: '10',
-      kl_persen: '90%',
-      waktu_bulan: '12',
-      kuantitas: '100',
-      target: Array.from({ length: 12 }, (_, i) => ({
-        bulan: new Date(0, i).toLocaleString('id-ID', { month: 'long' }),
-        kuantitas: '8.33',
-      })),
-      total_target: '100.00',
+const Kumulatif = ({ navigation, route }) => {
+  const { item } = route.params; // Use item from route.params
+  const [kinerja, setKinerja] = useState(item); // Initialize state with item
+  const [loading, setLoading] = useState(false);
+  const [errorCount, setErrorCount] = useState(false); // Track if total target exceeds kuantitas
+  const apiClient = useApiClient();
+  const showToast = (type, text1, text2) => {
+      Toast.show({
+        type,
+        text1,
+        text2,
+      });
     };
-  
-    return (
-      <ScrollView style={styles.container}>
-        <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={26} color="#000" />
-        </TouchableOpacity>
-        <Image
-          source={require('../../assets/sikaresoi.png')}
-          style={styles.headerImage}
-        />
-      </View>
 
-        <Card style={styles.card}>
-          <Card.Title
-            title="Performance Breakdown"
-            left={() => (
-              <TouchableOpacity onPress={() => navigation.goBack()}>
-                <Icon name="arrow-left" size={20} color="#000" />
-              </TouchableOpacity>
-            )}
-          />
-          <Card.Content>
-            <DetailRow label="Sub Unsur" value={kinerja.uraian?.sub_unsur?.nm_sub_unsur} />
-            <DetailRow label="Kegiatan Tugas Jabatan" value={kinerja.uraian?.nm_uraian} />
-            <DetailRow label="Angka Kredit" value={kinerja.uraian?.angka_kredit} />
-            <DetailRow label="Kuantitas" value={kinerja.kt_satuan} />
-            <DetailRow label="Kualitas" value={kinerja.kl_persen} />
-            <DetailRow label="Waktu (Bulan)" value={kinerja.waktu_bulan} />
-          </Card.Content>
-        </Card>
-  
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text style={styles.title}>Total Kuantitas</Text>
-            <TextInput
-              style={styles.input}
-              value={kinerja.total_target?.toString()}
-              editable={false}
-            />
-            <Button mode="contained" disabled={true} style={styles.button}>
-              SIMPAN
-            </Button>
-          </Card.Content>
-        </Card>
-  
-        <Card style={styles.card}>
-          <Card.Content>
-            <Button mode="contained" disabled={true} style={styles.autoButton}>
-              SET OTOMATIS
-            </Button>
-            <View style={styles.targetGrid}>
-              {kinerja.target?.map((target, index) => (
-                <View key={index} style={styles.targetItem}>
-                  <Text style={styles.targetLabel}>{target.bulan}:</Text>
-                  <TextInput
-                    style={styles.targetInput}
-                    value={target.kuantitas?.toString()}
-                    editable={false}
-                  />
-                </View>
-              ))}
-            </View>
-          </Card.Content>
-        </Card>
-      </ScrollView>
-    );
+  useEffect(() => {
+    console.log('item:', item); // Check if item is defined
+    if (item) {
+      fetchData();
+    }
+  }, [item]);
+
+  // Fetch data from the backend
+   const fetchData = async () => {
+    setLoading(true);
+    try {
+      const response = await apiClient.get(`user/kinerja/list/${item.id}/edit`);
+      setKinerja(response.data.data);
+    } catch (err) {
+      console.error('Invalid data:', response);
+      setData([]);
+    } finally {
+      setLoading(false);
+    }
   };
-  
-  const DetailRow = ({ label, value }) => (
-    <View style={styles.detailRow}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value || '-'}</Text>
-    </View>
+
+  // Save target data
+  const saveTarget = async () => {
+    setLoading(true);
+    try {
+      if (!item.target || !Array.isArray(item.target) || item.target.length === 0) {
+       showToast('error','Error', 'Data target tidak ditemukan');
+        return;
+    }
+
+    // Format ulang payload agar sesuai dengan yang diharapkan backend
+    const payload = item.target.map(target => ({
+        id: target.id, // Jika update, gunakan id. Jika insert baru, mungkin id dibiarkan kosong/null
+        uuid: target.uuid || null, // Jika data baru, backend mungkin akan generate UUID
+        bulan_id: target.bulan_id,
+        list_kinerja_id: target.list_kinerja_id,
+        kuantitas: target.kuantitas,
+        biaya: target.biaya,
+        pimpinan_id: target.pimpinan_id
+    }));
+
+      console.log('Payload:', JSON.stringify(payload, null, 2)); // Debugging: Log the payload
+
+      const response = await apiClient.post(`user/kinerja/list/target/${item.uuid}/save`, payload);
+      console.log('Save target response:', response.data.data);
+      showToast('success', 'Success', 'Data saved successfully');
+      fetchData(); // Refresh data after saving
+    } catch (err) {
+      console.error('Error', err.response?.data || err.message);
+      showToast('error', 'Error', 'Failed to save data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Calculate average and update target values (Set Otomatis)
+  const hitungRerata = () => {
+    const hasil = item.kuantitas / item.waktu;
+    const updatedTargets = kinerja.target.map((target) => ({
+      ...target,
+      kuantitas: parseFloat(hasil).toFixed(2),
+    }));
+    setKinerja({ ...kinerja, target: updatedTargets });
+    countTarget(); // Update total target
+  };
+
+  // Calculate total target and check for errors
+  const countTarget = () => {
+    let totalTarget = 0;
+    kinerja.target.forEach((target) => {
+      if (target.kuantitas) {
+        totalTarget += parseFloat(target.kuantitas);
+      }
+    });
+
+    if (totalTarget.toFixed(2) > parseFloat(kinerja.kuantitas)) {
+      setErrorCount(true);
+    } else {
+      setErrorCount(false);
+    }
+
+    setKinerja({ ...kinerja, total_target: totalTarget.toFixed(2) });
+  };
+
+  // Handle input change for target values
+  const handleTargetChange = (index, value) => {
+    const updatedTargets = [...kinerja.target];
+    updatedTargets[index].kuantitas = value;
+    setKinerja({ ...kinerja, target: updatedTargets });
+    countTarget(); // Update total target
+  };
+
+  // Fetch data on component mount
+  // useEffect(() => {
+  //   fetchData();
+  // }, []);
+
+  return (
+    <ScrollView style={styles.container}>
+      <Card style={[styles.customFont, styles.card]}>
+        <Card.Title
+          title="Kumulatif"
+          titleStyle={GlobalStyle.Bold}
+          left={() => (
+            <TouchableOpacity onPress={() => navigation.navigate('KontrakKinerja')}>
+              <Ionicons name="arrow-back" size={20} color="#000" />
+            </TouchableOpacity>
+          )}
+        />
+        <Card.Content style={styles.userJabatanRow}>
+          <View style={styles.userJabatanColumn}>
+            <View style={styles.userJabatanItem}>
+              <Text style={styles.userJabatanLabel}>Kegiatan Tugas Jabatan:</Text>
+              <Text style={styles.userJabatanValue}>{item.uraian?.nm_uraian}</Text>
+            </View>
+
+            <View style={styles.userJabatanItem}>
+              <Text style={styles.userJabatanLabel}>Angka Kredit:</Text>
+              <Text style={styles.userJabatanValue}>{item.uraian?.angka_kredit}</Text>
+            </View>
+          </View>
+          <View style={styles.userJabatanColumnR}>
+            <View style={styles.userJabatanItem}>
+              <Text style={styles.userJabatanLabel}>Kuantitas:</Text>
+              <Text style={styles.userJabatanValue}>{item.kt_satuan}</Text>
+            </View>
+
+            <View style={styles.userJabatanItem}>
+              <Text style={styles.userJabatanLabel}>Kualitas:</Text>
+              <Text style={styles.userJabatanValue}>{item.kl_persen}</Text>
+            </View>
+
+            <View style={styles.userJabatanItem}>
+              <Text style={styles.userJabatanLabel}>Waktu:</Text>
+              <Text style={styles.userJabatanValue}>{item.waktu_bulan}</Text>
+            </View>
+          </View>
+        </Card.Content>
+      </Card>
+
+      <Card style={styles.card}>
+        <Card.Content>
+          <Text style={[styles.customFont, styles.title]}>Total Kuantitas</Text>
+          <TextInput
+            style={styles.input}
+            value={kinerja.total_target?.toString()}
+            editable={false}
+          />
+          {errorCount && (
+            <Text style={styles.errorText}>
+              Maaf, Target Anda Tidak Boleh Lebih Dari {kinerja.kuantitas}
+            </Text>
+          )}
+          <Button 
+            mode="contained" 
+            onPress={saveTarget} 
+            style={styles.saveButton} 
+            disabled={loading || errorCount}
+          >
+            {loading ? (
+              <View style={styles.saveButtonContainer}>
+                <Text style={styles.textLoading}>Mohon Tunggu...</Text><Text> </Text>
+                <ActivityIndicator size={16} color="#fff" opacity={0.8}/>
+              </View>
+              
+              
+            ) : (
+              <Text style={styles.buttonText}>SIMPAN</Text>
+            )}
+          </Button>
+        </Card.Content>
+      </Card>
+
+      <Card style={styles.card}>
+        <Card.Content>
+          <Button mode="contained" onPress={hitungRerata} style={styles.autoButton} disabled={errorCount}>
+            <Text style={styles.buttonText}>SET OTOMATIS</Text>
+          </Button>
+          <View style={styles.targetGrid}>
+            {kinerja.target?.map((target, index) => (
+              <View key={index} style={styles.targetItem}>
+                <Text style={styles.targetLabel}>{target.bulan}:</Text>
+                <TextInput
+                  style={styles.targetInput}
+                  value={target.kuantitas?.toString()}
+                  onChangeText={(value) => handleTargetChange(index, value)}
+                  keyboardType="numeric"
+                />
+              </View>
+            ))}
+          </View>
+        </Card.Content>
+      </Card>
+    </ScrollView>
   );
+  
+};
+
+// Reusable DetailRow component
   
   const styles = StyleSheet.create({
     header: {
@@ -142,6 +253,7 @@ const Kumulatif = ({ navigation }) => {
       padding: 10,
     },
     card: {
+      backgroundColor: '#fff',
       marginBottom: 15,
       borderRadius: 8,
       elevation: 3,
@@ -160,12 +272,32 @@ const Kumulatif = ({ navigation }) => {
       textAlign: 'center',
       backgroundColor: '#fff',
     },
-    button: {
-      marginTop: 10,
-      backgroundColor: '#007bff',
+    saveButtonContainer: {
+      flexDirection: 'row',
+    },
+    saveButton: {
+      justifyContent: 'center',
+      padding: 3,
+      backgroundColor: '#3699ff',
+      borderRadius: 5,
+      marginVertical: 10,
     },
     autoButton: {
+      alignText: 'center',
+      justifyContent: 'space-between',
+      padding: 3,
+      borderRadius: 5,
+      marginBottom: 15,
       backgroundColor: '#28a745',
+    },
+    buttonText: {
+      color: '#fff',
+      fontFamily: 'Poppins-Bold',
+    },
+    textLoading: {
+      opacity: 0.8,
+      color: '#fff',
+      fontFamily: 'Poppins-Bold',
     },
     detailRow: {
       flexDirection: 'row',
@@ -199,6 +331,37 @@ const Kumulatif = ({ navigation }) => {
       padding: 8,
       fontSize: 14,
       backgroundColor: '#fff',
+    },
+    errorText: {
+      color: 'red',
+      fontSize: 12,
+      marginBottom: 8,
+    },
+    customFont: {
+    fontFamily: 'Poppins-Regular',
+    },
+    userJabatanRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    },
+    userJabatanColumn: {
+      flex: 1,
+      marginHorizontal: 5,
+    },
+    userJabatanColumnR: {
+      flex: 1,
+      marginHorizontal: 5,
+    },
+    userJabatanItem: {
+      flexDirection: 'column',
+      marginBottom: 8,
+    },
+    userJabatanLabel: {
+      fontFamily: "Poppins-SemiBold",
+      width: 120,
+    },
+    userJabatanValue: {
+      fontFamily: "Poppins-Regular",
     },
   });
   

@@ -9,6 +9,7 @@ import {
 } from './src/navigation/NavigationContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { StyleSheet } from 'react-native';
+import { Toast, toastConfig } from './src/utils/CustomToast.js';
 
 //login screens
 import LoginScreen from './screen/auth/login/Login';
@@ -223,9 +224,9 @@ function AppTabs() {
 
           if (route.name === 'DASHBOARD') {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Kontrak') {
+          } else if (route.name === 'KONTRAK') {
             iconName = focused ? 'document' : 'document-outline';
-          } else if (route.name === 'Profile') {
+          } else if (route.name === 'PROFIL') {
             iconName = focused ? 'person' : 'person-outline';
           }
 
@@ -245,7 +246,7 @@ function AppTabs() {
         options={{headerShown: false}}
       />
       <Tab.Screen
-        name="Kontrak"
+        name="KONTRAK"
         component={Kontrakstack} 
         options={{headerShown: false}}
       />
@@ -264,6 +265,7 @@ export default function App() {
       <NavigationProvider>
         <NavigationContainer>
           <RootStack />
+          <Toast config={toastConfig} />
         </NavigationContainer>
       </NavigationProvider>
     </AuthProvider>

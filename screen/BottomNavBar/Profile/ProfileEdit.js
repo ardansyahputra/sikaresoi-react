@@ -110,7 +110,7 @@ const ProfileEdit = ({navigation}) => {
             source={
               profileImage
                 ? {uri: profileImage}
-                : require('../../assets/images/sikaresoi.png')
+                : require('../../assets/sikaresoi.png')
             }
             style={styles.profileImage}
           />
@@ -159,7 +159,7 @@ const ProfileEdit = ({navigation}) => {
         <TouchableOpacity
           style={styles.updateButton}
           onPress={handleUpdateProfile}>
-          <Text style={styles.updateButtonText}>Kirim</Text>
+          <Text style={styles.updateButtonText}>SIMPAN</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>

@@ -18,6 +18,7 @@ import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../src/api/apiClient';
 import axios from 'axios';
+import { toastConfig, Toast } from '../../../src/utils/CustomToast';
 
 const MasterKinerja = ({navigation}) => {
   const [data, setData] = useState([]);
@@ -30,15 +31,33 @@ const MasterKinerja = ({navigation}) => {
   const [lastPage, setLastPage] = useState(1);
   const [selectedDisplay, setSelectedDisplay] = useState(null);
   const [userJabatanData, setUserJabatanData] = useState(null);
+  const [userJabatanId, setUserJabatanId] = useState(null);
+  const [kinerjaId, setKinerjaId] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [tgsTambahan, setTgsTambahan] = useState(false);
   const [checkedItems, setCheckedItems] = useState([]);
-
+  const [disabledItems, setDisabledItems] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(null);
+  
   const apiClient = useApiClient();
+  const showToast = (type, text1, text2) => {
+    Toast.show({
+      type,
+      text1,
+      text2,
+    });
+  };
+  
 
   const handleSearch = (query) => {
     setSearchQuery(query);
     fetchListUraian(query, currentPage, selectedDisplay);
+  };
+
+  const parseCheckbox = (checkbox) => {
+    const isChecked = checkbox.includes('checked="checked"');
+    const isDisabled = checkbox.includes('disabled="disabled"');
+    return { isChecked, isDisabled };
   };
 
   const [kinerja, setKinerja] = useState({
@@ -55,13 +74,14 @@ const MasterKinerja = ({navigation}) => {
   const [totalBobot, setTotalBobot] = useState(0);
   const [totalWpt, setTotalWpt] = useState(0);
 
-  useEffect(() => {
-    fetchUserJabatanData();
-  }, []);
+ 
 
   useEffect(() => {
-      fetchListUraian(currentPage, selectedDisplay);
-  }, [currentPage, selectedDisplay]);
+    fetchUserJabatanData();
+    fetchKinerja();
+    fetchYears();
+    fetchListUraian(currentPage, selectedDisplay, selectedYear);
+  }, [currentPage, selectedDisplay, selectedYear]);
 
   useEffect(() => {
       const lowerCaseQuery = searchQuery.toLowerCase();
@@ -76,39 +96,38 @@ const MasterKinerja = ({navigation}) => {
   const fetchUserJabatanData = async () => {
     try {
       const response = await apiClient.post('user/jabatan/aktif');
+      console.log('Jabatan Id:', response.data.data.jabatan_id);
       if (response?.data?.data) {
         setUserJabatanData(response.data.data);
+        setUserJabatanId(response.data.data.jabatan_id);
       }
     } catch (error) {
       console.error('Error fetching user jabatan data:', error);
     }
   };
 
-
-  const fetchListUraian = async (page) => {
+  const fetchKinerja = async (page, year) => {
     try {
-        setLoading(true);
-        const response = await apiClient.post('uraian/indexAndro_user', {
-            per: selectedDisplay,
-            page: page,
-            jabatan_id: userJabatanData?.id || null,
-            kinerja_id: kinerja?.id || null,
-            tgs_tambahan: tgsTambahan,
-            search: searchQuery,
+      setLoading(true);
+      const response = await apiClient.post('user/kinerja/list/index', {
+        page,
+        tahun_id: year,
+      });
+      if (response?.data) {
+        setKinerjaId(response.data.data.kinerja)
+        setKinerja(response.data.kinerja || {
+          totalak: 0,
+          totalwpt: 0,
+          totalbobot: 0,
+          tahun_id: year,
+          user_jabatan_id: userJabatanData?.id,
+          alert: {
+            show: false,
+          },
         });
+        setListKinerja(response.data.data);
 
-        if (response?.data?.data) {
-            const fetchedData = response.data.data;
-            const checkedIds = fetchedData
-              .filter(item => item.checkbox.includes('checked="checked"')) // Check if the checkbox is checked in the HTML string
-              .map(item => item.id);
-
-            setCheckedItems(checkedIds);
-            setData(fetchedData);
-            setCurrentPage(fetchedData.current_page);
-            setLastPage(fetchedData.last_page);
-            setListKinerja(response.data.data); 
-
+        // Calculate totalBobot and totalWpt
         console.log('Data fetched:', response.data);
       } else {
         console.error('Invalid data:', response);
@@ -119,72 +138,134 @@ const MasterKinerja = ({navigation}) => {
       if (axios.isAxiosError(error)) {
         console.log(error.toJSON());
       }
-      Alert.alert('Error', 'Gagal memuat data.');
+      showToast('error', 'Error', 'Gagal memuat data kinerja');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchYears = async () => {
+        try {
+          setLoading(true);
+          const response = await apiClient.get('tahun/show');
+          if (response?.data?.data) {
+            const years = response.data.data.map(year => ({
+              label: year.tahun.toString(),
+              value: year.id,
+            }));
+    
+            // Set default year to the current year
+            const currentYear = new Date().getFullYear();
+            const defaultYear = years.find(
+              year => year.label === currentYear.toString(),
+            );
+            setSelectedYear(defaultYear ? defaultYear.value : years[0]?.value);
+          } else {
+            console.error('Failed to load year options:', response);
+            showToast('error', 'Error', 'Gagal memuat data tahun');
+          }
+        } catch (error) {
+          console.error('Error fetching years:', error);
+          showToast('error', 'Error', 'Gagal memuat data tahun');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+  const fetchListUraian = async (page) => {
+    try {
+      setLoading(true);
+      const response = await apiClient.post('uraian/indexAndro_user', {
+        page,
+        per: selectedDisplay,
+        jabatan_id: userJabatanId || null,
+        kinerja_id: kinerjaId || null,
+        tgs_tambahan: tgsTambahan,
+        search: searchQuery,
+      });
+
+      if (response?.data?.data) {
+        const fetchedData = response.data.data;
+        const checkedIds = [];
+        const disabledIds = [];
+
+        fetchedData.forEach((item) => {
+          const { isChecked, isDisabled } = parseCheckbox(item.checkbox);
+          if (isChecked) {
+            checkedIds.push(item.id);
+          }
+          if (isDisabled) {
+            disabledIds.push(item.id);
+          }
+        });
+
+        setCheckedItems(checkedIds);
+        setDisabledItems(disabledIds);
+        setData(fetchedData);
+        setCurrentPage(response.data.current_page);
+        setLastPage(response.data.last_page);
+      } else {
+        console.error('Invalid data:', response);
+        setData([]);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      showToast('error', 'Error', 'Gagal memuat data');
     } finally {
       setLoading(false);
     }
   };
 
   const handleCheckboxToggle = async (item) => {
-    const isChecked = checkedItems.includes(item.id);
+    if (disabledItems.includes(item.checkbox)) {
+      return; // Do nothing if the checkbox is disabled
+    }
+
+    const isChecked = checkedItems.includes(item.checkbox);
     if (isChecked) {
-      setCheckedItems(checkedItems.filter(id => id !== item.id));
+      setCheckedItems(checkedItems.filter((id) => id !== item.checkbox));
     } else {
-      setCheckedItems([...checkedItems, item.id]);
+      setCheckedItems([...checkedItems, item.checkbox]);
     }
     await saveListKinerja(item);
   };
 
   const saveListKinerja = async (item) => {
     try {
+      // Construct the payload
       const payload = {
+        kinerja: { // Use the kinerjaId from state
+          uuid: item.uuid, // Generate or fetch this if needed
+          user_jabatan_id: userJabatanData?.id, // Use the userJabatanData from state
+          tahun_id: selectedYear, // Use the selectedYear from state
+          status: 0, // Default status
+        },
         list: {
-          angka: 0,
-          uraian_id: item.uraian?.id,
-          kuantitas: 0,
-          kualitas: 0,
-          kinerja_id: kinerja?.id || null,
-          waktu: 0,
-          bobot: 0,
-          tgs_tambahan: tgsTambahan,
-          uraian_point: item.uraian?.point || 0,
-          target_point: 0,
-          uraian: item.uraian,
+          id: item.id || null, // Use the item's ID if available
+          uraian_id: item.uraian?.id || item.id, // Use uraian.id or fallback to item.id
+          kuantitas: item.kuantitas || 0,
+          kualitas: item.kualitas || 0,
+          waktu: item.waktu || 0,
+          bobot: item.bobot || 0,
+          wpt: item.wpt || 0,
+          tgs_tambahan: item.tgs_tambahan || false,
+          target_point: item.target_point || 0,
+          uraian_point: item.uraian_point || 0,
         },
       };
-
-      if (tgsTambahan) {
-        payload.keterangan = {
-          bulan_id: bulan?.id,
-          pimpinan_id: dataAktif.pimpinan_id,
-        };
-      }
-
+  
+      console.log('Payload:', JSON.stringify(payload, null, 2)); // Debugging: Log the payload
+  
+      // Send the payload to the API
       const response = await apiClient.post('user/kinerja/list/save', payload);
-      console.log('Response:', response.data.data);
-      fetchListUraian(); // Refresh data after saving
+      console.log('Response:', response.data);
+      showToast('success', 'Sukses', 'Berhasil menambahkan data');
+      fetchListUraian(currentPage, selectedYear, selectedDisplay);
     } catch (error) {
       console.error('Error saving data:', error);
-      Alert.alert('Error', error.response?.data?.message || 'Gagal menyimpan data.');
+      showToast('error', 'Error', 'Berhasil menambahkan data',  error.response?.data?.message || 'Gagal menyimpan data.');
     }
   };
-
-
-const handlePrevPage = () => {
-  if (currentPage > 1) {
-    const newPage = currentPage - 1;
-    setCurrentPage(newPage);
-    fetchListUraian(newPage);
-  }
-};
-
-const handleNextPage = () => {
-  if (currentPage < lastPage) {
-    const newPage = currentPage + 1;
-    setCurrentPage(newPage);
-    fetchListUraian(newPage);
-  }
-};
 
   const display = [
     {label: '5', value: 5},
@@ -202,7 +283,7 @@ const handleNextPage = () => {
     <View>
       <View style={styles.filterContainer}>
         <View style={styles.displayContainer}>
-          <Text marginTop={-7} marginBottom={10} style={[styles.customFont]}>Uraian Kegiatan Tidak Ada?</Text>
+          <Text style={[styles.displayText, styles.customFont]}>Uraian Kegiatan Tidak Ada?</Text>
           <Dropdown
             style={styles.dropdown}
             data={display}
@@ -294,12 +375,12 @@ const handleNextPage = () => {
                   Jenis Uraian:
                 </Text>
                 <View style={styles.statusSection}>
-                {item.type_tugas === "Mandiri"
+                {item.type_tugas = "Mandiri"
                 ? (
                   <View style={styles.statusBadgeSuccess}>
                     <Text style={styles.statusTextSuccess}>Mandiri </Text>
                   </View>
-                  ) : item.type_tugas === "Tambahan" ?(
+                  ) : item.type_tugas = "Tambahan" ?(
                   <View style={styles.statusBadgeDanger}>
                   <Text style={styles.statusTextDanger}>Tambahan </Text>
                   </View>
@@ -308,10 +389,10 @@ const handleNextPage = () => {
               </View>
               <View style={styles.actionContainer}>
               <Checkbox
-                status={checkedItems.includes(item.id) ? 'checked' : 'unchecked'}
+                status={checkedItems.includes(item.checkbox) ? 'checked' : 'unchecked'}
                 onPress={() => handleCheckboxToggle(item)}
-                disabled={item.checkbox.includes('disabled="disabled"')} // Disable if the checkbox is disabled in the HTML string
-              />                  
+                disabled={disabledItems.includes(item.checkbox)}
+              />          
             </View>
             </View>
 
@@ -326,21 +407,13 @@ const handleNextPage = () => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="close" size={24} color="#000" />
-          </TouchableOpacity>
-          <Image
-            source={require('../../assets/sikaresoi.png')}
-            style={styles.logo}
-          />
-        </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
-          <TouchableOpacity style={styles.iconWrapper}>
-            <Ionicons name="person-circle-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity onPress={() => navigation.navigate('KontrakKinerja')} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={26} color="#000" />
+        </TouchableOpacity>
+        <Image
+          source={require('../../assets/sikaresoi.png')}
+          style={styles.headerImage}
+        />
       </View>
       <View>
         <Text style={[styles.customFont, styles.headerTitle]}>List Indikator</Text>              
@@ -358,21 +431,30 @@ const handleNextPage = () => {
             <View>
               {loading && <ActivityIndicator size="large" color="#0000ff" />}
               <Text style={styles.pageInfo}>
-                Showing page {currentPage} of {lastPage}
-              </Text>
-              <View style={styles.paginationContainer}>
-                
-                <View style={styles.paginationButtons}>
+                 Showing page {currentPage} of {lastPage}
+                 </Text>
+               <View style={styles.paginationContainer}>
+                 <View style={styles.paginationButtons}>
                   <TouchableOpacity
-                    style={[styles.pageButton, currentPage === 1 && styles.disabledButton]}
+                    style={[
+                    styles.pageButton,
+                    currentPage === 1 && styles.disabledButton,
+                    ]}
                     disabled={currentPage === 1}
-                    onPress={handlePrevPage}>
+                    onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    >
                     <Text style={styles.pageButtonText}>Previous</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={[styles.pageButton, currentPage === lastPage && styles.disabledButton]}
+                  <TouchableOpacity
+                    style={[
+                      styles.pageButton,
+                      currentPage === lastPage && styles.disabledButton,
+                    ]}
                     disabled={currentPage === lastPage}
-                    onPress={handleNextPage}>
+                    onPress={() =>
+                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
+                    }
+                    >
                     <Text style={styles.pageButtonText}>Next</Text>
                   </TouchableOpacity>
                 </View>
@@ -388,6 +470,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F7F8FB',
+  },
+  headerImage: {
+    width: '50%',
+    height: undefined,
+    aspectRatio: 5,
+    marginRight: 190,
+    resizeMode: 'contain',
+    alignSelf: 'center',
   },
   headerLeft: {
     flex: 1,
@@ -794,6 +884,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   displayContainer: {
+    width: 150,
     flexDirection: 'column',
     justifyContent: 'center',
     // alignItems: 'center',
@@ -802,8 +893,8 @@ const styles = StyleSheet.create({
   displayText: {
     fontFamily: 'Poppins-Regular',
     fontSize: 13,
-    marginRight: 8,
-    textAlign: 'center',
+    marginTop: -10,
+    textAlign: 'left',
     color: 'black',
   },
   dropdown: {

@@ -73,7 +73,7 @@ const Password = ({navigation}) => {
 
   return (
     <ImageBackground
-    source={require('../../assets/bfg.jpeg')} // Replace with your desired background image
+    source={require('../../assets/bfg.jpeg')} 
     style={[styles.container, styles.backgroundStyle]}>
       <ScrollView contentContainerStyle={styles.formWrapper}>
         <Text style={styles.label}>Password Lama</Text>

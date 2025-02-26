@@ -17,6 +17,7 @@ import { Dropdown } from 'react-native-element-dropdown';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import useApiClient from '../../../../src/api/apiClient';
+import { toastConfig, Toast } from '../../../../src/utils/CustomToast';
 
 const SettingJabatan = ({ navigation }) => {
   const [data, setData] = useState([]);
@@ -30,6 +31,13 @@ const SettingJabatan = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredData, setFilteredData] = useState([]);
   const apiClient = useApiClient();
+  const showToast = (type, text1, text2) => {
+        Toast.show({
+          type,
+          text1,
+          text2,
+        });
+      };
 
   
   useEffect(() => {
@@ -99,14 +107,14 @@ const SettingJabatan = ({ navigation }) => {
         },
       );
       fetchData();
-      Alert.alert('Sukses', 'Status berhasil diubah');
+      showToast('success', 'Sukses', 'Status berhasil diubah');
     } catch (error) {
       console.log(item);
       console.error(
         'Error merubah status',
         error.response?.data || error.message,
       );
-      Alert.alert('Gagal', 'Terjadi kesalahan saat mengubah status');
+      showToast('error','Gagal', 'Terjadi kesalahan saat mengubah status');
     }
   };
   
@@ -215,16 +223,17 @@ const SettingJabatan = ({ navigation }) => {
         </TouchableOpacity>
         {isExpanded && (
           <View style={styles.expandedRow}>
-            <Text style={styles.expandedText}>
-              Detail Jabatan: <Text style={styles.expandedTextDetail}> {item.detail_jabatan || '-'}</Text>
-            </Text>
-            <Text style={styles.expandedText}>
-              Pimpinan: <Text style={styles.expandedTextDetail}> {item.detail_pimpinan || '-'}</Text>
-            </Text>
-            <Text style={styles.expandedText}>
-              Periode: <Text style={styles.expandedTextDetail}>{item.periode || '-'}</Text>
-            </Text>
+            <Text style={styles.expandedTextDetail}> Detail Jabatan:</Text>
+            <Text style={styles.expandedText}> {item.detail_jabatan || '-'}</Text>
+
+            <Text style={styles.expandedTextDetail}>Pimpinan:</Text>
+            <Text style={styles.expandedText}> {item.detail_pimpinan || '-'}</Text>
+
+            <Text style={styles.expandedTextDetail}>Periode:</Text>
+            <Text style={styles.expandedText}>{item.periode || '-'}</Text>
+            
             <View style={styles.actionContainer}>
+            <Text style={styles.expandedTextDetail}>Aktif: </Text>
               <Switch
                 value={item.aktif === 1}
                 onValueChange={() => handleChangeAktif(item)}
@@ -249,7 +258,7 @@ const SettingJabatan = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header1}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={26} color="#000" />
         </TouchableOpacity>
         <Image
@@ -456,7 +465,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   searchContainer: {
-    width: 150,
+   
     height: 40,
     backgroundColor: '#FFFFFF',
     borderColor: '#CCCCCC',
@@ -516,7 +525,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', 
     justifyContent: 'center',
     padding: 10, 
-    backgroundColor: '#007bff', 
+    backgroundColor: '#3699ff', 
     borderRadius: 5,
     marginRight: 20,
   },
@@ -590,14 +599,14 @@ const styles = StyleSheet.create({
   expandedText: {
     fontSize: 14,
     color: '#555',
-    marginBottom: 5,
+    marginBottom: 10,
     fontFamily: "Poppins-Regular",
   },
   expandedTextDetail: {
     fontSize: 14,
     fontFamily: "Poppins-SemiBold",
     color: '#555', // Warna teks detail
-    marginBottom: 5,
+    marginBottom: -5,
   },
   expandedLinkText: {
     color: 'blue', // Teks berwarna biru untuk link
@@ -614,7 +623,7 @@ const styles = StyleSheet.create({
   actionButton: {
     padding: 8,
     backgroundColor: '#F0F0F0',
-    borderRadius: 5,
+    borderRadius: 0,
     marginHorizontal: 5,
   },
   paginationButtons: {
@@ -636,13 +645,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#3699ff',
-    margin: 5,
+    marginLeft: 5,
     paddingVertical: 10,
     paddingHorizontal: 10,
-    borderRadius: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    borderRadius: 5,
     shadowOpacity: 0.2,
     shadowRadius: 2,
   },
@@ -653,12 +659,7 @@ const styles = StyleSheet.create({
     margin: 5,
     paddingVertical: 10,
     paddingHorizontal: 10,
-    borderRadius: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
+    borderRadius: 5,
   },
   paginationButtons: {
     flexDirection: 'row',
