@@ -41,6 +41,8 @@ import MasterKinerja from './screen/BottomNavBar/KontrakKinerja/MasterKinerja.js
 import AddUraian from './screen/BottomNavBar/KontrakKinerja/AddUraian.js';
 import SalinKontrak from './screen/BottomNavBar/KontrakKinerja/SalinKontrak.js';
 import Kumulatif from './screen/BottomNavBar/KontrakKinerja/Kumulatif.js';
+import PerubahanPresensi from './screen/PerubahanPresensi.js';
+import AbsenPresensi from './screen/AbsenPresensi.js';
 
 const Tab = createBottomTabNavigator();
 const styles = StyleSheet.create({
@@ -170,9 +172,19 @@ function HomeStack() {
         component={PencapaianKerja}
         options={{headerShown: false}}
       />
+       <Stack.Screen
+        name="PerubahanPresensi"
+        component={PerubahanPresensi}
+        options={{headerShown: false}}
+      />
       <Stack.Screen
         name="RealisasiNext"
         component={RealisasiNext}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="AbsenPresensi"
+        component={AbsenPresensi}
         options={{headerShown: false}}
       />
     </Stack.Navigator>
