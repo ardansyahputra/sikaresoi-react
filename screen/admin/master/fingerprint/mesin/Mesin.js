@@ -10,6 +10,9 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import {Dropdown} from 'react-native-element-dropdown';
+import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect} from '@react-navigation/native';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import useApiClient from '../../../../../src/api/apiClient';
 import {BarIndicator} from 'react-native-indicators';
@@ -20,6 +23,8 @@ import Toast from 'react-native-toast-message';
 export default function Mesin() {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -41,9 +46,12 @@ export default function Mesin() {
   const fetchData = async (page, display) => {
     try {
       setIsLoading(true); // Set loading state
+      setIsLoading(true); // Set loading state
       const response = await apiClient.post(
         '/fingerprint_machine/index', // API URL
+        '/fingerprint_machine/index', // API URL
         {page, display},
+        {},
         {},
       );
       console.log('Full API Response:', response.data); // Log the full response to inspect all data
@@ -311,6 +319,7 @@ export default function Mesin() {
   return (
     <View style={styles.container}>
       {/* Header */}
+      <Header title="Mesin Fingerprint" />
       <Header title="Mesin Fingerprint" />
 
       {/* Loading Indicator */}

@@ -118,7 +118,7 @@ const EditPa3 = ({navigation, route}) => {
 
   return (
     <View style={styles.rootContainer}>
-      <Header title="Edit PA TELU" />
+      <Header title="Edit Pemotongan Tidak Hadir" />
       <View style={styles.container}>
         {isLoading ? (
           // Loading Indicator

@@ -7,26 +7,79 @@ const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
-export const AuthProvider = ({children, navigation}) => {
+export const AuthProvider = ({children}) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [userMenu, setUserMenu] = useState([]);
-  const [loading, setLoading] = useState(false); // For loading state
-  const [error, setError] = useState(null); // For error handling
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [pangkatItems, setPangkatItems] = useState([]);
 
   const loadTokenFromKeychain = async () => {
     const credentials = await Keychain.getGenericPassword();
     if (credentials) {
-      setToken(credentials.password); // Set token from Keychain if it exists
+      setToken(credentials.password);
     }
   };
 
-  const setMenuAccess = menu => {
-    setUserMenu(menu);
+  // Function to check if user has access to a specific route
+  const hasMenuAccess = route => {
+    return userMenu.some(menu => menu.nm_route === route);
   };
 
-  // Fungsi untuk fetch data pangkat
+  // Function to get all accessible routes
+  const getAccessibleRoutes = () => {
+    return userMenu.map(menu => menu.nm_route);
+  };
+
+  // Function to fetch menu access from API
+  const fetchMenuAccess = async (authToken = null) => {
+    try {
+      const tokenToUse = authToken || token;
+
+      if (!tokenToUse) {
+        console.error('No token available for fetching menu access');
+        return [];
+      }
+
+      const response = await axios.get(`${API_URL}routes/access`, {
+        headers: {
+          Authorization: `Bearer ${tokenToUse}`,
+        },
+      });
+
+      if (response.data?.data) {
+        // Flatten the menu structure to include nested child items
+        const flattenMenu = menu => {
+          return menu.reduce((acc, item) => {
+            acc.push(item); // Add the current item
+            if (item.child && Array.isArray(item.child)) {
+              acc.push(...flattenMenu(item.child)); // Recursively add child items
+            }
+            return acc;
+          }, []);
+        };
+
+        const flattenedMenu = flattenMenu(response.data.data);
+        setUserMenu(flattenedMenu);
+        console.log(flattenedMenu);
+        console.log('Menu access updated successfully');
+        return flattenedMenu;
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching menu access:', error);
+      // If token is expired, try to refresh and retry
+      if (error.response?.status === 401) {
+        const newToken = await refreshToken();
+        if (newToken) {
+          return fetchMenuAccess(newToken); // Retry with new token
+        }
+      }
+      return [];
+    }
+  };
+
   const fetchPangkat = async () => {
     try {
       const response = await axios.get(`${API_URL}/pangkat/show`, {
@@ -59,26 +112,22 @@ export const AuthProvider = ({children, navigation}) => {
     }
   };
 
-  useEffect(() => {
-    const loadTokenFromKeychain = async () => {
-      const credentials = await Keychain.getGenericPassword();
-      if (credentials) {
-        setToken(credentials.password);
-      }
-    };
-    loadTokenFromKeychain();
-  }, []);
-
-  useEffect(() => {
-    if (token) {
-      fetchPangkat(); // Fetch pangkat items when token is available
-    }
-  }, [token]);
-
   const login = async (userData, newToken) => {
-    setUser(userData);
-    setToken(newToken);
-    await Keychain.setGenericPassword('token', newToken);
+    try {
+      setLoading(true);
+      setUser(userData);
+      setToken(newToken);
+      await Keychain.setGenericPassword('token', newToken);
+
+      // Fetch menu access after successful login
+      const menuAccess = await fetchMenuAccess(newToken);
+      setUserMenu(menuAccess);
+    } catch (error) {
+      console.error('Error during login:', error);
+      setError('Failed to complete login process');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logout = () => {
@@ -88,7 +137,7 @@ export const AuthProvider = ({children, navigation}) => {
     Keychain.resetGenericPassword();
   };
 
-  // Fungsi untuk refresh token
+  // Refresh token implementation with menu access update
   const refreshToken = async () => {
     try {
       const credentials = await Keychain.getGenericPassword();
@@ -103,6 +152,9 @@ export const AuthProvider = ({children, navigation}) => {
           const newToken = response.headers.authorization; // Ambil dari header
           await Keychain.setGenericPassword('authToken', newToken);
           setToken(newToken);
+
+          // Update menu access with new token
+          await fetchMenuAccess(newToken);
           return newToken;
         }
       }
@@ -113,20 +165,26 @@ export const AuthProvider = ({children, navigation}) => {
     return null;
   };
 
+  useEffect(() => {
+    loadTokenFromKeychain();
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
         user,
         token,
         userMenu,
-        setUserMenu: setMenuAccess,
-        login,
-        logout,
-        fetchPangkat,
-        pangkatItems,
-        refreshToken,
         loading,
         error,
+        login,
+        logout,
+        refreshToken,
+        fetchPangkat,
+        hasMenuAccess,
+        getAccessibleRoutes,
+        pangkatItems,
+        fetchMenuAccess,
       }}>
       {children}
     </AuthContext.Provider>

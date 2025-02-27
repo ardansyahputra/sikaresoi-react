@@ -11,12 +11,11 @@ import {
 import {Pressable} from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {Dropdown} from 'react-native-element-dropdown';
-import CalendarPicker from 'react-native-calendar-picker';
 import useApiClient from '../../../src/api/apiClient';
 import {BarIndicator} from 'react-native-indicators';
 import GlobalStyle from '../../../src/utils/GlobalStyle';
 import Header from '../components/Header';
+import {useNavigation} from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 
 export default function Lock() {
@@ -25,19 +24,13 @@ export default function Lock() {
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [isModalVisible, setModalVisible] = useState(false);
   const [modalVisible, setModalHapusVisible] = useState(false);
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);
   const [activeButton, setActiveButton] = useState('kontrak');
-  const [selectedJenis, setSelectedJenis] = useState(null);
-  const [selectedTahun, setSelectedTahun] = useState(null);
-  const [selectedBulan, setSelectedBulan] = useState(null);
-  const [isHapusModalVisible, setHapusModalVisible] = useState(false);
-  const [selectedStartDate, setSelectedStartDate] = useState(null);
-  const [selectedEndDate, setSelectedEndDate] = useState(null);
   const [selectedAction, setSelectedAction] = useState(null);
+  const navigation = useNavigation();
 
   const apiClient = useApiClient();
 
@@ -128,89 +121,15 @@ export default function Lock() {
   };
 
   const handleTambah = () => {
-    setModalVisible(true);
+    navigation.navigate('TambahLock');
   };
 
-  const handleSave = () => {
-    // Helper function to format date
-    const formatDate = date => {
-      if (!date) return null;
-      const d = new Date(date);
-      const day = String(d.getDate()).padStart(2, '0');
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const year = d.getFullYear();
-      return `${day}-${month}-${year}`;
-    };
-
-    // Format the combined dates
-    const tanggalPengisian =
-      selectedStartDate && selectedEndDate
-        ? `${formatDate(selectedStartDate)} / ${formatDate(selectedEndDate)}`
-        : null;
-
-    console.log({
-      jenis: selectedJenis,
-      tahun: selectedTahun,
-      bulan: selectedBulan,
-      tanggalPengisian: tanggalPengisian,
-    });
-    setModalVisible(false);
+  const handleEdit = uuid => {
+    navigation.navigate('EditLock', {uuid});
   };
-
-  const jenisData = [
-    {label: 'Kontrak', value: 'kontrak'},
-    {label: 'Realisasi', value: 'realisasi'},
-  ];
-
-  const tahunData = [
-    {label: '2025', value: '2025'},
-    {label: '2024', value: '2024'},
-    {label: '2023', value: '2023'},
-    {label: '2022', value: '2022'},
-    {label: '2021', value: '2021'},
-    {label: '2020', value: '2020'},
-  ];
-
-  const bulanData = [
-    {label: 'Januari', value: '1'},
-    {label: 'Februari', value: '2'},
-    {label: 'Maret', value: '3'},
-    {label: 'April', value: '4'},
-    {label: 'Mei', value: '5'},
-    {label: 'Juni', value: '6'},
-    {label: 'Juli', value: '7'},
-    {label: 'Agustus', value: '8'},
-    {label: 'September', value: '9'},
-    {label: 'Oktober', value: '10'},
-    {label: 'November', value: '11'},
-    {label: 'Desember', value: '12'},
-  ];
-
-  const display = [
-    {label: '5', value: 5},
-    {label: '10', value: 10},
-    {label: '25', value: 25},
-    {label: '50', value: 50},
-    {label: '100', value: 100},
-  ];
 
   const toggleExpand = id => {
     setExpandedId(expandedId === id ? null : id);
-  };
-
-  const onDateChange = (date, type) => {
-    if (type === 'END_DATE') {
-      setSelectedEndDate(date);
-    } else {
-      setSelectedStartDate(date);
-      setSelectedEndDate(null);
-    }
-  };
-
-  const handleCloseModal = () => {
-    setModalVisible(false);
-    setSelectedStartDate(null);
-    setSelectedEndDate(null);
   };
 
   const getStatusStyle = status => {
@@ -387,7 +306,7 @@ export default function Lock() {
               <View style={styles.actionContainer}>
                 <TouchableOpacity
                   style={[styles.iconButton, styles.blueButton]}
-                  onPress={() => handleApprove(item.uuid)}>
+                  onPress={() => handleEdit(item.uuid)}>
                   <Ionicons name="pencil" size={20} color="white" />
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -488,150 +407,6 @@ export default function Lock() {
                 onPress={handleConfirmAction}>
                 <Text style={[GlobalStyle.SemiBold, styles.confirmText]}>
                   Ya
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Modal Input Tambah Data */}
-      <Modal
-        visible={isModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setModalVisible(false)}>
-        <View style={styles.modalTambahContainer}>
-          <View style={styles.modalTambahContent}>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={handleCloseModal}>
-              <Ionicons name="close" size={24} color="#333" />
-            </TouchableOpacity>
-            <Text style={[GlobalStyle.SemiBold, styles.modalTambahText]}>
-              Tambah Data
-            </Text>
-
-            {/* Dropdown Jenis */}
-            <Text style={[GlobalStyle.SemiBold, styles.modalLabel]}>
-              Jenis:
-            </Text>
-            <Dropdown
-              data={jenisData}
-              labelField="label"
-              valueField="value"
-              placeholder="Pilih Jenis"
-              value={selectedJenis}
-              placeholderStyle={{
-                ...GlobalStyle.SemiBold,
-                color: '#B0B0B0',
-                fontSize: 14,
-              }}
-              selectedTextStyle={{
-                ...GlobalStyle.SemiBold,
-                fontSize: 14,
-                color: '#313131',
-              }}
-              itemTextStyle={{
-                ...GlobalStyle.SemiBold,
-                fontSize: 14,
-                color: '#313131',
-              }}
-              onChange={item => setSelectedJenis(item.value)}
-              style={[styles.input]}
-            />
-
-            {/* Dropdown Tahun */}
-            <Text style={[GlobalStyle.SemiBold, styles.modalLabel]}>
-              Tahun:
-            </Text>
-            <Dropdown
-              data={tahunData}
-              labelField="label"
-              valueField="value"
-              placeholder="Pilih Tahun"
-              value={selectedTahun}
-              placeholderStyle={{
-                ...GlobalStyle.SemiBold,
-                color: '#B0B0B0',
-                fontSize: 14,
-              }}
-              selectedTextStyle={{
-                ...GlobalStyle.SemiBold,
-                fontSize: 14,
-                color: '#313131',
-              }}
-              itemTextStyle={{
-                ...GlobalStyle.SemiBold,
-                fontSize: 14,
-                color: '#313131',
-              }}
-              onChange={item => setSelectedTahun(item.value)}
-              style={[styles.input]}
-            />
-
-            {/* Dropdown Bulan */}
-            <Text style={[GlobalStyle.SemiBold, styles.modalLabel]}>
-              Bulan:
-            </Text>
-            <Dropdown
-              data={bulanData}
-              labelField="label"
-              valueField="value"
-              placeholder="Pilih Bulan"
-              value={selectedBulan}
-              onChange={item => setSelectedBulan(item.value)}
-              placeholderStyle={{
-                ...GlobalStyle.SemiBold,
-                color: '#B0B0B0',
-                fontSize: 14,
-              }}
-              selectedTextStyle={{
-                ...GlobalStyle.SemiBold,
-                fontSize: 14,
-                color: '#313131',
-              }}
-              itemTextStyle={{
-                ...GlobalStyle.SemiBold,
-                fontSize: 14,
-                color: '#313131',
-              }}
-              style={[styles.input]}
-            />
-
-            <Text style={[GlobalStyle.SemiBold, styles.modalLabel]}>
-              Rentang Tanggal:
-            </Text>
-            <View style={styles.calendarContainer}>
-              <CalendarPicker
-                startFromMonday={true}
-                allowRangeSelection={true}
-                selectedStartDate={selectedStartDate}
-                selectedEndDate={selectedEndDate}
-                onDateChange={onDateChange}
-                width={300}
-                selectedDayColor="#3699FF"
-                selectedDayTextColor="#FFFFFF"
-                todayBackgroundColor="#E6E6E6"
-                todayTextStyle={{color: '#000000'}}
-                style={{alignSelf: 'stretch'}}
-              />
-            </View>
-
-            {/* Tombol Modal */}
-            <View style={styles.modalTambahButtons}>
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={() => {
-                  console.log(
-                    'Tanggal yang dipilih:',
-                    selectedStartDate,
-                    selectedEndDate,
-                  );
-                  handleSave(); // Tutup modal setelah menyimpan
-                }}>
-                <Text style={[GlobalStyle.SemiBold, styles.buttonSubmitText]}>
-                  Simpan
                 </Text>
               </TouchableOpacity>
             </View>

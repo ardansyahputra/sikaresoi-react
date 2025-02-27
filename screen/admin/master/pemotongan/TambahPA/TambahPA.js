@@ -12,15 +12,19 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
+import {TimerPickerModal} from 'react-native-timer-picker';
 import useApiClient from '../../../../../src/api/apiClient';
 import Header from '../../../../components/Header';
 import GlobalStyle from '../../../../../src/utils/GlobalStyle';
 import {BarIndicator} from 'react-native-indicators';
 const {width} = Dimensions.get('window');
+import { BackHandler } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 const TambahPage = ({navigation}) => {
   const [selectedPotongan, setSelectedPotongan] = useState('');
+  const [isVisible, setIsVisible] = useState(false);
+  const [pickerMode, setPickerMode] = useState(null);
   const [selectedBatasAtas, setSelectedBatasAtas] = useState('00:00:00');
   const [selectedBatasBawah, setSelectedBatasBawah] = useState('00:00:00');
   const [keyboardOpen, setKeyboardOpen] = useState(false);
@@ -40,11 +44,40 @@ const TambahPage = ({navigation}) => {
       () => setKeyboardOpen(false),
     );
 
+    
     return () => {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
     };
   }, []);
+
+  const formatTime = pickedDuration => {
+    const {hours, minutes, seconds} = pickedDuration;
+    // Mengembalikan format waktu tanpa label HMS
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
+      2,
+      '0',
+    )}:${String(seconds).padStart(2, '0')}`;
+  };
+
+  const showPicker = mode => {
+    setPickerMode(mode);
+    setIsVisible(true);
+  };
+
+  const handleBatal = () => {
+    setIsVisible(false);
+  };
+
+  const handlePilih = time => {
+    const formattedTime = formatTime(time);
+    if (pickerMode === 'batasAtas') {
+      setSelectedBatasAtas(formattedTime);
+    } else if (pickerMode === 'batasBawah') {
+      setSelectedBatasBawah(formattedTime);
+    }
+    setIsVisible(false);
+  };
 
   const handleSave = async () => {
     setIsLoading(true);
@@ -98,7 +131,7 @@ const TambahPage = ({navigation}) => {
 
   return (
     <View style={styles.rootContainer}>
-      <Header title="Tambah PA" />
+      <Header title="Tambah Pemotongan Pulang awal" />
       <View style={styles.container}>
         {isLoading ? (
           // Loading Indicator
@@ -127,43 +160,92 @@ const TambahPage = ({navigation}) => {
             />
 
             <Text style={[GlobalStyle.SemiBold, styles.label]}>Batas Atas</Text>
-            <TextInput
+            <TouchableOpacity
               style={[
                 GlobalStyle.SemiBold,
                 styles.input,
-                focusState.selectedBatasAtas && styles.inputFocused,
                 selectedBatasAtas && styles.inputFilled,
               ]}
-              value={selectedBatasAtas}
-              onChangeText={text =>
-                handleTextChange(text, setSelectedBatasAtas)
-              }
-              keyboardType="default"
-              placeholder="Masukkan Batas Atas (angka atau ':')"
-              placeholderTextColor="#B0B0B0"
-              onFocus={() => handleFocus('selectedBatasAtas')}
-              onBlur={() => handleBlur('selectedBatasAtas')}
-            />
+              onPress={() => showPicker('batasAtas')}>
+              <Text style={styles.inputText}>
+                {selectedBatasAtas || 'Pilih Batas Atas ⏰'}
+              </Text>
+            </TouchableOpacity>
 
             <Text style={[GlobalStyle.SemiBold, styles.label]}>
               Batas Bawah
             </Text>
-            <TextInput
+            <TouchableOpacity
               style={[
                 GlobalStyle.SemiBold,
                 styles.input,
-                focusState.selectedBatasBawah && styles.inputFocused,
                 selectedBatasBawah && styles.inputFilled,
               ]}
-              value={selectedBatasBawah}
-              onChangeText={text =>
-                handleTextChange(text, setSelectedBatasBawah)
+              onPress={() => showPicker('batasBawah')}>
+              <Text style={styles.inputText}>
+                {selectedBatasBawah || 'Pilih Batas Bawah ⏰'}
+              </Text>
+            </TouchableOpacity>
+
+ <TimerPickerModal
+              visible={isVisible}
+              setIsVisible={setIsVisible}
+              hourLabel="                 :"
+              minuteLabel="                 :"
+              secondLabel="                 "
+              onConfirm={handlePilih}
+              onCancel={handleBatal}
+              modalTitle={
+                pickerMode === 'batasAtas'
+                  ? 'Pilih Batas Atas'
+                  : 'Pilih Batas Bawah'
               }
-              keyboardType="default"
-              placeholder="Masukkan Batas Bawah (angka atau ':')"
-              placeholderTextColor="#B0B0B0"
-              onFocus={() => handleFocus('selectedBatasBawah')}
-              onBlur={() => handleBlur('selectedBatasBawah')}
+              confirmButtonText="Simpan"
+              cancelButtonText="Batal"
+              modalProps={{
+                animationType: 'slide', // Mengubah animasi menjadi slide (dari bawah)
+                presentationStyle: 'overFullScreen', // Memastikan modal menutupi layar sepenuhnya
+              }}
+              styles={{
+                theme: 'light',
+                container: {
+                  backgroundColor: '#F0EFF5',
+                  borderRadius: 19,
+                  padding: 36,
+                  height: 395,
+                  marginTop: 545,
+                },
+                contentContainer: {
+                  alignItems: 'center',
+                  padding: 10,
+                },
+                modalTitle: {
+                  fontSize: 22,
+                  fontWeight: 'bold',
+                  color: '#333',
+                  textAlign: 'center',
+                },
+                cancelButton: {
+                  color: '#fff', // Warna merah untuk tombol batal
+                  backgroundColor: '#FF3B30',
+                  fontSize: 16,
+                  fontWeight: 'bold',
+                  borderColor: '#FF3B30',
+                  marginRight: 130,
+                  marginTop: 30,
+                  marginBottom: 40,
+                },
+                confirmButton: {
+                  color: '#fff', // Warna biru untuk tombol simpan
+                  backgroundColor: '#3699FE',
+                  borderColor: '#3699FE',
+                  fontSize: 16,
+                  fontWeight: 'bold',
+                  marginTop: 30,
+                  marginBottom: 30,
+                },
+              }}
+              hideSeconds={false}
             />
 
             <View style={styles.buttons}>

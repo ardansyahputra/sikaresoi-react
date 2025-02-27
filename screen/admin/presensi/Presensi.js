@@ -668,6 +668,7 @@ const styles = StyleSheet.create({
   modalTolak: {
     fontSize: 16,
     color: '#333',
+    marginBottom: 10,
   },
   modalInput: {
     width: '100%', // Pastikan input menggunakan lebar penuh

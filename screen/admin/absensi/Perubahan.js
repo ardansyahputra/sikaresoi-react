@@ -8,7 +8,6 @@ import {
   Modal,
   Linking,
   TextInput,
-  Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import useApiClient from '../../../src/api/apiClient';

@@ -1,135 +1,212 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback, act} from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
-  Image,
-  Linking,
-  Switch,
   Modal,
   TextInput,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
+import {Pressable} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../../src/api/apiClient';
+import {useNavigation} from '@react-navigation/native';
 import {BarIndicator} from 'react-native-indicators';
 import Header from '../../../components/Header';
 import GlobalStyle from '../../../../src/utils/GlobalStyle';
 import Toast from 'react-native-toast-message';
+import {useRoute} from '@react-navigation/native';
+import TambahUraian from '../uraian/Tambah';
 
-export default function UserGroupScreen() {
+export default function UraianPeta() {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [selectedUuid, setSelectedUuid] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);
+  const [activeButton, setActiveButton] = useState('bulan');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedAction, setSelectedAction] = useState(null);
-  const navigation = useNavigation();
   const apiClient = useApiClient();
+  const route = useRoute();
+  const {id, tahun} = route.params || {}; // Tangkap parameter yang dikirim
+  const navigation = useNavigation();
 
   useFocusEffect(
-    React.useCallback(() => {
-      fetchData(currentPage, selectedDisplay);
-    }, [currentPage, selectedDisplay]),
+    useCallback(() => {
+      setIsLoading(true);
+      fetchData();
+    }, [currentPage, activeButton, selectedDisplay]),
   );
 
-  const fetchData = async page => {
+  const fetchData = async () => {
     try {
-      setIsLoading(true);
-      const response = await apiClient.post('/user_group/index', {page});
-      setData(response.data.data);
-      setCurrentPage(response.data.current_page);
-      setLastPage(response.data.last_page);
+      if (activeButton === 'bulan') {
+        const [bulanResponse] = await Promise.all([
+          apiClient.post(`/uraian/jabatan/indexMasterUraian`, {
+            tahun_id: tahun,
+            jabatan_id: id,
+          }),
+        ]);
+        setData(bulanResponse.data.data);
+        setLastPage(bulanResponse.data.last_page || 1);
+      } else {
+        const [tahunResponse] = await Promise.all([
+          apiClient.post(`/uraian/jabatan/index`, {
+            tahun_id: tahun,
+            jabatan_id: id,
+          }),
+        ]);
+        setData(tahunResponse.data.data);
+        setLastPage(tahunResponse.data.last_page || 1);
+      }
     } catch (error) {
-      console.error('Error fetching data', error);
+      console.error('Error fetching data:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleEdit = uuid => {
-    navigation.navigate('EditUserGroup', {uuid});
-  };
-
-  const handleList = uuid => {
-    navigation.navigate('UserGroupList', {uuid});
-  };
-
   const handleHapusPress = uuid => {
     setSelectedUuid(uuid);
+    setSelectedAction('hapus'); // Tandai bahwa ini aksi hapus
     setModalVisible(true);
   };
 
   const handleConfirmAction = async () => {
     if (!selectedUuid) return;
 
-    setModalVisible(false);
+    setModalVisible(false); // Tutup modal sebelum aksi dijalankan
+    setIsLoading(true); // Aktifkan loading
+
+    // Langsung update state UI agar terlihat lebih cepat
+    setData(prevData => prevData.filter(item => item.uuid !== selectedUuid));
 
     try {
-      await apiClient.delete(`/user_group/${selectedUuid}/delete`);
-      fetchData(currentPage);
+      await apiClient.get(`uraian/jabatan/${selectedUuid}/delete`);
+
       Toast.show({
         type: 'success',
         text1: 'Berhasil',
         text2: 'Data berhasil dihapus.',
       });
+
+      fetchData(activeButton); 
     } catch (error) {
+      console.error('Error saat menghapus data:', error);
       Toast.show({
         type: 'error',
         text1: 'Terjadi Kesalahan',
         text2: 'Gagal menghapus data.',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleTambah = () => {
-    navigation.navigate('TambahUserGroup');
+  const handleTambah = uuid => {
+    navigation.navigate('TambahUraianPeta', {
+      tahun_id: tahun,
+      jabatan_id: id,
+      uuid: uuid,
+    });
   };
 
-  const display = [
-    {label: '5', value: 1},
-    {label: '10', value: 2},
-    {label: '25', value: 3},
-    {label: '50', value: 4},
-    {label: '100', value: 5},
-  ];
-
-  const toggleExpand = id => {
-    setExpandedId(expandedId === id ? null : id);
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(prev => {
+        const newPage = prev - 1;
+        return newPage;
+      });
+    }
   };
+
+  const handleNextPage = () => {
+    if (currentPage < lastPage) {
+      setCurrentPage(prev => {
+        const newPage = prev + 1;
+        return newPage;
+      });
+    }
+  };
+
+  const handlePress = buttonName => {
+    setIsLoading(true); // Aktifkan loading segera
+    setActiveButton(buttonName);
+    setCurrentPage(1);
+  };
+
+  const headerText = activeButton === 'bulan' ? 'Name' : 'Uraian';
 
   const TableHeader = () => (
     <View>
       <View style={styles.headerContainer}>
-        <View style={styles.searchContainer}>
-          <Ionicons
-            name="search"
-            size={18}
-            color="#888"
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={[GlobalStyle.SemiBold, styles.searchBar]}
-            placeholder="Search"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholderTextColor="#888"
-          />
+        {/* Baris atas: Tombol Bulan & Tahun */}
+        <View style={styles.bulanContainer}>
+          <Pressable
+            style={({pressed}) => [
+              styles.button,
+              pressed && styles.buttonPressed,
+              activeButton === 'bulan' && styles.buttonActive,
+            ]}
+            onPress={() => handlePress('bulan')}>
+            <View style={styles.bulanButton}>
+              <Text
+                style={[
+                  GlobalStyle.SemiBold,
+                  styles.buttonText,
+                  activeButton === 'bulan' && styles.textActive,
+                ]}>
+                Bulan
+              </Text>
+            </View>
+          </Pressable>
+
+          <Pressable
+            style={({pressed}) => [
+              styles.button,
+              pressed && styles.buttonPressed,
+              activeButton === 'tahun' && styles.buttonActive,
+            ]}
+            onPress={() => handlePress('tahun')}>
+            <View style={styles.bulanButton}>
+              <Text
+                style={[
+                  GlobalStyle.SemiBold,
+                  styles.buttonText,
+                  activeButton === 'tahun' && styles.textActive,
+                ]}>
+                Tahun
+              </Text>
+            </View>
+          </Pressable>
         </View>
-        <TouchableOpacity style={styles.tambahButton} onPress={handleTambah}>
-          <Ionicons name="add" size={18} color="#fff" style={styles.icon} />
-          <Text style={[GlobalStyle.SemiBold, styles.tambahText]}>Tambah</Text>
-        </TouchableOpacity>
+
+        {/* Baris bawah: Search Bar & Tombol Tambah */}
+        <View style={styles.bottomContainer}>
+          <View style={styles.searchContainer}>
+            <Ionicons
+              name="search"
+              size={18}
+              color="#888"
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={[GlobalStyle.SemiBold, styles.searchBar]}
+              placeholder="Search"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor="#888"
+            />
+          </View>
+        </View>
       </View>
 
+      {/* Table Header */}
       <View style={styles.tableHeader}>
         <Text
           style={[GlobalStyle.SemiBold, styles.headerCell, styles.numberCell]}>
@@ -137,11 +214,15 @@ export default function UserGroupScreen() {
         </Text>
         <Text
           style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}>
-          USER GROUP
+          {headerText}
         </Text>
         <Text
-          style={[GlobalStyle.SemiBold, styles.headerCell, styles.aksiCell]}>
-          AKSI
+          style={[
+            GlobalStyle.SemiBold,
+            styles.headerCell,
+            styles.tableStatusCell,
+          ]}>
+          Aksi
         </Text>
         <View style={styles.expandIconCell} />
       </View>
@@ -150,15 +231,23 @@ export default function UserGroupScreen() {
   );
 
   const renderItem = ({item, index}) => {
-    const isExpanded = expandedId === item.id;
+    const tahunBulanData =
+      activeButton === 'bulan' ? item.nm_uraian : item.uraian?.nm_uraian;
     const rowBackgroundColor = index % 2 === 0 ? '#F7F8FC' : '#FFFFFF'; // Warna selang-seling
+
+    const handleButtonPress = () => {
+      if (activeButton === 'bulan') {
+        handleTambah(item.uuid);
+      } else {
+        handleHapusPress(item.uuid);
+      }
+    };
 
     return (
       <>
         <View style={styles.tableRow}>
-          <TouchableOpacity
-            style={[styles.rowHeader, {backgroundColor: rowBackgroundColor}]}
-            onPress={() => toggleExpand(item.id)}>
+          <View
+            style={[styles.rowHeader, {backgroundColor: rowBackgroundColor}]}>
             <Text
               style={[
                 GlobalStyle.SemiBold,
@@ -169,55 +258,25 @@ export default function UserGroupScreen() {
             </Text>
             <Text
               style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}>
-              {item.nm_user_group || '-'}
+              {tahunBulanData || '-'}
             </Text>
             <View style={styles.actionContainer}>
               <TouchableOpacity
-                style={[styles.iconButton, styles.yellowButton]}
-                onPress={() => handleList(item.uuid)}>
-                <Ionicons name="menu-outline" size={20} color="white" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.iconButton, styles.blueButton]}
-                onPress={() => handleEdit(item.uuid)}>
-                <Ionicons name="pencil" size={20} color="white" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.iconButton, styles.redButton]}
-                onPress={() => handleHapusPress(item.uuid)}>
-                <Ionicons name="trash-outline" size={20} color="white" />
+                style={[
+                  styles.iconButton,
+                  activeButton === 'bulan'
+                    ? styles.blueButton
+                    : styles.redButton,
+                ]}
+                onPress={handleButtonPress}>
+                <Ionicons
+                  name={activeButton === 'bulan' ? 'add' : 'trash'}
+                  size={20}
+                  color="white"
+                />
               </TouchableOpacity>
             </View>
-            <Modal
-              animationType="fade"
-              transparent={true}
-              visible={modalVisible}
-              onRequestClose={() => setModalVisible(false)}>
-              <View style={styles.modalOverlay}>
-                <View style={styles.modalContainer}>
-                  <Text style={[GlobalStyle.SemiBold, styles.modalText]}>
-                    Apakah Anda yakin ingin menghapus data ini?
-                  </Text>
-                  <View style={styles.modalButtons}>
-                    <TouchableOpacity
-                      style={[styles.button, styles.cancelButton]}
-                      onPress={() => setModalVisible(false)}>
-                      <Text style={[GlobalStyle.SemiBold, styles.cancelText]}>
-                        Tidak
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.button, styles.confirmButton]}
-                      onPress={handleConfirmAction}>
-                      <Text style={[GlobalStyle.SemiBold, styles.confirmText]}>
-                        Ya
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            </Modal>
-          </TouchableOpacity>
+          </View>
         </View>
         {index === data.length - 1 && <View style={styles.verticalLine} />}
       </>
@@ -226,8 +285,7 @@ export default function UserGroupScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <Header title="User Group" />
+      <Header title="Uraian Peta Jabatan" />
       {/* Loading Indicator */}
       {isLoading ? (
         // Loading Indicator
@@ -256,7 +314,7 @@ export default function UserGroupScreen() {
                     currentPage === 1 && styles.disabledButton,
                   ]}
                   disabled={currentPage === 1}
-                  onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
+                  onPress={handlePreviousPage}>
                   <Ionicons
                     name="chevron-back"
                     size={20}
@@ -269,9 +327,7 @@ export default function UserGroupScreen() {
                     currentPage === lastPage && styles.disabledButton,
                   ]}
                   disabled={currentPage === lastPage}
-                  onPress={() =>
-                    setCurrentPage(prev => Math.min(prev + 1, lastPage))
-                  }>
+                  onPress={handleNextPage}>
                   <Ionicons
                     name="chevron-forward"
                     size={20}
@@ -283,6 +339,37 @@ export default function UserGroupScreen() {
           }
         />
       )}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={[GlobalStyle.SemiBold, styles.modalText]}>
+              {selectedAction === 'hapus'
+                ? 'Apakah Anda yakin ingin menghapus data ini?'
+                : 'Apakah Anda yakin ingin mereset password pengguna ini?'}
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.button, styles.cancelButton]}
+                onPress={() => setModalVisible(false)}>
+                <Text style={[GlobalStyle.SemiBold, styles.cancelText]}>
+                  Tidak
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, styles.confirmButton]}
+                onPress={handleConfirmAction}>
+                <Text style={[GlobalStyle.SemiBold, styles.confirmText]}>
+                  Ya
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -303,11 +390,6 @@ const styles = StyleSheet.create({
   headerCell: {
     fontSize: 13,
     color: '#9196B5',
-  },
-  aksiCell: {
-    width: 100, // Sesuaikan agar proporsional dengan ikon
-    textAlign: 'center',
-    alignSelf: 'center',
   },
   tableRow: {
     backgroundColor: '#FFFFFF',
@@ -404,10 +486,27 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   headerContainer: {
+    flexDirection: 'column', // Supaya tersusun vertikal
+    alignItems: 'stretch', // Mengisi lebar parent
+    marginBottom: 10,
+  },
+  bulanContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start', // Posisi ke kiri
+    gap: 10,
+    marginBottom: 20, // Beri jarak antara tombol Bulan & Tahun dengan Search Bar
+  },
+  bottomContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between', // Search & Tambah sejajar
+  },
+  searchTambahContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    width: '100%',
   },
 
   searchContainer: {
@@ -419,7 +518,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 42, // **Tinggi sama dengan tombol tambah**
     flex: 1,
-    maxWidth: '60%', // **Agar fleksibel di berbagai layar**
   },
 
   searchIcon: {
@@ -443,7 +541,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     height: 40, // **Samakan tinggi dengan search bar**
     borderRadius: 5,
-    marginLeft: 12,
+    marginLeft: 10,
   },
 
   icon: {
@@ -503,9 +601,6 @@ const styles = StyleSheet.create({
   },
   redButton: {
     backgroundColor: '#FF536D', // Warna merah untuk hapus
-  },
-  yellowButton: {
-    backgroundColor: '#EE9D01', // Warna yellow untuk menu
   },
 
   switchContainer: {
@@ -567,5 +662,32 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+
+  button: {
+    height: 40,
+    width: 90,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonPressed: {
+    backgroundColor: '#fff',
+  },
+  buttonActive: {
+    borderBottomWidth: 3,
+    borderBottomColor: '#A463FC', // Warna sesuai desain
+  },
+  buttonText: {
+    fontSize: 14,
+    color: 'grey',
+  },
+  textActive: {
+    color: '#A463FC',
+  },
+  bulanButton: {
+    flexDirection: 'row',
+    gap: 5,
   },
 });

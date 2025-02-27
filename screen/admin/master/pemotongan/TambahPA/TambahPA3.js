@@ -106,7 +106,7 @@ const TambahPage = ({navigation}) => {
 
   return (
     <View style={styles.rootContainer}>
-      <Header title="Tambah PA 3" />
+      <Header title="Tambah Pemotongan Tidak Hadir" />
       <View style={styles.container}>
         {isLoading ? (
           <View style={styles.loadingContainer}>

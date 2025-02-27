@@ -97,8 +97,11 @@ const EditMesin = ({navigation, route}) => {
     };
 
     const requestUrl = `/fingerprint_machine/${uuid}/update`;
+    const requestUrl = `/fingerprint_machine/${uuid}/update`;
     console.log('Request URL:', requestUrl);
     console.log('Payload:', payload);
+
+    setIsLoading(true);
 
     setIsLoading(true);
 

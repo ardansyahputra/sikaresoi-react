@@ -6,92 +6,138 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  Image,
-  Linking,
   Modal,
   TextInput,
   Alert,
+  Switch,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {Dropdown} from 'react-native-element-dropdown';
+import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../src/api/apiClient';
-import GlobalStyle from '../../../src/utils/GlobalStyle';
-import Header from '../components/Header';
-import Toast from 'react-native-toast-message';
 import {BarIndicator} from 'react-native-indicators';
+import Header from '../../components/Header';
+import GlobalStyle from '../../../src/utils/GlobalStyle';
+import Toast from 'react-native-toast-message';
 
-export default function Presensi() {
+export default function Surat_tugas() {
+  const navigation = useNavigation();
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [isModalVisible, setModalVisible] = useState(false);
-  const [declineReason, setDeclineReason] = useState('');
+  const [isTambahModalVisible, setTambahModalVisible] = useState(false);
+  const [isHapusModalVisible, setHapusModalVisible] = useState(false);
+  const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [selectedUuid, setSelectedUuid] = useState(null);
-  const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedDisplay, setSelectedDisplay] = useState(null);
-  const apiClient = useApiClient(); // Using useApiClient hook
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedAction, setSelectedAction] = useState(null);
+  const [isEnabled, setIsEnabled] = useState(false);
+  const [switchStates, setSwitchStates] = useState({});
+
+  const [selectedGolongan, setSelectedGolongan] = useState('');
+  const [selectedNominal, setSelectedNominal] = useState('');
+
+  const apiClient = useApiClient();
 
   useEffect(() => {
-    fetchData(currentPage, selectedDisplay);
+    fetchData(currentPage, selectedDisplay, 1);
   }, [currentPage, selectedDisplay]);
 
-  const fetchData = async page => {
+  const handleSwitchToggle = async (uuid, currentStatus) => {
+    const newStatus = currentStatus === 1 ? 0 : 1;
+    const payload = {terlampir: newStatus.toString()};
+
+    console.log(`UUID: ${uuid}, Status Baru: ${newStatus}`);
+
+    // Update state lokal terlebih dahulu untuk respons yang lebih cepat
+    setSwitchStates(prevState => ({
+      ...prevState,
+      [uuid]: newStatus,
+    }));
+
     try {
-      setLoading(true);
-      const response = await apiClient.post('/perubahan_absensi/indexadmin', {
+      const response = await apiClient.post(
+        `/surat-tugas/${uuid}/updateconfirmed`,
+        payload,
+      );
+
+      console.log('Response dari server:', response.data);
+
+      // Pastikan respons sukses sebelum mempertahankan perubahan
+      if (!response.data) {
+        throw new Error('Gagal memperbarui status di server');
+      }
+    } catch (error) {
+      console.error('Error:', error.message);
+
+      // Jika gagal, kembalikan ke status sebelumnya
+      setSwitchStates(prevState => ({
+        ...prevState,
+        [uuid]: currentStatus,
+      }));
+    }
+  };
+
+  const fetchData = async (page, display) => {
+    try {
+      setIsLoading(true);
+
+      const response = await apiClient.post('/surat-tugas/tableandro', {
         page,
+        display,
       });
+
+      console.log('Surat Tugas Data:', response.data);
+
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
     } catch (error) {
-      console.error('Error fetching data', error);
+      console.error(
+        'Error fetching data',
+        error.response?.data || error.message,
+      );
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleApprove = async uuid => {
-    try {
-      Alert.alert('Konfirmasi', 'Apakah Anda yakin ingin mengonfirmasi?', [
-        {text: 'Batal', style: 'cancel'},
-        {
-          text: 'Ya',
-          onPress: async () => {
-            await apiClient.post(`/perubahan_absensi/${uuid}/change`, {
-              status: '1',
-              revisi: null,
-            });
-            Alert.alert('Berhasil', 'Konfirmasi berhasil.');
-            fetchData(currentPage);
-          },
-        },
-      ]);
-    } catch (error) {
-      Alert.alert('Error', 'Gagal mengonfirmasi.');
-    }
+  const handleEdit = async (uuid, navigation) => {
+    navigation.navigate('EditSuratTugas', {uuid});
   };
 
-  const handleDecline = uuid => {
+  const handleCreate = async navigation => {
+    navigation.navigate('TambahSuratTugas');
+  };
+
+  const handleHapusPress = uuid => {
     setSelectedUuid(uuid);
+    setSelectedAction('hapus'); // Tandai bahwa ini aksi hapus
     setModalVisible(true);
   };
 
-  const submitDecline = async () => {
+  const handleConfirmAction = async () => {
+    if (!selectedUuid) return;
+
+    setModalVisible(false); // Tutup modal sebelum aksi dijalankan
+
     try {
-      await axios.post(
-        `http://192.168.2.152:8000/api/v1/perubahan_absensi/${selectedUuid}/change`,
-        {status: '2', revisi: declineReason},
-      );
-      Alert.alert('Berhasil', 'Penolakan berhasil.');
-      setModalVisible(false);
-      setDeclineReason('');
-      fetchData(currentPage); // Refresh data
+      await apiClient.delete(`/pemotongan_pulang_awal/${selectedUuid}/delete`);
+      fetchData(currentPage);
+      Toast.show({
+        type: 'success',
+        text1: 'Berhasil',
+        text2: 'Data berhasil dihapus.',
+      });
     } catch (error) {
-      Alert.alert('Error', 'Gagal menolak data.');
+      Toast.show({
+        type: 'error',
+        text1: 'Terjadi Kesalahan',
+        text2: 'Gagal menghapus data.',
+      });
     }
   };
 
@@ -107,27 +153,9 @@ export default function Presensi() {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const getStatusStyle = status => {
-    switch (status?.toUpperCase()) {
-      case 'DISETUJUI':
-        return styles.badgeApproved;
-      case 'DITOLAK':
-        return styles.badgeRejected;
-      case 'MENUNGGU':
-        return styles.badgePending;
-      default:
-        return styles.badgeDefault;
-    }
-  };
-
-  const stripHtml = html => {
-    return html.replace(/<[^>]*>/g, '').trim();
-  };
-
   const TableHeader = () => (
     <View>
       <View style={styles.headerContainer}>
-        {/* Search Bar */}
         <View style={styles.searchContainer}>
           <Ionicons
             name="search"
@@ -143,25 +171,30 @@ export default function Presensi() {
             placeholderTextColor="#888"
           />
         </View>
+        <TouchableOpacity
+          style={styles.tambahButton}
+          onPress={() => handleCreate(navigation, '10%', '18:00', '08:00')}>
+          <Ionicons name="add" size={18} color="#fff" style={styles.icon} />
+          <Text style={[GlobalStyle.SemiBold, styles.tambahText]}>Tambah</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.tableHeader}>
         <Text
-          style={[GlobalStyle.SemiBold, sstyles.headerCell, styles.numberCell]}>
-          NO
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.numberCell]}>
+          {String('NO')}
         </Text>
         <Text
-          style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}
-          numberOfLines={2}>
-          NAMA
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}>
+          {String('NO SKP')}
         </Text>
         <Text
-          style={[
-            GlobalStyle.SemiBold,
-            styles.headerCell,
-            styles.tableStatusCell,
-          ]}>
-          STATUS
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}>
+          {String('Tanggal SKP')}
+        </Text>
+        <Text
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}>
+          {String('Lampiran')}
         </Text>
         <View style={styles.expandIconCell} />
       </View>
@@ -171,169 +204,151 @@ export default function Presensi() {
 
   const renderItem = ({item, index}) => {
     const isExpanded = expandedId === item.id;
+    const rowBackgroundColor = index % 2 === 0 ? '#F7F8FC' : '#FFFFFF'; // Warna selang-seling
 
     return (
-      <View style={styles.tableRow}>
-        <TouchableOpacity
-          style={styles.rowHeader}
-          onPress={() => toggleExpand(item.id)}>
-          <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
-          <Text
-            style={[styles.tableCell, styles.nameCell]}
-            numberOfLines={1}
-            ellipsizeMode="tail">
-            {item.user?.name || '-'}
-          </Text>
-          <View style={styles.statusCellContainer}>
+      <>
+        <View style={styles.tableRow}>
+          <TouchableOpacity
+            style={[styles.rowHeader, {backgroundColor: rowBackgroundColor}]}
+            onPress={() => toggleExpand(item.id)}>
             <Text
               style={[
+                GlobalStyle.SemiBold,
                 styles.tableCell,
-                styles.statusCell,
-                getStatusStyle(item.status),
+                styles.numberCell,
               ]}>
-              {item.status || '-'}
+              {index + 1}
             </Text>
-          </View>
-          <View style={styles.expandIconCell}>
-            <Ionicons
-              name={isExpanded ? 'chevron-up' : 'chevron-down'}
-              size={20}
-              color="#333"
-            />
-          </View>
-        </TouchableOpacity>
-        {isExpanded && (
-          <View style={styles.expandedContent}>
-            <Text style={styles.expandedText}>
-              Tanggal: {item.tanggal || '-'}
+            <Text
+              style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}>
+              {item.nomor || '-'}
             </Text>
-            <Text style={styles.expandedText}>
-              Jam Masuk: {item.jam_masuk || '-'}
+            <Text
+              style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}>
+              {item.tgl_spt || '-'}
             </Text>
-            <Text style={styles.expandedText}>
-              Jam Keluar: {item.jam_keluar || '-'}
-            </Text>
-            <View style={styles.filetext}>
-              <Text>File:</Text>
-              <Text
-                style={styles.expandedLinkText}
-                onPress={() => Linking.openURL(item.file)}>
-                File Absensi
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <Text>{isEnabled ? '' : ''}</Text>
+              <Switch
+                value={
+                  switchStates[item.uuid] !== undefined
+                    ? switchStates[item.uuid] === 1
+                    : item.switch === 1
+                }
+                onValueChange={() =>
+                  handleSwitchToggle(
+                    item.uuid,
+                    switchStates[item.uuid] !== undefined
+                      ? switchStates[item.uuid]
+                      : item.switch,
+                  )
+                }
+                trackColor={{false: '#d3d3d3', true: '#add8e6'}}
+                thumbColor={
+                  switchStates[item.uuid] === 1 ? '#ffffff' : '#f4f4f4'
+                }
+              />
+            </View>
+            <View style={styles.expandIconCell}>
+              <Ionicons
+                name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#BEC2D5"
+              />
+            </View>
+          </TouchableOpacity>
+          {isExpanded && (
+            <View style={styles.expandedContent}>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Dasar: {item.dasar || '-'}
               </Text>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Tahun: {item.tahun || '-'}
+              </Text>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                status: {item.status || '-'}
+              </Text>
+              <View style={styles.actionContainer}>
+                <TouchableOpacity
+                  style={[styles.iconButton, styles.blueButton]}
+                  onPress={() => handleEdit(item.uuid, navigation)}>
+                  <Ionicons name="pencil" size={20} color="white" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.iconButton, styles.redButton]}
+                  onPress={() => handleHapusPress(item.uuid)}>
+                  <Ionicons name="trash-outline" size={20} color="white" />
+                </TouchableOpacity>
+              </View>
             </View>
-            <View style={styles.actionContainer}>
-              <TouchableOpacity
-                style={styles.approveButton}
-                onPress={() => handleApprove(item.uuid)}>
-                <Ionicons name="checkmark" size={20} color="white" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.declineButton}
-                onPress={() => handleDecline(item.uuid)}>
-                <Ionicons name="close" size={20} color="white" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-      </View>
+          )}
+        </View>
+        {index === data.length - 1 && <View style={styles.verticalLine} />}
+      </>
     );
   };
 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Image
-            source={require('../assets/images/logo.png')}
-            style={styles.logo}
-          />
-        </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
-          <TouchableOpacity style={styles.iconWrapper}>
-            <Ionicons name="person-circle-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <Header title="Surat Tugas" />
       {/* Loading Indicator */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
+        </View>
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
           data={data}
           renderItem={renderItem}
           keyExtractor={item => item.id.toString()}
-          contentContainerStyle={styles.card}
+          contentContainerStyle={{flexGrow: 1, padding: '10'}}
+          style={{flex: 1}}
+          showsVerticalScrollIndicator={false}
           ListFooterComponent={
-            <View>
-              <Text style={styles.pageInfo}>
-                Showing page {currentPage} of {lastPage}
+            <View style={styles.paginationContainer}>
+              <Text style={[GlobalStyle.SemiBold, styles.pageInfo]}>
+                {currentPage} of {lastPage}
               </Text>
-              <View style={styles.paginationContainer}>
-                <View style={styles.paginationButtons}>
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === 1 && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === 1}
-                    onPress={() =>
-                      setCurrentPage(prev => Math.max(prev - 1, 1))
-                    }>
-                    <Text style={styles.pageButtonText}>Previous</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === lastPage && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === lastPage}
-                    onPress={() =>
-                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
-                    }>
-                    <Text style={styles.pageButtonText}>Next</Text>
-                  </TouchableOpacity>
-                </View>
+
+              <View style={styles.paginationButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.pageButton,
+                    currentPage === 1 && styles.disabledButton,
+                  ]}
+                  disabled={currentPage === 1}
+                  onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
+                  <Ionicons
+                    name="chevron-back"
+                    size={20}
+                    color={currentPage === 1 ? '#ccc' : '#BEC2D5'}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.pageButton,
+                    currentPage === lastPage && styles.disabledButton,
+                  ]}
+                  disabled={currentPage === lastPage}
+                  onPress={() =>
+                    setCurrentPage(prev => Math.min(prev + 1, lastPage))
+                  }>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={currentPage === lastPage ? '#ccc' : '#BEC2D5'}
+                  />
+                </TouchableOpacity>
               </View>
             </View>
           }
         />
       )}
-
-      {/* Modal Input Alasan Penolakan */}
-      <Modal
-        visible={isModalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Tolak Data</Text>
-            <Text style={styles.modalLabel}>Alasan Penolakan:</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Masukkan alasan"
-              multiline
-              value={declineReason}
-              onChangeText={setDeclineReason}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setModalVisible(false)}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={submitDecline}>
-                <Text style={styles.buttonText}>Tolak</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -341,31 +356,19 @@ export default function Presensi() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F8FB',
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 15,
-    margin: 12,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    backgroundColor: '#fff',
   },
   tableHeader: {
+    marginTop: 15,
     flexDirection: 'row',
-    backgroundColor: '#E0E0E0',
     paddingVertical: 10,
     paddingHorizontal: 15,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
   },
   headerCell: {
-    fontFamily: 'Poppins-SemiBold',
     fontSize: 13,
-    color: '#333',
+    color: '#9196B5',
   },
   tableRow: {
     backgroundColor: '#FFFFFF',
@@ -375,21 +378,21 @@ const styles = StyleSheet.create({
   rowHeader: {
     flexDirection: 'row',
     padding: 15,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: '#F7F8FC',
     alignItems: 'center',
   },
   tableCell: {
-    fontFamily: 'Poppins-Regular',
     flexWrap: 'wrap',
+    color: '#313131',
     fontSize: 14,
   },
   tableStatusCell: {
     textAlign: 'center',
-    flex: 1,
+    flex: 0,
     paddingLeft: 0,
   },
   numberCell: {
-    width: 50,
+    width: 45,
   },
   nameCell: {
     flex: 1,
@@ -406,17 +409,15 @@ const styles = StyleSheet.create({
     width: 40,
     alignItems: 'flex-end',
   },
-  approvedStatus: {
-    color: '#4CAF50',
+  headerLine: {
+    height: 2,
+    backgroundColor: '#D3D3D3', // Garis horizontal bawah header
+    marginBottom: 5,
   },
-  rejectedStatus: {
-    color: '#F44336',
-  },
-  pendingStatus: {
-    color: '#FFC107',
-  },
-  defaultStatus: {
-    color: '#9E9E9E',
+  verticalLine: {
+    height: 2, // Tinggi garis horizontal
+    backgroundColor: '#D3D3D3', // Warna abu-abu mirip header line
+    marginBottom: 10, // Jarak atas & bawah agar tidak menempel
   },
   expandedContent: {
     padding: 15,
@@ -425,172 +426,98 @@ const styles = StyleSheet.create({
   expandedText: {
     marginBottom: 5,
     fontSize: 14,
-  },
-  expandedLinkText: {
-    color: 'blue',
-    marginBottom: 5,
-    fontSize: 14,
-  },
-  filetext: {
-    flexDirection: 'row',
+    color: '#313131',
   },
   actionContainer: {
     flexDirection: 'row',
     marginTop: 10,
     justifyContent: 'flex-end',
     alignItems: 'center',
-    gap: 10,
-  },
-  actionButton: {
-    padding: 8,
-    backgroundColor: '#F0F0F0',
-    borderRadius: 5,
-  },
-  approveButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#4CAF50',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  declineButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F44336',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
   },
   paginationButtons: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
   pageButton: {
-    padding: 10,
-    backgroundColor: '#007bff',
+    padding: 8, // Padding agar tombol lebih mudah diklik
     borderRadius: 5,
-    marginHorizontal: 5,
   },
   pageButtonText: {
-    fontFamily: 'Poppins-Regular',
     fontSize: 13,
     color: '#fff',
   },
   disabledButton: {
-    backgroundColor: '#CCCCCC',
+    opacity: 0.5, // Efek disabled lebih jelas
   },
   paginationText: {
     color: 'white',
     fontWeight: 'bold',
   },
   pageInfo: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 13,
+    fontSize: 14,
+    color: '#888', // Warna abu-abu sesuai tampilan gambar
+    marginRight: 10, // Jarak antara teks dan tombol navigasi
   },
   paginationContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 10,
-  },
-  header: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingVertical: 10,
+  },
+  headerContainer: {
+    flexDirection: 'row',
     justifyContent: 'space-between',
-    elevation: 4,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  logo: {
-    width: 140,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  headerRight: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    flex: 1,
-  },
-  iconWrapper: {
-    marginLeft: 12,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
     marginBottom: 10,
   },
-  modalLabel: {
-    fontSize: 14,
-    marginBottom: 5,
-  },
-  modalInput: {
-    borderWidth: 1,
+
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F7F8FC',
     borderColor: '#ccc',
     borderRadius: 5,
-    padding: 10,
-    minHeight: 80,
-    marginBottom: 15,
-    textAlignVertical: 'top',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  cancelButton: {
-    backgroundColor: '#ccc',
-    padding: 10,
-    borderRadius: 5,
-    marginRight: 10,
-  },
-  submitButton: {
-    backgroundColor: '#F44336',
-    padding: 10,
-    borderRadius: 5,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  searchContainer: {
-    width: 150,
-    backgroundColor: '#FFFFFF',
-  },
-  searchBar: {
-    height: 40,
-    borderColor: '#CCCCCC',
-    borderWidth: 1,
-    borderRadius: 5,
     paddingHorizontal: 12,
+    height: 42, // **Tinggi sama dengan tombol tambah**
+    flex: 1,
+    maxWidth: '60%', // **Agar fleksibel di berbagai layar**
   },
+
+  searchIcon: {
+    marginRight: 10,
+    fontSize: 14, // **Agar proporsional dengan teks**
+    alignSelf: 'center',
+  },
+
+  searchBar: {
+    flex: 1,
+    fontSize: 12, // **Agar lebih proporsional**
+    color: '#BEC2D5',
+    textAlignVertical: 'center', // **Pastikan teks sejajar secara vertikal**
+    paddingVertical: 0, // **Hapus padding default agar tidak terlalu tinggi**
+  },
+
+  tambahButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#3699FE',
+    paddingHorizontal: 15,
+    height: 40, // **Samakan tinggi dengan search bar**
+    borderRadius: 5,
+    marginLeft: 12,
+  },
+
+  icon: {
+    fontSize: 14, // **Ukuran disesuaikan agar sejajar dengan teks**
+  },
+
+  tambahText: {
+    color: '#fff',
+    marginLeft: 5,
+    fontSize: 12, // **Lebih proporsional**
+    textAlignVertical: 'center',
+  },
+
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -603,7 +530,6 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   displayText: {
-    fontFamily: 'Poppins-Regular',
     fontSize: 13,
     marginRight: 8,
     textAlign: 'center',
@@ -621,10 +547,83 @@ const styles = StyleSheet.create({
   },
   dropdownItem: {
     padding: 10,
+    fontSize: 12,
+    color: '#333',
+  },
+
+  iconButton: {
+    padding: 10, // Ukuran tombol lebih besar
+    marginHorizontal: 5,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  blueButton: {
+    backgroundColor: '#3699FE', // Warna biru untuk reset & edit
+  },
+  redButton: {
+    backgroundColor: '#FF536D', // Warna merah untuk hapus
+  },
+
+  switchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: 10,
+  },
+  switchLabel: {
     fontSize: 16,
     color: '#333',
   },
-  customFont: {
-    fontFamily: 'Poppins-Regular',
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContainer: {
+    width: 300,
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginHorizontal: 5,
+    backgroundColor: '#000',
+  },
+  cancelButton: {
+    borderWidth: 1,
+    borderColor: '#3498db',
+    backgroundColor: '#fff',
+  },
+  cancelText: {
+    color: '#0A3D62',
+  },
+  confirmButton: {
+    backgroundColor: '#3498db',
+  },
+  confirmText: {
+    color: '#fff',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
