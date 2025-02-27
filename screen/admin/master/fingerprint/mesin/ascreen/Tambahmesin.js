@@ -54,7 +54,6 @@ const Tambahmesin = ({navigation, route}) => {
     };
 
     const requestUrl = `/fingerprint_machine/create`;
-    const requestUrl = `/fingerprint_machine/create`;
     console.log('Request URL:', requestUrl);
     console.log('Payload:', payload);
 

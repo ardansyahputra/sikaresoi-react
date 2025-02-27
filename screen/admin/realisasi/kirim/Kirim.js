@@ -176,65 +176,6 @@ export default function BelumKontrak() {
     </View>
   );
 
-  const renderItem = ({item, index}) => {
-    const isExpanded = expandedId === item.id;
-
-    return (
-      <View style={styles.tableRow}>
-        <TouchableOpacity
-          style={styles.rowHeader}
-          onPress={() => toggleExpand(item.id)}>
-          <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
-          <Text
-            style={[styles.tableCell, styles.nameCell]}
-            numberOfLines={1}
-            ellipsizeMode="tail">
-            {item.nip || '-'}
-          </Text>
-          <View style={styles.statusCellContainer}>
-            <Text
-              style={[
-                styles.tableCell,
-                styles.statusCell,
-                getStatusStyle(item.name), // Ganti item.nama menjadi item.name
-              ]}>
-              {item.name || '-'} {/* Ganti item.nama menjadi item.name */}
-            </Text>
-          </View>
-          <View style={styles.expandIconCell}>
-            <Ionicons
-              name={isExpanded ? 'chevron-up' : 'chevron-down'}
-              size={20}
-              color="#333"
-            />
-          </View>
-        </TouchableOpacity>
-        {isExpanded && (
-          <View style={styles.expandedContent}>
-            <Text style={styles.expandedText}>NIP/NRP: {item.nip || '-'}</Text>
-            <Text style={styles.expandedText}>
-              Nama: {item.name || '-'} {/* Ganti item.nama menjadi item.name */}
-            </Text>
-            <View style={styles.actionContainer}>
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => handleApprove(item.uuid)}>
-                <FontAwesome name="pencil" size={20} color="white" />
-                <Text style={styles.customFont}>Edit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.declineButton}
-                onPress={() => handleHapus(item.uuid)}>
-                <Ionicons name="trash" size={20} color="white" />
-                <Text style={styles.customFont}>Hapus</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-      </View>
-    );
-  };
-
   return (
     <View style={styles.container}>
       <View>

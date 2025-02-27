@@ -16,7 +16,6 @@ export default function BelumKontrak() {
   const apiClient = useApiClient();
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
