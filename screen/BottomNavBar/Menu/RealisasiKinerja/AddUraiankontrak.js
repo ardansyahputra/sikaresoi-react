@@ -11,14 +11,14 @@ import {
   Image,
 } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
-import useApiClient from '../../../src/api/apiClient';
+import useApiClient from '../../../../src/api/apiClient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Toast, toastConfig} from '../../../src/utils/CustomToast';
+import { Toast, toastConfig} from '../../../../src/utils/CustomToast';
 
-const AddUraian = ({ navigation, route }) => {
+const AddUraiankontrak = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
   const [dropdownLoading, setDropdownLoading] = useState(true);
-  const [tgsTambahan, setTgsTambahan] = useState(false); // Track toast visibility
+  const [tgsTambahan, setTgsTambahan] = useState(null); // Track toast visibility
   const showToast = (type, text1, text2) => {
     Toast.show({
       type,
@@ -66,13 +66,13 @@ const AddUraian = ({ navigation, route }) => {
   const fetchUraian = async () => {
     try {
       const response = await apiClient.post('uraian/indexAndro_user');
-      console.log('tgs tambahan:', response.data.data.tgs_tambahan); // Debugging log
+      console.log('tgs tambahan:', response.data.data.tgs_tambahan[0]); // Debugging log
   
       if (response?.data?.data) {
         // If you need to set tgs_tambahan based on some condition, do it here
         setFormData(prev => ({
           ...prev,
-          tgs_tambahan: false, // Set to false or based on some condition
+          tgs_tambahan: response.data.data.tgs_tambahan[4], // Set to false or based on some condition
         }));
       }
     } catch (error) {
@@ -168,7 +168,7 @@ const AddUraian = ({ navigation, route }) => {
           valueField="value"
           placeholder="Pilih Satuan"
           value={formData.satuan} 
-          onChange={item => setField('satuan', item.label) }
+          onChange={item => setField('satuan', item.value) }
           
         />
 
@@ -346,4 +346,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddUraian;
+export default AddUraiankontrak;

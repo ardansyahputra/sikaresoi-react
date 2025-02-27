@@ -35,7 +35,7 @@ const Remunerasi = () => {
     })
     .catch(error => {
       console.error("Error fetching months:", error.response?.data || error.message);
-    });
+    }); 
 
     // Hardcode Tahun dari 2020 hingga 2025
     const tahunData = [

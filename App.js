@@ -8,7 +8,8 @@ import {
   useNavigationContext,
 } from './src/navigation/NavigationContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {StyleSheet} from 'react-native';
+import { StyleSheet } from 'react-native';
+import { Toast, toastConfig } from './src/utils/CustomToast.js';
 
 //login screens
 import LoginScreen from './screen/auth/login/Login';
@@ -44,7 +45,9 @@ import MasterKinerja from './screen/BottomNavBar/KontrakKinerja/MasterKinerja.js
 import AddUraian from './screen/BottomNavBar/KontrakKinerja/AddUraian.js';
 import SalinKontrak from './screen/BottomNavBar/KontrakKinerja/SalinKontrak.js';
 import Kumulatif from './screen/BottomNavBar/KontrakKinerja/Kumulatif.js';
-import realisasi from './screen/BottomNavBar/Menu/RealisasiKinerja/tambahan.js';
+import PerubahanPresensi from './screen/PerubahanPresensi.js';
+import AbsenPresensi from './screen/AbsenPresensi.js';
+import AddUraiankontrak from './screen/BottomNavBar/Menu/RealisasiKinerja/AddUraiankontrak.js';
 
 const Tab = createBottomTabNavigator();
 const styles = StyleSheet.create({
@@ -178,6 +181,11 @@ function HomeStack() {
         component={PencapaianKerja}
         options={{headerShown: false}}
       />
+       <Stack.Screen
+        name="PerubahanPresensi"
+        component={PerubahanPresensi}
+        options={{headerShown: false}}
+      />
       <Stack.Screen
         name="RealisasiNext"
         component={RealisasiNext}
@@ -193,11 +201,14 @@ function HomeStack() {
         component={MasterKinerjaRealisasi}
         options={{headerShown: false}}
       />
+     
       <Stack.Screen
-        name="realisasi"
-        component={realisasi}
+        name="AbsenPresensi"
+        component={AbsenPresensi}
         options={{headerShown: false}}
       />
+
+<Stack.Screen name="AddUraiankontrak" component={AddUraiankontrak} />
     </Stack.Navigator>
   );
 }
@@ -222,6 +233,7 @@ function Kontrakstack() {
         component={MasterKinerjaRealisasi}
       />
       <Stack.Screen name="AddUraian" component={AddUraian} />
+      
       <Stack.Screen name="Kumulatif" component={Kumulatif} />
     </Stack.Navigator>
   );
@@ -279,6 +291,7 @@ export default function App() {
       <NavigationProvider>
         <NavigationContainer>
           <RootStack />
+          <Toast config={toastConfig} />
         </NavigationContainer>
       </NavigationProvider>
     </AuthProvider>

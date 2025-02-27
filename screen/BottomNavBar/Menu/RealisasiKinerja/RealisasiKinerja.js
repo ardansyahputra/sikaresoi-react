@@ -24,7 +24,7 @@ const RealisasiKinerja = () => {
   const navigation = useNavigation();
   const [data, setData] = useState([]);
   const [dataUtama, setDataUtama] = useState([]);
-  const [dataTambahan, setDataTambahan] = useState([]); 
+  const [dataTambahan, setDataTambahan] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);

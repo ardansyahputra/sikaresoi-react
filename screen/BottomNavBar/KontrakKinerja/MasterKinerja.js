@@ -18,6 +18,7 @@ import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../src/api/apiClient';
 import axios from 'axios';
+import { toastConfig, Toast } from '../../../src/utils/CustomToast';
 
 const MasterKinerja = ({navigation}) => {
   const [data, setData] = useState([]);
@@ -39,6 +40,14 @@ const MasterKinerja = ({navigation}) => {
   const [selectedYear, setSelectedYear] = useState(null);
   
   const apiClient = useApiClient();
+  const showToast = (type, text1, text2) => {
+    Toast.show({
+      type,
+      text1,
+      text2,
+    });
+  };
+  
 
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -128,7 +137,7 @@ const MasterKinerja = ({navigation}) => {
       if (axios.isAxiosError(error)) {
         console.log(error.toJSON());
       }
-      Alert.alert('Error', 'Gagal memuat data.');
+      showToast('error', 'Error', 'Gagal memuat data kinerja');
     } finally {
       setLoading(false);
     }
@@ -152,11 +161,11 @@ const MasterKinerja = ({navigation}) => {
             setSelectedYear(defaultYear ? defaultYear.value : years[0]?.value);
           } else {
             console.error('Failed to load year options:', response);
-            Alert.alert('Error', 'Gagal memuat data tahun.');
+            showToast('error', 'Error', 'Gagal memuat data tahun');
           }
         } catch (error) {
           console.error('Error fetching years:', error);
-          Alert.alert('Error', 'Gagal memuat data tahun.');
+          showToast('error', 'Error', 'Gagal memuat data tahun');
         } finally {
           setLoading(false);
         }
@@ -200,7 +209,7 @@ const MasterKinerja = ({navigation}) => {
       }
     } catch (error) {
       console.error('Error fetching data:', error);
-      Alert.alert('Error', 'Gagal memuat data.');
+      showToast('error', 'Error', 'Gagal memuat data');
     } finally {
       setLoading(false);
     }
@@ -222,8 +231,6 @@ const MasterKinerja = ({navigation}) => {
 
   const saveListKinerja = async (item) => {
     try {
-    
-  
       // Construct the payload
       const payload = {
         kinerja: { // Use the kinerjaId from state
@@ -254,10 +261,7 @@ const MasterKinerja = ({navigation}) => {
       fetchListUraian(selectedYear);
     } catch (error) {
       console.error('Error saving data:', error);
-      Alert.alert(
-        'Error',
-        error.response?.data?.message || 'Gagal menyimpan data.',
-      );
+      showToast('error', 'Error', 'Berhasil menambahkan data',  error.response?.data?.message || 'Gagal menyimpan data.');
     }
   };
 

@@ -21,6 +21,8 @@ import GetAktifCard from './GetAktif';
 import KirimKontrak from './KirimKontrak';
 import axios from 'axios';
 import HomeScreen from '../Home/HomeScreen';
+import { toastConfig, Toast } from '../../../src/utils/CustomToast';
+import Overlay from '../../../src/utils/Overlay';
 
 const KontrakKinerjaScreen = () => {
   const navigation = useNavigation();
@@ -35,6 +37,14 @@ const KontrakKinerjaScreen = () => {
   const [selectedDisplay, setSelectedDisplay] = useState(null);
   const [userJabatanData, setUserJabatanData] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false); // Track toast visibility
+  const showToast = (type, text1, text2) => {
+      Toast.show({
+        type,
+        text1,
+        text2,
+      });
+    };
 
   const apiClient = useApiClient();
 
@@ -93,11 +103,9 @@ const KontrakKinerjaScreen = () => {
         setSelectedYear(defaultYear ? defaultYear.value : years[0]?.value);
       } else {
         console.error('Failed to load year options:', response);
-        Alert.alert('Error', 'Gagal memuat data tahun.');
       }
     } catch (error) {
       console.error('Error fetching years:', error);
-      Alert.alert('Error', 'Gagal memuat data tahun.');
     } finally {
       setLoading(false);
     }
@@ -193,7 +201,7 @@ const KontrakKinerjaScreen = () => {
     try {
       await apiClient.delete(`user/kinerja/list/${uuid}/delete`, {});
       Alert.alert('Sukses', 'Data berhasil dihapus.');
-      fetchKontrak(); // Refresh data setelah penghapusan
+      fetchKontrak(currentPage, selectedYear, selectedDisplay) // Refresh data setelah penghapusan
     } catch (error) {
       console.error(
         'Error deleting data',
@@ -330,8 +338,45 @@ const KontrakKinerjaScreen = () => {
                     value={item.uraian.angka_kredit.toString()}
                   />
                 </View>
+              </View>
+              <View style={styles.rightColumn}>
+              <Text style={styles.expandedText}>Waktu: </Text>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={styles.input}
+                    value={item.waktu?.toString()}
+                    onChangeText={value => {
+                      const updatedItem = {...item, waktu: value};
+                      onSaveKinerja(updatedItem);
+                    }}
+                    keyboardType="numeric"
+                    placeholder="0"
+                    placeholderTextColor="#999"
+                  />
+                  <Text style={styles.inputSuffix}>BULAN</Text>
+                </View>
+                {item.waktu <= 0 && (
+                  <Text style={styles.errorText}>Tidak boleh 0</Text>
+                )}
 
-                <Text style={styles.expandedText}>Kuantitas: </Text>
+                <Text style={styles.expandedText}>WPT: </Text>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={styles.input}
+                    value={item.wpt?.toString()}
+                    onChangeText={value => {
+                      const updatedItem = {...item, wpt: value};
+                      onSaveKinerja(updatedItem);
+                    }}
+                    keyboardType="numeric"
+                    placeholder="0"
+                    placeholderTextColor="#999"
+                  />
+                </View>
+              </View>
+            </View>
+            
+            <Text style={styles.expandedText}>Kuantitas: </Text>
                 <View style={styles.inputWrapper}>
                   {/* Input Angka */}
                   <TextInput
@@ -427,45 +472,10 @@ const KontrakKinerjaScreen = () => {
                 {item.kualitas <= 0 && (
                   <Text style={styles.errorText}>Tidak boleh 0</Text>
                 )}
-              </View>
 
-              {/* Kolom kanan */}
-              <View style={styles.rightColumn}>
-                <Text style={styles.expandedText}>Waktu: </Text>
-                <View style={styles.inputWrapper}>
-                  <TextInput
-                    style={styles.input}
-                    value={item.waktu?.toString()}
-                    onChangeText={value => {
-                      const updatedItem = {...item, waktu: value};
-                      onSaveKinerja(updatedItem);
-                    }}
-                    keyboardType="numeric"
-                    placeholder="0"
-                    placeholderTextColor="#999"
-                  />
-                  <Text style={styles.inputSuffix}>BULAN</Text>
-                </View>
-                {item.waktu <= 0 && (
-                  <Text style={styles.errorText}>Tidak boleh 0</Text>
-                )}
-
-                <Text style={styles.expandedText}>WPT: </Text>
-                <View style={styles.inputWrapper}>
-                  <TextInput
-                    style={styles.input}
-                    value={item.wpt?.toString()}
-                    onChangeText={value => {
-                      const updatedItem = {...item, wpt: value};
-                      onSaveKinerja(updatedItem);
-                    }}
-                    keyboardType="numeric"
-                    placeholder="0"
-                    placeholderTextColor="#999"
-                  />
-                </View>
-
-                <Text style={styles.expandedText}>Bobot: </Text>
+            <View style={styles.splitContainer}>
+              <View style={styles.leftColumn2}>
+              <Text style={styles.expandedText}>Bobot: </Text>
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={styles.input}
@@ -483,6 +493,9 @@ const KontrakKinerjaScreen = () => {
                   <Text style={styles.errorText}>Tidak boleh 0</Text>
                 )}
 
+              </View>
+              {/* Kolom kanan */}
+              <View style={styles.rightColumn2}>
                 <Text style={styles.expandedText}>Status: </Text>
                 <View style={styles.statusSection}>
                   {item.kuantitas <= 0 ||
@@ -511,11 +524,23 @@ const KontrakKinerjaScreen = () => {
                 </View>
               </View>
             </View>
+            
 
             <View style={styles.actionContainer}>
               <TouchableOpacity
                 style={styles.editButton}
-                onPress={() => handleKumulatif(item)}>
+                onPress={() => {
+                  if (
+                    item.kuantitas <= 0 ||
+                    item.kualitas <= 0 ||
+                    item.waktu <= 0 ||
+                    item.bobot <= 0
+                  ) {
+                    showToast('error', 'Peringatan', 'Mohon isi data yang kosong atau NOL (0)');
+                  } else {
+                    handleKumulatif(item);
+                  }
+                }}>
                 <Ionicons name="create" size={20} color="white" />
               </TouchableOpacity>
               <TouchableOpacity
@@ -780,6 +805,16 @@ const styles = StyleSheet.create({
   rightColumn: {
     flex: 1,
     marginLeft: 10,
+  },
+  leftColumn2: {
+    flex: 1,
+    marginRight: 10,
+    marginTop: 5,
+  },
+  rightColumn2: {
+    flex: 1,
+    marginLeft: 10,
+    marginTop: 5,
   },
   expandedRow: {
     padding: 15,
@@ -1119,14 +1154,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   editButton: {
-    gap: 5,
-    flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#3699FF',
     paddingVertical: 10,
     paddingHorizontal: 10,
-    borderRadius: 10,
-    elevation: 3,
+    borderRadius: 5,
+    elevation: 1,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.2,
@@ -1139,8 +1172,8 @@ const styles = StyleSheet.create({
     margin: 5,
     paddingVertical: 10,
     paddingHorizontal: 10,
-    borderRadius: 10,
-    elevation: 3,
+    borderRadius: 5,
+    elevation: 1,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.2,

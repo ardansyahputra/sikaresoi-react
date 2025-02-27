@@ -1,13 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, Modal } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import useApiClient from '../../../src/api/apiClient'; // Adjust the import path
+import { toastConfig, Toast } from '../../../src/utils/CustomToast';
+import Overlay from '../../../src/utils/Overlay';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const KirimKontrak = ({ kinerja, user }) => {
   const navigation = useNavigation();
   const apiClient = useApiClient();
   const [revisi, setRevisi] = useState('');
   const [userJabatanData, setUserJabatanData] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
+  const showToast = (type, text1, text2) => {
+      Toast.show({
+        type,
+        text1,
+        text2,
+      });
+    };
 
    useEffect(() => {
       fetchUserJabatanData();
@@ -30,33 +42,25 @@ const KirimKontrak = ({ kinerja, user }) => {
         ...kinerja,
         note_ke_atasan: revisi,
       });
-      Alert.alert('Sukses', response.data.data);
+      showToast('success', 'Sukses', response.data.data);
       // Emit event or trigger a callback if needed
     } catch (error) {
-      Alert.alert('Gagal', error.response?.data?.message || 'Terjadi kesalahan');
+      showToast('error', 'Error', error.response?.data?.message || 'Terjadi kesalahan');      // Alert.alert('Gagal', error.response?.data?.message || 'Terjadi kesalahan');
     }
   };
 
   const sendKinerja = async () => {
-    Alert.alert(
-      'Konfirmasi',
-      'Apakah Anda yakin? Anda tidak bisa mengubah data hingga atasan Anda memberi tanggapan!',
-      [
-        { text: 'Batal', style: 'cancel' },
-        {
-          text: 'Ya, Kirim!',
-          onPress: async () => {
-            try {
-              const response = await apiClient.get(`/user/kinerja/${kinerja.uuid}/send`);
-              Alert.alert('Sukses', response.data.data);
-              // Emit event or trigger a callback if needed
-            } catch (error) {
-              Alert.alert('Gagal', error.response?.data?.message || 'Terjadi kesalahan');
-            }
-          },
-        },
-      ]
-    );
+    setModalVisible(false)
+    try {
+      const response = await apiClient.get(`/user/kinerja/${kinerja.uuid}/send`);
+      showToast('sukses', 'Sukses', response.data.data);
+
+      // Emit event or trigger a callback if needed
+    } catch (error) {
+      showToast('error', 'Gagal', error.response?.data?.message || 'Terjadi kesalahan');
+      setModalVisible(false);
+    }
+          
   };
 
   const batalKinerja = async () => {
@@ -67,6 +71,10 @@ const KirimKontrak = ({ kinerja, user }) => {
     } catch (error) {
       Alert.alert('Gagal', error.response?.data?.message || 'Terjadi kesalahan');
     }
+  };
+
+  const confirmSend = item => {
+    setModalVisible(true);
   };
 
   return (
@@ -93,12 +101,39 @@ const KirimKontrak = ({ kinerja, user }) => {
       {kinerja.status === 0 && !kinerja.revisi && (
         <View style={styles.card}>
           <View style={styles.cardBody}>
-            <TouchableOpacity style={styles.primaryButton} onPress={sendKinerja}>
+            <TouchableOpacity style={styles.primaryButton} onPress={confirmSend}>
               <Text style={styles.buttonText}>KIRIM KE ATASAN</Text>
             </TouchableOpacity>
           </View>
         </View>
       )}
+      <Modal
+      animationType="slide"
+      transparent={true}
+      visible={modalVisible}
+      onRequestClose={() => setModalVisible(false)}>
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}> Peringatan </Text>
+          <Ionicons name="alert-circle-outline" size={100} color="#ffab09" />
+          <Text style={styles.modalText}>
+            Apakah Anda yakin ingin mengirim data ini ke atasan? Anda tidak bisa mengubah data hingga atasan memberi tanggapan!
+          </Text>
+          <View style={styles.modalActions}>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.modalButtonCancel]}
+              onPress={() => setModalVisible(false)}>
+              <Text style={styles.modalButtonText}>Batal</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.modalButtonDelete]}
+              onPress={sendKinerja}>
+              <Text style={styles.modalButtonText}>Kirim</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
 
       {/* Card for Status Not 0 and Has Revisi */}
       {kinerja.status !== 0 && kinerja.revisi && (
@@ -209,6 +244,64 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontFamily: 'Poppins-Bold',
+    marginBottom: 15,
+    textAlign: 'center',
+    color: '#333',
+  },
+  modalText: {
+    fontSize: 14,
+    fontFamily: 'Poppins-Regular',
+    textAlign: 'left',
+    color: '#555',
+    marginHorizontal: 10,
+    marginVertical: 15,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  modalButton: {
+    width: 230,
+    paddingVertical: 12,
+    marginBottom: 5, // Beri jarak antar tombol
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalButtonCancel: {
+    backgroundColor: '#f64e60',
+  },
+  modalButtonDelete: {
+    backgroundColor: '#3699ff',
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 

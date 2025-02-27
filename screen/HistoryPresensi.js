@@ -83,9 +83,9 @@ const HistoryPresensi = ({ navigation }) => {
                   <Icon name="cloud-download" size={18} color="#fff" style={styles.buttonIcon} />
                   <Text style={styles.buttonText}>Fetch</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.resetButton} onPress={() => setSearch('')}>
+                <TouchableOpacity style={styles.resetButton} onPress={() => navigation.navigate('PerubahanPresensi')}>
                   <Icon name="refresh" size={18} color="#fff" style={styles.buttonIcon} />
-                  <Text style={styles.buttonText}>Reset</Text>
+                  <Text style={styles.buttonText}>Perubahan</Text>
                 </TouchableOpacity>
               </View>
             </View>
