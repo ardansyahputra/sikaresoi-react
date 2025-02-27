@@ -17,14 +17,14 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../../src/api/apiClient';
-import axios from 'axios'; // Added missing import
 import GetAktifCard from '../../KontrakKinerja/GetAktif';
+
+// import KirimKontrak from './KirimKontrak';
+
 
 const RealisasiKinerja = () => {
   const navigation = useNavigation();
   const [data, setData] = useState([]);
-  const [dataUtama, setDataUtama] = useState([]);
-  const [dataTambahan, setDataTambahan] = useState([]); 
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
@@ -38,12 +38,6 @@ const RealisasiKinerja = () => {
   const [monthOptions, setMonthOptions] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [showDetail, setShowDetail] = useState(null);
-  const [pimpinanId, setPimpinanId] = useState(null);
-  const [bulanId, setBulanId] = useState(null);
-  const [listKinerja, setListKinerja] = useState({ utama: [], tambahan: [] });
-  const [totalBobot, setTotalBobot] = useState(0);
-  const [totalWpt, setTotalWpt] = useState(0);
-
   const apiClient = useApiClient();
 
   const [kinerja, setKinerja] = useState({
@@ -57,32 +51,30 @@ const RealisasiKinerja = () => {
       show: false,
     },
   });
+  const [listKinerja, setListKinerja] = useState([]);
+  const [totalBobot, setTotalBobot] = useState(0);
+  const [totalWpt, setTotalWpt] = useState(0);
 
-  // Initial data loading
   useEffect(() => {
     fetchYears();
     fetchMonth();
     fetchUserJabatanData();
   }, []);
 
-  // Re-fetch data when filters change
   useEffect(() => {
     if (selectedYear && selectedMonth) {
-      fetchKontrak(currentPage, selectedYear, selectedMonth);
+      fetchKontrak(currentPage, selectedYear, selectedMonth, selectedDisplay);
     }
-  }, [currentPage, selectedYear, selectedMonth]);
+  }, [currentPage, selectedYear, selectedMonth, selectedDisplay]);
 
   const fetchUserJabatanData = async () => {
     try {
       const response = await apiClient.post('user/jabatan/aktif');
-      
       if (response?.data?.data) {
-        setUserJabatanData(response.data.data);
-        setPimpinanId(response.data.data.pimpinan_id);
+        setUserJabatanData(response.data.utama  );
       }
     } catch (error) {
       console.error('Error fetching user jabatan data:', error);
-      Alert.alert('Error', 'Gagal memuat data jabatan.');
     }
   };
 
@@ -97,14 +89,14 @@ const RealisasiKinerja = () => {
         }));
         setMonthOptions(months);
 
-        // Set default month to current month or first available
-        const currentMonth = new Date().getMonth() + 1; // JavaScript months are 0-indexed
+
+        const currentMonth = new Date().getMonth();
         const defaultMonth = months.find(
-          month => parseInt(month.label) === currentMonth
+          month => month.value === currentMonth
         );
         setSelectedMonth(defaultMonth ? defaultMonth.value : months[0]?.value);
-        setBulanId(defaultMonth ? defaultMonth.value : months[0]?.value);
       } else {
+        console.error('Failed to load month options:', response);
         Alert.alert('Error', 'Gagal memuat data bulan.');
       }
     } catch (error) {
@@ -114,6 +106,7 @@ const RealisasiKinerja = () => {
       setLoading(false);
     }
   };
+
 
   const fetchYears = async () => {
     try {
@@ -126,13 +119,14 @@ const RealisasiKinerja = () => {
         }));
         setYearOptions(years);
 
-        // Set default year to current year or first available
+
         const currentYear = new Date().getFullYear();
         const defaultYear = years.find(
-          year => parseInt(year.label) === currentYear
+          year => year.label === currentYear.toString(),
         );
         setSelectedYear(defaultYear ? defaultYear.value : years[0]?.value);
       } else {
+        console.error('Failed to load year options:', response);
         Alert.alert('Error', 'Gagal memuat data tahun.');
       }
     } catch (error) {
@@ -144,100 +138,65 @@ const RealisasiKinerja = () => {
   };
 
   const fetchKontrak = async (page, year, month) => {
-    if (!year || !month) return;
-    
-    try {
-      setLoading(true);
-      const response = await apiClient.post('user/kinerja/list/target/realisasi/index', {
-        page,
-        tahun_id: year,
-        bulan_id: month,
-      });
-  
-      if (response?.data) {
-        const utamaData = response.data.utama || [];
-        const tambahanData = response.data.tambahan || [];
-  
-        // Set data for main list
-        setData(utamaData);
-        setCurrentPage(response.data.current_page || 1);
-        setLastPage(response.data.last_page || 1);
-  
-        // Calculate totals
-        const totalAK = utamaData.reduce((sum, item) => {
-          return sum + (parseFloat(item.target?.list_kinerja?.angka_kredit) || 0);
-        }, 0);
-        
-        const totalWPT = utamaData.reduce((sum, item) => {
-          return sum + (parseFloat(item.target?.list_kinerja?.wpt) || 0);
-        }, 0);
-        
-        const totalBobot = utamaData.reduce((sum, item) => {
-          return sum + (parseFloat(item.target?.list_kinerja?.bobot) || 0);
-        }, 0);
-        
-        // Update kinerja state with calculated totals
-        setKinerja({
-          totalak: totalAK,
-          totalwpt: totalWPT,
-          totalbobot: totalBobot,
+      try {
+        setLoading(true);
+        const response = await apiClient.post('user/kinerja/list/target/realisasi/index', {
+          page,
           tahun_id: year,
           bulan_id: month,
-          user_jabatan_id: userJabatanData?.id,
-          alert: {
-            show: false,
-          },
         });
+        if (response?.data) {
+          setData(response.data.utama);
+          setCurrentPage(response.data.current_page);
+          setLastPage(response.data.last_page);
   
-        // Store complete data
-        setListKinerja({ utama: utamaData, tambahan: tambahanData });
-        setTotalBobot(totalBobot);
-        setTotalWpt(totalWPT);
-      } else {
-        setData([]);
-        setListKinerja({ utama: [], tambahan: [] });
+          // Update kinerja and listKinerja
+          setKinerja(response.data.kinerja || {
+            totalak: 0,
+            totalwpt: 0,
+            totalbobot: 0,
+            tahun_id: year,
+            bulan_id: month,
+            user_jabatan_id: userJabatanData?.id,
+            alert: {
+              show: false,
+            },
+          });
+          setListKinerja(response.data.data);
+  
+          
+          console.log('Data fetched:', response.data);
+        } else {
+          console.error('Invalid data:', response);
+          setData([]);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        if (axios.isAxiosError(error)) {
+          console.log(error.toJSON());
+        }
+        Alert.alert('Error', 'Gagal memuat data.');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      if (axios.isAxiosError(error)) {
-        console.log('Axios error details:', error.toJSON());
-      }
-      Alert.alert('Error', 'Gagal memuat data.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  const handleTugastambahan = (userJabatanId, tahunId) => {
-    navigation.navigate('MasterKinerjaRealisasi', {
-      userJabatanId, 
-      tahunId,
-      bulanId: selectedMonth
-    });
+  const handleTugastambahan = (userJabatanId, tahunId, item) => {
+    navigation.navigate('MasterKinerjaRealisasi', {userJabatanId, tahunId, item});
   };
 
   const handleEdit = (item) => {
     setShowDetail(showDetail === item.id ? null : item.id);
   };
+  
 
-  const onSaveKinerja = async (updatedItem) => {
+  const onSaveKinerja = async updatedItem => {
     try {
-      // Validate required fields
-      if (updatedItem.kuantitas <= 0 || updatedItem.kualitas <= 0) {
-        Alert.alert('Validasi Gagal', 'Kuantitas dan Kualitas tidak boleh 0 atau negatif');
-        return;
-      }
-
       const payload = {
-        kinerja: {
-          ...kinerja,
-          tahun_id: selectedYear,
-          bulan_id: selectedMonth,
-          user_jabatan_id: userJabatanData?.id,
-        },
+        kinerja: kinerja,
         list: {
           id: updatedItem.id,
-          uraian_id: updatedItem.target?.list_kinerja?.uraian.id,
+          uraian_id: updatedItem.uraian.id,
           angka: updatedItem.angka || 0,
           kuantitas: updatedItem.kuantitas || 0,
           kualitas: updatedItem.kualitas || 0,
@@ -247,21 +206,12 @@ const RealisasiKinerja = () => {
           tgs_tambahan: updatedItem.tgs_tambahan || 0,
           uraian_point: updatedItem.uraian_point || 0,
           target_point: updatedItem.target_point || 0,
-          usulan_kuantitas: updatedItem.usulanKuantitas || 0,
-          usulan_kualitas: updatedItem.usulanKualitas || 0,
-          persetujuan_kuantitas: updatedItem.persetujuanKuantitas || 0,
-          persetujuan_kualitas: updatedItem.persetujuanKualitas || 0,
         },
       };
-      
+      console.log('Payload:', JSON.stringify(payload, null, 2)); // Debugging payload sebelum dikirim
       const response = await apiClient.post('user/kinerja/list/save', payload);
-      
-      if (response.data.success) {
-        Alert.alert('Sukses', 'Data berhasil disimpan');
-        fetchKontrak(currentPage, selectedYear, selectedMonth);
-      } else {
-        Alert.alert('Gagal', response.data.message || 'Terjadi kesalahan saat menyimpan');
-      }
+      console.log('Response:', response.data);
+      fetchKontrak(currentPage,selectedMonth, selectedYear, selectedDisplay); // Refresh data setelah menyimpan
     } catch (error) {
       console.error('Error saving data:', error);
       Alert.alert(
@@ -271,41 +221,32 @@ const RealisasiKinerja = () => {
     }
   };
 
-  const handleDelete = async (uuid) => {
-    if (!uuid) {
-      Alert.alert('Error', 'ID data tidak valid');
-      return;
-    }
-    
+  const handleDelete = async uuid => {
     setModalVisible(false);
     try {
-      const response = await apiClient.delete(`user/kinerja/list/${uuid}/delete`);
-      
-      if (response.data.success) {
-        Alert.alert('Sukses', 'Data berhasil dihapus.');
-        fetchKontrak(currentPage, selectedYear, selectedMonth);
-      } else {
-        Alert.alert('Gagal', response.data.message || 'Terjadi kesalahan saat menghapus');
-      }
+      await apiClient.delete(`user/kinerja/list/${uuid}/delete`, {});
+      Alert.alert('Sukses', 'Data berhasil dihapus.');
+      fetchKontrak(); // Refresh data setelah penghapusan
     } catch (error) {
-      console.error('Error deleting data', error);
+      console.error(
+        'Error deleting data',
+        error.response?.data || error.message,
+      );
       Alert.alert('Gagal', 'Terjadi kesalahan saat menghapus data.');
     }
   };
 
-  const confirmDelete = (item) => {
-    setSelectedItem(item);
-    setModalVisible(true);
-  };
+ 
 
-  const toggleExpand = (id) => {
+  
+  const toggleExpand = id => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const TableHeader = () => (
+  const TableHeader = (item,) => (
     <View>
       <View style={styles.filterContainer}>
-        {/* Tahun & Bulan Selectors */}
+        {/* Tahun Selector */}
         <View style={styles.displayContainer}>
           <Dropdown
             style={styles.dropdown}
@@ -314,38 +255,42 @@ const RealisasiKinerja = () => {
             valueField="value"
             value={selectedYear}
             onChange={item => setSelectedYear(item.value)}
-            placeholder="Tahun"
           />
-       
+        </View>
+
+        <View style={styles.displayContainer}>
           <Dropdown
-            style={[styles.dropdown, {marginTop: 8}]}
+            style={styles.dropdown}
             data={monthOptions}
             labelField="label"
             valueField="value"
             value={selectedMonth}
             onChange={item => setSelectedMonth(item.value)}
-            placeholder="Bulan"
           />
         </View>
-        
+        </View>
+        {/*Button Kinerja */}
         <View style={styles.buttonRightContainer}>
           <TouchableOpacity
             style={styles.listkinerjaButton}
-            onPress={() => handleTugastambahan(userJabatanData?.id, selectedYear)}>
+            onPress={() => handleTugastambahan(item.user_jabatan_id, item.tahun_id)
+            }>
             <FontAwesome name="plus" size={15} color="white" />
             <Text style={styles.buttonText}>TUGAS TAMBAHAN</Text>
           </TouchableOpacity>
-          
           <TouchableOpacity style={styles.ubahatasanButton}>
             <FontAwesome name="copy" size={15} color="white" />
             <Text style={styles.buttonText}>UBAH ATASAN</Text>
           </TouchableOpacity>
         </View>
-      </View>
-      
+     
       <View style={styles.tableHeader}>
-        <Text style={[styles.headerCell, styles.numberCell]}>Nomor</Text>
-        <Text style={[styles.headerCell, styles.nameCell]}>Uraian Kegiatan</Text>
+        <Text style={[styles.headerCell, styles.numberCell]} align="center">
+          Nomor
+        </Text>
+        <Text style={[styles.headerCell, styles.nameCell]}>
+          Uraian Kegiatan
+        </Text>
         <View style={styles.expandIconCell} />
       </View>
     </View>
@@ -388,8 +333,7 @@ const RealisasiKinerja = () => {
                   <Text style={styles.inputSuffixBiaya}>Rp.</Text>
                   <TextInput 
                     style={styles.input}
-                    value={item.target?.list_kinerja?.uraian.biaya?.toString() || "0"}
-                    editable={false}
+                    value= {item.target?.list_kinerja?.uraian.biaya.toString()}
                   />  
                 </View>
   
@@ -397,8 +341,7 @@ const RealisasiKinerja = () => {
                 <View style={styles.inputWrapper} pointerEvents='none'>
                   <TextInput 
                     style={styles.input}
-                    value={item.target?.list_kinerja?.uraian.angka_kredit?.toString() || "0"}
-                    editable={false}
+                    value= {item.target?.list_kinerja?.uraian.angka_kredit.toString()}
                   />  
                 </View>
   
@@ -406,9 +349,9 @@ const RealisasiKinerja = () => {
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={styles.input}
-                    value={item.kuantitas?.toString() || item.target?.kuantitas?.toString() || "0"}
+                    value={item.target?.kuantitas.toString()}
                     onChangeText={value => {
-                      const numericValue = parseInt(value) || 0;
+                      const numericValue = parseInt(value) || 1;
                       const updatedItem = {...item, kuantitas: numericValue};
                       onSaveKinerja(updatedItem);
                     }}
@@ -419,8 +362,8 @@ const RealisasiKinerja = () => {
                   <TouchableOpacity
                     style={styles.arrowButton}
                     onPress={() => {
-                      if ((item.kuantitas || 0) > 1) {
-                        const updatedItem = {...item, kuantitas: (item.kuantitas || 1) - 1};
+                      if (item.kuantitas > 1) {
+                        const updatedItem = {...item, kuantitas: item.kuantitas - 1};
                         onSaveKinerja(updatedItem);
                       }
                     }}>
@@ -429,16 +372,16 @@ const RealisasiKinerja = () => {
                   <TouchableOpacity
                     style={styles.arrowButton}
                     onPress={() => {
-                      const updatedItem = {...item, kuantitas: (item.kuantitas || 0) + 1};
+                      const updatedItem = {...item, kuantitas: item.kuantitas + 1};
                       onSaveKinerja(updatedItem);
                     }}>
                     <Text style={styles.arrowText}>+</Text>
                   </TouchableOpacity>
                   <Text style={styles.inputSuffix}>
-                    {item.target?.list_kinerja?.uraian.satuan || ""}
+                    {item.target?.list_kinerja?.uraian.satuan}
                   </Text>
                 </View>
-                {(item.kuantitas <= 0) && (
+                {item.kuantitas <= 0 && (
                   <Text style={styles.errorText}>Tidak boleh 0</Text>
                 )}
   
@@ -446,9 +389,9 @@ const RealisasiKinerja = () => {
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={styles.input}
-                    value={item.kualitas?.toString() || "0"}
+                    value={item?.kualitas.toString()}
                     onChangeText={value => {
-                      const numericValue = parseInt(value) || 0;
+                      const numericValue = parseInt(value) || 1;
                       const updatedItem = {...item, kualitas: numericValue};
                       onSaveKinerja(updatedItem);
                     }}
@@ -458,7 +401,7 @@ const RealisasiKinerja = () => {
                   />
                   <Text style={styles.inputSuffix}> %</Text>
                 </View>
-                {(item.kualitas <= 0) && (
+                {item.kualitas <= 0 && (
                   <Text style={styles.errorText}>Tidak boleh 0</Text>
                 )}
               </View>
@@ -469,10 +412,9 @@ const RealisasiKinerja = () => {
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={styles.input}
-                    value={item.waktu?.toString() || item.target?.list_kinerja?.waktu?.toString() || "0"}
+                    value={item.target?.list_kinerja?.waktu?.toString()}
                     onChangeText={value => {
-                      const numericValue = parseInt(value) || 0;
-                      const updatedItem = {...item, waktu: numericValue};
+                      const updatedItem = {...item, waktu: value};
                       onSaveKinerja(updatedItem);
                     }}
                     keyboardType="numeric"
@@ -486,10 +428,9 @@ const RealisasiKinerja = () => {
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={styles.input}
-                    value={item.bobot?.toString() || item.target?.list_kinerja?.bobot?.toString() || "0"}
+                    value={item.target?.list_kinerja?.bobot?.toString()}
                     onChangeText={value => {
-                      const numericValue = parseFloat(value) || 0;
-                      const updatedItem = {...item, bobot: numericValue};
+                      const updatedItem = {...item, bobot: value};
                       onSaveKinerja(updatedItem);
                     }}
                     keyboardType="numeric"
@@ -500,10 +441,11 @@ const RealisasiKinerja = () => {
   
                 <Text style={styles.expandedText}>Status: </Text>
                 <View style={styles.statusSection}>
-                  {(item.kuantitas <= 0 ||
-                    item.kualitas <= 0 ||
-                    item.waktu <= 0 ||
-                    item.bobot <= 0) ? (
+                  {item.kuantitas <= 0 ||
+                  item.kualitas <= 0 ||
+                  item.waktu <= 0 ||
+                  item.bobot <= 0
+                  ? (
                     <View style={styles.statusBadgeDanger}>
                       <Ionicons name="alert-circle" size={16} color="white" />
                       <Text style={styles.statusText}> LENGKAPI DATA</Text>
@@ -525,116 +467,108 @@ const RealisasiKinerja = () => {
   
             <View style={styles.actionContainer}>
               <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => handleEdit(item)}>
+                style={[styles.editButton, {
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }]}
+                onPress={() => setShowDetail(showDetail === item.id ? null : item.id)}>
                 <Ionicons name="checkmark-done-sharp" size={20} color="white" />
-                <Text style={styles.actionButtonText}>Realisasi</Text>
+                <Text style={{
+                  color: 'white',
+                  marginTop: 2,
+                  fontSize: 12
+                }}>Realisasi</Text>
               </TouchableOpacity>
             </View>
-            
             {showDetail === item.id && (
-              <View style={styles.detailContainer}>
-                {/* First Row */}
-                <View style={styles.rowContainer}>
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>
-                      USULAN KUANTITAS <Text style={styles.requiredStar}>*</Text>
-                    </Text>
-                    <View style={styles.inputWrapper}>
-                      <TextInput
-                        style={styles.inputs}
-                        value={item.usulanKuantitas?.toString() || "0"}
-                        onChangeText={(text) => {
-                          const numericValue = parseFloat(text.replace(',', '.')) || 0;
-                          const updatedItem = {...item, usulanKuantitas: numericValue};
-                          onSaveKinerja(updatedItem);
-                        }}
-                        keyboardType="numeric"
-                      />
-                      <TouchableOpacity>
-                        <Text style={styles.laporanLink}>Laporan</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                  
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>
-                      USULAN KUALITAS <Text style={styles.requiredStar}>*</Text>
-                    </Text>
-                    <View style={styles.inputWrapper}>
-                      <TextInput
-                        style={styles.inputs}
-                        value={item.usulanKualitas?.toString() || "0"}
-                        onChangeText={(text) => {
-                          const numericValue = parseFloat(text.replace(',', '.')) || 0;
-                          const updatedItem = {...item, usulanKualitas: numericValue};
-                          onSaveKinerja(updatedItem);
-                        }}
-                        keyboardType="numeric"
-                      />
-                      <Text style={styles.percentageText}>%</Text>
-                    </View>
-                  </View>
-                </View>
+  <View style={styles.detailContainer}>
+    {/* First Row */}
+    <View style={styles.rowContainer}>
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>
+          USULAN KUANTITAS <Text style={styles.requiredStar}>*</Text>
+        </Text>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.inputs}
+            value={item.usulanKuantitas || '0,00'}
+            onChangeText={(text) => onSaveKinerja({...item, usulanKuantitas: text})}
+            keyboardType="numeric"
+          />
+          <TouchableOpacity>
+            <Text style={styles.laporanLink}>Laporan</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>
+          USULAN KUALITAS <Text style={styles.requiredStar}>*</Text>
+        </Text>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.inputs}
+            value={item.usulanKualitas || '0,00'}
+            onChangeText={(text) => onSaveKinerja({...item, usulanKualitas: text})}
+            keyboardType="numeric"
+          />
+          <Text style={styles.percentageText}>%</Text>
+        </View>
+      </View>
+    </View>
 
-                {/* Second Row */}
-                <View style={styles.rowContainer}>
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>
-                      PERSETUJUAN KUANTITAS <Text style={styles.requiredStar}>*</Text>
-                    </Text>
-                    <View style={styles.inputWrapper}>
-                      <TextInput
-                        style={styles.inputs}
-                        value={item.persetujuanKuantitas?.toString() || "0"}
-                        onChangeText={(text) => {
-                          const numericValue = parseFloat(text.replace(',', '.')) || 0;
-                          const updatedItem = {...item, persetujuanKuantitas: numericValue};
-                          onSaveKinerja(updatedItem);
-                        }}
-                        keyboardType="numeric"
-                      />
-                      <TouchableOpacity>
-                        <Text style={styles.laporanLink}>Laporan</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                  
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>
-                      PERSETUJUAN KUALITAS <Text style={styles.requiredStar}>*</Text>
-                    </Text>
-                    <View style={styles.inputWrapper}>
-                      <TextInput
-                        style={styles.inputs}
-                        value={item.persetujuanKualitas?.toString() || "0"}
-                        onChangeText={(text) => {
-                          const numericValue = parseFloat(text.replace(',', '.')) || 0;
-                          const updatedItem = {...item, persetujuanKualitas: numericValue};
-                          onSaveKinerja(updatedItem);
-                        }}
-                        keyboardType="numeric"
-                      />
-                      <Text style={styles.percentageText}>%</Text>
-                    </View>
-                  </View>
-                </View>
+    {/* Second Row */}
+    <View style={styles.rowContainer}>
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>
+          PERSETUJUAN KUANTITAS <Text style={styles.requiredStar}>*</Text>
+        </Text>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.inputs}
+            value={item.persetujuanKuantitas || '0,00'}
+            onChangeText={(text) => onSaveKinerja({...item, persetujuanKuantitas: text})}
+            keyboardType="numeric"
+          />
+          <TouchableOpacity>
+            <Text style={styles.laporanLink}>Laporan</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>
+          PERSETUJUAN KUALITAS <Text style={styles.requiredStar}>*</Text>
+        </Text>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.inputs}
+            value={item.persetujuanKualitas || '0,00'}
+            onChangeText={(text) => onSaveKinerja({...item, persetujuanKualitas: text})}
+            keyboardType="numeric"
+          />
+          <Text style={styles.percentageText}>%</Text>
+        </View>
+      </View>
+    </View>
 
-                {/* Dokumen Link */}
-                <View style={styles.dokumenContainer}>
-                  <TouchableOpacity>
-                    <Text style={styles.dokumenText}>+ Dokumen</Text>
-                  </TouchableOpacity>
-                </View>
+    {/* Dokumen Link */}
+    <View style={styles.dokumenContainer}>
+      <TouchableOpacity>
+        <Text style={styles.dokumenText}>+ Dokumen</Text>
+      </TouchableOpacity>
+    </View>
 
-                {/* Save Button */}
-                <View style={styles.buttonContainer}>
-                  <TouchableOpacity style={styles.saveButton} onPress={() => onSaveKinerja(item)}>
-                    <Text style={styles.buttonText}>SIMPAN</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
+    {/* Save Button */}
+    <View style={styles.buttonContainer}>
+      <TouchableOpacity style={styles.saveButton} onPress={() => onSaveKinerja(item)}>
+        <Text style={styles.buttonText}>SIMPAN</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+)}
+
           </View>
         )}
       </View>
@@ -660,15 +594,13 @@ const RealisasiKinerja = () => {
           </TouchableOpacity>
         </View>
       </View>
-      
       <View>
         <Text style={styles.headerTitle}>Realisasi Kinerja</Text>
         <Text style={styles.headerSubtitle}>User • Kinerja • Realisasi </Text>
+              
       </View>
 
       {userJabatanData && <GetAktifCard data={userJabatanData} />}
-      
-      {/* Delete Confirmation Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -676,7 +608,7 @@ const RealisasiKinerja = () => {
         onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Peringatan</Text>
+            <Text style={styles.modalTitle}> Peringatan </Text>
             <Text style={styles.modalText}>
               Apakah Anda yakin ingin menghapus data ini?
             </Text>
@@ -688,7 +620,7 @@ const RealisasiKinerja = () => {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalButtonDelete]}
-                onPress={() => handleDelete(selectedItem?.uuid)}>
+                onPress={() => handleDelete(selectedItem.uuid)}>
                 <Text style={styles.modalButtonText}>Hapus</Text>
               </TouchableOpacity>
             </View>
@@ -696,12 +628,9 @@ const RealisasiKinerja = () => {
         </View>
       </Modal>
 
-      {/* Main Content */}
+      {/* Loading Indicator */}
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0000ff" />
-          <Text style={styles.loadingText}>Memuat data...</Text>
-        </View>
+        <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <FlatList
           scrollEnabled={false}
@@ -710,42 +639,38 @@ const RealisasiKinerja = () => {
           renderItem={renderItem}
           keyExtractor={item => item.id.toString()}
           contentContainerStyle={styles.card}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Tidak ada data</Text>
-            </View>
-          }
           ListFooterComponent={
             <View>
-              {data.length > 0 && (
-                <>
-                  <Text style={styles.pageInfo}>
-                    Showing page {currentPage} of {lastPage}
-                  </Text>
-                  <View style={styles.paginationContainer}>
-                    <View style={styles.paginationButtons}>
-                      <TouchableOpacity
-                        style={[
-                          styles.pageButton,
-                          currentPage === 1 && styles.disabledButton,
-                        ]}
-                        disabled={currentPage === 1}
-                        onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
-                        <Text style={styles.pageButtonText}>Previous</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[
-                          styles.pageButton,
-                          currentPage === lastPage && styles.disabledButton,
-                        ]}
-                        disabled={currentPage === lastPage}
-                        onPress={() => setCurrentPage(prev => Math.min(prev + 1, lastPage))}>
-                        <Text style={styles.pageButtonText}>Next</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </>
-              )}
+              <Text style={styles.pageInfo}>
+                Showing page {currentPage} of {lastPage}
+              </Text>
+              <View style={styles.paginationContainer}>
+                
+                <View style={styles.paginationButtons}>
+                  <TouchableOpacity
+                    style={[
+                      styles.pageButton,
+                      currentPage === 1 && styles.disabledButton,
+                    ]}
+                    disabled={currentPage === 1}
+                    onPress={() =>
+                      setCurrentPage(prev => Math.max(prev - 1, 1))
+                    }>
+                    <Text style={styles.pageButtonText}>Previous</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.pageButton,
+                      currentPage === lastPage && styles.disabledButton,
+                    ]}
+                    disabled={currentPage === lastPage}
+                    onPress={() =>
+                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
+                    }>
+                    <Text style={styles.pageButtonText}>Next</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
           }
         />
@@ -1165,12 +1090,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   filterContainer: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     justifyContent: 'space-between',
     marginBottom: 10,
   },
   displayContainer: {
-    flexDirection: 'column',
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,

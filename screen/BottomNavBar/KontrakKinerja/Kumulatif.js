@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, View, Text, StyleSheet, TextInput, TouchableOpacity, Image, FlatList, ActivityIndicator } from 'react-native';
+import { ScrollView, View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { Card, Button } from 'react-native-paper';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import useApiClient from '../../../src/api/apiClient';
@@ -9,15 +9,15 @@ const Kumulatif = ({ navigation, route }) => {
   const { item } = route.params; // Use item from route.params
   const [kinerja, setKinerja] = useState(item); // Initialize state with item
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [errorCount, setErrorCount] = useState(false); // Track if total target exceeds kuantitas
 
   const apiClient = useApiClient();
 
   // Fetch data from the backend
-  const fetchData = async () => {
+   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await apiclient.get(`user/kinerja/list/${item.uuid}/edit`);
+      const response = await apiClient.get(`user/kinerja/list/${item.id}/edit`);
       setKinerja(response.data.data);
     } catch (err) {
       console.error('Invalid data:', response);
@@ -31,75 +31,53 @@ const Kumulatif = ({ navigation, route }) => {
   const saveTarget = async () => {
     setLoading(true);
     try {
-      const response = await apiclient.post(`user/kinerja/list/target/${kinerja.uuid}/save, kinerja.target`);
-      console.log(response.data.data);
+      const response = await apiClient.post(`user/kinerja/list/target/${kinerja.id}/save`, kinerja.target);
+      console.log('Save target response:', response.data.data);
+      Alert.alert('Success', 'Data saved successfully');
       fetchData(); // Refresh data after saving
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save target');
+      console.error('Error', err.response?.data || err.message);
+      Alert.alert('Error', 'Failed to save data');
     } finally {
       setLoading(false);
     }
   };
 
-  // Save total target
-  const saveTotalTarget = async () => {
-    setLoading(true);
-    try {
-      const response = await apiclient.post(`user/kinerja/list/${kinerja.uuid}/total-target, kinerja`);
-      console.log(response.data.data);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save total target');
-    } finally {
-      setLoading(false);
-    }
+  // Calculate average and update target values (Set Otomatis)
+  const hitungRerata = () => {
+    const hasil = item.kuantitas / item.waktu;
+    const updatedTargets = kinerja.target.map((target) => ({
+      ...target,
+      kuantitas: parseFloat(hasil).toFixed(2),
+    }));
+    setKinerja({ ...kinerja, target: updatedTargets });
+    countTarget(); // Update total target
   };
 
-  // Handle auto-sum calculation
-  const hitungRerata = async () => {
-    setLoading(true);
-    try {
-      const response = await apiclient.post(`user/kinerja/list/${kinerja.uuid}/auto-sum`, {
-        uraian_id: kinerja.uraian_id,
-        tahun_id: kinerja.kinerja.tahun_id,
-      });
-      setKinerja({ ...kinerja, target: response.data.data });
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to calculate auto-sum');
-    } finally {
-      setLoading(false);
+  // Calculate total target and check for errors
+  const countTarget = () => {
+    let totalTarget = 0;
+    kinerja.target.forEach((target) => {
+      if (target.kuantitas) {
+        totalTarget += parseFloat(target.kuantitas);
+      }
+    });
+
+    if (totalTarget.toFixed(2) > parseFloat(kinerja.kuantitas)) {
+      setErrorCount(true);
+    } else {
+      setErrorCount(false);
     }
+
+    setKinerja({ ...kinerja, total_target: totalTarget.toFixed(2) });
   };
 
-  // Handle otomatis toggle
-  const changeOtomatis = async () => {
-    setLoading(true);
-    try {
-      const response = await apiclient.post(`user/kinerja/list/target/${kinerja.uuid}/otomatis`, {
-        otomatis: !kinerja.otomatis
-      });
-      console.log(response.data.data);
-      fetchData(); // Refresh data after toggling
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to toggle otomatis');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Handle kumulatif toggle
-  const changeKumulatif = async () => {
-    setLoading(true);
-    try {
-      const response = await apiclient.post(`user/kinerja/list/target/${kinerja.uuid}/kumulatif`, {
-        kumulatif: kinerja.is_kumulatif ? 0 : 1,
-      });
-      console.log(response.data.data);
-      fetchData(); // Refresh data after toggling
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to toggle kumulatif');
-    } finally {
-      setLoading(false);
-    }
+  // Handle input change for target values
+  const handleTargetChange = (index, value) => {
+    const updatedTargets = [...kinerja.target];
+    updatedTargets[index].kuantitas = value;
+    setKinerja({ ...kinerja, target: updatedTargets });
+    countTarget(); // Update total target
   };
 
   // Fetch data on component mount
@@ -116,63 +94,45 @@ const Kumulatif = ({ navigation, route }) => {
     );
   }
 
-  // Render error state
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>{error}</Text>
-        <Button onPress={fetchData}>Retry</Button>
-      </View>
-    );
-  }
-
   return (
     <ScrollView style={styles.container}>
-
       <Card style={[styles.customFont, styles.card]}>
-        <Card.Title 
+        <Card.Title
           title="Kumulatif"
           titleStyle={GlobalStyle.Bold}
           left={() => (
-            <TouchableOpacity onPress={() => navigation.goBack()}>
+            <TouchableOpacity onPress={() => navigation.navigate('KontrakKinerja')}>
               <Ionicons name="arrow-back" size={20} color="#000" />
             </TouchableOpacity>
           )}
         />
         <Card.Content style={styles.userJabatanRow}>
           <View style={styles.userJabatanColumn}>
-                    <View style={styles.userJabatanItem}>
-                      <Text style={styles.userJabatanLabel}>Kegiatan Tugas Jabatan</Text>
-                    </View>
-                    <View style={styles.userJabatanItem}>
-                      <Text style={styles.userJabatanLabel}>Angka Kredit</Text>
-                    </View>
-                    <View style={styles.userJabatanItem}>
-                      <Text style={styles.userJabatanLabel}>Kuantitas</Text>
-                    </View>
-                    <View style={styles.userJabatanItem}>
-                      <Text style={styles.userJabatanLabel}>Kualitas</Text>
-                    </View>
-                    <View style={styles.userJabatanItem}>
-                      <Text style={styles.userJabatanLabel}>Waktu</Text>
-                    </View>
+            <View style={styles.userJabatanItem}>
+              <Text style={styles.userJabatanLabel}>Kegiatan Tugas Jabatan</Text>
+              <Text style={styles.userJabatanValue}>: {item.uraian?.nm_uraian}</Text>
+            </View>
+
+            <View style={styles.userJabatanItem}>
+              <Text style={styles.userJabatanLabel}>Angka Kredit</Text>
+              <Text style={styles.userJabatanValue}>: {item.uraian?.angka_kredit}</Text>
+            </View>
           </View>
           <View style={styles.userJabatanColumnR}>
-                    <View style={styles.userJabatanItem}>
-                      <Text style={styles.userJabatanValue}>: {kinerja.uraian?.nm_uraian}</Text>
-                    </View>
-                    <View style={styles.userJabatanItem}>
-                      <Text style={styles.userJabatanValue}>: {kinerja.uraian?.angka_kredit}</Text>
-                    </View>
-                    <View style={styles.userJabatanItem}>
-                      <Text style={styles.userJabatanValue}>: {kinerja.kt_satuan}</Text>
-                    </View>
-                    <View style={styles.userJabatanItem}>
-                      <Text style={styles.userJabatanValue}>: {kinerja.kl_persen}</Text>
-                    </View>
-                    <View style={styles.userJabatanItem}>
-                      <Text style={styles.userJabatanValue}>: {kinerja.waktu_bulan}</Text>
-                    </View>
+            <View style={styles.userJabatanItem}>
+              <Text style={styles.userJabatanLabel}>Kuantitas</Text>
+              <Text style={styles.userJabatanValue}>: {item.kt_satuan}</Text>
+            </View>
+
+            <View style={styles.userJabatanItem}>
+              <Text style={styles.userJabatanLabel}>Kualitas</Text>
+              <Text style={styles.userJabatanValue}>: {item.kl_persen}</Text>
+            </View>
+
+            <View style={styles.userJabatanItem}>
+              <Text style={styles.userJabatanLabel}>Waktu</Text>
+              <Text style={styles.userJabatanValue}>: {item.waktu_bulan}</Text>
+            </View>
           </View>
         </Card.Content>
       </Card>
@@ -185,7 +145,12 @@ const Kumulatif = ({ navigation, route }) => {
             value={kinerja.total_target?.toString()}
             editable={false}
           />
-          <Button mode="contained" onPress={saveTotalTarget} style={styles.saveButton}>
+          {errorCount && (
+            <Text style={styles.errorText}>
+              Maaf, Target Anda Tidak Boleh Lebih Dari {kinerja.kuantitas}
+            </Text>
+          )}
+          <Button mode="contained" onPress={saveTarget} style={styles.saveButton} disabled={errorCount}>
             <Text style={styles.buttonText}>SIMPAN</Text>
           </Button>
         </Card.Content>
@@ -193,7 +158,7 @@ const Kumulatif = ({ navigation, route }) => {
 
       <Card style={styles.card}>
         <Card.Content>
-          <Button mode="contained" onPress={changeOtomatis} style={[styles.autoButton]}>
+          <Button mode="contained" onPress={hitungRerata} style={styles.autoButton} disabled={errorCount}>
             SET OTOMATIS
           </Button>
           <View style={styles.targetGrid}>
@@ -203,7 +168,8 @@ const Kumulatif = ({ navigation, route }) => {
                 <TextInput
                   style={styles.targetInput}
                   value={target.kuantitas?.toString()}
-                  editable={false}
+                  onChangeText={(value) => handleTargetChange(index, value)}
+                  keyboardType="numeric"
                 />
               </View>
             ))}
@@ -215,12 +181,6 @@ const Kumulatif = ({ navigation, route }) => {
 };
 
 // Reusable DetailRow component
-const DetailRow = ({ label, value }) => (
-  <View style={styles.detailRow}>
-    <Text style={styles.label}>{label}</Text>
-    <Text style={styles.value}>{value || '-'}</Text>
-  </View>
-);
   
   const styles = StyleSheet.create({
     header: {
@@ -326,6 +286,11 @@ const DetailRow = ({ label, value }) => (
       padding: 8,
       fontSize: 14,
       backgroundColor: '#fff',
+    },
+    errorText: {
+      color: 'red',
+      fontSize: 12,
+      marginBottom: 8,
     },
     customFont: {
     fontFamily: 'Poppins-Regular',

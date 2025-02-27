@@ -249,7 +249,7 @@ const SettingJabatan = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header1}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={26} color="#000" />
         </TouchableOpacity>
         <Image

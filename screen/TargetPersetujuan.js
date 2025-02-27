@@ -1,323 +1,364 @@
-import React, { useEffect, useState } from 'react';
-import { ScrollView, View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { Card, Button } from 'react-native-paper';
+import React, {useEffect, useState} from 'react';
+import {
+  ScrollView,
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  Dimensions,
+  StatusBar,
+} from 'react-native';
+import {Surface, Button, ProgressBar, Divider} from 'react-native-paper';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import useApiClient from '../src/api/apiClient';
-import GlobalStyle from '../src/utils/GlobalStyle';
 
-const Kumulatif = ({ navigation, route }) => {
-  const { item } = route.params; // Use item from route.params
-  const [kinerja, setKinerja] = useState(item); // Initialize state with item
+const {width} = Dimensions.get('window');
+
+const Kumulatif = ({navigation, route}) => {
+  const {item} = route.params;
+  const [kinerja, setKinerja] = useState(item);
   const [loading, setLoading] = useState(false);
-  const [errorCount, setErrorCount] = useState(false); // Track if total target exceeds kuantitas
+  const [errorCount, setErrorCount] = useState(false);
 
   const apiClient = useApiClient();
 
-  // Fetch data from the backend
-   const fetchData = async () => {
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await apiClient.get(`user/kinerja/list/${item.id}/edit`);
-      setKinerja(response.data.data);
+      const response = await apiClient.post(`user/kinerja/list/index`);
+      
+      if (response.data.data.length > 0) {
+        const fetchedKinerja = response.data.data; // Ambil item pertama
+        setKinerja({
+          ...fetchedKinerja,
+          target: fetchedKinerja.target || [] // Pastikan target ada
+        });
+      } else {
+        Alert.alert('Data Kosong', 'Tidak ada data kinerja yang ditemukan.');
+      }
     } catch (err) {
-      console.error('Invalid data:', response);
-      setData([]);
+      console.error('Error fetching data:', err);
+      Alert.alert('Error', 'Gagal mengambil data.');
     } finally {
       setLoading(false);
     }
   };
-
-  // Save target data
   const saveTarget = async () => {
+    if (errorCount) {
+      Alert.alert('Error', 'Total target melebihi kuantitas yang diizinkan');
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await apiClient.post(`user/kinerja/list/target/${kinerja.id}/save`, kinerja.target);
-      console.log('Save target response:', response.data.data);
-      Alert.alert('Success', 'Data saved successfully');
-      fetchData(); // Refresh data after saving
+      const response = await apiClient.post(
+        `user/kinerja/list/target/${kinerja.id}/save`,
+        kinerja.target,
+      );
+      Alert.alert('Success', 'Data berhasil disimpan');
+      fetchData();
     } catch (err) {
-      console.error('Error', err.response?.data || err.message);
-      Alert.alert('Error', 'Failed to save data');
+      // console.error('Error saving data:', err);
+      // Alert.alert('Error', 'Gagal menyimpan data');
     } finally {
       setLoading(false);
     }
   };
 
-  // Calculate average and update target values (Set Otomatis)
   const hitungRerata = () => {
-    const hasil = item.kuantitas / item.waktu;
-    const updatedTargets = kinerja.target.map((target) => ({
+    const hasil = kinerja.kuantitas / kinerja.waktu;
+    const updatedTargets = kinerja.target.map(target => ({
       ...target,
       kuantitas: parseFloat(hasil).toFixed(2),
     }));
-    setKinerja({ ...kinerja, target: updatedTargets });
-    countTarget(); // Update total target
+    setKinerja({...kinerja, target: updatedTargets});
+    countTarget(updatedTargets);
   };
 
-  // Calculate total target and check for errors
-  const countTarget = () => {
+  const countTarget = (targets = kinerja.target) => {
     let totalTarget = 0;
-    kinerja.target.forEach((target) => {
+    targets.forEach(target => {
       if (target.kuantitas) {
         totalTarget += parseFloat(target.kuantitas);
       }
     });
 
-    if (totalTarget.toFixed(2) > parseFloat(kinerja.kuantitas)) {
-      setErrorCount(true);
-    } else {
-      setErrorCount(false);
-    }
-
-    setKinerja({ ...kinerja, total_target: totalTarget.toFixed(2) });
+    const isExceeded = totalTarget > parseFloat(kinerja.kuantitas);
+    setErrorCount(isExceeded);
+    setKinerja(prev => ({...prev, total_target: totalTarget.toFixed(2)}));
   };
 
-  // Handle input change for target values
   const handleTargetChange = (index, value) => {
     const updatedTargets = [...kinerja.target];
     updatedTargets[index].kuantitas = value;
-    setKinerja({ ...kinerja, target: updatedTargets });
-    countTarget(); // Update total target
+    setKinerja(prev => ({...prev, target: updatedTargets}));
+    countTarget(updatedTargets);
   };
 
-  // Fetch data on component mount
   useEffect(() => {
     fetchData();
   }, []);
 
-  // Render loading state
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#6366f1" />
       </View>
     );
   }
 
+  const progressValue = kinerja.total_target
+    ? Math.min(
+        parseFloat(kinerja.total_target) / parseFloat(kinerja.kuantitas),
+        1,
+      )
+    : 0;
+
   return (
-    <ScrollView style={styles.container}>
-      <Card style={[styles.customFont, styles.card]}>
-        <Card.Title
-          title="Kumulatif"
-          titleStyle={GlobalStyle.Bold}
-          left={() => (
-            <TouchableOpacity onPress={() => navigation.navigate('KontrakKinerja')}>
-              <Ionicons name="arrow-back" size={20} color="#000" />
-            </TouchableOpacity>
-          )}
-        />
-        <Card.Content style={styles.userJabatanRow}>
-          <View style={styles.userJabatanColumn}>
-            <View style={styles.userJabatanItem}>
-              <Text style={styles.userJabatanLabel}>Kegiatan Tugas Jabatan</Text>
-              <Text style={styles.userJabatanValue}>: {item.uraian?.nm_uraian}</Text>
-            </View>
+    <View style={styles.container}>
+      <StatusBar backgroundColor="#6366f1" barStyle="light-content" />
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Kumulatif</Text>
+      </View>
 
-            <View style={styles.userJabatanItem}>
-              <Text style={styles.userJabatanLabel}>Angka Kredit</Text>
-              <Text style={styles.userJabatanValue}>: {item.uraian?.angka_kredit}</Text>
+      <ScrollView style={styles.content}>
+        <Surface style={styles.card}>
+          <Text style={styles.sectionTitle}>Kegiatan Tugas Jabatan</Text>
+          <Text style={styles.description}>{item.uraian?.nm_uraian}</Text>
+
+          <Divider style={styles.divider} />
+
+          <View style={styles.metricsContainer}>
+            <View style={styles.metricBox}>
+              <Ionicons name="star-outline" size={24} color="#6366f1" />
+              <Text style={styles.metricLabel}>Angka Kredit</Text>
+              <Text style={styles.metricValue}>
+                {kinerja.uraian?.angka_kredit}
+              </Text>
+            </View>
+            <View style={styles.metricBox}>
+              <Ionicons name="trending-up-outline" size={24} color="#6366f1" />
+              <Text style={styles.metricLabel}>Kuantitas</Text>
+              <Text style={styles.metricValue}>{kinerja.kt_satuan}</Text>
+            </View>
+            <View style={styles.metricBox}>
+              <Ionicons name="time-outline" size={24} color="#6366f1" />
+              <Text style={styles.metricLabel}>Waktu</Text>
+              <Text style={styles.metricValue}>
+                {kinerja.waktu_bulan} Bulan
+              </Text>
             </View>
           </View>
-          <View style={styles.userJabatanColumnR}>
-            <View style={styles.userJabatanItem}>
-              <Text style={styles.userJabatanLabel}>Kuantitas</Text>
-              <Text style={styles.userJabatanValue}>: {item.kt_satuan}</Text>
-            </View>
+        </Surface>
 
-            <View style={styles.userJabatanItem}>
-              <Text style={styles.userJabatanLabel}>Kualitas</Text>
-              <Text style={styles.userJabatanValue}>: {item.kl_persen}</Text>
-            </View>
+        <Surface style={styles.card}>
+          <Text style={styles.sectionTitle}>Progress Kuantitas</Text>
+          <Text style={styles.totalValue}>{kinerja.total_target || '0'}</Text>
+          <Text style={styles.targetMax}>dari {kinerja.kuantitas}</Text>
 
-            <View style={styles.userJabatanItem}>
-              <Text style={styles.userJabatanLabel}>Waktu</Text>
-              <Text style={styles.userJabatanValue}>: {item.waktu_bulan}</Text>
-            </View>
-          </View>
-        </Card.Content>
-      </Card>
-
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text style={[styles.customFont, styles.title]}>Total Kuantitas</Text>
-          <TextInput
-            style={styles.input}
-            value={kinerja.total_target?.toString()}
-            editable={false}
+          <ProgressBar
+            progress={progressValue}
+            color={errorCount ? '#ef4444' : '#6366f1'}
+            style={styles.progressBar}
           />
+
           {errorCount && (
             <Text style={styles.errorText}>
-              Maaf, Target Anda Tidak Boleh Lebih Dari {kinerja.kuantitas}
+              Target melebihi kuantitas maksimum ({kinerja.kuantitas})
             </Text>
           )}
-          <Button mode="contained" onPress={saveTarget} style={styles.saveButton} disabled={errorCount}>
-            <Text style={styles.buttonText}>SIMPAN</Text>
-          </Button>
-        </Card.Content>
-      </Card>
+        </Surface>
 
-      <Card style={styles.card}>
-        <Card.Content>
-          <Button mode="contained" onPress={hitungRerata} style={styles.autoButton} disabled={errorCount}>
-            SET OTOMATIS
-          </Button>
+        <Surface style={styles.card}>
+          <View style={styles.targetHeader}>
+            <Text style={styles.sectionTitle}>Target Bulanan</Text>
+            <Button
+              mode="contained"
+              onPress={hitungRerata}
+              style={[styles.button, styles.autoButton]}
+              labelStyle={styles.buttonLabel}>
+              Set Otomatis
+            </Button>
+          </View>
+
           <View style={styles.targetGrid}>
             {kinerja.target?.map((target, index) => (
-              <View key={index} style={styles.targetItem}>
-                <Text style={styles.targetLabel}>{target.bulan}:</Text>
+              <Surface key={index} style={styles.targetCard}>
+                <Text style={styles.monthLabel}>{target.bulan}</Text>
                 <TextInput
                   style={styles.targetInput}
                   value={target.kuantitas?.toString()}
-                  onChangeText={(value) => handleTargetChange(index, value)}
+                  onChangeText={value => handleTargetChange(index, value)}
                   keyboardType="numeric"
+                  placeholder="0.00"
                 />
-              </View>
+              </Surface>
             ))}
           </View>
-        </Card.Content>
-      </Card>
-    </ScrollView>
+
+          <Button
+            mode="contained"
+            onPress={saveTarget}
+            style={[styles.button, styles.saveButton]}
+            labelStyle={styles.buttonLabel}
+            disabled={errorCount}>
+            Simpan
+          </Button>
+        </Surface>
+      </ScrollView>
+    </View>
   );
 };
 
-// Reusable DetailRow component
-  
-  const styles = StyleSheet.create({
-    header: {
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  header: {
+    padding: 20,
+    paddingTop: 50,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 18,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    elevation: 5,
-    },
-    headerImage: {
-      width: '50%',
-      height: undefined,
-      aspectRatio: 5,
-      marginRight: 190,
-      resizeMode: 'contain',
-      alignSelf: 'center',
-    },
-    backButton: {
-      marginTop:1,
-      marginLeft:3,
-      marginRight:1,
-      opacity: 0.4,
-    },
-    container: {
-      flex: 1,
-      backgroundColor: '#f5f5f5',
-      padding: 10,
-    },
-    card: {
-      backgroundColor: '#fff',
-      marginBottom: 15,
-      borderRadius: 8,
-      elevation: 3,
-    },
-    title: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      marginBottom: 10,
-    },
-    input: {
-      borderWidth: 1,
-      borderColor: '#ddd',
-      borderRadius: 4,
-      padding: 10,
-      fontSize: 16,
-      textAlign: 'center',
-      backgroundColor: '#fff',
-    },
-    saveButton: {
-      alignText: 'center',
-      justifyContent: 'space-between',
-      padding: 3,
-      backgroundColor: '#3699ff',
-      borderRadius: 5,
-      marginVertical: 10,
-    },
-    autoButton: {
-      alignText: 'center',
-      justifyContent: 'space-between',
-      padding: 3,
-      borderRadius: 5,
-      marginBottom: 15,
-      backgroundColor: '#28a745',
-    },
-    buttonText: {
-      fontFamily: 'Poppins-Regular',
-      fontWeight: 'bold',
-    },
-    detailRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 10,
-    },
-    label: {
-      fontSize: 14,
-      fontWeight: 'bold',
-    },
-    value: {
-      fontSize: 14,
-    },
-    targetGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'space-between',
-    },
-    targetItem: {
-      width: '48%',
-      marginBottom: 10,
-    },
-    targetLabel: {
-      fontSize: 14,
-      fontWeight: 'bold',
-    },
-    targetInput: {
-      borderWidth: 1,
-      borderColor: '#ddd',
-      borderRadius: 4,
-      padding: 8,
-      fontSize: 14,
-      backgroundColor: '#fff',
-    },
-    errorText: {
-      color: 'red',
-      fontSize: 12,
-      marginBottom: 8,
-    },
-    customFont: {
+    backgroundColor: '#6366f1',
+  },
+  backButton: {
+    marginRight: 16,
+  },
+  headerTitle: {
+    color: 'white',
+    fontSize: 24,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  content: {
+    padding: 16,
+  },
+  card: {
+    padding: 16,
+    marginBottom: 16,
+    borderRadius: 12,
+    elevation: 2,
+    backgroundColor: 'white',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    color: '#64748b',
+    fontFamily: 'Poppins-Medium',
+    marginBottom: 8,
+  },
+  description: {
+    fontSize: 16,
+    color: '#1e293b',
     fontFamily: 'Poppins-Regular',
-    },
-    userJabatanRow: {
+    lineHeight: 24,
+  },
+  divider: {
+    marginVertical: 16,
+    backgroundColor: '#e2e8f0',
+  },
+  metricsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    },
-    userJabatanColumn: {
-      flex: 1,
-      marginHorizontal: 5,
-    },
-    userJabatanColumnR: {
-      flex: 1,
-      marginHorizontal: 5,
-    },
-    userJabatanItem: {
-      flexDirection: 'column',
-      marginBottom: 8,
-    },
-    userJabatanLabel: {
-      fontFamily: "Poppins-SemiBold",
-      width: 120,
-    },
-    userJabatanValue: {
-      fontFamily: "Poppins-Regular",
-    },
-  });
-  
-  export default Kumulatif;
+    marginTop: 8,
+  },
+  metricBox: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 12,
+  },
+  metricLabel: {
+    fontSize: 12,
+    color: '#64748b',
+    fontFamily: 'Poppins-Regular',
+    marginTop: 8,
+  },
+  metricValue: {
+    fontSize: 16,
+    color: '#1e293b',
+    fontFamily: 'Poppins-SemiBold',
+    marginTop: 4,
+  },
+  totalValue: {
+    fontSize: 32,
+    color: '#1e293b',
+    fontFamily: 'Poppins-Bold',
+    marginTop: 8,
+  },
+  targetMax: {
+    fontSize: 14,
+    color: '#64748b',
+    fontFamily: 'Poppins-Regular',
+    marginBottom: 16,
+  },
+  progressBar: {
+    height: 8,
+    borderRadius: 4,
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: 12,
+    fontFamily: 'Poppins-Regular',
+    marginTop: 8,
+  },
+  targetHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  targetGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  targetCard: {
+    width: (width - 64) / 2,
+    padding: 12,
+    marginBottom: 12,
+    borderRadius: 8,
+    elevation: 1,
+    backgroundColor: 'white',
+  },
+  monthLabel: {
+    fontSize: 12,
+    color: '#64748b',
+    fontFamily: 'Poppins-Regular',
+    marginBottom: 4,
+  },
+  targetInput: {
+    fontSize: 16,
+    color: '#1e293b',
+    fontFamily: 'Poppins-Medium',
+    padding: 0,
+  },
+  button: {
+    borderRadius: 8,
+    elevation: 0,
+  },
+  autoButton: {
+    backgroundColor: '#6366f1',
+  },
+  saveButton: {
+    backgroundColor: '#06b6d4',
+  },
+  buttonLabel: {
+    fontSize: 14,
+    fontFamily: 'Poppins-SemiBold',
+  },
+});
+
+export default Kumulatif;

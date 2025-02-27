@@ -20,6 +20,8 @@ import axios from 'axios';
 
 const SalinKontrak = ({navigation}) => {
   const [data, setData] = useState([]);
+  const [tahunId, setTahunId] = useState(null);
+  const [jabatanId, setJabatanId] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
@@ -31,6 +33,7 @@ const SalinKontrak = ({navigation}) => {
   const [userJabatanData, setUserJabatanData] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [tgsTambahan, setTgsTambahan] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(null);
 
   const apiClient = useApiClient();
 
@@ -39,21 +42,8 @@ const SalinKontrak = ({navigation}) => {
     fetchSalinKontrak(query, currentPage, selectedDisplay);
   };
 
-  const [kinerja, setKinerja] = useState({
-    totalak: 0,
-    totalwpt: 0,
-    totalbobot: 0,
-    tahun_id: null,
-    user_jabatan_id: null,
-    alert: {
-      show: false,
-    },
-  });
-  const [listKinerja, setListKinerja] = useState([]);
-  const [totalBobot, setTotalBobot] = useState(0);
-  const [totalWpt, setTotalWpt] = useState(0);
-
   useEffect(() => {
+    fetchYears();
     fetchUserJabatanData();
   }, []);
 
@@ -82,30 +72,46 @@ const SalinKontrak = ({navigation}) => {
     }
   };
 
+  const fetchYears = async () => {
+      try {
+        setLoading(true);
+        const response = await apiClient.get('tahun/show');
+        if (response?.data?.data) {
+          const years = response.data.data.map(year => ({
+            label: year.tahun.toString(),
+            value: year.id,
+          }));
+  
+          // Set default year to the current year
+          const currentYear = new Date().getFullYear();
+          const defaultYear = years.find(
+            year => year.label === currentYear.toString(),
+          );
+          setSelectedYear(defaultYear ? defaultYear.value : years[0]?.value);
+        } else {
+          console.error('Failed to load year options:', response);
+          Alert.alert('Error', 'Gagal memuat data tahun.');
+        }
+      } catch (error) {
+        console.error('Error fetching years:', error);
+        Alert.alert('Error', 'Gagal memuat data tahun.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
   const fetchSalinKontrak = async (page, year) => {
     try {
       setLoading(true);
       const response = await apiClient.post('user/kinerja/index', {
-        
+        page,
+        year,
       });
       if (response?.data) {
         setData(response.data.data || []);
         setCurrentPage(response.data.current_page);
-        setLastPage(response.data.last_page);
-
-        setKinerja(response.data.kinerja || {
-          totalak: 0,
-          totalwpt: 0,
-          totalbobot: 0,
-          tahun_id: year,
-          user_jabatan_id: userJabatanData?.id,
-          alert: {
-            show: false,
-          },
-        });
-        setListKinerja(response.data.data || []);
-
+        setLastPage(response.data.last_page); 
+        setJabatanId(response.data.data.jabatan_id);
         console.log('Data fetched:', response.data);
       } else {
         console.error('Invalid data:', response);
@@ -122,12 +128,12 @@ const SalinKontrak = ({navigation}) => {
     }
   };;
 
-  const handleSalinKontrak = async uuid => {
+  const handleSalin = async (uuid) => {
       setModalVisible(false);
       try {
-        await apiClient.delete(`user/kinerja/list/${uuid}/delete`, {});
-        Alert.alert('Sukses', 'Data berhasil dihapus.');
-        fetchKontrak(); // Refresh data setelah penghapusan
+        await apiClient.post(`user/kinerja/${uuid}/salin`, {tahun_id: selectedYear});
+        Alert.alert('Sukses', 'Berhasil menyalin kontrak kinerja');
+        fetchSalinKontrak(); // Refresh data setelah penghapusan
       } catch (error) {
         console.error(
           'Error deleting data',
@@ -258,7 +264,7 @@ const handleNextPage = () => {
                 <View style={styles.actionContainer}>
                   <TouchableOpacity
                     style={styles.salinkontrakButton}
-                    onPress={() => handleSalinKontrak(selectedItem.uuid)}>
+                    onPress={() => confirmSalin(item)}>
                     <FontAwesome name="copy" size={15} color="white" />
                     <Text style={[styles.customFont, styles.buttonText]}>Salin Kontrak</Text>
                   </TouchableOpacity>                  
@@ -277,27 +283,47 @@ const handleNextPage = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="close" size={24} color="#000" />
-          </TouchableOpacity>
-          <Image
-            source={require('../../assets/sikaresoi.png')}
-            style={styles.logo}
-          />
-        </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
-          <TouchableOpacity style={styles.iconWrapper}>
-            <Ionicons name="person-circle-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
-      </View>
+       <View style={styles.header}>
+              <TouchableOpacity onPress={() => navigation.navigate('KontrakKinerja')} style={styles.backButton}>
+                <Ionicons name="arrow-back" size={20} color="#000" />
+              </TouchableOpacity>
+              <Image
+                source={require('../../assets/sikaresoi.png')}
+                style={styles.headerImage}
+              />
+            </View>
       <View>
         <Text style={[styles.customFont, styles.headerTitle]}>Salin Kontrak Sebelumnya</Text>              
       </View>
 
+
+      <Modal
+              animationType="slide"
+              transparent={true}
+              visible={modalVisible}
+              onRequestClose={() => setModalVisible(false)}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}> Peringatan </Text>
+                  <Ionicons name="alert-circle-outline" size={100} color="#ffab09" />
+                  <Text style={styles.modalText}>
+                    Kontrak kinerja sekarang akan dihapus dan diganti!
+                  </Text>
+                  <View style={styles.modalActions}>
+                  <TouchableOpacity
+                      style={[styles.modalButton, styles.modalButtonCancel]}
+                      onPress={() => handleSalin(selectedItem.uuid)}>
+                      <Text style={styles.modalButtonText}>Ya, salin</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.modalButton, styles.modalButtonDelete]}
+                      onPress={() => setModalVisible(false)}>
+                      <Text style={styles.modalButtonText}>Batal</Text>
+                    </TouchableOpacity>         
+                  </View>
+                </View>
+              </View>
+            </Modal>
 
         <FlatList
           scrollEnabled={false}
@@ -341,19 +367,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F7F8FB',
   },
-  headerLeft: {
-    flex: 1,
-  },
-  logo: {
-    width: 140,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  headerRight: {
+  header: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    flex: 1,
+    justifyContent: 'space-between',
+    elevation: 4,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  headerImage: {
+    width: '50%',
+    height: undefined,
+    aspectRatio: 5,
+    marginRight: 190,
+    resizeMode: 'contain',
+    alignSelf: 'center',
   },
   headerTitle: {
     fontSize: 18,
@@ -482,10 +513,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F0',
   },
   expandedText: {
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
+    fontSize: 15,
+    color: 'black',
+    marginTop: 7,
+  },
+  expandedTextDetail: {
+    fontFamily: 'Poppins-Regular',
     fontSize: 15,
     color: '#555',
-    marginTop: 7,
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -650,34 +686,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     marginTop: 10,
   },
-  header: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    elevation: 4,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  logo: {
-    width: 140,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    flex: 1,
-  },
-  iconWrapper: {
-    marginLeft: 12,
-  },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -694,7 +702,6 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
   },
   modalLabel: {
     fontSize: 14,
@@ -868,27 +875,32 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   modalTitle: {
+    fontFamily: 'Poppins-Bold',
     fontSize: 18,
-    fontWeight: 'bold',
     marginBottom: 15,
     textAlign: 'center',
     color: '#333',
   },
   modalText: {
+    fontFamily: 'Poppins-Regular',
     fontSize: 16,
     textAlign: 'center',
     color: '#555',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
   },
+  modalActions: {
+    flexDirection: 'row',
+    padding: 0,
+  },
   modalButton: {
-    width: 230,
+    width: 100,
     paddingVertical: 12,
-    marginBottom: 5, // Beri jarak antar tombol
+    margin: 5, 
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',

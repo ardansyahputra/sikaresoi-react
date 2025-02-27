@@ -17,13 +17,14 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 const AddUraian = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
   const [dropdownLoading, setDropdownLoading] = useState(true);
+  const [tgsTambahan, setTgsTambahan] = useState(false);
 
   const [formData, setFormData] = useState({
     nm_uraian: '',
     satuan: '',
     wpt: 0,
     jabatan_id: 0,
-    tgs_tambahan: '',
+    tgs_tambahan: tgsTambahan,
   });
 
   const [dropdownOptions, setDropdownOptions] = useState({
@@ -35,16 +36,17 @@ const AddUraian = ({ navigation, route }) => {
   useEffect(() => {
     fetchDropdownOptions();
     fetchUserJabatanData();
+    fetchUraian();
   }, []);
 
   const fetchUserJabatanData = async () => {
     try {
       const response = await apiClient.post('user/jabatan/aktif');
+      console.log('Jabatan Id:', response.data.data.jabatan_id); // Log the API response
       if (response?.data?.data) {
         setFormData(prev => ({
           ...prev,
-          jabatan_id: response.data.jabatan?.id,
-          tgs_tambahan: response.data.data.tgsTambahan || '',
+          jabatan_id: response.data.data.jabatan_id,
         }));
       }
     } catch (error) {
@@ -53,13 +55,32 @@ const AddUraian = ({ navigation, route }) => {
     }
   };
 
+  const fetchUraian = async () => {
+    try {
+      const response = await apiClient.post('uraian/indexAndro_user');
+      console.log('tgs tambahan:', response.data.data.tgs_tambahan); // Debugging log
+  
+      if (response?.data?.data) {
+        // If you need to set tgs_tambahan based on some condition, do it here
+        setFormData(prev => ({
+          ...prev,
+          tgs_tambahan: false, // Set to false or based on some condition
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching uraian:', error);
+      Alert.alert('Error', 'Gagal memuat data Tugas Tambahan.');
+    }
+  };
+
+
   const fetchDropdownOptions = async () => {
     try {
       setDropdownLoading(true);
       const response = await apiClient.get('satuan/show');
       const satuanOptions = (response.data?.data || []).map(item => ({
         label: item.nm_satuan || 'Unknown',
-        value: item.satuan,
+        value: item.satuan, // Ensure this matches the expected value
       }));
       setDropdownOptions({ satuan: satuanOptions });
     } catch (error) {
@@ -75,23 +96,30 @@ const AddUraian = ({ navigation, route }) => {
   };
 
   const handleSave = async () => {
-    if (!formData.nm_uraian || !formData.satuan || !formData.wpt || !formData.jabatan_id) {
-      Alert.alert('Validasi', 'Harap isi semua field yang diperlukan.');
-      return;
-    }
+  console.log('Form Data Before Validation:', formData); // Log formData before validation
+  if (!formData.nm_uraian || !formData.satuan || !formData.wpt || !formData.jabatan_id) {
+    Alert.alert('Validasi', 'Harap isi semua field yang diperlukan.');
+    return;
+  }
 
-    setLoading(true);
-    try {
-      await apiClient.post('/uraian/create', formData);
-      Alert.alert('Sukses', 'Data berhasil ditambahkan');
-      navigation.goBack();
-    } catch (error) {
-      console.error('Error saving data:', error.response?.data || error.message);
-      Alert.alert('Error', 'Terjadi kesalahan saat menyimpan data.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  try {
+    const payload = {
+      ...formData,
+      wpt: formData.wpt.toString(), // Ensure wpt is a string
+      tgs_tambahan: formData.tgs_tambahan, // Ensure tgs_tambahan is a boolean
+    };
+    console.log('Payload Being Sent:', payload); // Log the payload before API call
+    await apiClient.post('/uraian/create', payload);
+    Alert.alert('Sukses', 'Data berhasil ditambahkan');
+    navigation.navigate('MasterKinerja');
+  } catch (error) {
+    console.error('Error saving data:', error.response?.data || error.message);
+    Alert.alert('Error', 'Terjadi kesalahan saat menyimpan data.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -131,8 +159,9 @@ const AddUraian = ({ navigation, route }) => {
           labelField="label"
           valueField="value"
           placeholder="Pilih Satuan"
-          value={formData.satuan}
-          onChange={item => setField('satuan', item.value)}
+          value={formData.satuan} 
+          onChange={item => setField('satuan', item.label) }
+          
         />
 
         <Text style={styles.label}>
@@ -142,9 +171,9 @@ const AddUraian = ({ navigation, route }) => {
           style={styles.input}
           placeholderStyle={styles.placeholderStyle}
           placeholder="WPT"
+          value={formData.wpt}
+          onChangeText={text => setField('wpt', text.replace(/\D/g, ''))} // Ensure only numbers are entered
           keyboardType="numeric"
-          value={formData.wpt.toString()}
-          onChangeText={text => setField('wpt', parseInt(text, 10))}
         />
 
         <View style={styles.buttonContainer}>

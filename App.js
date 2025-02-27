@@ -44,7 +44,7 @@ import MasterKinerja from './screen/BottomNavBar/KontrakKinerja/MasterKinerja.js
 import AddUraian from './screen/BottomNavBar/KontrakKinerja/AddUraian.js';
 import SalinKontrak from './screen/BottomNavBar/KontrakKinerja/SalinKontrak.js';
 import Kumulatif from './screen/BottomNavBar/KontrakKinerja/Kumulatif.js';
-import realisasi from './screen/BottomNavBar/Menu/RealisasiKinerja/realisasi.js';
+import realisasi from './screen/BottomNavBar/Menu/RealisasiKinerja/tambahan.js';
 
 const Tab = createBottomTabNavigator();
 const styles = StyleSheet.create({
