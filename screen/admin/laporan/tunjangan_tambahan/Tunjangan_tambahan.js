@@ -195,6 +195,42 @@ export default function TunjanganTambahan({navigation}) {
           <View style={styles.cardHeader}>
             <Text style={styles.cardTitle}>Report Tunjangan Tambahan</Text>
           </View>
+          <Text style={styles.label}>Tanda Tangan Kiri *</Text>
+          <Dropdown
+            style={styles.dropdown}
+            data={signatures}
+            labelField="label"
+            valueField="value"
+            placeholder="Pilih Tanda Tangan Kiri"
+            value={leftSignature}
+            onChange={item => setLeftSignature(item.value)}
+            search
+            searchPlaceholder="Cari nama..."
+            maxHeight={300}
+            renderItem={item => (
+              <View style={styles.dropdownItem}>
+                <Text style={styles.dropdownText}>{item.label}</Text>
+              </View>
+            )}
+          />
+          <Text style={styles.label}>Tanda Tangan Kanan *</Text>
+          <Dropdown
+            style={styles.dropdown}
+            data={signatures}
+            labelField="label"
+            valueField="value"
+            placeholder="Pilih Tanda Tangan Kanan"
+            value={rightSignature}
+            onChange={item => setRightSignature(item.value)}
+            search
+            searchPlaceholder="Cari nama..."
+            maxHeight={300}
+            renderItem={item => (
+              <View style={styles.dropdownItem}>
+                <Text style={styles.dropdownText}>{item.label}</Text>
+              </View>
+            )}
+          />
           <View style={styles.cardDivider}></View>
           <Text style={styles.label}>Pilih Bulan *</Text>
           <Dropdown
@@ -250,42 +286,6 @@ export default function TunjanganTambahan({navigation}) {
             onChangeText={setPercentage}
             keyboardType="numeric"
             placeholder="Masukkan persentase"
-          />
-          <Text style={styles.label}>Tanda Tangan Kiri *</Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={signatures}
-            labelField="label"
-            valueField="value"
-            placeholder="Pilih Tanda Tangan Kiri"
-            value={leftSignature}
-            onChange={item => setLeftSignature(item.value)}
-            search
-            searchPlaceholder="Cari nama..."
-            maxHeight={300}
-            renderItem={item => (
-              <View style={styles.dropdownItem}>
-                <Text style={styles.dropdownText}>{item.label}</Text>
-              </View>
-            )}
-          />
-          <Text style={styles.label}>Tanda Tangan Kanan *</Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={signatures}
-            labelField="label"
-            valueField="value"
-            placeholder="Pilih Tanda Tangan Kanan"
-            value={rightSignature}
-            onChange={item => setRightSignature(item.value)}
-            search
-            searchPlaceholder="Cari nama..."
-            maxHeight={300}
-            renderItem={item => (
-              <View style={styles.dropdownItem}>
-                <Text style={styles.dropdownText}>{item.label}</Text>
-              </View>
-            )}
           />
           <TouchableOpacity
             style={styles.downloadButton}

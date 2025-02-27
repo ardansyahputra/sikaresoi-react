@@ -114,6 +114,7 @@ export default function BelumKontrak() {
     console.log('Fetching Realisasi Data');
     try {
       setIsLoading(true);
+      setIsLoading(true);
       const response = await apiClient.post('/realisasi/belum_setuju', {
         page,
         bulan: selectedMonth,
@@ -134,12 +135,14 @@ export default function BelumKontrak() {
       });
     } finally {
       setIsLoading(false);
+      setIsLoading(false);
     }
   };
   // Update the fetchKontrakData function
   const fetchKontrakData = async page => {
     console.log('Fetching Kontrak Data');
     try {
+      setIsLoading(true);
       setIsLoading(true);
       const response = await apiClient.post('/realisasi/sudah_setuju', {
         page,
@@ -156,6 +159,7 @@ export default function BelumKontrak() {
       console.error('Kontrak Error:', error);
       console.log('Error', 'Failed to fetch data');
     } finally {
+      setIsLoading(false);
       setIsLoading(false);
     }
   };
@@ -290,8 +294,21 @@ export default function BelumKontrak() {
           style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}>
           NAMA
         </Text>
+        <Text
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.numberCell]}>
+          NO
+        </Text>
+        <Text
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}>
+          NIP/NRP
+        </Text>
+        <Text
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}>
+          NAMA
+        </Text>
         <View style={styles.expandIconCell} />
       </View>
+      <View style={styles.headerLine} />
       <View style={styles.headerLine} />
     </View>
   );
@@ -451,15 +468,23 @@ const styles = StyleSheet.create({
   },
   tableHeader: {
     marginTop: 15,
+    marginTop: 15,
     flexDirection: 'row',
     paddingVertical: 10,
     paddingHorizontal: 15,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
     borderTopLeftRadius: 6,
     borderTopRightRadius: 6,
   },
 
   yearMonthContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+
+  rowContainer: {
     justifyContent: 'space-between',
     marginBottom: 10,
   },
@@ -484,9 +509,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
+  bottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
   headerCell: {
     fontSize: 13,
     color: '#9196B5',
+    color: '#9196B5',
+  },
+
+  tableRow: {
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+    elevation: 0,
   },
 
   tableRow: {
@@ -500,10 +538,13 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: '#F7F8FC',
     alignItems: 'center',
+    backgroundColor: '#F7F8FC',
+    alignItems: 'center',
   },
 
   tableCell: {
     flexWrap: 'wrap',
+    color: '#313131',
     color: '#313131',
     fontSize: 14,
   },
@@ -514,6 +555,7 @@ const styles = StyleSheet.create({
   },
 
   numberCell: {
+    width: 45,
     width: 45,
   },
 
@@ -550,6 +592,17 @@ const styles = StyleSheet.create({
     marginBottom: 10, // Jarak atas & bawah agar tidak menempel
   },
 
+  headerLine: {
+    height: 2,
+    backgroundColor: '#D3D3D3', // Garis horizontal bawah header
+    marginBottom: 5,
+  },
+  verticalLine: {
+    height: 2, // Tinggi garis horizontal
+    backgroundColor: '#D3D3D3', // Warna abu-abu mirip header line
+    marginBottom: 10, // Jarak atas & bawah agar tidak menempel
+  },
+
   expandedContent: {
     padding: 15,
     backgroundColor: '#FAFAFA',
@@ -568,6 +621,7 @@ const styles = StyleSheet.create({
 
   pageButton: {
     padding: 8, // Padding agar tombol lebih mudah diklik
+    padding: 8, // Padding agar tombol lebih mudah diklik
     borderRadius: 5,
   },
 
@@ -577,6 +631,7 @@ const styles = StyleSheet.create({
   },
 
   disabledButton: {
+    opacity: 0.5, // Efek disabled lebih jelas
     opacity: 0.5, // Efek disabled lebih jelas
   },
 
@@ -594,12 +649,14 @@ const styles = StyleSheet.create({
   paginationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignItems: 'center',
     justifyContent: 'flex-end',
     marginTop: 10,
   },
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     alignItems: 'center',
     marginBottom: 10,
   },
@@ -739,6 +796,7 @@ const styles = StyleSheet.create({
   },
   dropdownPlaceholder: {
     fontFamily: 'Poppins-SemiBold', // Placeholder font Poppins
+    fontFamily: 'Poppins-SemiBold', // Placeholder font Poppins
     fontSize: 14,
     color: 'grey',
     paddingLeft: 5,
@@ -747,6 +805,13 @@ const styles = StyleSheet.create({
   dropdownLabel: {
     fontFamily: 'Poppins-SemiBold', // Label font Poppins
     fontSize: 14,
+    color: 'grey',
+  },
+  dropdownText: {
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 14,
+    color: 'grey',
+    paddingLeft: 5,
     color: 'grey',
   },
   dropdownText: {
@@ -768,11 +833,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 5,
+    paddingHorizontal: 5,
   },
   buttonPressed: {
     backgroundColor: '#fff',
   },
   buttonActive: {
+    borderBottomWidth: 3,
+    borderBottomColor: '#A463FC', // Warna sesuai desain
     borderBottomWidth: 3,
     borderBottomColor: '#A463FC', // Warna sesuai desain
   },

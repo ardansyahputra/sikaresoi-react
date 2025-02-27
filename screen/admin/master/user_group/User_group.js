@@ -21,7 +21,7 @@ import Header from '../../../components/Header';
 import GlobalStyle from '../../../../src/utils/GlobalStyle';
 import Toast from 'react-native-toast-message';
 
-export default function Satuan() {
+export default function UserGroupScreen() {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
@@ -55,22 +55,16 @@ export default function Satuan() {
     }
   };
 
-  const fetchMenus = async () => {
-    try {
-      const response = await apiClient.get('/routes/show');
-      setMenus(response.data.data);
-    } catch (error) {
-      console.error('Error fetching menus', error);
-    }
+  const handleEdit = uuid => {
+    navigation.navigate('EditUserGroup', {uuid});
   };
 
-  const handleEdit = uuid => {
-    navigation.navigate('EditSatuan', {uuid});
+  const handleList = uuid => {
+    navigation.navigate('UserGroupList', {uuid});
   };
 
   const handleHapusPress = uuid => {
     setSelectedUuid(uuid);
-    setSelectedAction('hapus'); // Tandai bahwa ini aksi hapus
     setModalVisible(true);
   };
 
@@ -97,7 +91,7 @@ export default function Satuan() {
   };
 
   const handleTambah = () => {
-    navigation.navigate('TambahSatuan');
+    navigation.navigate('TambahUserGroup');
   };
 
   const display = [
@@ -180,7 +174,7 @@ export default function Satuan() {
             <View style={styles.actionContainer}>
               <TouchableOpacity
                 style={[styles.iconButton, styles.yellowButton]}
-                onPress={() => handleHapusPress(item.uuid)}>
+                onPress={() => handleList(item.uuid)}>
                 <Ionicons name="menu-outline" size={20} color="white" />
               </TouchableOpacity>
               <TouchableOpacity
@@ -202,9 +196,7 @@ export default function Satuan() {
               <View style={styles.modalOverlay}>
                 <View style={styles.modalContainer}>
                   <Text style={[GlobalStyle.SemiBold, styles.modalText]}>
-                    {selectedAction === 'hapus'
-                      ? 'Apakah Anda yakin ingin menghapus data ini?'
-                      : 'Apakah Anda yakin ingin mereset password pengguna ini?'}
+                    Apakah Anda yakin ingin menghapus data ini?
                   </Text>
                   <View style={styles.modalButtons}>
                     <TouchableOpacity

@@ -127,7 +127,7 @@ const EditRewardPunishment = ({navigation, route}) => {
 
   return (
     <View style={styles.rootContainer}>
-      <Header title="Tambah Reward & Punishment" />
+      <Header title="Edit Reward & Punishment" />
       <View style={styles.container}>
         {isLoading ? (
           // Loading Indicator

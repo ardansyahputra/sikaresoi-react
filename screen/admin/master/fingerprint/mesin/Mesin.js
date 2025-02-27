@@ -41,9 +41,9 @@ export default function Mesin() {
 
   const fetchData = async (page, display) => {
     try {
-      setLoading(true); // Set loading state
+      setIsLoading(true); // Set loading state
       const response = await apiClient.post(
-        '/fingerprint_machine/indexandro', // API URL
+        '/fingerprint_machine/index', // API URL
         {page, display},
         {},
       );

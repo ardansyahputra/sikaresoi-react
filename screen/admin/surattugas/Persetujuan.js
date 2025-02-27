@@ -13,6 +13,7 @@ import {
   Alert,
 } from 'react-native';
 import RNFS from 'react-native-fs';
+import {API_URL} from '@env';
 import {Pressable} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';

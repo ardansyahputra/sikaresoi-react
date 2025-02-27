@@ -13,13 +13,12 @@ import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../../../../src/api/apiClient';
 import Header from '../../components/Header';
 import GlobalStyle from '../../../../src/utils/GlobalStyle';
-import Toast from 'react-native-toast-message';
 import {BarIndicator} from 'react-native-indicators';
 
 export default function BelumKontrak() {
   const apiClient = useApiClient();
   const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -84,6 +83,7 @@ export default function BelumKontrak() {
   };
 
   const fetchRealisasiData = async page => {
+    setIsLoading(true);
     console.log('Fetching Realisasi Data');
     console.log('Endpoint:', 'POST /realisasi/belum_setuju');
     console.log('Request Payload:', {
@@ -94,7 +94,6 @@ export default function BelumKontrak() {
     });
 
     try {
-      setIsLoading(true);
       const response = await apiClient.post('/kinerja/belum_setuju', {
         per: selectedDisplay,
         search: searchQuery,
@@ -130,6 +129,7 @@ export default function BelumKontrak() {
   };
 
   const fetchKontrakData = async page => {
+    setIsLoading(true);
     console.log('Fetching Kontrak Data');
     setIsLoading(true); // Pastikan loading di-set sebelum request API
 

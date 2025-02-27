@@ -224,9 +224,7 @@ const EditDewas = ({navigation, route}) => {
               onFocus={() => handleFocus('jabatan')}
               onBlur={() => handleBlur('jabatan')}
               value={editData.jabatan} // Menggunakan `jabatan_id` sebagai value
-              onChange={
-                item => setEditData(prev => ({...prev, jabatan: item.value})) // Perbarui `jabatan_id` sesuai pilihan
-              }
+              e
               renderItem={item => (
                 <Text style={[styles.dropdownItem, GlobalStyle.SemiBold]}>
                   {item.label}

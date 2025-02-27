@@ -207,6 +207,12 @@ export default function UangMakan() {
     }
   };
 
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchData(currentPage, selectedDisplay);
+    }, [currentPage, selectedDisplay, activeButton]), // Tidak ada activeButton di dependencies
+  );
+
   const handlePress = async buttonName => {
     try {
       setIsLoading(true);
@@ -263,7 +269,7 @@ export default function UangMakan() {
     setSelectedUuid(uuid);
     setSelectedType(type);
     setModalVisible(true);
-  };
+};
 
   const handleConfirmAction = async (uuid, type) => {
     if (!uuid || typeof uuid !== 'string') {
@@ -721,6 +727,7 @@ export default function UangMakan() {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
