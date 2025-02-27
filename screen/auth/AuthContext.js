@@ -42,7 +42,7 @@ export const AuthProvider = ({children}) => {
         return [];
       }
 
-      const response = await axios.get(`${API_URL}routes/access`, {
+      const response = await axios.get(`${API_URL}/routes/access`, {
         headers: {
           Authorization: `Bearer ${tokenToUse}`,
         },

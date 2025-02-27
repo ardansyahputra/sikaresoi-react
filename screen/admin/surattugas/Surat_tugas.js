@@ -88,7 +88,7 @@ export default function Surat_tugas() {
     try {
       setIsLoading(true);
       
-      const response = await apiClient.post('/surat-tugas/tableandro', {
+      const response = await apiClient.post('/surat-tugas/table', {
         page,
         display,
       });

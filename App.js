@@ -147,6 +147,7 @@ import RevisiSuratTugas from './screen/admin/surattugas/Revisi';
 import TambahSuratTugas from './screen/admin/surattugas/Tambah_surat';
 import TambahLock from './screen/admin/lock/Tambah';
 import EditLock from './screen/admin/lock/Edit';
+import RealisasiTanggung from './screen/admin/tanggung_renteng/Realisasi';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -610,6 +611,11 @@ function HomeStack() {
         options={{headerShown: false}}
         name="TanggungRenteng"
         component={TanggungRentengScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="RealisasiTanggung"
+        component={RealisasiTanggung}
       />
       <Stack.Screen
         options={{headerShown: false}}
