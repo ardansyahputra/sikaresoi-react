@@ -140,7 +140,7 @@ const TambahPa = ({route, navigation}) => {
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}>
-            <Text style={[GlobalStyle.SemiBold, styles.label]}>User *</Text>
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>User</Text>
             <Dropdown
               style={[
                 GlobalStyle.SemiBold,

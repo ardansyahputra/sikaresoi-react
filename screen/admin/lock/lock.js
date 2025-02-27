@@ -5,20 +5,19 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
-  Image,
-  Linking,
   Modal,
   TextInput,
-  Alert,
 } from 'react-native';
 import {Pressable} from 'react-native';
+import {useFocusEffect} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import CalendarPicker from 'react-native-calendar-picker';
 import useApiClient from '../../../src/api/apiClient';
 import {BarIndicator} from 'react-native-indicators';
+import GlobalStyle from '../../../src/utils/GlobalStyle';
+import Header from '../components/Header';
+import Toast from 'react-native-toast-message';
 
 export default function Lock() {
   const [data, setData] = useState([]);
@@ -27,6 +26,7 @@ export default function Lock() {
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [isModalVisible, setModalVisible] = useState(false);
+  const [modalVisible, setModalHapusVisible] = useState(false);
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State untuk search query
   const [selectedDisplay, setSelectedDisplay] = useState(null);
@@ -37,20 +37,24 @@ export default function Lock() {
   const [isHapusModalVisible, setHapusModalVisible] = useState(false);
   const [selectedStartDate, setSelectedStartDate] = useState(null);
   const [selectedEndDate, setSelectedEndDate] = useState(null);
+  const [selectedAction, setSelectedAction] = useState(null);
+
   const apiClient = useApiClient();
 
-  useEffect(() => {
-    if (activeButton === 'kontrak') {
-      fetchKontrakData(1); // Reset to page 1 when display changes
-    } else {
-      fetchRealisasiData(1); // Reset to page 1 when display changes
-    }
-  }, [activeButton, selectedDisplay]);
+  useFocusEffect(
+    React.useCallback(() => {
+      if (activeButton === 'kontrak') {
+        fetchKontrakData(currentPage);
+      } else {
+        fetchRealisasiData(currentPage);
+      }
+    }, [activeButton, currentPage, selectedDisplay]),
+  );
 
   const fetchRealisasiData = async page => {
     try {
       setIsLoading(true);
-      const response = await apiClient.post('/lock/indexRealisasiAndro', {
+      const response = await apiClient.post('/lock/indexRealisasi', {
         page,
         per: selectedDisplay,
       });
@@ -67,7 +71,7 @@ export default function Lock() {
   const fetchKontrakData = async page => {
     try {
       setIsLoading(true);
-      const response = await apiClient.post('/lock/indexKontrakAndro', {
+      const response = await apiClient.post('/lock/indexKontrak', {
         page,
         per: selectedDisplay,
       });
@@ -81,31 +85,46 @@ export default function Lock() {
     }
   };
 
-  const submitHapus = async () => {
+  const handleHapusPress = uuid => {
+    setSelectedUuid(uuid);
+    setSelectedAction('hapus'); // Tandai bahwa ini aksi hapus
+    setModalHapusVisible(true);
+  };
+
+  const handleConfirmAction = async () => {
+    if (!selectedUuid) return;
+
+    setModalHapusVisible(false); // Tutup modal sebelum aksi dijalankan
+
     try {
       const response = await apiClient.delete(`/lock/${selectedUuid}/delete`);
 
       if (response.status === 200 || response.status === 204) {
-        // Operasi berhasil
-        Alert.alert('Berhasil', 'Data berhasil dihapus.');
-        setHapusModalVisible(false);
-        fetchData(currentPage); // Refresh data
+        if (activeButton === 'kontrak') {
+          fetchKontrakData(1);
+        } else {
+          fetchRealisasiData(1);
+        }
+        Toast.show({
+          type: 'success',
+          text1: 'Berhasil',
+          text2: 'Data berhasil dihapus.',
+        });
       } else {
-        // Jika respons statusnya tidak seperti yang diharapkan
-        Alert.alert(
-          'Peringatan',
-          'Data mungkin sudah dihapus, tetapi respons tidak sesuai.',
-        );
+        Toast.show({
+          type: 'info',
+          text1: 'Peringatan',
+          text2: 'Data mungkin sudah dihapus, tetapi respons tidak sesuai.',
+        });
       }
     } catch (error) {
       console.error('Error saat menghapus:', error);
-      Alert.alert('Error', 'Gagal menghapus data.');
+      Toast.show({
+        type: 'error',
+        text1: 'Terjadi Kesalahan',
+        text2: 'Gagal menghapus data.',
+      });
     }
-  };
-
-  const handleHapus = uuid => {
-    setSelectedUuid(uuid);
-    setHapusModalVisible(true);
   };
 
   const handleTambah = () => {
@@ -197,12 +216,16 @@ export default function Lock() {
   const getStatusStyle = status => {
     switch (status?.toUpperCase()) {
       case 'DIBUKA':
-        return styles.approvedStatus;
+        return styles.badgeApproved;
       case 'DITUTUP':
-        return styles.rejectedStatus;
+        return styles.badgeRejected;
       default:
-        return styles.defaultStatus;
+        return styles.badgeDefault;
     }
+  };
+
+  const stripHtml = html => {
+    return html.replace(/<[^>]*>/g, '').trim();
   };
 
   const handlePress = buttonName => {
@@ -216,193 +239,174 @@ export default function Lock() {
 
   const TableHeader = () => (
     <View>
-      <View style={styles.filterContainer}>
-        <View style={styles.displayContainer}>
-          <Text style={styles.displayText}>Display</Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={display}
-            labelField="label"
-            valueField="value"
-            placeholder="10"
-            value={selectedDisplay}
-            onChange={item => {
-              setSelectedDisplay(item.value);
-              fetchRealisasiData(currentPage); // Panggil fetchData setelah nilai dropdown diperbarui
-            }}
-            renderItem={item => (
-              <Text style={[styles.dropdownItem, styles.customFont]}>
-                {item.label}
+      <View style={styles.headerContainer}>
+        <View style={styles.bulanContainer}>
+          <Pressable
+            style={({pressed}) => [
+              styles.button,
+              pressed && styles.buttonPressed,
+              activeButton === 'kontrak' && styles.buttonActive,
+            ]}
+            onPress={() => handlePress('kontrak')}>
+            <View style={styles.bulanButton}>
+              <Text
+                style={[
+                  GlobalStyle.SemiBold,
+                  styles.buttonText,
+                  activeButton === 'kontrak' && styles.textActive,
+                ]}>
+                Kontrak
               </Text>
-            )}
-            placeholderStyle={styles.customFont}
-          />
+            </View>
+          </Pressable>
+
+          <Pressable
+            style={({pressed}) => [
+              styles.button,
+              pressed && styles.buttonPressed,
+              activeButton === 'realisasi' && styles.buttonActive,
+            ]}
+            onPress={() => handlePress('realisasi')}>
+            <View style={styles.bulanButton}>
+              <Text
+                style={[
+                  GlobalStyle.SemiBold,
+                  styles.buttonText,
+                  activeButton === 'realisasi' && styles.textActive,
+                ]}>
+                Realisasi
+              </Text>
+            </View>
+          </Pressable>
         </View>
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchBar}
-            placeholder="Search"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
+        {/* Baris bawah: Search Bar & Tombol Tambah */}
+        <View style={styles.bottomContainer}>
+          <View style={styles.searchContainer}>
+            <Ionicons
+              name="search"
+              size={18}
+              color="#888"
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={[GlobalStyle.SemiBold, styles.searchBar]}
+              placeholder="Search"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor="#888"
+            />
+          </View>
+
+          <TouchableOpacity style={styles.tambahButton} onPress={handleTambah}>
+            <Ionicons name="add" size={18} color="#fff" style={styles.icon} />
+            <Text style={[GlobalStyle.SemiBold, styles.tambahText]}>
+              Tambah
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
+
       <View style={styles.tableHeader}>
-        <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
-        <Text style={[styles.headerCell, styles.nameCell]}>Jenis</Text>
-        <Text style={[styles.headerCell, styles.tableStatusCell]}>Status</Text>
+        <Text
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.numberCell]}>
+          NO
+        </Text>
+        <Text
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}>
+          JENIS
+        </Text>
+        <Text
+          style={[
+            GlobalStyle.SemiBold,
+            styles.headerCell,
+            styles.tableStatusCell,
+          ]}
+          numberOfLines={2} // Bisa disesuaikan sesuai kebutuhan
+          ellipsizeMode="tail">
+          STATUS
+        </Text>
         <View style={styles.expandIconCell} />
       </View>
+      <View style={styles.headerLine} />
     </View>
   );
 
   const renderItem = ({item, index}) => {
     const isExpanded = expandedId === item.id;
+    const rowBackgroundColor = index % 2 === 0 ? '#F7F8FC' : '#FFFFFF'; // Warna selang-seling
 
     return (
-      <View style={styles.tableRow}>
-        <TouchableOpacity
-          style={styles.rowHeader}
-          onPress={() => toggleExpand(item.id)}>
-          <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
-          <Text
-            style={[styles.tableCell, styles.nameCell]}
-            numberOfLines={1}
-            ellipsizeMode="tail">
-            {item.jenis || '-'}
-          </Text>
-          <View style={styles.statusCellContainer}>
+      <>
+        <View style={styles.tableRow}>
+          <TouchableOpacity
+            style={[styles.rowHeader, {backgroundColor: rowBackgroundColor}]}
+            onPress={() => toggleExpand(item.id)}>
             <Text
               style={[
+                GlobalStyle.SemiBold,
                 styles.tableCell,
-                styles.statusCell,
-                getStatusStyle(item.status),
+                styles.numberCell,
               ]}>
-              {item.status || '-'}
+              {index + 1}
             </Text>
-          </View>
-          <View style={styles.expandIconCell}>
-            <Ionicons
-              name={isExpanded ? 'chevron-up' : 'chevron-down'}
-              size={20}
-              color="#333"
-            />
-          </View>
-        </TouchableOpacity>
-        {isExpanded && (
-          <View style={styles.expandedContent}>
-            <Text style={styles.expandedText}>Jenis: {item.jenis || '-'}</Text>
-            <Text style={styles.expandedText}>
-              Tahun: {item.tahun?.tahun || '-'}
+            <Text
+              style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}>
+              {item.jenis || '-'}
             </Text>
-            <Text style={styles.expandedText}>
-              Tanggal Pengisian: {item.tgl_pengisian || '-'}
+
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.tableCell,
+                styles.persenCell,
+                getStatusStyle(item.status),
+                getStatusStyle(stripHtml(item.status)),
+              ]}>
+              {stripHtml(item.status) || '-'}
             </Text>
-            <View style={styles.actionContainer}>
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => handleApprove(item.uuid)}>
-                <FontAwesome name="pencil" size={20} color="white" />
-                <Text style={styles.customFont}>Edit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.declineButton}
-                onPress={() => handleHapus(item.uuid)}>
-                <Ionicons name="trash" size={20} color="white" />
-                <Text style={styles.customFont}>Hapus</Text>
-              </TouchableOpacity>
+
+            <View style={styles.expandIconCell}>
+              <Ionicons
+                name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#BEC2D5"
+              />
             </View>
-          </View>
-        )}
-      </View>
+          </TouchableOpacity>
+          {isExpanded && (
+            <View style={styles.expandedContent}>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Jenis: {item.jenis || '-'}
+              </Text>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Tahun: {item.tahun?.tahun || '-'}
+              </Text>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Tanggal Pengisian: {item.tgl_pengisian || '-'}
+              </Text>
+              <View style={styles.actionContainer}>
+                <TouchableOpacity
+                  style={[styles.iconButton, styles.blueButton]}
+                  onPress={() => handleApprove(item.uuid)}>
+                  <Ionicons name="pencil" size={20} color="white" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.iconButton, styles.redButton]}
+                  onPress={() => handleHapusPress(item.uuid)}>
+                  <Ionicons name="trash-outline" size={20} color="white" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </View>
+        {index === data.length - 1 && <View style={styles.verticalLine} />}
+      </>
     );
   };
 
   return (
     <View style={styles.container}>
-      <View>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Image
-              source={require('../assets/images/logo.png')}
-              style={styles.logo}
-            />
-          </View>
-          <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
-            <TouchableOpacity style={styles.iconWrapper}>
-              <Ionicons name="person-circle-outline" size={24} color="#333" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
-      {/* Card untuk Tombol */}
-      <View style={styles.card}>
-        <View style={styles.tambahContainer}>
-          <TouchableOpacity style={styles.tambahButton} onPress={handleTambah}>
-            <FontAwesome
-              name="plus"
-              size={20}
-              color="#fff"
-              style={styles.icon}
-            />
-            <Text style={styles.tambahText}>TAMBAH</Text>
-          </TouchableOpacity>
-          <View style={styles.kontrakContainer}>
-            <Pressable
-              style={({pressed}) => [
-                styles.button,
-                pressed && styles.buttonPressed,
-                activeButton === 'kontrak' && styles.buttonActive,
-              ]}
-              onPress={() => handlePress('kontrak')}>
-              <View style={styles.kontrakButton}>
-                <FontAwesome
-                  name="tint"
-                  size={24}
-                  color={activeButton === 'kontrak' ? '#A463FC' : 'gray'}
-                  style={styles.icon}
-                />
-                <Text
-                  style={[
-                    styles.buttonText,
-                    activeButton === 'kontrak' && styles.textActive,
-                  ]}>
-                  Kontrak
-                </Text>
-              </View>
-            </Pressable>
-
-            <Pressable
-              style={({pressed}) => [
-                styles.button,
-                pressed && styles.buttonPressed,
-                activeButton === 'realisasi' && styles.buttonActive,
-              ]}
-              onPress={() => handlePress('realisasi')}>
-              <View style={styles.kontrakButton}>
-                <FontAwesome
-                  name="tint"
-                  size={24}
-                  color={activeButton === 'realisasi' ? '#A463FC' : 'gray'}
-                  style={styles.icon}
-                />
-                <Text
-                  style={[
-                    styles.buttonText,
-                    activeButton === 'realisasi' && styles.textActive,
-                  ]}>
-                  Realisasi
-                </Text>
-              </View>
-            </Pressable>
-          </View>
-        </View>
-      </View>
-
+      <Header title="Lock" />
       {/* Tabel */}
       {isLoading ? (
         // Loading Indicator
@@ -415,37 +419,44 @@ export default function Lock() {
           data={data}
           renderItem={renderItem}
           keyExtractor={item => item.id.toString()}
-          contentContainerStyle={styles.card}
+          contentContainerStyle={{flexGrow: 1, padding: '10'}}
+          style={{flex: 1}}
+          showsVerticalScrollIndicator={false}
           ListFooterComponent={
-            <View>
-              <Text style={styles.pageInfo}>
-                Showing page {currentPage} of {lastPage}
+            <View style={styles.paginationContainer}>
+              <Text style={[GlobalStyle.SemiBold, styles.pageInfo]}>
+                {currentPage} of {lastPage}
               </Text>
-              <View style={styles.paginationContainer}>
-                <View style={styles.paginationButtons}>
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === 1 && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === 1}
-                    onPress={() =>
-                      setCurrentPage(prev => Math.max(prev - 1, 1))
-                    }>
-                    <Text style={styles.pageButtonText}>Previous</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === lastPage && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === lastPage}
-                    onPress={() =>
-                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
-                    }>
-                    <Text style={styles.pageButtonText}>Next</Text>
-                  </TouchableOpacity>
-                </View>
+
+              <View style={styles.paginationButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.pageButton,
+                    currentPage === 1 && styles.disabledButton,
+                  ]}
+                  disabled={currentPage === 1}
+                  onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
+                  <Ionicons
+                    name="chevron-back"
+                    size={20}
+                    color={currentPage === 1 ? '#ccc' : '#BEC2D5'}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.pageButton,
+                    currentPage === lastPage && styles.disabledButton,
+                  ]}
+                  disabled={currentPage === lastPage}
+                  onPress={() =>
+                    setCurrentPage(prev => Math.min(prev + 1, lastPage))
+                  }>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={currentPage === lastPage ? '#ccc' : '#BEC2D5'}
+                  />
+                </TouchableOpacity>
               </View>
             </View>
           }
@@ -453,23 +464,31 @@ export default function Lock() {
       )}
 
       <Modal
-        visible={isHapusModalVisible}
         animationType="fade"
-        transparent
-        onRequestClose={() => setHapusModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Setujui Data</Text>
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalHapusVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={[GlobalStyle.SemiBold, styles.modalText]}>
+              {selectedAction === 'hapus'
+                ? 'Apakah Anda yakin ingin menghapus data ini?'
+                : 'Apakah Anda yakin ingin mereset password pengguna ini?'}
+            </Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setHapusModalVisible(false)}>
-                <Text style={styles.buttonText}>Batal</Text>
+                style={[styles.button, styles.cancelButton]}
+                onPress={() => setModalHapusVisible(false)}>
+                <Text style={[GlobalStyle.SemiBold, styles.cancelText]}>
+                  Tidak
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.submitButton, styles.approveButton]}
-                onPress={submitHapus}>
-                <Text style={styles.buttonText}>Setujui</Text>
+                style={[styles.button, styles.confirmButton]}
+                onPress={handleConfirmAction}>
+                <Text style={[GlobalStyle.SemiBold, styles.confirmText]}>
+                  Ya
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -482,36 +501,79 @@ export default function Lock() {
         animationType="fade"
         transparent
         onRequestClose={() => setModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Tambah Data</Text>
+        <View style={styles.modalTambahContainer}>
+          <View style={styles.modalTambahContent}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={handleCloseModal}>
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={[GlobalStyle.SemiBold, styles.modalTambahText]}>
+              Tambah Data
+            </Text>
 
             {/* Dropdown Jenis */}
-            <Text style={styles.modalLabel}>Jenis:</Text>
+            <Text style={[GlobalStyle.SemiBold, styles.modalLabel]}>
+              Jenis:
+            </Text>
             <Dropdown
               data={jenisData}
               labelField="label"
               valueField="value"
               placeholder="Pilih Jenis"
               value={selectedJenis}
+              placeholderStyle={{
+                ...GlobalStyle.SemiBold,
+                color: '#B0B0B0',
+                fontSize: 14,
+              }}
+              selectedTextStyle={{
+                ...GlobalStyle.SemiBold,
+                fontSize: 14,
+                color: '#313131',
+              }}
+              itemTextStyle={{
+                ...GlobalStyle.SemiBold,
+                fontSize: 14,
+                color: '#313131',
+              }}
               onChange={item => setSelectedJenis(item.value)}
-              style={styles.dropdownModal}
+              style={[styles.input]}
             />
 
             {/* Dropdown Tahun */}
-            <Text style={styles.modalLabel}>Tahun:</Text>
+            <Text style={[GlobalStyle.SemiBold, styles.modalLabel]}>
+              Tahun:
+            </Text>
             <Dropdown
               data={tahunData}
               labelField="label"
               valueField="value"
               placeholder="Pilih Tahun"
               value={selectedTahun}
+              placeholderStyle={{
+                ...GlobalStyle.SemiBold,
+                color: '#B0B0B0',
+                fontSize: 14,
+              }}
+              selectedTextStyle={{
+                ...GlobalStyle.SemiBold,
+                fontSize: 14,
+                color: '#313131',
+              }}
+              itemTextStyle={{
+                ...GlobalStyle.SemiBold,
+                fontSize: 14,
+                color: '#313131',
+              }}
               onChange={item => setSelectedTahun(item.value)}
-              style={styles.dropdownModal}
+              style={[styles.input]}
             />
 
             {/* Dropdown Bulan */}
-            <Text style={styles.modalLabel}>Bulan:</Text>
+            <Text style={[GlobalStyle.SemiBold, styles.modalLabel]}>
+              Bulan:
+            </Text>
             <Dropdown
               data={bulanData}
               labelField="label"
@@ -519,10 +581,27 @@ export default function Lock() {
               placeholder="Pilih Bulan"
               value={selectedBulan}
               onChange={item => setSelectedBulan(item.value)}
-              style={styles.dropdownModal}
+              placeholderStyle={{
+                ...GlobalStyle.SemiBold,
+                color: '#B0B0B0',
+                fontSize: 14,
+              }}
+              selectedTextStyle={{
+                ...GlobalStyle.SemiBold,
+                fontSize: 14,
+                color: '#313131',
+              }}
+              itemTextStyle={{
+                ...GlobalStyle.SemiBold,
+                fontSize: 14,
+                color: '#313131',
+              }}
+              style={[styles.input]}
             />
 
-            <Text style={styles.modalLabel}>Rentang Tanggal:</Text>
+            <Text style={[GlobalStyle.SemiBold, styles.modalLabel]}>
+              Rentang Tanggal:
+            </Text>
             <View style={styles.calendarContainer}>
               <CalendarPicker
                 startFromMonday={true}
@@ -535,18 +614,14 @@ export default function Lock() {
                 selectedDayTextColor="#FFFFFF"
                 todayBackgroundColor="#E6E6E6"
                 todayTextStyle={{color: '#000000'}}
+                style={{alignSelf: 'stretch'}}
               />
             </View>
 
             {/* Tombol Modal */}
-            <View style={styles.modalButtons}>
+            <View style={styles.modalTambahButtons}>
               <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={handleCloseModal}>
-                <Text style={styles.buttonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
+                style={styles.saveButton}
                 onPress={() => {
                   console.log(
                     'Tanggal yang dipilih:',
@@ -555,7 +630,9 @@ export default function Lock() {
                   );
                   handleSave(); // Tutup modal setelah menyimpan
                 }}>
-                <Text style={styles.buttonText}>Simpan</Text>
+                <Text style={[GlobalStyle.SemiBold, styles.buttonSubmitText]}>
+                  Simpan
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -568,31 +645,19 @@ export default function Lock() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F8FB',
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 15,
-    margin: 12,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    backgroundColor: '#fff',
   },
   tableHeader: {
+    marginTop: 15,
     flexDirection: 'row',
-    backgroundColor: '#E0E0E0',
     paddingVertical: 10,
     paddingHorizontal: 15,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
   },
   headerCell: {
-    fontFamily: 'Poppins-SemiBold',
     fontSize: 13,
-    color: '#333',
+    color: '#9196B5',
   },
   tableRow: {
     backgroundColor: '#FFFFFF',
@@ -602,25 +667,27 @@ const styles = StyleSheet.create({
   rowHeader: {
     flexDirection: 'row',
     padding: 15,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: '#F7F8FC',
     alignItems: 'center',
   },
   tableCell: {
-    fontFamily: 'Poppins-Regular',
     flexWrap: 'wrap',
+    color: '#313131',
     fontSize: 14,
   },
   tableStatusCell: {
+    width: 80,
     textAlign: 'center',
-    flex: 1,
-    paddingLeft: 0,
   },
   numberCell: {
-    width: 50,
+    width: 45,
   },
   nameCell: {
     flex: 1,
     overflow: 'hidden',
+    flexShrink: 1, // Memungkinkan teks agar tidak memaksa ruang lebih
+    paddingHorizontal: 8, // Memberi jarak antar teks
+    minWidth: 80, // Mencegah terlalu kecil saat teks panjang
   },
   statusCellContainer: {
     width: 100,
@@ -629,24 +696,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
   },
+  persenCell: {
+    fontSize: 12,
+  },
   expandIconCell: {
     width: 40,
     alignItems: 'flex-end',
   },
-  approvedStatus: {
-    backgroundColor: '#C9F7F5',
-    color: '#4CAF50',
+  headerLine: {
+    height: 2,
+    backgroundColor: '#D3D3D3', // Garis horizontal bawah header
+    marginBottom: 5,
   },
-  rejectedStatus: {
-    borderRadius: 5,
-    backgroundColor: '#FFE2E5',
-    color: '#F44336',
-  },
-  pendingStatus: {
-    color: '#FFC107',
-  },
-  defaultStatus: {
-    color: '#9E9E9E',
+  verticalLine: {
+    height: 2, // Tinggi garis horizontal
+    backgroundColor: '#D3D3D3', // Warna abu-abu mirip header line
+    marginBottom: 10, // Jarak atas & bawah agar tidak menempel
   },
   expandedContent: {
     padding: 15,
@@ -655,177 +720,114 @@ const styles = StyleSheet.create({
   expandedText: {
     marginBottom: 5,
     fontSize: 14,
-  },
-  expandedLinkText: {
-    color: 'blue',
-    marginBottom: 5,
-    fontSize: 14,
-  },
-  filetext: {
-    flexDirection: 'row',
+    color: '#313131',
   },
   actionContainer: {
     flexDirection: 'row',
     marginTop: 10,
     justifyContent: 'flex-end',
     alignItems: 'center',
-    gap: 10,
-  },
-  actionButton: {
-    padding: 8,
-    backgroundColor: '#F0F0F0',
-    borderRadius: 5,
-  },
-  editButton: {
-    gap: 5,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#3699FF',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  declineButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F44336',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
   },
   paginationButtons: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
   pageButton: {
-    padding: 10,
-    backgroundColor: '#007bff',
+    padding: 8, // Padding agar tombol lebih mudah diklik
     borderRadius: 5,
-    marginHorizontal: 5,
   },
   pageButtonText: {
-    fontFamily: 'Poppins-Regular',
     fontSize: 13,
     color: '#fff',
   },
   disabledButton: {
-    backgroundColor: '#CCCCCC',
+    opacity: 0.5, // Efek disabled lebih jelas
   },
   paginationText: {
     color: 'white',
     fontWeight: 'bold',
   },
   pageInfo: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 13,
+    fontSize: 14,
+    color: '#888', // Warna abu-abu sesuai tampilan gambar
+    marginRight: 10, // Jarak antara teks dan tombol navigasi
   },
   paginationContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 10,
-  },
-  header: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    elevation: 4,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  logo: {
-    width: 140,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  headerRight: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    flex: 1,
+    paddingVertical: 10,
   },
-  iconWrapper: {
-    marginLeft: 12,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  headerContainer: {
+    flexDirection: 'column', // Supaya tersusun vertikal
+    alignItems: 'stretch', // Mengisi lebar parent
     marginBottom: 10,
   },
-  modalLabel: {
-    fontSize: 14,
-    marginBottom: 5,
+  bulanContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start', // Posisi ke kiri
+    gap: 10,
+    marginBottom: 20, // Beri jarak antara tombol Bulan & Tahun dengan Search Bar
   },
-  modalInput: {
-    borderWidth: 1,
+  bottomContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between', // Search & Tambah sejajar
+  },
+  searchTambahContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
+
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F7F8FC',
     borderColor: '#ccc',
     borderRadius: 5,
-    padding: 10,
-    minHeight: 80,
-    marginBottom: 15,
-    textAlignVertical: 'top',
+    paddingHorizontal: 12,
+    height: 42, // **Tinggi sama dengan tombol tambah**
+    flex: 1,
   },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  dropdownModal: {
-    height: 40,
-    borderColor: '#CCCCCC',
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    marginBottom: 10,
-  },
-  cancelButton: {
-    backgroundColor: '#ccc',
-    padding: 10,
-    borderRadius: 5,
+
+  searchIcon: {
     marginRight: 10,
+    fontSize: 14, // **Agar proporsional dengan teks**
+    alignSelf: 'center',
   },
-  submitButton: {
-    backgroundColor: '#F44336',
-    padding: 10,
-    borderRadius: 5,
-  },
-  searchContainer: {
-    width: 180,
-    backgroundColor: '#FFFFFF',
-  },
+
   searchBar: {
-    height: 40,
-    borderColor: '#CCCCCC',
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
+    flex: 1,
+    fontSize: 12, // **Agar lebih proporsional**
+    color: '#BEC2D5',
+    textAlignVertical: 'center', // **Pastikan teks sejajar secara vertikal**
+    paddingVertical: 0, // **Hapus padding default agar tidak terlalu tinggi**
   },
+
+  tambahButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#3699FE',
+    paddingHorizontal: 15,
+    height: 40, // **Samakan tinggi dengan search bar**
+    borderRadius: 5,
+    marginLeft: 10,
+  },
+
+  icon: {
+    fontSize: 14, // **Ukuran disesuaikan agar sejajar dengan teks**
+  },
+
+  tambahText: {
+    color: '#fff',
+    marginLeft: 5,
+    fontSize: 12, // **Lebih proporsional**
+    textAlignVertical: 'center',
+  },
+
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -838,7 +840,6 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   displayText: {
-    fontFamily: 'Poppins-Regular',
     fontSize: 13,
     marginRight: 8,
     textAlign: 'center',
@@ -856,36 +857,155 @@ const styles = StyleSheet.create({
   },
   dropdownItem: {
     padding: 10,
-    fontSize: 13,
+    fontSize: 12,
     color: '#333',
   },
-  customFont: {
-    color: 'white',
-    fontFamily: 'Poppins-Regular',
-  },
-  tambahContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  tambahButton: {
-    flexDirection: 'row',
-    backgroundColor: '#3699FF',
-    width: 90,
-    height: 40,
+
+  iconButton: {
+    padding: 10, // Ukuran tombol lebih besar
+    marginHorizontal: 5,
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tambahText: {
-    marginTop: 1,
-    fontFamily: 'Poppins-Regular',
-    color: 'white',
-    marginLeft: 5,
-    lineHeight: 20,
-    fontSize: 13,
-    textAlignVertical: 'center',
+
+  blueButton: {
+    backgroundColor: '#3699FE', // Warna biru untuk reset & edit
   },
+  redButton: {
+    backgroundColor: '#FF536D', // Warna merah untuk hapus
+  },
+
+  switchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: 10,
+  },
+  switchLabel: {
+    fontSize: 16,
+    color: '#333',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContainer: {
+    width: 300,
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 20,
+  },
+  modalTambahText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 10,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+
+  modalTambahContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalTambahContent: {
+    width: '80%',
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    elevation: 5,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    padding: 5,
+  },
+  modalLabel: {
+    fontSize: 14,
+    marginBottom: 5,
+  },
+  input: {
+    padding: 10,
+    fontSize: 14,
+    borderRadius: 5, // Default border radius
+    marginBottom: 20,
+    backgroundColor: '#F0ECEC', // Default background color
+    borderWidth: 1,
+    borderColor: 'transparent', // Default border color (tidak terlihat)
+    color: '#313131',
+  },
+  calendarContainer: {
+    width: '104%', // Agar sejajar dengan dropdown di atasnya
+    padding: 12,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    marginBottom: 20,
+    alignSelf: 'stretch',
+  },
+
+  modalTambahButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  saveButton: {
+    width: '100%',
+    height: 48,
+    backgroundColor: '#3699FE',
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cancelTambahButton: {
+    backgroundColor: '#ccc',
+    padding: 10,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+
+  button: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginHorizontal: 5,
+    backgroundColor: '#000',
+  },
+  cancelButton: {
+    borderWidth: 1,
+    borderColor: '#3498db',
+    backgroundColor: '#fff',
+  },
+  cancelText: {
+    color: '#0A3D62',
+  },
+  confirmButton: {
+    backgroundColor: '#3498db',
+  },
+  confirmText: {
+    color: '#fff',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
   button: {
     height: 40,
     width: 90,
@@ -898,27 +1018,43 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   buttonActive: {
-    backgroundColor: '#E6E7F0',
+    borderBottomWidth: 3,
+    borderBottomColor: '#A463FC', // Warna sesuai desain
   },
   buttonText: {
-    fontFamily: 'Poppins-Regular',
     fontSize: 14,
     color: 'grey',
   },
+  buttonSubmitText: {color: '#fff', fontSize: 14},
+
   textActive: {
-    fontFamily: 'Poppins-Regular',
     color: '#A463FC',
   },
-  kontrakContainer: {
-    flexDirection: 'row',
-  },
-  kontrakButton: {
+  bulanButton: {
     flexDirection: 'row',
     gap: 5,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  badgeApproved: {
+    backgroundColor: '#C9F7F5', // Biru
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start', // Agar badge tidak melebar
+    color: '#1BC5BD',
+  },
+  badgeRejected: {
+    backgroundColor: '#FFE2E5', // Merah
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    color: '#F64E60',
+  },
+  badgeDefault: {
+    backgroundColor: '#BEC2D5', // Abu-abu
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
   },
 });

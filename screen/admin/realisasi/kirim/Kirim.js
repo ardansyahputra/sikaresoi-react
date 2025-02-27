@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   TextInput,
-  Alert,
 } from 'react-native';
 import {Pressable} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -33,7 +32,7 @@ export default function Lock() {
       fetchRealisasiData(1); // Reset to page 1 when display changes
     }
   }, [activeButton, selectedDisplay]);
-  
+
   const fetchRealisasiData = async page => {
     try {
       setLoading(true);
@@ -41,7 +40,7 @@ export default function Lock() {
         page,
         per: selectedDisplay,
       });
-      console.log('Realisasi Data:', response.data);  // Log data yang diterima
+      console.log('Realisasi Data:', response.data); // Log data yang diterima
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -51,7 +50,7 @@ export default function Lock() {
       setLoading(false);
     }
   };
-  
+
   const fetchKontrakData = async page => {
     try {
       setLoading(true);
@@ -59,7 +58,7 @@ export default function Lock() {
         page,
         per: selectedDisplay,
       });
-      console.log('Kontrak Data:', response.data);  // Log data yang diterima
+      console.log('Kontrak Data:', response.data); // Log data yang diterima
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -69,7 +68,7 @@ export default function Lock() {
       setLoading(false);
     }
   };
-  
+
   const display = [
     {label: '5', value: 5},
     {label: '10', value: 10},
@@ -77,11 +76,11 @@ export default function Lock() {
     {label: '50', value: 50},
     {label: '100', value: 100},
   ];
-  
+
   const toggleExpand = id => {
     setExpandedId(expandedId === id ? null : id);
   };
-  
+
   const getStatusStyle = status => {
     switch (status?.toUpperCase()) {
       case 'DIBUKA':
@@ -92,7 +91,7 @@ export default function Lock() {
         return styles.defaultStatus;
     }
   };
-  
+
   const handlePress = buttonName => {
     setActiveButton(buttonName); // Set active button
     if (buttonName === 'kontrak') {
@@ -101,7 +100,7 @@ export default function Lock() {
       fetchRealisasiData(1); // Fetch data when "Realisasi" button is selected
     }
   };
-  
+
   const TableHeader = () => (
     <View>
       <View style={styles.filterContainer}>
@@ -144,10 +143,10 @@ export default function Lock() {
       </View>
     </View>
   );
-  
+
   const renderItem = ({item, index}) => {
     const isExpanded = expandedId === item.id;
-  
+
     return (
       <View style={styles.tableRow}>
         <TouchableOpacity
@@ -165,9 +164,9 @@ export default function Lock() {
               style={[
                 styles.tableCell,
                 styles.statusCell,
-                getStatusStyle(item.name),  // Ganti item.nama menjadi item.name
+                getStatusStyle(item.name), // Ganti item.nama menjadi item.name
               ]}>
-              {item.name || '-'}  {/* Ganti item.nama menjadi item.name */}
+              {item.name || '-'} {/* Ganti item.nama menjadi item.name */}
             </Text>
           </View>
           <View style={styles.expandIconCell}>
@@ -182,7 +181,7 @@ export default function Lock() {
           <View style={styles.expandedContent}>
             <Text style={styles.expandedText}>NIP/NRP: {item.nip || '-'}</Text>
             <Text style={styles.expandedText}>
-              Nama: {item.name || '-'}  {/* Ganti item.nama menjadi item.name */}
+              Nama: {item.name || '-'} {/* Ganti item.nama menjadi item.name */}
             </Text>
             <View style={styles.actionContainer}>
               <TouchableOpacity
@@ -203,8 +202,6 @@ export default function Lock() {
       </View>
     );
   };
-  
-  
 
   return (
     <View style={styles.container}>
@@ -223,9 +220,7 @@ export default function Lock() {
       {/* Card untuk Tombol */}
       <View style={styles.card}>
         <View style={styles.tambahContainer}>
-          <TouchableOpacity style={styles.y} >
-
-          </TouchableOpacity>
+          <TouchableOpacity style={styles.y}></TouchableOpacity>
           <View style={styles.kontrakContainer}>
             <Pressable
               style={({pressed}) => [
@@ -584,7 +579,7 @@ const styles = StyleSheet.create({
   },
   kontrakContainer: {
     flexDirection: 'row',
-    },
+  },
   kontrakButton: {
     flexDirection: 'row',
     gap: 5,

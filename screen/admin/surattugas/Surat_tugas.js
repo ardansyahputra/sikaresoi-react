@@ -13,12 +13,17 @@ import {
   Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Dropdown } from 'react-native-element-dropdown'
+import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../../../src/api/apiClient';
+import GlobalStyle from '../../../src/utils/GlobalStyle';
+import Header from '../components/Header';
+import Toast from 'react-native-toast-message';
+import {BarIndicator} from 'react-native-indicators';
 
 export default function Presensi() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -29,7 +34,6 @@ export default function Presensi() {
   const [selectedDisplay, setSelectedDisplay] = useState(null);
   const apiClient = useApiClient(); // Using useApiClient hook
 
-  
   useEffect(() => {
     fetchData(currentPage, selectedDisplay);
   }, [currentPage, selectedDisplay]);
@@ -37,16 +41,9 @@ export default function Presensi() {
   const fetchData = async page => {
     try {
       setLoading(true);
-      const response = await apiClient.post(
-        '/perubahan_absensi/indexadmin',
-        {page},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYxLjEyMzo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM0NTg0MjY2LCJleHAiOjE3MzQ1OTc5OTQsIm5iZiI6MTczNDU5NDM5NCwianRpIjoiMXZQT3lNMFVhdzdiak1CdCIsInN1YiI6MSwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.Jj3yyLl1vCqszKDQxSuqVXAdp8O8sjdgS6Y_u2g5g1o',
-          },
-        },
-      );
+      const response = await apiClient.post('/perubahan_absensi/indexadmin', {
+        page,
+      });
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -64,10 +61,10 @@ export default function Presensi() {
         {
           text: 'Ya',
           onPress: async () => {
-            await apiClient.post(
-              `/perubahan_absensi/${uuid}/change`,
-              {status: '1', revisi: null},
-            );
+            await apiClient.post(`/perubahan_absensi/${uuid}/change`, {
+              status: '1',
+              revisi: null,
+            });
             Alert.alert('Berhasil', 'Konfirmasi berhasil.');
             fetchData(currentPage);
           },
@@ -88,13 +85,6 @@ export default function Presensi() {
       await axios.post(
         `http://192.168.2.152:8000/api/v1/perubahan_absensi/${selectedUuid}/change`,
         {status: '2', revisi: declineReason},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjIuMTUzOjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzQzOTk0NDQsImV4cCI6MTczNDQxNDc0MiwibmJmIjoxNzM0NDExMTQyLCJqdGkiOiJhS0xXR2w5Y3pkN0pVM1NMIiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.BXVqz9M9HJ18YZOo7-3uqMpTXHTS5MXTWNH9uu63NcQ',
-            Accept: 'application/json'
-          },
-        },
       );
       Alert.alert('Berhasil', 'Penolakan berhasil.');
       setModalVisible(false);
@@ -106,11 +96,11 @@ export default function Presensi() {
   };
 
   const display = [
-    { label: '5', value: 1 },
-    { label: '10', value: 2 },
-    { label: '25', value: 3 },
-    { label: '50', value: 4 },
-    { label: '100', value: 5 },
+    {label: '5', value: 1},
+    {label: '10', value: 2},
+    {label: '25', value: 3},
+    {label: '50', value: 4},
+    {label: '100', value: 5},
   ];
 
   const toggleExpand = id => {
@@ -120,54 +110,62 @@ export default function Presensi() {
   const getStatusStyle = status => {
     switch (status?.toUpperCase()) {
       case 'DISETUJUI':
-        return styles.approvedStatus;
+        return styles.badgeApproved;
       case 'DITOLAK':
-        return styles.rejectedStatus;
+        return styles.badgeRejected;
       case 'MENUNGGU':
-        return styles.pendingStatus;
+        return styles.badgePending;
       default:
-        return styles.defaultStatus;
+        return styles.badgeDefault;
     }
+  };
+
+  const stripHtml = html => {
+    return html.replace(/<[^>]*>/g, '').trim();
   };
 
   const TableHeader = () => (
     <View>
-    <View style={styles.filterContainer}>
-    <View style={styles.displayContainer}>
-    <Text style={styles.displayText}>
-      Display
-    </Text>
-    <Dropdown
-          style={styles.dropdown}
-          data={display}
-          labelField="label"
-          valueField="value"
-          placeholder="10"
-          value={selectedDisplay}
-          onChange={item => setSelectedDisplay(item.value)}
-          renderItem={(item) => (
-          <Text style={[styles.dropdownItem, styles.customFont]}>
-            {item.label}
-          </Text>
-        )}
-        />
-      </View>  
-    {/* Search Bar */}
-    <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchBar}
-          placeholder="Search"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
+      <View style={styles.headerContainer}>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Ionicons
+            name="search"
+            size={18}
+            color="#888"
+            style={styles.searchIcon}
+          />
+          <TextInput
+            style={[GlobalStyle.SemiBold, styles.searchBar]}
+            placeholder="Search"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholderTextColor="#888"
+          />
+        </View>
       </View>
-    </View>
-    <View style={styles.tableHeader}>
-      <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
-      <Text style={[styles.headerCell, styles.nameCell]}>Name</Text>
-      <Text style={[styles.headerCell, styles.tableStatusCell]}>Status</Text>
-      <View style={styles.expandIconCell} />
-    </View>
+
+      <View style={styles.tableHeader}>
+        <Text
+          style={[GlobalStyle.SemiBold, sstyles.headerCell, styles.numberCell]}>
+          NO
+        </Text>
+        <Text
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}
+          numberOfLines={2}>
+          NAMA
+        </Text>
+        <Text
+          style={[
+            GlobalStyle.SemiBold,
+            styles.headerCell,
+            styles.tableStatusCell,
+          ]}>
+          STATUS
+        </Text>
+        <View style={styles.expandIconCell} />
+      </View>
+      <View style={styles.headerLine} />
     </View>
   );
 
@@ -224,7 +222,7 @@ export default function Presensi() {
               </Text>
             </View>
             <View style={styles.actionContainer}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.approveButton}
                 onPress={() => handleApprove(item.uuid)}>
                 <Ionicons name="checkmark" size={20} color="white" />
@@ -281,7 +279,9 @@ export default function Presensi() {
                       currentPage === 1 && styles.disabledButton,
                     ]}
                     disabled={currentPage === 1}
-                    onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
+                    onPress={() =>
+                      setCurrentPage(prev => Math.max(prev - 1, 1))
+                    }>
                     <Text style={styles.pageButtonText}>Previous</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -301,7 +301,7 @@ export default function Presensi() {
           }
         />
       )}
-  
+
       {/* Modal Input Alasan Penolakan */}
       <Modal
         visible={isModalVisible}
@@ -335,7 +335,7 @@ export default function Presensi() {
         </View>
       </Modal>
     </View>
-  );  
+  );
 }
 
 const styles = StyleSheet.create({
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
     paddingLeft: 0,
   },
   numberCell: {
-    width: 50
+    width: 50,
   },
   nameCell: {
     flex: 1,
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
   displayContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems:'center',
+    alignItems: 'center',
     marginRight: 20,
   },
   displayText: {
@@ -626,5 +626,5 @@ const styles = StyleSheet.create({
   },
   customFont: {
     fontFamily: 'Poppins-Regular',
-  }
+  },
 });

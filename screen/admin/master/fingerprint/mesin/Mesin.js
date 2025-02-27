@@ -5,18 +5,17 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  BarIndicator,
   Modal,
   TextInput,
-  Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import {Dropdown} from 'react-native-element-dropdown';
-import { useNavigation } from '@react-navigation/native';
-import { useFocusEffect } from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import useApiClient from '../../../../../src/api/apiClient';
-
+import {BarIndicator} from 'react-native-indicators';
+import Header from '../../../../components/Header';
+import GlobalStyle from '../../../../../src/utils/GlobalStyle';
+import Toast from 'react-native-toast-message';
 
 export default function Mesin() {
   const [data, setData] = useState([]);
@@ -28,10 +27,10 @@ export default function Mesin() {
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDisplay, setSelectedDisplay] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedAction, setSelectedAction] = useState(null);
   const navigation = useNavigation();
   const apiClient = useApiClient();
-
-
 
   useFocusEffect(
     React.useCallback(() => {
@@ -41,16 +40,11 @@ export default function Mesin() {
 
   const fetchData = async (page, display) => {
     try {
-      setLoading(true); // Set loading state
+      setIsLoading(true); // Set loading state
       const response = await apiClient.post(
-        '/fingerprint_machine/indexandro', // API URL
+        '/fingerprint_machine/index', // API URL
         {page, display},
-        {
-          headers: {
-            Authorization:
-              'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjE4Ljk0OjgwMDBcL2FwaVwvdjFcL2F1dGhcL3JlZnJlc2giLCJpYXQiOjE3MzY5MDgwNDUsImV4cCI6MTczNjkzMTIzNCwibmJmIjoxNzM2OTI3NjM0LCJqdGkiOiJVVENITmt4MUN1eEY5M1NhIiwic3ViIjoxLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.LocW4Sk32906K41W9PoCrcHoRx1Za-aonestc-IJhng', // Token
-          },
-        },
+        {},
       );
       console.log('Full API Response:', response.data); // Log the full response to inspect all data
 
@@ -61,34 +55,44 @@ export default function Mesin() {
       setLastPage(last_page);
     } catch (error) {
       console.error('Error fetching data:', error);
+
+      // Tampilkan toast error ketika gagal fetch data
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal Memuat Data',
+        text2: 'Terjadi kesalahan saat mengambil data.',
+      });
     } finally {
       setIsLoading(false); // Reset loading state
     }
   };
 
-  const submitHapus = async () => {
-    try {
-      await apiClient.delete(`/fingerprint_machine/${selectedUuid}/delete`);
-      Alert.alert('Berhasil', 'Data berhasil dihapus.');
-      setHapusModalVisible(false);
-      fetchData(currentPage);
-    } catch (error) {
-      console.error('Error during delete:', error);
-      if (error.response) {
-        console.error('Response:', error.response);
-        Alert.alert(
-          'Error',
-          `Gagal menghapus data: ${error.response.data.message}`,
-        );
-      } else {
-        Alert.alert('Error', 'Gagal menghapus data.');
-      }
-    }
+  const handleHapusPress = uuid => {
+    setSelectedUuid(uuid);
+    setSelectedAction('hapus'); // Tandai bahwa ini aksi hapus
+    setModalVisible(true);
   };
 
-  const handleHapus = uuid => {
-    setSelectedUuid(uuid);
-    setHapusModalVisible(true); // Menampilkan modal konfirmasi hapus
+  const handleConfirmAction = async () => {
+    if (!selectedUuid) return;
+
+    setModalVisible(false); // Tutup modal sebelum aksi dijalankan
+
+    try {
+      await apiClient.delete(`/fingerprint_machine/${selectedUuid}/delete`);
+      fetchData(currentPage);
+      Toast.show({
+        type: 'success',
+        text1: 'Berhasil',
+        text2: 'Data berhasil dihapus.',
+      });
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Terjadi Kesalahan',
+        text2: 'Gagal menghapus data.',
+      });
+    }
   };
 
   const handleCreate = (navigation, value1, value2, value3) => {
@@ -113,56 +117,62 @@ export default function Mesin() {
 
   const TableHeader = () => (
     <View>
-      <View style={styles.tambahContainer}>
-        <TouchableOpacity
-          style={styles.tambahButton}
-          onPress={() => handleCreate(navigation, '10%', '18:00', '08:00')}>
-          <FontAwesome name="plus" size={20} color="#fff" style={styles.icon} />
-          <Text style={styles.tambahText}>Tambah</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.filterContainer}>
-        <View style={styles.displayContainer}>
-          <Text style={styles.displayText}>Display</Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={display} // Ensure display options are properly passed
-            labelField="label"
-            valueField="value"
-            placeholder="10"
-            value={selectedDisplay}
-            onChange={item => setSelectedDisplay(item.value)}
-            renderItem={item => (
-              <Text style={[styles.dropdownItem, styles.customFont]}>
-                {item.label}
-              </Text>
-            )}
-          />
-        </View>
-
-        {/* Search Bar */}
+      <View style={styles.headerContainer}>
         <View style={styles.searchContainer}>
+          <Ionicons
+            name="search"
+            size={18}
+            color="#888"
+            style={styles.searchIcon}
+          />
           <TextInput
-            style={styles.searchBar}
+            style={[GlobalStyle.SemiBold, styles.searchBar]}
             placeholder="Search"
             value={searchQuery}
             onChangeText={setSearchQuery}
+            placeholderTextColor="#888"
           />
         </View>
+        <TouchableOpacity
+          style={styles.tambahButton}
+          onPress={() => handleCreate(navigation, '10%', '18:00', '08:00')}>
+          <Ionicons name="add" size={18} color="#fff" style={styles.icon} />
+          <Text style={[GlobalStyle.SemiBold, styles.tambahText]}>Tambah</Text>
+        </TouchableOpacity>
       </View>
+
       <View style={styles.tableHeader}>
-        <Text style={[styles.headerCell, styles.numberCell]}>#</Text>
-        <Text style={[styles.headerCell, styles.nameCell]}>Nama Mesin</Text>
-        <Text style={[styles.headerCell, styles.ipCell]}>IP</Text>{' '}
+        <Text
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.numberCell]}>
+          NO
+        </Text>
+        <Text
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}
+          numberOfLines={2} // Bisa disesuaikan sesuai kebutuhan
+          ellipsizeMode="tail">
+          NAMA MESIN
+        </Text>
+        <Text
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.ipcell]}
+          numberOfLines={2} // Bisa disesuaikan sesuai kebutuhan
+          ellipsizeMode="tail">
+          IP ADDRESS
+        </Text>
         {/* IP header */}
-        <Text style={[styles.headerCell, styles.portCell]}>Port</Text>
+        <Text
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.portcell]}
+          numberOfLines={2} // Bisa disesuaikan sesuai kebutuhan
+          ellipsizeMode="tail">
+          PORT
+        </Text>
         <View style={styles.expandIconCell} />
       </View>
+      <View style={styles.headerLine} />
     </View>
   );
 
   const renderItem = ({item, index}) => {
+    const rowBackgroundColor = index % 2 === 0 ? '#F7F8FC' : '#FFFFFF'; // Warna selang-seling
     // Log data yang diterima untuk setiap item
     console.log('Data item:', item);
 
@@ -191,113 +201,117 @@ export default function Mesin() {
       item.connected === 'Aktif' ? '#c6f3f1' : '#ffe2e5';
 
     return (
-      <View style={styles.tableRow}>
-        <TouchableOpacity
-          style={styles.rowHeader}
-          onPress={() => toggleExpand(item.id)}>
-          <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
-          <Text
-            style={[styles.tableCell, styles.nameCell]}
-            numberOfLines={1}
-            ellipsizeMode="tail">
-            {item.name || '-'}
-          </Text>
-          <Text style={[styles.tableCell, styles.ipCell]}>
-            {item.ip || '-'}
-          </Text>
-          <Text style={[styles.tableCell, styles.portCell]}>
-            {item.port || '-'}
-          </Text>
-          <View style={styles.expandIconCell}>
-            <Ionicons
-              name={isExpanded ? 'chevron-up' : 'chevron-down'}
-              size={20}
-              color="#333"
-            />
-          </View>
-        </TouchableOpacity>
-
-        {isExpanded && (
-          <View style={styles.expandedContent}>
-            <Text style={styles.expandedText}>
-              Nama Mesin: {item.name || '-'}
+      <>
+        <View style={styles.tableRow}>
+          <TouchableOpacity
+            style={[styles.rowHeader, {backgroundColor: rowBackgroundColor}]}
+            onPress={() => toggleExpand(item.id)}>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.tableCell,
+                styles.numberCell,
+              ]}>
+              {index + 1}
             </Text>
-            <Text style={styles.expandedText}>IP: {item.ip || '-'}</Text>
-            <Text style={styles.expandedText}>Port: {item.port || '-'}</Text>
-
-            {/* Teks Status Aktif dengan ikon dan background */}
-            <Text style={styles.expandedText}>
-              Status Aktif:
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor: activeBackgroundColor,
-                  paddingVertical: 1,
-                  paddingHorizontal: 10,
-                  borderRadius: 5, // Menambahkan border radius
-                  transform: [
-                    {translateX: 10}, // Geser background ke kanan
-                    {translateY: 5}, // Geser background ke bawah
-                  ],
-                }}>
-                <View style={{marginRight: -1}}>{activeIcon}</View>
-              </View>
+            <Text
+              style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}
+              numberOfLines={2} // Bisa disesuaikan sesuai kebutuhan
+              ellipsizeMode="tail">
+              {item.name || '-'}
             </Text>
-
-            {/* Teks Status Terhubung dengan ikon dan background */}
-            <Text style={styles.expandedText}>
-              Status Terhubung:
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor: connectedBackgroundColor,
-                  paddingVertical: 1,
-                  paddingHorizontal: 10,
-                  borderRadius: 5, // Menambahkan border radius
-                  transform: [
-                    {translateX: 10}, // Geser background ke kanan
-                    {translateY: 5}, // Geser background ke bawah
-                  ],
-                }}>
-                <View style={{marginRight: -1}}>{connectedIcon}</View>
-              </View>
+            <Text
+              style={[GlobalStyle.SemiBold, styles.tableCell, styles.ipcell]}
+              numberOfLines={2} // Bisa disesuaikan sesuai kebutuhan
+              ellipsizeMode="tail">
+              {item.ip || '-'}
             </Text>
-
-            <View style={styles.actionContainer}>
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => handleEdit(item.uuid, navigation)}>
-                <FontAwesome name="pencil" size={20} color="white" />
-                <Text style={styles.customFont}>Edit</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.declineButton}
-                onPress={() => handleHapus(item.uuid)}>
-                <Ionicons name="trash" size={20} color="white" />
-                <Text style={styles.customFont}>Hapus</Text>
-              </TouchableOpacity>
+            <Text
+              style={[GlobalStyle.SemiBold, styles.tableCell, styles.portcell]}>
+              {item.port || '-'}
+            </Text>
+            <View style={styles.expandIconCell}>
+              <Ionicons
+                name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#BEC2D5"
+              />
             </View>
-          </View>
-        )}
-      </View>
+          </TouchableOpacity>
+
+          {isExpanded && (
+            <View style={styles.expandedContent}>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Nama Mesin: {item.name || '-'}
+              </Text>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                IP: {item.ip || '-'}
+              </Text>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Port: {item.port || '-'}
+              </Text>
+
+              {/* Teks Status Aktif dengan ikon dan background */}
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                  Status Aktif:{' '}
+                </Text>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: activeBackgroundColor,
+                    paddingVertical: 1,
+                    paddingHorizontal: 10,
+                    borderRadius: 5,
+                  }}>
+                  <View style={{marginRight: -1}}>{activeIcon}</View>
+                </View>
+              </View>
+
+              {/* Teks Status Terhubung dengan ikon dan background */}
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                  Status Terhubung:{' '}
+                </Text>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: connectedBackgroundColor,
+                    paddingVertical: 1,
+                    paddingHorizontal: 10,
+                    borderRadius: 5,
+                  }}>
+                  <View style={{marginRight: -1}}>{connectedIcon}</View>
+                </View>
+              </View>
+
+              <View style={styles.actionContainer}>
+                <TouchableOpacity
+                  style={[styles.iconButton, styles.blueButton]}
+                  onPress={() => handleEdit(item.uuid, navigation)}>
+                  <Ionicons name="pencil" size={20} color="white" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.iconButton, styles.redButton]}
+                  onPress={() => handleHapusPress(item.uuid)}>
+                  <Ionicons name="trash-outline" size={20} color="white" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </View>
+        {index === data.length - 1 && <View style={styles.verticalLine} />}
+      </>
     );
   };
 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}></View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
-          <TouchableOpacity style={styles.iconWrapper}>
-            <Ionicons name="person-circle-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <Header title="Mesin Fingerprint" />
 
       {/* Loading Indicator */}
       {isLoading ? (
@@ -311,37 +325,44 @@ export default function Mesin() {
           data={data}
           renderItem={renderItem}
           keyExtractor={item => item.id.toString()}
-          contentContainerStyle={styles.card}
+          contentContainerStyle={{flexGrow: 1, padding: '10'}}
+          style={{flex: 1}}
+          showsVerticalScrollIndicator={false}
           ListFooterComponent={
-            <View>
-              <Text style={styles.pageInfo}>
-                Showing page {currentPage} of {lastPage}
+            <View style={styles.paginationContainer}>
+              <Text style={[GlobalStyle.SemiBold, styles.pageInfo]}>
+                {currentPage} of {lastPage}
               </Text>
-              <View style={styles.paginationContainer}>
-                <View style={styles.paginationButtons}>
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === 1 && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === 1}
-                    onPress={() =>
-                      setCurrentPage(prev => Math.max(prev - 1, 1))
-                    }>
-                    <Text style={styles.pageButtonText}>Previous</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === lastPage && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === lastPage}
-                    onPress={() =>
-                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
-                    }>
-                    <Text style={styles.pageButtonText}>Next</Text>
-                  </TouchableOpacity>
-                </View>
+
+              <View style={styles.paginationButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.pageButton,
+                    currentPage === 1 && styles.disabledButton,
+                  ]}
+                  disabled={currentPage === 1}
+                  onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
+                  <Ionicons
+                    name="chevron-back"
+                    size={20}
+                    color={currentPage === 1 ? '#ccc' : '#BEC2D5'}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.pageButton,
+                    currentPage === lastPage && styles.disabledButton,
+                  ]}
+                  disabled={currentPage === lastPage}
+                  onPress={() =>
+                    setCurrentPage(prev => Math.min(prev + 1, lastPage))
+                  }>
+                  <Ionicons
+                    name="chevron-back"
+                    size={20}
+                    color={currentPage === 1 ? '#ccc' : '#BEC2D5'}
+                  />
+                </TouchableOpacity>
               </View>
             </View>
           }
@@ -349,23 +370,31 @@ export default function Mesin() {
       )}
 
       <Modal
-        visible={isHapusModalVisible}
         animationType="fade"
-        transparent
-        onRequestClose={() => setHapusModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Hapus Data</Text>
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={[GlobalStyle.SemiBold, styles.modalText]}>
+              {selectedAction === 'hapus'
+                ? 'Apakah Anda yakin ingin menghapus data ini?'
+                : 'Apakah Anda yakin ingin mereset password pengguna ini?'}
+            </Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setHapusModalVisible(false)}>
-                <Text style={styles.buttonText}>Batal</Text>
+                style={[styles.button, styles.cancelButton]}
+                onPress={() => setModalVisible(false)}>
+                <Text style={[GlobalStyle.SemiBold, styles.cancelText]}>
+                  Tidak
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.submitButton, styles.approveButton]}
-                onPress={submitHapus}>
-                <Text style={styles.buttonText}>Setujui</Text>
+                style={[styles.button, styles.confirmButton]}
+                onPress={handleConfirmAction}>
+                <Text style={[GlobalStyle.SemiBold, styles.confirmText]}>
+                  Ya
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -378,33 +407,19 @@ export default function Mesin() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F8FB',
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 15,
-    margin: 12,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    backgroundColor: '#fff',
   },
   tableHeader: {
+    marginTop: 15,
     flexDirection: 'row',
-    backgroundColor: '#E0E0E0',
     paddingVertical: 10,
     paddingHorizontal: 15,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
   },
   headerCell: {
-    fontFamily: 'Poppins-SemiBold',
     fontSize: 13,
-    color: '#333',
-    textAlign: 'center', // Center the text horizontally
-    marginright: 25,
+    color: '#9196B5',
   },
   tableRow: {
     backgroundColor: '#FFFFFF',
@@ -414,42 +429,44 @@ const styles = StyleSheet.create({
   rowHeader: {
     flexDirection: 'row',
     padding: 15,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: '#F7F8FC',
     alignItems: 'center',
   },
-  ipCell: {
-    flex: 1, // Ensures the IP column takes up available space equally
-    textAlign: 'center', // Center the content within the cell
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  statusContainer: {
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
-  },
-  ipCello: {
-    flex: 1, // Ensures the IP column takes up available space equally
-    marginLeft: 70,
-  },
   tableCell: {
-    fontFamily: 'Poppins-Regular',
     flexWrap: 'wrap',
+    color: '#313131',
     fontSize: 14,
-    marginLeft: 15,
   },
   tableStatusCell: {
     textAlign: 'center',
-    flex: 1,
-    paddingLeft: -5,
-    width: 20,
+    flex: 0,
+    paddingLeft: 0,
   },
   numberCell: {
-    width: 35,
+    width: 45,
   },
   nameCell: {
     flex: 1,
     overflow: 'hidden',
+    flexShrink: 1, // Memungkinkan teks agar tidak memaksa ruang lebih
+    paddingHorizontal: 10, // Memberi jarak antar teks
+    minWidth: 85, // Mencegah terlalu kecil saat teks panjang
+  },
+  ipcell: {
+    alignSelf: 'top',
+    flex: 1,
+    overflow: 'hidden',
+    flexShrink: 1, // Memungkinkan teks agar tidak memaksa ruang lebih
+    paddingHorizontal: 10, // Memberi jarak antar teks
+    minWidth: 115, // Mencegah terlalu kecil saat teks panjang
+  },
+  portcell: {
+    flex: 1,
+    overflow: 'hidden',
+    flexShrink: 1, // Memungkinkan teks agar tidak memaksa ruang lebih
+
+    paddingHorizontal: 8, // Memberi jarak antar teks
+    minWidth: 50, // Mencegah terlalu kecil saat teks panjang
   },
   statusCellContainer: {
     width: 100,
@@ -462,23 +479,15 @@ const styles = StyleSheet.create({
     width: 40,
     alignItems: 'flex-end',
   },
-  discountCell: {
-    textAlign: 'right',
-    flex: 1,
-    paddingHorizontal: -10,
-    paddingLeft: 5,
+  headerLine: {
+    height: 2,
+    backgroundColor: '#D3D3D3', // Garis horizontal bawah header
+    marginBottom: 5,
   },
-  approvedStatus: {
-    color: '#4CAF50',
-  },
-  rejectedStatus: {
-    color: '#F44336',
-  },
-  pendingStatus: {
-    color: '#FFC107',
-  },
-  defaultStatus: {
-    color: '#9E9E9E',
+  verticalLine: {
+    height: 2, // Tinggi garis horizontal
+    backgroundColor: '#D3D3D3', // Warna abu-abu mirip header line
+    marginBottom: 10, // Jarak atas & bawah agar tidak menempel
   },
   expandedContent: {
     padding: 15,
@@ -487,172 +496,98 @@ const styles = StyleSheet.create({
   expandedText: {
     marginBottom: 5,
     fontSize: 14,
-  },
-  expandedLinkText: {
-    color: 'blue',
-    marginBottom: 5,
-    fontSize: 14,
-  },
-  filetext: {
-    flexDirection: 'row',
+    color: '#313131',
   },
   actionContainer: {
     flexDirection: 'row',
     marginTop: 10,
     justifyContent: 'flex-end',
     alignItems: 'center',
-    gap: 10,
-  },
-  actionButton: {
-    padding: 8,
-    backgroundColor: '#F0F0F0',
-    borderRadius: 5,
-  },
-  approveButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#4CAF50',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  declineButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F44336',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
   },
   paginationButtons: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
   pageButton: {
-    padding: 10,
-    backgroundColor: '#007bff',
+    padding: 8, // Padding agar tombol lebih mudah diklik
     borderRadius: 5,
-    marginHorizontal: 5,
   },
   pageButtonText: {
-    fontFamily: 'Poppins-Regular',
     fontSize: 13,
     color: '#fff',
   },
   disabledButton: {
-    backgroundColor: '#CCCCCC',
+    opacity: 0.5, // Efek disabled lebih jelas
   },
   paginationText: {
     color: 'white',
     fontWeight: 'bold',
   },
   pageInfo: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 13,
+    fontSize: 14,
+    color: '#888', // Warna abu-abu sesuai tampilan gambar
+    marginRight: 10, // Jarak antara teks dan tombol navigasi
   },
   paginationContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 10,
-  },
-  header: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingVertical: 10,
+  },
+  headerContainer: {
+    flexDirection: 'row',
     justifyContent: 'space-between',
-    elevation: 4,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  logo: {
-    width: 140,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  headerRight: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    flex: 1,
-  },
-  iconWrapper: {
-    marginLeft: 12,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
     marginBottom: 10,
   },
-  modalLabel: {
-    fontSize: 14,
-    marginBottom: 5,
-  },
-  modalInput: {
-    borderWidth: 1,
+
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F7F8FC',
     borderColor: '#ccc',
     borderRadius: 5,
-    padding: 10,
-    minHeight: 10,
-    marginBottom: 15,
-    textAlignVertical: 'top',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  cancelButton: {
-    backgroundColor: '#ccc',
-    padding: 10,
-    borderRadius: 5,
-    marginRight: 10,
-  },
-  submitButton: {
-    backgroundColor: '#F44336',
-    padding: 10,
-    borderRadius: 5,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  searchContainer: {
-    width: 150,
-    backgroundColor: '#FFFFFF',
-  },
-  searchBar: {
-    height: 40,
-    borderColor: '#CCCCCC',
-    borderWidth: 1,
-    borderRadius: 5,
     paddingHorizontal: 12,
+    height: 42, // **Tinggi sama dengan tombol tambah**
+    flex: 1,
+    maxWidth: '60%', // **Agar fleksibel di berbagai layar**
   },
+
+  searchIcon: {
+    marginRight: 10,
+    fontSize: 14, // **Agar proporsional dengan teks**
+    alignSelf: 'center',
+  },
+
+  searchBar: {
+    flex: 1,
+    fontSize: 12, // **Agar lebih proporsional**
+    color: '#BEC2D5',
+    textAlignVertical: 'center', // **Pastikan teks sejajar secara vertikal**
+    paddingVertical: 0, // **Hapus padding default agar tidak terlalu tinggi**
+  },
+
+  tambahButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#3699FE',
+    paddingHorizontal: 15,
+    height: 40, // **Samakan tinggi dengan search bar**
+    borderRadius: 5,
+    marginLeft: 12,
+  },
+
+  icon: {
+    fontSize: 14, // **Ukuran disesuaikan agar sejajar dengan teks**
+  },
+
+  tambahText: {
+    color: '#fff',
+    marginLeft: 5,
+    fontSize: 12, // **Lebih proporsional**
+    textAlignVertical: 'center',
+  },
+
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -665,7 +600,6 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   displayText: {
-    fontFamily: 'Poppins-Regular',
     fontSize: 13,
     marginRight: 8,
     textAlign: 'center',
@@ -683,52 +617,79 @@ const styles = StyleSheet.create({
   },
   dropdownItem: {
     padding: 10,
-    fontSize: 16,
+    fontSize: 12,
     color: '#333',
   },
-  customFont: {
-    fontFamily: 'Poppins-Regular',
-  },
-  tambahContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  tambahButton: {
-    flexDirection: 'row',
-    backgroundColor: '#3699FF',
-    width: 90,
-    height: 40,
+
+  iconButton: {
+    padding: 10, // Ukuran tombol lebih besar
+    marginHorizontal: 5,
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tambahText: {
-    marginTop: 1,
-    fontFamily: 'Poppins-Regular',
-    color: 'white',
-    marginLeft: 5,
-    lineHeight: 20,
-    fontSize: 13,
-    textAlignVertical: 'center',
+
+  blueButton: {
+    backgroundColor: '#3699FE', // Warna biru untuk reset & edit
   },
-  editButton: {
-    gap: 5,
+  redButton: {
+    backgroundColor: '#FF536D', // Warna merah untuk hapus
+  },
+
+  switchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#3699FF',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
+    justifyContent: 'space-between',
+    marginVertical: 10,
   },
-  customFont: {
-    color: 'white',
-    fontFamily: 'Poppins-Regular',
+  switchLabel: {
+    fontSize: 16,
+    color: '#333',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContainer: {
+    width: 300,
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginHorizontal: 5,
+    backgroundColor: '#000',
+  },
+  cancelButton: {
+    borderWidth: 1,
+    borderColor: '#3498db',
+    backgroundColor: '#fff',
+  },
+  cancelText: {
+    color: '#0A3D62',
+  },
+  confirmButton: {
+    backgroundColor: '#3498db',
+  },
+  confirmText: {
+    color: '#fff',
   },
   loadingContainer: {
     flex: 1,

@@ -164,7 +164,12 @@ export default function JenisPegawai() {
           <View
             style={[styles.rowHeader, {backgroundColor: rowBackgroundColor}]}
             onPress={() => toggleExpand(item.id)}>
-            <Text style={[styles.tableCell, styles.numberCell]}>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.tableCell,
+                styles.numberCell,
+              ]}>
               {index + 1}
             </Text>
             <Text

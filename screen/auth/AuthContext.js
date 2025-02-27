@@ -29,7 +29,7 @@ export const AuthProvider = ({children, navigation}) => {
   // Fungsi untuk fetch data pangkat
   const fetchPangkat = async () => {
     try {
-      const response = await axios.get(`${API_URL}pangkat/show`, {
+      const response = await axios.get(`${API_URL}/pangkat/show`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

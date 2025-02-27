@@ -1,415 +1,791 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
-  Modal,
-  Linking,
+  FlatList,
+  TouchableOpacity,
   ActivityIndicator,
+  Image,
+  TextInput,
+  Alert,
 } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
-import RNFS from 'react-native-fs';
-import {APP_URL} from '@env';
-import Header from '../../components/Header';
+import {Pressable} from 'react-native';
+import axios from 'axios';
+import useApiClient from '../../../../src/api/apiClient';
+import Header from '../../../components/Header';
+import GlobalStyle from '../../../../src/utils/GlobalStyle';
+import {BarIndicator} from 'react-native-indicators';
 
-
-export default function TugasTambahan({navigation}) {
-  const [selectedMonth, setSelectedMonth] = useState(null);
+export default function PersetujuanRealisasi({navigation}) {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeButton, setActiveButton] = useState('bulan');
+  const [expandedId, setExpandedId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDisplay, setSelectedDisplay] = useState(10);
   const [selectedYear, setSelectedYear] = useState(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
-  const [isConfirmationVisible, setIsConfirmationVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(null);
+  const [tahunOptions, setTahunOptions] = useState([]);
+  const [bulanOptions, setBulanOptions] = useState([]);
+  const apiClient = useApiClient();
 
-  const monthData = [
-    {label: 'Januari', value: 1},
-    {label: 'Februari', value: 2},
-    {label: 'Maret', value: 3},
-    {label: 'April', value: 4},
-    {label: 'Mei', value: 5},
-    {label: 'Juni', value: 6},
-    {label: 'Juli', value: 7},
-    {label: 'Agustus', value: 8},
-    {label: 'September', value: 9},
-    {label: 'Oktober', value: 10},
-    {label: 'November', value: 11},
-    {label: 'Desember', value: 12},
-    {label: 'Januari', value: 1},
-    {label: 'Februari', value: 2},
-    {label: 'Maret', value: 3},
-    {label: 'April', value: 4},
-    {label: 'Mei', value: 5},
-    {label: 'Juni', value: 6},
-    {label: 'Juli', value: 7},
-    {label: 'Agustus', value: 8},
-    {label: 'September', value: 9},
-    {label: 'Oktober', value: 10},
-    {label: 'November', value: 11},
-    {label: 'Desember', value: 12},
-  ];
+  useEffect(() => {
+    fetchData(selectedMonth, selectedYear, selectedDisplay, searchQuery);
+    fetchTahun();
+    fetchBulan();
+  }, []);
 
-  const yearData = [
-    {label: '2020', value: '2020'},
-    {label: '2021', value: '2021'},
-    {label: '2022', value: '2022'},
-    {label: '2023', value: '2023'},
-    {label: '2024', value: '2024'},
-    {label: '2025', value: '2025'},
-    {label: '2020', value: '2020'},
-    {label: '2021', value: '2021'},
-    {label: '2022', value: '2022'},
-    {label: '2023', value: '2023'},
-    {label: '2024', value: '2024'},
-    {label: '2025', value: '2025'},
-  ];
+  useEffect(() => {
+    fetchData(selectedMonth, selectedYear, selectedDisplay, searchQuery);
+  }, [selectedMonth, selectedYear, selectedDisplay, searchQuery]);
 
-  const showConfirmationDialog = () => {
-    if (!selectedMonth || !selectedYear) {
-      setModalMessage('Harap pilih bulan dan tahun untuk laporan!');
-      setIsModalVisible(true);
-      return;
-    }
-
-    if (!APP_URL) {
-      setModalMessage('URL server tidak ditemukan. Periksa konfigurasi!');
-      setIsModalVisible(true);
-      return;
-    }
-
-    setIsConfirmationVisible(true);
-  };
-
-  const handleDownload = async () => {
-    setIsConfirmationVisible(false);
-    setIsLoading(true);
-
-    const downloadUrl = `${APP_URL}/report/admin/tugas_tambahan/${selectedMonth}/${selectedYear}`;
-    const filePath = `/storage/emulated/0/Download/Laporan_Tugas_Tambahan_${selectedMonth}_${selectedYear}.xlsx`;
-
+  const fetchTahun = async () => {
     try {
-      console.log('Memulai proses download:', downloadUrl);
+      const response = await apiClient.get('/tahun/show', {});
 
-      const download = RNFS.downloadFile({
-        fromUrl: downloadUrl,
-        toFile: filePath,
-        connectionTimeout: 20000,
-        readTimeout: 60000,
-        progress: res => {
-          if (res.contentLength && res.contentLength > 0) {
-            const progressPercent = (
-              (res.bytesWritten / res.contentLength) *
-              100
-            ).toFixed(2);
-            console.log(`Download progress: ${progressPercent}%`);
-          }
-        },
-      });
+      console.log('API Response:', response.data); // Debugging log
 
-      const result = await download.promise;
-
-      if (result.statusCode === 200) {
-        setModalMessage('Laporan berhasil diunduh!');
-        
-        try {
-          setIsLoading(false);
-          
-          const canOpen = await Linking.canOpenURL(`file://${filePath}`);
-          if (canOpen) {
-            await Linking.openURL(`file://${filePath}`);
-          } else {
-            const fileUri = `content://com.android.providers.downloads.documents/document/raw:${filePath}`;
-            await Linking.openURL(fileUri);
-          }
-        } catch (openError) {
-          console.error('Gagal membuka file:', openError);
-          setModalMessage('Laporan berhasil diunduh tetapi gagal dibuka secara otomatis. Silakan buka file secara manual dari folder Download.');
-          setIsModalVisible(true);
-        }
-      } else {
-        setModalMessage('Gagal mengunduh laporan. Coba lagi.');
-        setIsLoading(false);
-        setIsModalVisible(true);
-      }
-    } catch (error) {
-      console.error('Terjadi kesalahan saat mengunduh file:', error);
-      if (error.message.includes('timeout')) {
-        setModalMessage(
-          'Gagal mengunduh laporan: Koneksi timeout. Coba lagi dengan jaringan yang lebih stabil.',
+      if (response.data && response.data.data) {
+        setTahunOptions(
+          response.data.data.map(item => ({label: item.tahun, value: item.id})),
         );
       } else {
-        setModalMessage('Terjadi kesalahan saat mengunduh file.');
+        Alert.alert('Error', 'Data tahun tidak ditemukan.');
       }
-      setIsLoading(false);
-      setIsModalVisible(true);
+    } catch (error) {
+      console.error('Error fetching tahun:', error);
+      Alert.alert('Error', 'Gagal memuat data tahun.');
     }
+  };
+
+  const fetchBulan = async () => {
+    try {
+      const response = await apiClient.get('/bulan/show', {});
+
+      console.log('API Response:', response.data); // Debugging log
+
+      if (response.data && response.data.data) {
+        setBulanOptions(
+          response.data.data.map(item => ({label: item.bulan, value: item.id})),
+        );
+      } else {
+        Alert.alert('Error', 'Data bulan tidak ditemukan.');
+      }
+    } catch (error) {
+      console.error('Error fetching bulan:', error);
+      Alert.alert('Error', 'Gagal memuat data bulan.');
+    }
+  };
+
+  const fetchData = async (bulanId, tahunId, perPage, search) => {
+    try {
+      setIsLoading(true);
+      const payload = {
+        bulan_id: bulanId || 1,
+        tahun_id: tahunId || 6,
+        per: perPage || 10,
+        search: search || '',
+      };
+      const response = await apiClient.post(
+        '/user/kinerja/send_realisasi/indexAndro',
+        payload,
+        {},
+      );
+
+      if (response.data && response.data.data) {
+        setData(response.data.data);
+        setCurrentPage(response.data.current_page || 1);
+        setLastPage(response.data.last_page || 1);
+      } else {
+        Alert.alert('Error', 'Data tidak valid.');
+        console.error('Invalid response structure:', response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error.message);
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+        console.error('Response headers:', error.response.headers);
+      } else if (error.request) {
+        console.error('Request data:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTambah = () => {
+    const screenName = activeButton === 'bulan' ? 'TambahBulan' : 'TambahTahun';
+    navigation.navigate(screenName);
+  };
+
+  const TableHeader = () => (
+    <View>
+      <View style={styles.filterHeader}>
+        <View style={styles.bottomRow}>
+          <View style={styles.bulanContainer}>
+            <Pressable
+              style={({pressed}) => [
+                styles.buttonpress,
+                pressed && styles.buttonPressed,
+                activeButton === 'bulan' && styles.buttonActive,
+              ]}
+              onPress={() => handlePress('bulan')}>
+              <View style={styles.bulanButton}>
+                <Text
+                  style={[
+                    GlobalStyle.SemiBold,
+                    styles.buttonText,
+                    activeButton === 'bulan' && styles.textActive,
+                  ]}>
+                  Bulan
+                </Text>
+              </View>
+            </Pressable>
+
+            <Pressable
+              style={({pressed}) => [
+                styles.buttonpress,
+                pressed && styles.buttonPressed,
+                activeButton === 'tahun' && styles.buttonActive,
+              ]}
+              onPress={() => handlePress('tahun')}>
+              <View style={styles.bulanButton}>
+                <Text
+                  style={[
+                    GlobalStyle.SemiBold,
+                    styles.buttonText,
+                    activeButton === 'tahun' && styles.textActive,
+                  ]}>
+                  Tahun
+                </Text>
+              </View>
+            </Pressable>
+          </View>
+        </View>
+        <View style={styles.separatorLine} />
+
+        {/* Dropdown Tahun dan Search Bar sejajar */}
+        <View style={styles.rowContainer}>
+          <View style={styles.searchContainer}>
+            <Ionicons
+              name="search"
+              size={18}
+              color="#888"
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={[GlobalStyle.SemiBold, styles.searchBar]}
+              placeholder="Search"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor="#888"
+            />
+          </View>
+          <View style={styles.yearContainer}>
+            <Dropdown
+              style={styles.dropdownTahun}
+              data={tahunOptions}
+              labelField="label"
+              valueField="value"
+              placeholder="Pilih Tahun"
+              value={selectedYear}
+              onChange={item => setSelectedYear(item.value)}
+              labelStyle={styles.dropdownLabel}
+              selectedTextStyle={styles.dropdownText}
+              placeholderStyle={styles.dropdownPlaceholder}
+              itemTextStyle={styles.dropdownItemText}
+            />
+          </View>
+        </View>
+      </View>
+      <View style={styles.tableHeader}>
+        <Text
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.numberCell]}>
+          NO
+        </Text>
+        <Text
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}>
+          DETAIL PENGIRIM
+        </Text>
+        <Text
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}>
+          JABATAN
+        </Text>
+        <View style={styles.expandIconCell} />
+      </View>
+      <View style={styles.headerLine} />
+    </View>
+  );
+
+  const toggleExpand = id => {
+    setExpandedId(prevId => (prevId === id ? null : id));
+  };
+
+  const renderItem = ({item, index}) => {
+    const isExpanded = expandedId === item.id;
+    const rowBackgroundColor = index % 2 === 0 ? '#F7F8FC' : '#FFFFFF'; // Warna selang-seling
+
+    const nameWithNip = `${item.kinerja?.user_jabatan?.user?.name || ''} ${
+      item.kinerja?.user_jabatan?.user?.nip || ''
+    }`;
+    const jabatanAndUnitKerja = `${
+      item.kinerja?.user_jabatan?.jabatan?.nm_jabatan || ''
+    } - ${item.kinerja?.user_jabatan?.unit_kerja?.nm_unit_kerja || ''}`;
+
+    return (
+      <>
+        <View style={styles.tableRow}>
+          <TouchableOpacity
+            style={[styles.rowHeader, {backgroundColor: rowBackgroundColor}]}
+            onPress={() => toggleExpand(item.id)}>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.tableCell,
+                styles.numberCell,
+              ]}>
+              {index + 1}
+            </Text>
+            {/* Display Detail Pengirim (name_nip) */}
+            <Text
+              style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}
+              numberOfLines={2}
+              ellipsizeMode="tail">
+              {nameWithNip || '-'}
+            </Text>
+            {/* Display Jabatan */}
+            <Text
+              style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}>
+              {jabatanAndUnitKerja || '-'}
+            </Text>
+            <View style={styles.expandIconCell}>
+              <Ionicons
+                name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#BEC2D5"
+              />
+            </View>
+          </TouchableOpacity>
+          {isExpanded && (
+            <View style={styles.expandedContent}>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Periode: {item.kinerja?.user_jabatan?.periode || '-'}
+              </Text>
+
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Status: {item.status_class || '-'}
+              </Text>
+
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Status Revisi: {item.revisi_class || '-'}
+              </Text>
+
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Aksi:
+              </Text>
+              <View style={styles.actionContainer}>
+                <TouchableOpacity
+                  style={[styles.iconButton, styles.blueButton]}
+                  onPress={() =>
+                    navigation.navigate('RealisasiNext', {id: item.uuid})
+                  }>
+                  <Ionicons name="pencil" size={20} color="white" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </View>
+        {index === data.length - 1 && <View style={styles.verticalLine} />}
+      </>
+    );
   };
 
   return (
     <View style={styles.container}>
-      <Header title="Report Tugas Tambahan" />
-
-      <View style={styles.cardContainer}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Report Tugas Tambahan</Text>
+      {/* Header */}
+      <Header title="Persetujuan Realisasi" />
+      {/* <View style={styles.headerTextContainer}>
+        <Text style={styles.headerTitle}>Persetujuan Realisasi</Text>
+        <Text style={styles.separatorText}> • </Text>
+        <Text style={styles.headerSubtitle}>Realisasi</Text>
+      </View> */}
+      {/* Loading Indicator */}
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
         </View>
-        <View style={styles.cardDivider} />
-        
-        <Text style={styles.label}>Pilih Bulan *</Text>
-        <Dropdown
-          style={styles.dropdown}
-          data={monthData}
-          labelField="label"
-          valueField="value"
-          placeholder="Pilih Bulan"
-          value={selectedMonth}
-          onChange={item => setSelectedMonth(item.value)}
-        />
-
-        <Text style={styles.label}>Pilih Tahun *</Text>
-        <Dropdown
-          style={styles.dropdown}
-          data={yearData}
-          labelField="label"
-          valueField="value"
-          placeholder="Pilih Tahun"
-          value={selectedYear}
-          onChange={item => setSelectedYear(item.value)}
-        />
-
-        <TouchableOpacity
-          style={styles.downloadButton}
-          onPress={showConfirmationDialog}>
-          <Text style={styles.buttonText}>Download Laporan</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Konfirmasi Download Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={isConfirmationVisible}
-        onRequestClose={() => setIsConfirmationVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Apakah Anda Yakin?</Text>
-            </View>
-            <View style={styles.modalBody}>
-              <Text style={styles.modalText}>
-                Anda Akan Mendownload Report Berformat Excel, Mungkin Membutuhkan Waktu Beberapa Detik!
+      ) : (
+        <FlatList
+          ListHeaderComponent={TableHeader}
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={item => item.id.toString()}
+          contentContainerStyle={{flexGrow: 1, padding: '10'}}
+          style={{flex: 1}}
+          showsVerticalScrollIndicator={false}
+          ListFooterComponent={
+            <View style={styles.paginationContainer}>
+              <Text style={[GlobalStyle.SemiBold, styles.pageInfo]}>
+                {currentPage} of {lastPage}
               </Text>
-            </View>
-            <View style={styles.modalFooter}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setIsConfirmationVisible(false)}>
-                <Text style={styles.modalButtonText}>Batal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.confirmButton]}
-                onPress={handleDownload}>
-                <Text style={styles.modalButtonText}>Download</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
-      {/* Loading Modal */}
-      <Modal 
-        animationType="fade" 
-        transparent={true} 
-        visible={isLoading}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.loadingContent}>
-            <ActivityIndicator size="large" color="#28c4ac" />
-            <Text style={styles.loadingText}>Mendownload file...</Text>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Notification Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={isModalVisible}
-        onRequestClose={() => setIsModalVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalText}>{modalMessage}</Text>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setIsModalVisible(false)}>
-              <Text style={styles.buttonText}>Tutup</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+              <View style={styles.paginationButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.pageButton,
+                    currentPage === 1 && styles.disabledButton,
+                  ]}
+                  disabled={currentPage === 1}
+                  onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
+                  <Ionicons
+                    name="chevron-back"
+                    size={20}
+                    color={currentPage === 1 ? '#ccc' : '#BEC2D5'}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.pageButton,
+                    currentPage === lastPage && styles.disabledButton,
+                  ]}
+                  disabled={currentPage === lastPage}
+                  onPress={() =>
+                    setCurrentPage(prev => Math.min(prev + 1, lastPage))
+                  }>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={currentPage === lastPage ? '#ccc' : '#BEC2D5'}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  // Container & Header Styles
   container: {
     flex: 1,
-    backgroundColor: '#E7E9F1',
+    backgroundColor: '#F7F8FB',
   },
-  header: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+  tableHeader: {
+    backgroundColor: '#E9EDFD',
+    marginTop: 15,
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
-    borderBottomLeftRadius: 15,
-    borderBottomRightRadius: 15,
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
   },
+  // header: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   backgroundColor: '#fff',
+  //   paddingHorizontal: 16,
+  //   paddingVertical: 18,
+  //   borderBottomLeftRadius: 20,
+  //   borderBottomRightRadius: 20,
+  //   shadowColor: '#000',
+  //   shadowOpacity: 0.1,
+  //   elevation: 5,
+  // },
 
-  cardContainer: {
-    backgroundColor: '#FFFF',
-    paddingVertical: 20,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    elevation: 4,
-    marginHorizontal: 10,
-    marginTop: 30,
-    width: 387,
-  },
-  cardHeader: {
-    marginBottom: 15,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 5,
-    marginBottom: -5,
-  },
-  cardDivider: {
-    height: 1,
-    backgroundColor: '#ddd',
-    marginVertical: 10,
-  },
-
-  // Form Elements
-  label: {
-    fontSize: 16,
-    marginBottom: 5,
-    color: '#333',
-  },
-  dropdown: {
-    borderWidth: 1,
-    borderColor: '#CCC',
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 15,
-    backgroundColor: '#F9F9F9',
-  },
-  downloadButton: {
-    backgroundColor: '#28c4ac',
-    padding: 15,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  buttonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-  },
-
-  // Modal Styles
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-  },
-  modalContent: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    width: '85%',
-    maxWidth: 400,
-    padding: 20,
-    elevation: 5,
-  },
-  modalHeader: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    backgroundColor: '#ccc',
-    padding: 20,
-    marginHorizontal: -20,
-    marginTop: -20,
-  },
-  modalTitle: {
-    color: '#333',
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  modalBody: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  modalText: {
-    fontSize: 16,
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  modalFooter: {
+  yearMonthContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    elevation: 2,
-    marginHorizontal: 8,
-  },
-  cancelButton: {
-    backgroundColor: '#dc3545',
-  },
-  confirmButton: {
-    backgroundColor: '#28c4ac',
-  },
-  modalButtonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-    textAlign: 'center',
+    marginBottom: 10,
   },
 
-  // Loading Modal
-  loadingContent: {
-    backgroundColor: '#FFF',
-    padding: 24,
-    borderRadius: 16,
+  rowContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    minWidth: 200,
-    elevation: 5,
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
-  loadingText: {
-    marginTop: 16,
+  yearContainer: {
+    flex: 1,
+    alignItems: 'flex-end',
+  },
+  monthContainer: {
+    flex: 1,
+  },
+
+  separatorLine: {
+    height: 1,
+    backgroundColor: '#D3D3D3',
+    marginVertical: 15,
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  headerCell: {
+    fontSize: 13,
+    color: '#9196B5',
+  },
+
+  tableRow: {
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+    elevation: 0,
+  },
+
+  rowHeader: {
+    flexDirection: 'row',
+    padding: 15,
+    backgroundColor: '#F7F8FC',
+    alignItems: 'center',
+  },
+
+  tableCell: {
+    flexWrap: 'wrap',
+    color: '#313131',
+    fontSize: 14,
+  },
+
+  tableStatusCell: {
+    textAlign: 'center', // Teks di tengah
+    width: 100, // Sesuaikan lebar sesuai kebutuhan
+  },
+
+  numberCell: {
+    width: 45,
+  },
+
+  nameCell: {
+    flex: 1,
+    overflow: 'hidden',
+    flexShrink: 1, // Memungkinkan teks agar tidak memaksa ruang lebih
+    minWidth: 80, // Mencegah terlalu kecil saat teks panjang
+  },
+
+  statusCellContainer: {
+    width: 100,
+  },
+
+  statusCell: {
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+
+  expandIconCell: {
+    width: 40,
+    alignItems: 'flex-end',
+  },
+
+  headerLine: {
+    height: 2,
+    backgroundColor: '#D3D3D3', // Garis horizontal bawah header
+    marginBottom: 5,
+  },
+  verticalLine: {
+    height: 2, // Tinggi garis horizontal
+    backgroundColor: '#D3D3D3', // Warna abu-abu mirip header line
+    marginBottom: 10, // Jarak atas & bawah agar tidak menempel
+  },
+
+  expandedContent: {
+    padding: 15,
+    backgroundColor: '#FAFAFA',
+  },
+
+  expandedText: {
+    marginBottom: 5,
+    fontSize: 14,
+    color: '#313131',
+  },
+
+  actionContainer: {
+    flexDirection: 'row',
+    marginTop: 10,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+
+  paginationButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  pageButton: {
+    padding: 8, // Padding agar tombol lebih mudah diklik
+    borderRadius: 5,
+  },
+
+  pageButtonText: {
+    fontSize: 13,
+    color: '#fff',
+  },
+
+  disabledButton: {
+    opacity: 0.5, // Efek disabled lebih jelas
+  },
+
+  paginationText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+
+  pageInfo: {
+    fontSize: 14,
+    color: '#888', // Warna abu-abu sesuai tampilan gambar
+    marginRight: 10, // Jarak antara teks dan tombol navigasi
+  },
+
+  paginationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginTop: 10,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+    marginLeft: 20,
+    marginBottom: 4,
+    marginTop: 10,
+  },
+
+  headerSubtitle: {
+    color: '#000',
+    marginLeft: 20,
+    marginBottom: 4,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F7F8FC',
+    borderColor: '#ccc',
+    borderRadius: 5,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    height: 42, // **Tinggi sama dengan tombol tambah**
+    flex: 1,
+    maxWidth: '60%', // **Agar fleksibel di berbagai layar**
+  },
+  searchIcon: {
+    marginRight: 10,
+    fontSize: 14, // **Agar proporsional dengan teks**
+    alignSelf: 'center',
+  },
+
+  searchBar: {
+    flex: 1,
+    fontSize: 12, // **Agar lebih proporsional**
+    color: '#BEC2D5',
+    textAlignVertical: 'center', // **Pastikan teks sejajar secara vertikal**
+    paddingVertical: 0, // **Hapus padding default agar tidak terlalu tinggi**
+  },
+
+  icon: {
+    fontSize: 14, // **Ukuran disesuaikan agar sejajar dengan teks**
+  },
+
+  filterHeader: {
+    marginBottom: 15,
+  },
+
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+
+  displayContainer: {
+    flex: 1,
+    maxWidth: '20%',
+    marginRight: 10,
+  },
+
+  displayText: {
+    fontSize: 14,
+    textAlign: 'left',
+    color: 'grey',
+    width: '100%',
+  },
+
+  dropdown: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 5,
+    color: 'grey',
+    fontFamily: 'Poppins-SemiBold',
+  },
+  dropdownTahun: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 5,
+    width: 120,
+  },
+  // Style untuk dropdown display
+  dropdownDisplay: {
+    height: 42,
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    width: 80, // Lebar sesuai kebutuhan
+    justifyContent: 'center',
+  },
+
+  // Style untuk dropdown bulan
+  dropdownBulan: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 5,
+  },
+
+  dropdownItem: {
+    padding: 10,
     fontSize: 16,
     color: '#333',
-    fontWeight: '500',
   },
-
-  // Close Button
-  closeButton: {
-    backgroundColor: '#28c4ac',
-    padding: 10,
+  iconButton: {
+    padding: 10, // Ukuran tombol lebih besar
+    marginHorizontal: 5,
     borderRadius: 5,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  blueButton: {
+    backgroundColor: '#3699FE', // Warna biru untuk reset & edit
+  },
+  redButton: {
+    backgroundColor: '#FF536D', // Warna merah untuk hapus
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginHorizontal: 5,
+    backgroundColor: '#000',
+  },
+  cancelButton: {
+    borderWidth: 1,
+    borderColor: '#3498db',
+    backgroundColor: '#fff',
+  },
+  cancelText: {
+    color: '#0A3D62',
+  },
+  confirmButton: {
+    backgroundColor: '#3498db',
+  },
+  confirmText: {
+    color: '#fff',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  headerTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 20,
+    marginTop: 20,
+  },
+
+  headerTitle: {
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 17,
+    color: '#000',
+  },
+
+  separatorText: {
+    fontSize: 20,
+    color: '#000',
+    marginBottom: 3,
+  },
+
+  headerSubtitle: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: '#000',
+    marginLeft: 0,
+  },
+  dropdownItemText: {
+    fontFamily: 'Poppins-SemiBold', // Poppins untuk teks item
+    fontSize: 14,
+    color: 'grey',
+  },
+  dropdownPlaceholder: {
+    fontFamily: 'Poppins-SemiBold', // Placeholder font Poppins
+    fontSize: 14,
+    color: 'grey',
+    paddingLeft: 5,
+  },
+
+  dropdownLabel: {
+    fontFamily: 'Poppins-SemiBold', // Label font Poppins
+    fontSize: 14,
+    color: 'grey',
+  },
+  dropdownText: {
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 14,
+    color: 'grey',
+  },
+  bulanContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start', // Posisi ke kiri
+    gap: 10,
+  },
+  buttonpress: {
+    height: 40,
+    width: 90,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonPressed: {
+    backgroundColor: '#fff',
+  },
+  buttonActive: {
+    borderBottomWidth: 3,
+    borderBottomColor: '#A463FC', // Warna sesuai desain
+  },
+  buttonText: {
+    fontSize: 14,
+    color: 'grey',
+  },
+  textActive: {
+    color: '#A463FC',
+  },
+  bulanButton: {
+    flexDirection: 'row',
+    gap: 5,
   },
 });

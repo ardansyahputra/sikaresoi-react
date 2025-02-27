@@ -5,20 +5,17 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
-  Image,
-  Linking,
-  Switch,
   Modal,
   TextInput,
   Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../src/api/apiClient';
 import {BarIndicator} from 'react-native-indicators';
+import Header from '../components/Header';
+import GlobalStyle from '../../../src/utils/GlobalStyle';
 
 export default function SettingPersentaseCapaian() {
   const [tahunOptions, setTahunOptions] = useState([]);
@@ -120,151 +117,158 @@ export default function SettingPersentaseCapaian() {
 
   const TableHeader = () => (
     <View>
-      <View style={styles.tambahContainer}>
-        <TouchableOpacity style={styles.tambahButton} onPress={handleTambah}>
-          <FontAwesome name="plus" size={20} color="#fff" style={styles.icon} />
-          <Text style={styles.tambahText}>TAMBAH</Text>
-        </TouchableOpacity>
-        <View style={styles.displayContainer}>
-          <Dropdown
-            style={styles.dropdowntahun}
-            data={tahunOptions}
-            labelField="label"
-            valueField="value"
-            placeholder="Tahun"
-            placeholderStyle={{color: '#B6B9CA'}}
-            value={pickTahunOptions}
-            onChange={item => {
-              console.log('Tahun yang dipilih:', item.value); // Log tahun yang dipilih
-              setPickTahunOptions(item.value); // Atur nilai tahun
-            }}
-            renderItem={item => (
-              <Text
-                style={[
-                  styles.dropdownItem,
-                  styles.customFont,
-                  {color: '#333'},
-                ]}>
-                {item.label}
-              </Text>
-            )}
-          />
+      <View style={styles.headerContainer}>
+        <View style={styles.rowContainer}>
+          <View style={styles.searchContainer}>
+            <Ionicons
+              name="search"
+              size={18}
+              color="#888"
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={[GlobalStyle.SemiBold, styles.searchBar]}
+              placeholder="Search"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor="#888"
+            />
+          </View>
+
+          <View style={styles.dropdownsContainer}>
+            <Dropdown
+              style={styles.dropdownTahun}
+              data={tahunOptions}
+              labelField="label"
+              labelStyle={styles.dropdownLabel}
+              selectedTextStyle={styles.dropdownText}
+              placeholderStyle={styles.dropdownPlaceholder}
+              itemTextStyle={styles.dropdownItemText}
+              valueField="value"
+              placeholder="Tahun"
+              value={pickTahunOptions}
+              onChange={item => {
+                setPickTahunOptions(item.value);
+              }}
+              renderItem={item => (
+                <Text
+                  style={[
+                    GlobalStyle.SemiBold,
+                    styles.dropdownItem,
+                    {fontSize: 14}, // Samakan dengan selectedTextStyle
+                  ]}>
+                  {item.label}
+                </Text>
+              )}
+            />
+          </View>
+          <TouchableOpacity
+            style={styles.tambahButton}
+            onPress={() => handleTambah(navigation)}>
+            <Ionicons name="add" size={18} color="#fff" style={styles.icon} />
+            <Text style={[GlobalStyle.SemiBold, styles.tambahText]}>
+              Tambah
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
-      <View style={styles.filterContainer}>
-        <View style={styles.displayContainer}>
-          <Text style={styles.displayText}>Display</Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={display}
-            labelField="label"
-            valueField="value"
-            placeholder="10"
-            value={selectedDisplay}
-            onChange={item => setSelectedDisplay(item.value)}
-            renderItem={item => (
-              <Text style={[styles.dropdownItem, styles.customFont]}>
-                {item.label}
-              </Text>
-            )}
-          />
-        </View>
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchBar}
-            placeholder="Search"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-      </View>
+
       <View style={styles.tableHeader}>
-        <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
-        <Text style={[styles.headerCell, styles.nameCell]}>Bulan</Text>
-        <Text style={[styles.headerCell, styles.tableStatusCell]}>
-          Max Persentase
+        <Text
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.numberCell]}>
+          NO
+        </Text>
+        <Text
+          style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}>
+          BULAN
+        </Text>
+        <Text
+          style={[
+            GlobalStyle.SemiBold,
+            styles.headerCell,
+            styles.tableStatusCell,
+          ]}>
+          MAX PRESENTASE
         </Text>
         <View style={styles.expandIconCell} />
       </View>
+      <View style={styles.headerLine} />
     </View>
   );
 
   const renderItem = ({item, index}) => {
     const isExpanded = expandedId === item.id;
+    const rowBackgroundColor = index % 2 === 0 ? '#F7F8FC' : '#FFFFFF'; // Warna selang-seling
 
     return (
-      <View style={styles.tableRow}>
-        <TouchableOpacity
-          style={styles.rowHeader}
-          onPress={() => toggleExpand(item.id)}>
-          <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
-          <Text
-            style={[styles.tableCell, styles.nameCell]}
-            numberOfLines={1}
-            ellipsizeMode="tail">
-            {item.bulan?.bulan || '-'}
-          </Text>
-          <Text
-            style={[styles.tableCell, styles.nameCell]}
-            numberOfLines={1}
-            ellipsizeMode="tail">
-            {item.max_persen || '-'}
-          </Text>
-          <View style={styles.expandIconCell}>
-            <Ionicons
-              name={isExpanded ? 'chevron-up' : 'chevron-down'}
-              size={20}
-              color="#333"
-            />
-          </View>
-        </TouchableOpacity>
-        {isExpanded && (
-          <View style={styles.expandedContent}>
-            <Text style={styles.expandedText}>
-              Bulan: {item.bulan?.bulan || '-'}
+      <>
+        <View style={styles.tableRow}>
+          <TouchableOpacity
+            style={[styles.rowHeader, {backgroundColor: rowBackgroundColor}]}
+            onPress={() => toggleExpand(item.id)}>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.tableCell,
+                styles.numberCell,
+              ]}>
+              {index + 1}
             </Text>
-            <Text style={styles.expandedText}>
-              Tahun: {item.tahun?.tahun || '-'}
+            <Text
+              style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}>
+              {item.bulan?.bulan || '-'}
             </Text>
-            <Text style={styles.expandedText}>
-              Nama Jabatan: {item.name || '-'}
+            <Text
+              style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}>
+              {item.max_persen || '-'}
             </Text>
-            <Text style={styles.expandedText}>
-              Max Persentase: {item.max_persen || '-'}
-            </Text>
-            <View style={styles.actionContainer}>
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => handleEdit(item.uuid)}>
-                <FontAwesome name="pencil" size={20} color="white" />
-                <Text style={styles.customFont}>Edit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.declineButton}
-                onPress={() => handleHapus(item.uuid)}>
-                <Ionicons name="trash" size={20} color="white" />
-                <Text style={styles.customFont}>Hapus</Text>
-              </TouchableOpacity>
+            <View style={styles.expandIconCell}>
+              <Ionicons
+                name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#BEC2D5"
+              />
             </View>
-          </View>
-        )}
-      </View>
+          </TouchableOpacity>
+          {isExpanded && (
+            <View style={styles.expandedContent}>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Bulan: {item.bulan?.bulan || '-'}
+              </Text>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Tahun: {item.tahun?.tahun || '-'}
+              </Text>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Nama Jabatan: {item.name || '-'}
+              </Text>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+                Max Persentase: {item.max_persen || '-'}
+              </Text>
+              <View style={styles.actionContainer}>
+                <TouchableOpacity
+                  style={[styles.iconButton, styles.blueButton]}
+                  onPress={() => handleEdit(item.uuid)}>
+                  <Ionicons name="pencil" size={20} color="white" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.iconButton, styles.redButton]}
+                  onPress={() => handleHapus(item.uuid)}>
+                  <Ionicons name="trash-outline" size={20} color="white" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </View>
+        {index === data.length - 1 && <View style={styles.verticalLine} />}
+      </>
     );
   };
 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}></View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
-          <TouchableOpacity style={styles.iconWrapper}>
-            <Ionicons name="person-circle-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      {/* Header */}
+      <Header title="Persentase Capaian" />
       {/* Loading Indicator */}
       {isLoading ? (
         // Loading Indicator
@@ -277,37 +281,44 @@ export default function SettingPersentaseCapaian() {
           data={data}
           renderItem={renderItem}
           keyExtractor={item => item.id.toString()}
-          contentContainerStyle={styles.card}
+          contentContainerStyle={{flexGrow: 1, padding: '10'}}
+          style={{flex: 1}}
+          showsVerticalScrollIndicator={false}
           ListFooterComponent={
-            <View>
-              <Text style={styles.pageInfo}>
-                Showing page {currentPage} of {lastPage}
+            <View style={styles.paginationContainer}>
+              <Text style={[GlobalStyle.SemiBold, styles.pageInfo]}>
+                {currentPage} of {lastPage}
               </Text>
-              <View style={styles.paginationContainer}>
-                <View style={styles.paginationButtons}>
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === 1 && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === 1}
-                    onPress={() =>
-                      setCurrentPage(prev => Math.max(prev - 1, 1))
-                    }>
-                    <Text style={styles.pageButtonText}>Previous</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === lastPage && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === lastPage}
-                    onPress={() =>
-                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
-                    }>
-                    <Text style={styles.pageButtonText}>Next</Text>
-                  </TouchableOpacity>
-                </View>
+
+              <View style={styles.paginationButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.pageButton,
+                    currentPage === 1 && styles.disabledButton,
+                  ]}
+                  disabled={currentPage === 1}
+                  onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
+                  <Ionicons
+                    name="chevron-back"
+                    size={20}
+                    color={currentPage === 1 ? '#ccc' : '#BEC2D5'}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.pageButton,
+                    currentPage === lastPage && styles.disabledButton,
+                  ]}
+                  disabled={currentPage === lastPage}
+                  onPress={() =>
+                    setCurrentPage(prev => Math.min(prev + 1, lastPage))
+                  }>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={currentPage === lastPage ? '#ccc' : '#BEC2D5'}
+                  />
+                </TouchableOpacity>
               </View>
             </View>
           }
@@ -345,31 +356,19 @@ export default function SettingPersentaseCapaian() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F8FB',
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 15,
-    margin: 12,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    backgroundColor: '#fff',
   },
   tableHeader: {
+    marginTop: 15,
     flexDirection: 'row',
-    backgroundColor: '#E0E0E0',
     paddingVertical: 10,
     paddingHorizontal: 15,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
   },
   headerCell: {
-    fontFamily: 'Poppins-SemiBold',
     fontSize: 13,
-    color: '#333',
+    color: '#9196B5',
   },
   tableRow: {
     backgroundColor: '#FFFFFF',
@@ -379,25 +378,28 @@ const styles = StyleSheet.create({
   rowHeader: {
     flexDirection: 'row',
     padding: 15,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: '#F7F8FC',
     alignItems: 'center',
   },
   tableCell: {
-    fontFamily: 'Poppins-Regular',
     flexWrap: 'wrap',
+    color: '#313131',
     fontSize: 14,
   },
   tableStatusCell: {
     textAlign: 'center',
-    flex: 1,
+    flex: 0,
     paddingLeft: 0,
   },
   numberCell: {
-    width: 50,
+    width: 45,
   },
   nameCell: {
     flex: 1,
     overflow: 'hidden',
+    flexShrink: 1, // Memungkinkan teks agar tidak memaksa ruang lebih
+    paddingHorizontal: 8, // Memberi jarak antar teks
+    minWidth: 80, // Mencegah terlalu kecil saat teks panjang
   },
   statusCellContainer: {
     width: 100,
@@ -410,17 +412,15 @@ const styles = StyleSheet.create({
     width: 40,
     alignItems: 'flex-end',
   },
-  approvedStatus: {
-    color: '#4CAF50',
+  headerLine: {
+    height: 2,
+    backgroundColor: '#D3D3D3', // Garis horizontal bawah header
+    marginBottom: 5,
   },
-  rejectedStatus: {
-    color: '#F44336',
-  },
-  pendingStatus: {
-    color: '#FFC107',
-  },
-  defaultStatus: {
-    color: '#9E9E9E',
+  verticalLine: {
+    height: 2, // Tinggi garis horizontal
+    backgroundColor: '#D3D3D3', // Warna abu-abu mirip header line
+    marginBottom: 10, // Jarak atas & bawah agar tidak menempel
   },
   expandedContent: {
     padding: 15,
@@ -429,172 +429,134 @@ const styles = StyleSheet.create({
   expandedText: {
     marginBottom: 5,
     fontSize: 14,
-  },
-  expandedLinkText: {
-    color: 'blue',
-    marginBottom: 5,
-    fontSize: 14,
-  },
-  filetext: {
-    flexDirection: 'row',
+    color: '#313131',
   },
   actionContainer: {
     flexDirection: 'row',
     marginTop: 10,
     justifyContent: 'flex-end',
     alignItems: 'center',
-    gap: 10,
-  },
-  actionButton: {
-    padding: 8,
-    backgroundColor: '#F0F0F0',
-    borderRadius: 5,
-  },
-  approveButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#4CAF50',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  declineButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F44336',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
   },
   paginationButtons: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
   pageButton: {
-    padding: 10,
-    backgroundColor: '#007bff',
+    padding: 8, // Padding agar tombol lebih mudah diklik
     borderRadius: 5,
-    marginHorizontal: 5,
   },
   pageButtonText: {
-    fontFamily: 'Poppins-Regular',
     fontSize: 13,
     color: '#fff',
   },
   disabledButton: {
-    backgroundColor: '#CCCCCC',
+    opacity: 0.5, // Efek disabled lebih jelas
   },
   paginationText: {
     color: 'white',
     fontWeight: 'bold',
   },
   pageInfo: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 13,
+    fontSize: 14,
+    color: '#888', // Warna abu-abu sesuai tampilan gambar
+    marginRight: 10, // Jarak antara teks dan tombol navigasi
   },
   paginationContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 10,
-  },
-  header: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    elevation: 4,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  logo: {
-    width: 140,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  headerRight: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    flex: 1,
+    paddingVertical: 10,
   },
-  iconWrapper: {
-    marginLeft: 12,
+  headerContainer: {
+    marginVertical: 10,
   },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  rowContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    gap: 10,
   },
-  modalContent: {
-    width: '80%',
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  modalLabel: {
-    fontSize: 14,
-    marginBottom: 5,
-  },
-  modalInput: {
-    borderWidth: 1,
+
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F7F8FC',
     borderColor: '#ccc',
     borderRadius: 5,
-    padding: 10,
-    minHeight: 10,
-    marginBottom: 15,
-    textAlignVertical: 'top',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  cancelButton: {
-    backgroundColor: '#ccc',
-    padding: 10,
-    borderRadius: 5,
-    marginRight: 10,
-  },
-  submitButton: {
-    backgroundColor: '#F44336',
-    padding: 10,
-    borderRadius: 5,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  searchContainer: {
-    width: 150,
-    backgroundColor: '#FFFFFF',
-  },
-  searchBar: {
-    height: 40,
-    borderColor: '#CCCCCC',
-    borderWidth: 1,
-    borderRadius: 5,
     paddingHorizontal: 12,
+    height: 42, // **Tinggi sama dengan tombol tambah**
+    flex: 1,
   },
+
+  searchIcon: {
+    marginRight: 10,
+    fontSize: 14, // **Agar proporsional dengan teks**
+    alignSelf: 'center',
+  },
+
+  searchBar: {
+    flex: 1,
+    fontSize: 12, // **Agar lebih proporsional**
+    color: '#BEC2D5',
+    textAlignVertical: 'center', // **Pastikan teks sejajar secara vertikal**
+    paddingVertical: 0, // **Hapus padding default agar tidak terlalu tinggi**
+  },
+
+  tambahButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#3699FE',
+    paddingHorizontal: 10,
+    height: 38, // **Samakan tinggi dengan search bar**
+    borderRadius: 5,
+  },
+
+  icon: {
+    fontSize: 14, // **Ukuran disesuaikan agar sejajar dengan teks**
+  },
+
+  tambahText: {
+    color: '#fff',
+    marginLeft: 5,
+    fontSize: 12, // **Lebih proporsional**
+    textAlignVertical: 'center',
+  },
+  dropdownsContainer: {
+    flexDirection: 'row', // Dropdown Bulan dan Tahun sejajar horizontal
+    alignItems: 'center',
+    gap: 10,
+  },
+
+  dropdownTahun: {
+    borderColor: '#ccc',
+    backgroundColor: '#F7F8FC',
+    borderRadius: 5,
+    padding: 5,
+    height: 42,
+    width: 80,
+  },
+  dropdownLabel: {
+    fontFamily: 'Poppins-SemiBold', // Label font Poppins
+    fontSize: 14,
+    color: 'grey',
+  },
+  dropdownText: {
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 14,
+    color: 'grey',
+    paddingLeft: 5,
+  },
+  dropdownPlaceholder: {
+    fontFamily: 'Poppins-SemiBold', // Placeholder font Poppins
+    fontSize: 14,
+    color: 'grey',
+    paddingLeft: 5,
+  },
+  dropdownItemText: {
+    fontFamily: 'Poppins-SemiBold', // Poppins untuk teks item
+    fontSize: 14,
+    color: 'grey',
+  },
+
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -607,7 +569,6 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   displayText: {
-    fontFamily: 'Poppins-Regular',
     fontSize: 13,
     marginRight: 8,
     textAlign: 'center',
@@ -626,52 +587,24 @@ const styles = StyleSheet.create({
   dropdownItem: {
     padding: 10,
     fontSize: 12,
-    color: '#333',
+    color: '#313131',
   },
-  customFont: {
-    fontFamily: 'Poppins-Regular',
-  },
-  tambahContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  tambahButton: {
-    flexDirection: 'row',
-    backgroundColor: '#3699FF',
-    width: 90,
-    height: 40,
+
+  iconButton: {
+    padding: 10, // Ukuran tombol lebih besar
+    marginHorizontal: 5,
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tambahText: {
-    marginTop: 1,
-    fontFamily: 'Poppins-Regular',
-    color: 'white',
-    marginLeft: 5,
-    lineHeight: 20,
-    fontSize: 13,
-    textAlignVertical: 'center',
+
+  blueButton: {
+    backgroundColor: '#3699FE', // Warna biru untuk reset & edit
   },
-  editButton: {
-    gap: 5,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#3699FF',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
+  redButton: {
+    backgroundColor: '#FF536D', // Warna merah untuk hapus
   },
-  customFont: {
-    color: 'white',
-    fontFamily: 'Poppins-Regular',
-  },
+
   switchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -682,15 +615,50 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
-  dropdowntahun: {
-    height: 40,
-    borderColor: '#CCCCCC',
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    width: 95,
+  modalOverlay: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContainer: {
+    width: 300,
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginHorizontal: 5,
+    backgroundColor: '#000',
+  },
+  cancelButton: {
+    borderWidth: 1,
+    borderColor: '#3498db',
+    backgroundColor: '#fff',
+  },
+  cancelText: {
+    color: '#0A3D62',
+  },
+  confirmButton: {
+    backgroundColor: '#3498db',
+  },
+  confirmText: {
+    color: '#fff',
   },
   loadingContainer: {
     flex: 1,
