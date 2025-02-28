@@ -13,7 +13,7 @@ import RNFS from 'react-native-fs';
 import {APP_URL} from '@env';
 import useApiClient from '../../../../src/api/apiClient'; // Custom API hook for making requests
 import Header from '../../components/Header';
-
+import GlobalStyle from '../../../../src/utils/GlobalStyle';
 
 export default function KontrakKerja({navigation}) {
   const [selectedYear, setSelectedYear] = useState(null);
@@ -31,24 +31,24 @@ export default function KontrakKerja({navigation}) {
 
   // Fetch users
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await apiClient('/user_master/show');
-        const data = response.data || (await response.json());
-
-        if (data && data.res.code === 200) {
-          const userData = data.data.map(user => ({
-            label: user.name,
-            value: user.id,
-          }));
-          setUserList(userData);
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
-    };
     fetchUsers();
   }, []);
+  const fetchUsers = async () => {
+    try {
+      const response = await apiClient('/user_master/show');
+      const data = response.data || (await response.json());
+
+      if (data && data.res.code === 200) {
+        const userData = data.data.map(user => ({
+          label: user.name,
+          value: user.id,
+        }));
+        setUserList(userData);
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
 
 
   // Fetch user positions
@@ -113,13 +113,14 @@ export default function KontrakKerja({navigation}) {
   const handleDownload = async () => {
     setIsConfirmationVisible(false);
     setIsLoading(true);
-
+  
     const downloadUrl = `${APP_URL}/report/kontrak_kinerja/${selectedPosition}?type=stream&tahun_id=${selectedYear}`;
     const filePath = `${RNFS.DownloadDirectoryPath}/kontrak_kerja${selectedUser}_${selectedYear}.pdf`;
-
+  
     try {
       console.log('Memulai proses download:', downloadUrl);
-
+      console.log('File akan disimpan di:', filePath); // Log file path where the file will be saved
+  
       const download = RNFS.downloadFile({
         fromUrl: downloadUrl,
         toFile: filePath,
@@ -135,19 +136,24 @@ export default function KontrakKerja({navigation}) {
           }
         },
       });
-
+  
       const result = await download.promise;
-
+  
       if (result.statusCode === 200) {
+        console.log('File berhasil diunduh ke:', filePath); // Log successful download path
+  
         try {
           const fileUri = `file://${filePath}`;
+          console.log('Mencoba membuka file dari URI:', fileUri); // Log the file URI being used to open the file
+  
           const supported = await Linking.canOpenURL(fileUri);
-
+  
           if (supported) {
             await Linking.openURL(fileUri);
             setModalMessage('Laporan berhasil diunduh dan dibuka!');
           } else {
-            const androidUri = `content://com.android.externalstorage.documents/document/primary%3ADownload%2Fkontrak_kerja${selectedUser}_${selectedYear}.pdf`;
+            const androidUri = `content://com.android.providers.downloads.documents/document/raw:${filePath}`;
+            console.log('Mencoba membuka file dari Android URI:', androidUri); // Log the Android URI being used
             await Linking.openURL(androidUri);
             setModalMessage('Laporan berhasil diunduh dan dibuka!');
           }
@@ -242,26 +248,24 @@ export default function KontrakKerja({navigation}) {
         visible={isConfirmationVisible}
         onRequestClose={() => setIsConfirmationVisible(false)}>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Apakah Anda Yakin?</Text>
-            </View>
-            <View style={styles.modalBody}>
-              <Text style={styles.modalText}>
-                Anda Akan Mendownload Report Berformat Excel, Mungkin
-                Membutuhkan Waktu Beberapa Detik!
-              </Text>
-            </View>
-            <View style={styles.modalFooter}>
+          <View style={styles.modalContainer}>
+            <Text style={[GlobalStyle.SemiBold, styles.modalText]}>
+              Apakah anda yakin Mendownload Report Berformat pdf?
+            </Text>
+            <View style={styles.modalButtons}>
               <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
+                style={[styles.button, styles.cancelButton]}
                 onPress={() => setIsConfirmationVisible(false)}>
-                <Text style={styles.modalButtonText}>Batal</Text>
+                <Text style={[GlobalStyle.SemiBold, styles.cancelText]}>
+                  Batal
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalButton, styles.confirmButton]}
+                style={[styles.button, styles.confirmButton]}
                 onPress={handleDownload}>
-                <Text style={styles.modalButtonText}>Download</Text>
+                <Text style={[GlobalStyle.SemiBold, styles.confirmText]}>
+                  Download
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -321,6 +325,7 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
   },
+  // Card Styles
   cardContainer: {
     backgroundColor: '#FFFF',
     paddingVertical: 20,
@@ -361,7 +366,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9F9F9',
   },
   downloadButton: {
-    backgroundColor: '#28c4ac',
+    backgroundColor: '#FF536D',
     padding: 15,
     borderRadius: 5,
     alignItems: 'center',
@@ -372,12 +377,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContainer: {
+    width: 300,
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
   },
   modalContent: {
     backgroundColor: '#FFF',
@@ -387,35 +398,17 @@ const styles = StyleSheet.create({
     padding: 20,
     elevation: 5,
   },
-  modalHeader: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    backgroundColor: '#ccc',
-    padding: 20,
-    marginHorizontal: -20,
-    marginTop: -20,
-  },
-  modalTitle: {
-    color: '#333',
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  modalBody: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
+
   modalText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#333',
-    textAlign: 'center',
     marginBottom: 20,
+    textAlign: 'center',
   },
-  modalFooter: {
+  modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    width: '100%',
   },
   modalButton: {
     flex: 1,
@@ -424,17 +417,28 @@ const styles = StyleSheet.create({
     elevation: 2,
     marginHorizontal: 8,
   },
+  button: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginHorizontal: 5,
+    backgroundColor: '#000',
+  },
   cancelButton: {
-    backgroundColor: '#dc3545',
+    borderWidth: 1,
+    borderColor: '#FF536D',
+    backgroundColor: '#fff',
   },
+  cancelText: {
+    color: '#0A3D62',
+  },
+
   confirmButton: {
-    backgroundColor: '#28c4ac',
+    backgroundColor: '#FF536D',
   },
-  modalButtonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-    textAlign: 'center',
+  confirmText: {
+    color: '#fff',
   },
 
   // Loading Modal
@@ -455,7 +459,7 @@ const styles = StyleSheet.create({
 
   // Close Button
   closeButton: {
-    backgroundColor: '#28c4ac',
+    backgroundColor: '#FF536D',
     padding: 10,
     borderRadius: 5,
     alignItems: 'center',

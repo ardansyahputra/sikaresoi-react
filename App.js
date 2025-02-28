@@ -148,6 +148,8 @@ import TambahSuratTugas from './screen/admin/surattugas/Tambah_surat';
 import TambahLock from './screen/admin/lock/Tambah';
 import EditLock from './screen/admin/lock/Edit';
 import RealisasiTanggung from './screen/admin/tanggung_renteng/Realisasi';
+import PotonganlainTambah from './screen/admin/potongan_lain/Potongan_laintambah';
+import PotonganlainEdit from './screen/admin/potongan_lain/Potongan_lainedit';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -245,6 +247,16 @@ function HomeStack() {
         options={{headerShown: false}}
         name="PotonganLain"
         component={PotonganLainScreen}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="PotonganLainTambah"
+        component={PotonganlainTambah}
+      />
+      <Stack.Screen
+        options={{headerShown: false}}
+        name="PotonganlainEdit"
+        component={PotonganlainEdit}
       />
       <Stack.Screen
         options={{headerShown: false}}

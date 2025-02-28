@@ -57,12 +57,15 @@ const EditPersentaseCapaian = ({navigation, route}) => {
 
   const submitEdit = async () => {
     try {
-      await apiClient.post(`/setting_persentase_capaian/${editData.uuid}/update`, {
-        bulan_id: editData.bulan_id,
-        tahun_id: editData.tahun_id,
-        name: editData.name,
-        max_persen: editData.max_persen
-      });
+      await apiClient.post(
+        `/setting_persentase_capaian/${editData.uuid}/update`,
+        {
+          bulan_id: editData.bulan_id,
+          tahun_id: editData.tahun_id,
+          name: editData.name,
+          max_persen: editData.max_persen,
+        },
+      );
       Alert.alert('Berhasil', 'Data berhasil diperbarui.');
     } catch (error) {
       Alert.alert('Error', 'Gagal memperbarui data.');

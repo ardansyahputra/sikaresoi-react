@@ -37,8 +37,6 @@ export default function Surat_tugas() {
   const [isEnabled, setIsEnabled] = useState(false);
   const [switchStates, setSwitchStates] = useState({});
 
-
-
   const [selectedGolongan, setSelectedGolongan] = useState('');
   const [selectedNominal, setSelectedNominal] = useState('');
 
@@ -50,31 +48,31 @@ export default function Surat_tugas() {
 
   const handleSwitchToggle = async (uuid, currentStatus) => {
     const newStatus = currentStatus === 1 ? 0 : 1;
-    const payload = { terlampir: newStatus.toString() };
-  
+    const payload = {terlampir: newStatus.toString()};
+
     console.log(`UUID: ${uuid}, Status Baru: ${newStatus}`);
-  
+
     // Update state lokal terlebih dahulu untuk respons yang lebih cepat
     setSwitchStates(prevState => ({
       ...prevState,
       [uuid]: newStatus,
     }));
-  
+
     try {
       const response = await apiClient.post(
         `/surat-tugas/${uuid}/updateconfirmed`,
-        payload
+        payload,
       );
-  
-      console.log("Response dari server:", response.data);
-  
+
+      console.log('Response dari server:', response.data);
+
       // Pastikan respons sukses sebelum mempertahankan perubahan
       if (!response.data) {
-        throw new Error("Gagal memperbarui status di server");
+        throw new Error('Gagal memperbarui status di server');
       }
     } catch (error) {
-      console.error("Error:", error.message);
-  
+      console.error('Error:', error.message);
+
       // Jika gagal, kembalikan ke status sebelumnya
       setSwitchStates(prevState => ({
         ...prevState,
@@ -82,7 +80,6 @@ export default function Surat_tugas() {
       }));
     }
   };
-  
 
   const fetchData = async (page, display) => {
     try {
@@ -92,26 +89,28 @@ export default function Surat_tugas() {
         page,
         display,
       });
-  
+
       console.log('Surat Tugas Data:', response.data);
-  
+
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
     } catch (error) {
-      console.error('Error fetching data', error.response?.data || error.message);
+      console.error(
+        'Error fetching data',
+        error.response?.data || error.message,
+      );
     } finally {
       setIsLoading(false);
     }
   };
-  
 
   const handleEdit = async (uuid, navigation) => {
-    navigation.navigate('EditSuratTugas',{uuid});
+    navigation.navigate('EditSuratTugas', {uuid});
   };
 
-  const handleCreate = async (navigation) => {
-   navigation.navigate('TambahSuratTugas');
+  const handleCreate = async navigation => {
+    navigation.navigate('TambahSuratTugas');
   };
 
   const handleHapusPress = uuid => {
@@ -229,15 +228,28 @@ export default function Surat_tugas() {
               style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}>
               {item.tgl_spt || '-'}
             </Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-      <Text>{isEnabled ? '' : ''}</Text>
-      <Switch
-        value={switchStates[item.uuid] !== undefined ? switchStates[item.uuid] === 1 : item.switch === 1}
-        onValueChange={() => handleSwitchToggle(item.uuid, switchStates[item.uuid] !== undefined ? switchStates[item.uuid] : item.switch)}
-        trackColor={{ false: '#d3d3d3', true: '#add8e6' }}
-        thumbColor={switchStates[item.uuid] === 1 ? '#ffffff' : '#f4f4f4'}
-      />
-    </View>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <Text>{isEnabled ? '' : ''}</Text>
+              <Switch
+                value={
+                  switchStates[item.uuid] !== undefined
+                    ? switchStates[item.uuid] === 1
+                    : item.switch === 1
+                }
+                onValueChange={() =>
+                  handleSwitchToggle(
+                    item.uuid,
+                    switchStates[item.uuid] !== undefined
+                      ? switchStates[item.uuid]
+                      : item.switch,
+                  )
+                }
+                trackColor={{false: '#d3d3d3', true: '#add8e6'}}
+                thumbColor={
+                  switchStates[item.uuid] === 1 ? '#ffffff' : '#f4f4f4'
+                }
+              />
+            </View>
             <View style={styles.expandIconCell}>
               <Ionicons
                 name={isExpanded ? 'chevron-up' : 'chevron-down'}
@@ -248,14 +260,13 @@ export default function Surat_tugas() {
           </TouchableOpacity>
           {isExpanded && (
             <View style={styles.expandedContent}>
-              
               <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
                 Dasar: {item.dasar || '-'}
               </Text>
               <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
                 Tahun: {item.tahun || '-'}
               </Text>
-               <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
+              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
                 status: {item.status || '-'}
               </Text>
               <View style={styles.actionContainer}>
@@ -271,7 +282,6 @@ export default function Surat_tugas() {
                   <Ionicons name="trash-outline" size={20} color="white" />
                 </TouchableOpacity>
               </View>
-              
             </View>
           )}
         </View>

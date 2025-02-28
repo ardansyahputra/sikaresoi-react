@@ -7,6 +7,7 @@ import {
   FlatList,
   Image,
   ScrollView, // Tambahkan ScrollView di sini
+  ActivityIndicator,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
@@ -17,6 +18,9 @@ import useApiClient from '../../../src/api/apiClient';
 import GlobalStyle from '../../../src/utils/GlobalStyle';
 
 const Home = () => {
+  const [logoWhite, setLogoWhite] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
   const navigation = useNavigation();
   const {token} = useAuth();
   const apiClient = useApiClient(); // Gunakan useApiClient
@@ -165,15 +169,38 @@ const Home = () => {
     );
   };
 
+  const fetchSettings = async () => {
+    try {
+      const response = await apiClient.get('/setting');
+      if (response.data && response.data.status) {
+        setLogoWhite(response.data.data.logowhitedir);
+      } else {
+        console.error('Invalid API response format:', response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  fetchSettings();
+
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Image
-            source={require('../assets/images/logo.png')}
-            style={styles.logo}
-          />
+          {isLoading ? (
+            <ActivityIndicator size="small" color="#0000ff" />
+          ) : logoWhite ? (
+            <Image source={{uri: logoWhite}} style={styles.logo} />
+          ) : (
+            <Image
+              source={require('../assets/images/logo.png')}
+              style={styles.logo}
+            />
+          )}
         </View>
         <View style={styles.headerRight}></View>
       </View>

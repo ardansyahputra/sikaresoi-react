@@ -5,18 +5,96 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Modal,
-  Linking,
+  ActivityIndicator,
   TextInput,
+  Alert,
+  Modal,
+  Animated,
+  TouchableWithoutFeedback,
+  Dimensions,
+  Platform,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import {Dropdown} from 'react-native-element-dropdown';
+import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../src/api/apiClient';
-import {BarIndicator} from 'react-native-indicators';
+import DatePicker from 'react-native-modern-datepicker';
 import GlobalStyle from '../../../src/utils/GlobalStyle';
 import Header from '../components/Header';
-import Toast from 'react-native-toast-message';
 
-export default function PerubahanPresensi() {
+const SCREEN_HEIGHT = Dimensions.get('window').height;
+const BOTTOM_SHEET_HEIGHT = SCREEN_HEIGHT * 0.7;
+
+const CustomDatePicker = ({isVisible, onClose, onDateChange, currentDate}) => {
+  const slideAnim = React.useRef(
+    new Animated.Value(BOTTOM_SHEET_HEIGHT),
+  ).current;
+
+  React.useEffect(() => {
+    if (isVisible) {
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        bounciness: 4,
+      }).start();
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: BOTTOM_SHEET_HEIGHT,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [isVisible]);
+
+  if (!isVisible) return null;
+
+  return (
+    <Modal transparent visible={isVisible} animationType="fade">
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View style={styles.modalOverlay}>
+          <TouchableWithoutFeedback>
+            <Animated.View
+              style={[
+                styles.bottomSheet,
+                {
+                  transform: [
+                    {
+                      translateY: slideAnim,
+                    },
+                  ],
+                },
+              ]}>
+              <View style={styles.bottomSheetHeader}>
+                <Text style={styles.bottomSheetTitle}>Select Date</Text>
+                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                  <Ionicons name="close" size={24} color="#333" />
+                </TouchableOpacity>
+              </View>
+              <DatePicker
+                mode="calendar"
+                onDateChange={onDateChange}
+                current={currentDate || new Date().toISOString().split('T')[0]}
+                options={{
+                  textHeaderColor: '#007BFF',
+                  textDefaultColor: '#333',
+                  selectedTextColor: '#FFF',
+                  mainColor: '#007BFF',
+                  textSecondaryColor: '#B0B0B0',
+                  borderColor: 'rgba(122, 146, 165, 0.1)',
+                }}
+                style={styles.datePicker}
+              />
+            </Animated.View>
+          </TouchableWithoutFeedback>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
+  );
+};
+
+export default function Jabatan() {
+  const navigation = useNavigation();
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
@@ -27,165 +105,154 @@ export default function PerubahanPresensi() {
   const [declineReason, setDeclineReason] = useState('');
   const [selectedUuid, setSelectedUuid] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
   const [selectedDisplay, setSelectedDisplay] = useState(null);
-
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [Tanggal, setTanggal] = useState('');
+  const [tambahModalVisible, setTambahModalVisible] = useState(false);
   const apiClient = useApiClient();
 
   useEffect(() => {
-    fetchData(currentPage, selectedDisplay);
-  }, [currentPage, selectedDisplay]);
+    const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+    setTanggal(today); // Set the default date to today
+    fetchData(currentPage, selectedDisplay, today); // Fetch data for today initially
+  }, []); // Empty dependency array to run only once on component mount
 
-  const fetchData = async (page, per) => {
+  useEffect(() => {
+    fetchData(currentPage, selectedDisplay, Tanggal); // Fetch data whenever date or other dependencies change
+  }, [currentPage, selectedDisplay, Tanggal]); // Watch for changes to currentPage, selectedDisplay, and Tanggal
+
+  const fetchData = async (page, selectedDisplay, tanggal) => {
     try {
-      setIsLoading(true);
-      const response = await apiClient.post('/perubahan_absensi/indexadmin', {
+      setLoading(true);
+      const response = await apiClient.post('/admin/absensi/index', {
         page,
+        per: selectedDisplay,
+        search: searchQuery,
+        tanggal: tanggal || '', // Pastikan tanggal dikirimkan dengan benar
       });
-      setData(response.data.data);
-      setCurrentPage(response.data.current_page);
-      setLastPage(response.data.last_page);
+
+      if (response?.data?.data) {
+        setData(response.data.data);
+        setCurrentPage(response.data.current_page);
+        setLastPage(response.data.last_page);
+      } else {
+        console.error('Data tidak valid:', response);
+        setData([]);
+      }
     } catch (error) {
-      console.error('Error fetching data', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Terjadi Kesalahan',
-        text2: 'Gagal mengambil data. Silakan coba lagi!',
-      });
+      console.error('Error fetching data:', error);
+      Alert.alert('Error', 'Gagal memuat data.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleSearch = query => {
-    setSearchQuery(query);
-  };
+  const handleEdit = (id, name) => {
+    console.log('Navigating to Presensiedit with:', {
+      userId: id,
+      userName: name,
+      selectedDate: Tanggal, // Pastikan ini berisi nilai tanggal
+    });
 
-  const handleApprove = uuid => {
-    setSelectedUuid(uuid);
-    setApproveModalVisible(true);
-  };
-
-  const handleDecline = uuid => {
-    setSelectedUuid(uuid);
-    setModalVisible(true);
-  };
-
-  const submitDecline = async () => {
-    try {
-      await apiClient.post(`/perubahan_absensi/${selectedUuid}/change`, {
-        status: '2',
-        revisi: declineReason,
-      });
-      Toast.show({
-        type: 'error',
-        text1: 'Gagal',
-        text2: 'Penolakan Berhasil',
-      });
-      setModalVisible(false);
-      setDeclineReason('');
-      fetchData(currentPage, selectedDisplay); // Refresh data
-    } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Terjadi Kesalahan',
-        text2: 'Gagal menolak data. Silakan coba lagi!',
-      });
-    }
-  };
-
-  const submitApprove = async () => {
-    try {
-      await apiClient.post(`/perubahan_absensi/${selectedUuid}/change`, {
-        status: '1',
-        revisi: null,
-      });
-      Toast.show({
-        type: 'success',
-        text1: 'Sukses',
-        text2: 'Persetujuan Berhasil',
-      });
-      setApproveModalVisible(false);
-      fetchData(currentPage, selectedDisplay); // Refresh data
-    } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Terjadi Kesalahan',
-        text2: 'Gagal menyetujui data. Silakan coba lagi!',
-      });
-    }
+    navigation.navigate('Presensiedit', {
+      userId: id,
+      userName: name,
+      selectedDate: Tanggal,
+    });
   };
 
   const display = [
-    {label: '5', value: 5},
-    {label: '10', value: 10},
-    {label: '25', value: 25},
-    {label: '50', value: 50},
-    {label: '100', value: 100},
+    {label: '5', value: 1},
+    {label: '10', value: 2},
+    {label: '25', value: 3},
+    {label: '50', value: 4},
+    {label: '100', value: 5},
   ];
 
   const toggleExpand = id => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const getStatusStyle = status => {
-    switch (status?.toUpperCase()) {
-      case 'DISETUJUI':
-        return styles.badgeApproved; // Badge biru
-      case 'DITOLAK':
-        return styles.badgeRejected; // Badge merah
-      case 'MENUNGGU':
-        return styles.badgePending; // Badge kuning
-      default:
-        return styles.badgeDefault; // Badge default (abu-abu)
-    }
-  };
+  const handleDateChange = React.useCallback(
+    date => {
+      const [year, month, day] = date.split('/');
+      const formattedDate = `${year}-${month}-${day}`; // Pastikan format yang benar
 
-  const stripHtml = html => {
-    return html.replace(/<[^>]*>/g, '').trim();
-  };
+      if (formattedDate !== Tanggal) {
+        setTanggal(formattedDate);
+        setShowDatePicker(false); // Tutup popup setelah memilih tanggal
+      }
+    },
+    [Tanggal],
+  );
 
   const TableHeader = () => (
     <View>
-      <View style={styles.headerContainer}>
-        <View style={styles.searchContainer}>
-          <Ionicons
-            name="search"
-            size={18}
-            color="#888"
-            style={styles.searchIcon}
+      <View style={styles.tambahContainer}>
+        <View style={styles.datePickerContainer}>
+          <TouchableOpacity
+            style={styles.dateInput}
+            onPress={() => setShowDatePicker(true)}>
+            <Text style={styles.dateText}>{Tanggal || 'Pilih Tanggal'}</Text>
+            <Ionicons name="calendar-outline" size={20} color="#666" />
+          </TouchableOpacity>
+
+          <CustomDatePicker
+            isVisible={showDatePicker}
+            onClose={() => setShowDatePicker(false)}
+            onDateChange={handleDateChange}
+            currentDate={
+              Tanggal ||
+              new Date().toISOString().split('T')[0].replace(/-/g, '/')
+            }
           />
+        </View>
+
+        <TouchableOpacity
+          style={styles.downloadButton}
+          onPress={() => navigation.navigate('Presensiexcel')}>
+          <FontAwesome
+            name="file-excel-o"
+            size={20}
+            color="#fff"
+            style={styles.icon}
+          />
+          <Text style={styles.downloadText}>Download Excel</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.filterContainer}>
+        <View style={styles.displayContainer}>
+          <Text style={styles.displayText}>Display</Text>
+          <Dropdown
+            style={styles.dropdown}
+            data={display}
+            labelField="label"
+            valueField="value"
+            placeholder="10"
+            value={selectedDisplay}
+            onChange={item => setSelectedDisplay(item.value)}
+            renderItem={item => (
+              <Text style={[styles.dropdownItem, styles.customFont]}>
+                {item.label}
+              </Text>
+            )}
+          />
+        </View>
+        <View style={styles.searchContainer}>
           <TextInput
-            style={[GlobalStyle.SemiBold, styles.searchBar]}
+            style={styles.searchBar}
             placeholder="Search"
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholderTextColor="#888"
           />
         </View>
       </View>
 
       <View style={styles.tableHeader}>
-        <Text
-          style={[GlobalStyle.SemiBold, styles.headerCell, styles.numberCell]}>
-          NO
-        </Text>
-        <Text
-          style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}
-          numberOfLines={2} // Bisa disesuaikan sesuai kebutuhan
-        >
-          NAMA
-        </Text>
-        <Text
-          style={[
-            GlobalStyle.SemiBold,
-            styles.headerCell,
-            styles.tableStatusCell,
-          ]}
-          numberOfLines={2} // Bisa disesuaikan sesuai kebutuhan
-          ellipsizeMode="tail">
-          STATUS
-        </Text>
+        <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
+        <Text style={[styles.headerCell, styles.nameCell]}>Nama</Text>
+        <Text style={[styles.headerCell, styles.tableStatusCell]}>Status</Text>
         <View style={styles.expandIconCell} />
       </View>
       <View style={styles.headerLine} />
@@ -193,112 +260,71 @@ export default function PerubahanPresensi() {
   );
 
   const renderItem = ({item, index}) => {
+    if (!item) return null;
     const isExpanded = expandedId === item.id;
-    const rowBackgroundColor = index % 2 === 0 ? '#F7F8FC' : '#FFFFFF'; // Warna selang-seling
 
     return (
-      <>
-        <View style={styles.tableRow}>
-          <TouchableOpacity
-            style={[styles.rowHeader, {backgroundColor: rowBackgroundColor}]}
-            onPress={() => toggleExpand(item.id)}>
-            <Text
-              style={[
-                GlobalStyle.SemiBold,
-                styles.tableCell,
-                styles.numberCell,
-              ]}>
-              {index + 1}
+      <View style={styles.tableRow}>
+        <TouchableOpacity
+          style={styles.rowHeader}
+          onPress={() => toggleExpand(item.id)}>
+          <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
+          <Text
+            style={[styles.tableCell, styles.nameCell]}
+            numberOfLines={1}
+            ellipsizeMode="tail">
+            {item.name}
+          </Text>
+          <Text
+            style={[styles.tableCell, styles.nameCell]}
+            numberOfLines={1}
+            ellipsizeMode="tail">
+            {item.status}
+          </Text>
+          <View style={styles.actionCell}>
+            <Ionicons
+              name={isExpanded ? 'chevron-up' : 'chevron-down'}
+              size={20}
+              color="#333"
+            />
+          </View>
+        </TouchableOpacity>
+        {isExpanded && (
+          <View style={styles.expandedContent}>
+            <Text style={styles.expandedText}>Nama: {item.name}</Text>
+            <Text style={styles.expandedText}>
+              Tanggal: {item.absensi?.tanggal}
             </Text>
-            <Text
-              style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}
-              numberOfLines={2} // Bisa disesuaikan sesuai kebutuhan
-            >
-              {item.user?.name || '-'}
+            <Text style={styles.expandedText}>
+              Pemotongan: {item.absensi?.pemotongan}
             </Text>
-            <Text
-              style={[
-                GlobalStyle.SemiBold,
-                styles.tableCell,
-                styles.persenCell,
-                getStatusStyle(stripHtml(item.status)), // Hapus tag HTML dan ambil status
-              ]}>
-              {stripHtml(item.status) || '-'} {/* Hapus tag HTML */}
-            </Text>
-            <View style={styles.expandIconCell}>
-              <Ionicons
-                name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                size={20}
-                color="#BEC2D5"
-              />
+            <View style={styles.actionContainer}>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => handleEdit(item.id, item.name)}>
+                <FontAwesome name="cogs" size={30} color="white" />
+                <Text style={styles.customFont}></Text>
+              </TouchableOpacity>
             </View>
-          </TouchableOpacity>
-          {isExpanded && (
-            <View style={styles.expandedContent}>
-              <Text
-                style={[GlobalStyle.SemiBold, styles.expandedText]}
-                numberOfLines={2} // Bisa disesuaikan sesuai kebutuhan
-              >
-                Nama: {item.user?.name || '-'}
-              </Text>
-              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
-                Tanggal: {item.tanggal || '-'}
-              </Text>
-              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
-                Jam Masuk: {item.jam_masuk || '-'}
-              </Text>
-              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
-                Jam Keluar: {item.jam_keluar || '-'}
-              </Text>
-              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
-                Keterangan: {item.revisi || '-'}
-              </Text>
-              <View style={styles.filetext}>
-                <Text style={GlobalStyle.SemiBold}>File: </Text>
-                <Text
-                  style={[GlobalStyle.SemiBold, styles.expandedLinkText]}
-                  onPress={() => Linking.openURL(item.file)}>
-                  Lihat File
-                </Text>
-              </View>
-              <View style={styles.actionContainer}>
-                {item.status !== 'DISETUJUI' && item.status !== 'DITOLAK' ? (
-                  <>
-                    <TouchableOpacity
-                      style={[styles.iconButton, styles.greenButton]}
-                      onPress={() => handleApprove(item.uuid)}>
-                      <Ionicons name="checkmark" size={20} color="white" />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.iconButton, styles.redButton]}
-                      onPress={() => handleDecline(item.uuid)}>
-                      <Ionicons name="close" size={20} color="white" />
-                    </TouchableOpacity>
-                  </>
-                ) : (
-                  <Text style={[GlobalStyle.SemiBold, styles.statusText]}>
-                    {item.status}
-                  </Text>
-                )}
-              </View>
-            </View>
-          )}
-        </View>
-        {index === data.length - 1 && <View style={styles.verticalLine} />}
-      </>
+          </View>
+        )}
+      </View>
     );
   };
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <Header title="Perubahan Absensi" />
-      {/* Loading Indicator */}
-      {isLoading ? (
-        // Loading Indicator
-        <View style={styles.loadingContainer}>
-          <BarIndicator color="#D4C6C6" count={5} size={24} />
+      <View style={styles.header}>
+        <View style={styles.headerLeft}></View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
+          <TouchableOpacity style={styles.iconWrapper}>
+            <Ionicons name="person-circle-outline" size={24} color="#333" />
+          </TouchableOpacity>
         </View>
+      </View>
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
@@ -426,7 +452,18 @@ export default function PerubahanPresensi() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F7F8FB',
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 15,
+    margin: 12,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   tableHeader: {
     marginTop: 15,
@@ -461,22 +498,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   numberCell: {
-    width: 45,
+    width: 50,
+    marginLeft: 10,
   },
   nameCell: {
-    flex: 1,
+    flex: 2,
     overflow: 'hidden',
-    flexShrink: 1, // Memungkinkan teks agar tidak memaksa ruang lebih
-    paddingHorizontal: 8, // Memberi jarak antar teks
-    minWidth: 80, // Mencegah terlalu kecil saat teks panjang
-  },
-  filetext: {
-    flexDirection: 'row',
-    alignItems: 'left', // Menjadikan teks sejajar secara vertikal
-  },
-
-  expandedLinkText: {
-    color: '#9B94E9',
+    marginright: 100,
   },
   statusCellContainer: {
     width: 100,
@@ -484,20 +512,23 @@ const styles = StyleSheet.create({
   statusCell: {
     textAlign: 'center',
     fontWeight: 'bold',
+    marginRight: 35,
   },
   expandIconCell: {
     width: 40,
     alignItems: 'flex-end',
   },
-  headerLine: {
-    height: 2,
-    backgroundColor: '#D3D3D3', // Garis horizontal bawah header
-    marginBottom: 5,
+  approvedStatus: {
+    color: '#4CAF50',
   },
-  verticalLine: {
-    height: 2, // Tinggi garis horizontal
-    backgroundColor: '#D3D3D3', // Warna abu-abu mirip header line
-    marginBottom: 10, // Jarak atas & bawah agar tidak menempel
+  rejectedStatus: {
+    color: '#F44336',
+  },
+  pendingStatus: {
+    color: '#FFC107',
+  },
+  defaultStatus: {
+    color: '#9E9E9E',
   },
   expandedContent: {
     padding: 15,
@@ -506,7 +537,35 @@ const styles = StyleSheet.create({
   expandedText: {
     marginBottom: 5,
     fontSize: 14,
-    color: '#313131',
+    marginright: 10,
+  },
+  dibacaWrapper: {
+    flexDirection: 'row', // Menyusun "Dibaca:" dan nilai dibaca dalam satu baris
+    alignItems: 'center', // Menyusun konten secara vertikal agar berada sejajar
+    marginBottom: 5, // Memberikan jarak bawah setelah wrapper
+    flexWrap: 'wrap', // Memungkinkan elemen untuk membungkus jika terlalu panjang
+  },
+  dibacaValueWrapper: {
+    backgroundColor: '#4CAF50', // Warna latar belakang default
+    borderRadius: 8, // Membuat sudut rounded
+    paddingVertical: 5, // Menambahkan padding vertikal di dalam wrapper
+    paddingHorizontal: 10, // Menambahkan padding horizontal di dalam wrapper
+    marginright: 20,
+    marginBottom: 20, // Memberikan jarak antara "Dibaca:" dan nilai
+    maxWidth: '100%', // Membatasi lebar nilai agar tidak melampaui layar
+    overflow: 'hidden', // Menyembunyikan konten yang melampaui batas
+  },
+  DibacaText: {
+    fontSize: 14,
+    color: '#fff', // Warna teks putih agar kontras dengan background
+  },
+  expandedLinkText: {
+    color: 'blue',
+    marginBottom: 5,
+    fontSize: 14,
+  },
+  filetext: {
+    flexDirection: 'row',
   },
   actionContainer: {
     flexDirection: 'row',
@@ -514,9 +573,39 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
-  paginationButtons: {
+  actionButton: {
+    padding: 8,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 5,
+  },
+  approveButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#4CAF50',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  declineButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F44336',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  paginationButtons: {
+    flexDirection: 'row',
   },
   pageButton: {
     padding: 8, // Padding agar tombol lebih mudah diklik
@@ -544,60 +633,98 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingVertical: 10,
   },
-  headerContainer: {
+  header: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: 4,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  logo: {
+    width: 140,
+    height: 40,
+    resizeMode: 'contain',
+  },
+  headerRight: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    flex: 1,
+  },
+  iconWrapper: {
+    marginLeft: 12,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
     marginBottom: 10,
   },
-
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F7F8FC',
+  modalLabel: {
+    fontSize: 14,
+    marginBottom: 5,
+  },
+  modalInput: {
+    borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 5,
-    paddingHorizontal: 12,
-    height: 42, // **Tinggi sama dengan tombol tambah**
-    flex: 1,
-    maxWidth: '60%', // **Agar fleksibel di berbagai layar**
+    padding: 10,
+    minHeight: 10,
+    marginBottom: 15,
+    textAlignVertical: 'top',
   },
-
-  searchIcon: {
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  cancelButton: {
+    backgroundColor: '#ccc',
+    padding: 10,
+    borderRadius: 5,
     marginRight: 10,
     fontSize: 14, // **Agar proporsional dengan teks**
     alignSelf: 'center',
   },
-
-  searchBar: {
-    flex: 1,
-    fontSize: 12, // **Agar lebih proporsional**
-    color: '#BEC2D5',
-    textAlignVertical: 'center', // **Pastikan teks sejajar secara vertikal**
-    paddingVertical: 0, // **Hapus padding default agar tidak terlalu tinggi**
-  },
-
-  tambahButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#3699FE',
-    paddingHorizontal: 15,
-    height: 40, // **Samakan tinggi dengan search bar**
+  submitButton: {
+    backgroundColor: '#F44336',
+    padding: 10,
     borderRadius: 5,
-    marginLeft: 12,
   },
-
-  icon: {
-    fontSize: 14, // **Ukuran disesuaikan agar sejajar dengan teks**
-  },
-
-  tambahText: {
+  buttonText: {
     color: '#fff',
-    marginLeft: 5,
-    fontSize: 12, // **Lebih proporsional**
-    textAlignVertical: 'center',
+    fontWeight: 'bold',
   },
-
+  searchContainer: {
+    width: 150,
+    backgroundColor: '#FFFFFF',
+  },
+  searchBar: {
+    height: 40,
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 12,
+  },
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -610,6 +737,7 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   displayText: {
+    fontFamily: 'Poppins-Regular',
     fontSize: 13,
     marginRight: 8,
     textAlign: 'center',
@@ -630,25 +758,82 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#333',
   },
-
-  iconButton: {
-    padding: 10, // Ukuran tombol lebih besar
-    marginHorizontal: 5,
+  customFont: {
+    fontFamily: 'Poppins-Regular',
+  },
+  tambahContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center', // Agar elemen dalam satu baris rata tengah secara vertikal
+    marginBottom: 10,
+    padding: 10, // Tambahkan padding agar terlihat lebih rapi
+    backgroundColor: '#F9F9F9', // Warna latar belakang untuk elemen container
+    borderRadius: 8, // Tambahkan border radius untuk gaya lebih modern
+    elevation: 2, // Bayangan untuk tampilan lebih menarik di Android
+    shadowColor: '#000', // Bayangan untuk iOS
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  tambahButton: {
+    flexDirection: 'row',
+    backgroundColor: '#333',
+    width: 90,
+    height: 40,
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  persenCell: {
-    fontSize: 12,
+  tambahText: {
+    fontFamily: 'Poppins-Regular',
+    color: 'white', // Warna teks putih agar kontras dengan latar belakang gelap
+    lineHeight: 10,
+    fontSize: 10,
+    textAlignVertical: 'center',
+    marginRight: 10,
   },
-
-  greenButton: {
-    backgroundColor: '#1BC5BD', // Warna biru untuk reset & edit
+  downloadText: {
+    fontFamily: 'Poppins-Regular',
+    color: 'white', // Warna teks putih agar kontras dengan latar belakang gelap
+    lineHeight: 20,
+    fontSize: 14,
+    textAlignVertical: 'center',
+    marginRight: 10,
   },
-  redButton: {
-    backgroundColor: '#FF536D', // Warna merah untuk hapus
+  downloadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#007BFF',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
   },
-
+  icon: {
+    marginRight: 5,
+  },
+  tambahText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  editButton: {
+    gap: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#3699FF',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  customFont: {
+    color: 'white',
+    fontFamily: 'Poppins-Regular',
+  },
   switchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -659,106 +844,78 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+  input: {
+    flex: 1, // Agar input mengambil ruang yang tersedia
+    borderWidth: 1,
+    borderColor: '#CCC',
+    padding: 10,
+    borderRadius: 5,
+    backgroundColor: '#FFF', // Tambahkan latar belakang putih untuk input
+    marginRight: 10, // Beri jarak antar elemen di sebelah kanan
   },
-  modalContainer: {
-    width: 300,
-    padding: 20,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  modalText: {
-    fontSize: 16,
-    color: '#333',
+  datePickerContainer: {
     marginBottom: 10,
   },
-  modalTolak: {
-    fontSize: 16,
-    color: '#333',
-  },
-  modalInput: {
-    width: '100%', // Pastikan input menggunakan lebar penuh
-    marginVertical: 20, // Tambahkan padding agar tidak di tengah
-    paddingHorizontal: 15, // Memberikan ruang pada sisi kiri dan kanan
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    color: '#313131',
-    fontSize: 14,
-    textAlignVertical: 'top', // Pastikan teks dimulai dari atas
-    backgroundColor: '#f9f9f9', // Tambahkan warna latar belakang untuk kontras
-    borderColor: 'transparent',
-  },
 
-  modalButtons: {
+  dateInput: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%',
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
     alignItems: 'center',
-    marginHorizontal: 5,
-    backgroundColor: '#000',
-  },
-  cancelButton: {
     borderWidth: 1,
-    borderColor: '#3498db',
-    backgroundColor: '#fff',
+    borderColor: '#CCC',
+    borderRadius: 5,
+    padding: 10,
+    backgroundColor: '#FFF',
   },
-  cancelText: {
-    color: '#0A3D62',
-  },
-  confirmButton: {
-    backgroundColor: '#1BC5BD',
-  },
-  confirmTolak: {
-    backgroundColor: '#FF536D',
-  },
-  confirmText: {
-    color: '#fff',
-  },
-  loadingContainer: {
+  modalOverlay: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  bottomSheet: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    height: BOTTOM_SHEET_HEIGHT,
+    // Add shadow for iOS
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -3,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    // Add elevation for Android
+    elevation: 5,
+  },
+  bottomSheetHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 20,
   },
-  badgeApproved: {
-    backgroundColor: '#C9F7F5', // Biru
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignSelf: 'flex-start', // Agar badge tidak melebar
-    color: '#1BC5BD',
+  bottomSheetTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
   },
-  badgeRejected: {
-    backgroundColor: '#FFE2E5', // Merah
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-    color: '#F64E60',
+  closeButton: {
+    padding: 5,
   },
-  badgePending: {
-    backgroundColor: '#FFF4DE', // Kuning
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-    color: '#FFA800',
+  datePicker: {
+    borderRadius: 10,
   },
-  badgeDefault: {
-    backgroundColor: '#BEC2D5', // Abu-abu
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
+  confirmDateButton: {
+    backgroundColor: '#007BFF',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  confirmDateButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

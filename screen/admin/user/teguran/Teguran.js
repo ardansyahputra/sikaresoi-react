@@ -58,8 +58,7 @@ export default function Jabatan() {
     }
   };
 
-
-  const handleHapus = async (uuid) => {
+  const handleHapus = async uuid => {
     Alert.alert(
       'Hapus Data',
       'Apakah Anda yakin ingin menghapus data ini?',
@@ -73,9 +72,11 @@ export default function Jabatan() {
           onPress: async () => {
             try {
               console.log(`Attempting to delete UUID: ${uuid}`);
-              const response = await apiClient.delete(`/teguran/${uuid}/delete`);
+              const response = await apiClient.delete(
+                `/teguran/${uuid}/delete`,
+              );
               console.log('Delete response:', response);
-              
+
               if (response?.data?.success) {
                 Alert.alert('Berhasil', 'Data berhasil dihapus.');
                 // Refresh the data after deletion by calling fetchData
@@ -90,11 +91,9 @@ export default function Jabatan() {
           },
         },
       ],
-      { cancelable: false }
+      {cancelable: false},
     );
   };
-  
-  
 
   const handleTambah = () => {
     setTambahModalVisible(true); // Ubah sesuai state yang didefinisikan

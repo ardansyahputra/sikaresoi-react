@@ -342,7 +342,7 @@ const AttendanceChangeTable = () => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <Header title="Tanggung Rentang" />
+      <Header title="Tanggung Renteng" />
       {isLoading ? (
         // Loading Indicator
         <View style={styles.loadingContainer}>

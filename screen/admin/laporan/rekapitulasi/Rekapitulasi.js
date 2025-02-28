@@ -12,6 +12,7 @@ import {Dropdown} from 'react-native-element-dropdown';
 import RNFS from 'react-native-fs';
 import {APP_URL} from '@env';
 import Header from '../../components/Header';
+import GlobalStyle from '../../../../src/utils/GlobalStyle';
 
 
 export default function Rekapitulasi({navigation}) {
@@ -170,36 +171,35 @@ export default function Rekapitulasi({navigation}) {
       </View>
 
       {/* Konfirmasi Download Modal */}
-         <Modal
-           animationType="fade"
-           transparent={true}
-           visible={isConfirmationVisible}
-           onRequestClose={() => setIsConfirmationVisible(false)}>
-           <View style={styles.modalOverlay}>
-             <View style={styles.modalContent}>
-               <View style={styles.modalHeader}>
-                 <Text style={styles.modalTitle}>Apakah Anda Yakin?</Text>
-               </View>
-               <View style={styles.modalBody}>
-                 <Text style={styles.modalText}>
-                   Anda Akan Mendownload Report Berformat Excel, Mungkin Membutuhkan Waktu Beberapa Detik!
-                 </Text>
-               </View>
-               <View style={styles.modalFooter}>
-                 <TouchableOpacity
-                   style={[styles.modalButton, styles.cancelButton]}
-                   onPress={() => setIsConfirmationVisible(false)}>
-                   <Text style={styles.modalButtonText}>Batal</Text>
-                 </TouchableOpacity>
-                 <TouchableOpacity
-                   style={[styles.modalButton, styles.confirmButton]}
-                   onPress={handleDownload}>
-                   <Text style={styles.modalButtonText}>Download</Text>
-                 </TouchableOpacity>
-               </View>
-             </View>
-           </View>
-         </Modal>
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={isConfirmationVisible}
+        onRequestClose={() => setIsConfirmationVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={[GlobalStyle.SemiBold, styles.modalText]}>
+              Apakah anda yakin Mendownload Report Berformat Excel?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.button, styles.cancelButton]}
+                onPress={() => setIsConfirmationVisible(false)}>
+                <Text style={[GlobalStyle.SemiBold, styles.cancelText]}>
+                  Batal
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, styles.confirmButton]}
+                onPress={handleDownload}>
+                <Text style={[GlobalStyle.SemiBold, styles.confirmText]}>
+                  Download
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Loading Modal */}
       <Modal animationType="fade" transparent={true} visible={isLoading}>
@@ -254,6 +254,7 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
   },
+
   cardContainer: {
     backgroundColor: '#FFFF',
     paddingVertical: 20,
@@ -310,7 +311,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContainer: {
+    width: 300,
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
   },
   modalContent: {
     backgroundColor: '#FFF',
@@ -320,35 +328,17 @@ const styles = StyleSheet.create({
     padding: 20,
     elevation: 5,
   },
-  modalHeader: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    backgroundColor: '#ccc',
-    padding: 20,
-    marginHorizontal: -20,
-    marginTop: -20,
-  },
-  modalTitle: {
-    color: '#333',
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  modalBody: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
+
   modalText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#333',
-    textAlign: 'center',
     marginBottom: 20,
+    textAlign: 'center',
   },
-  modalFooter: {
+  modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    width: '100%',
   },
   modalButton: {
     flex: 1,
@@ -357,17 +347,28 @@ const styles = StyleSheet.create({
     elevation: 2,
     marginHorizontal: 8,
   },
-  cancelButton: {
-    backgroundColor: '#dc3545',
+  button: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginHorizontal: 5,
+    backgroundColor: '#000',
   },
+  cancelButton: {
+    borderWidth: 1,
+    borderColor: '#28c4ac',
+    backgroundColor: '#fff',
+  },
+  cancelText: {
+    color: '#0A3D62',
+  },
+
   confirmButton: {
     backgroundColor: '#28c4ac',
   },
-  modalButtonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-    textAlign: 'center',
+  confirmText: {
+    color: '#fff',
   },
 
   // Loading Modal

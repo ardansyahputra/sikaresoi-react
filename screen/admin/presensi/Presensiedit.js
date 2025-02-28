@@ -4,11 +4,16 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
+  Dimensions,
   ScrollView,
 } from 'react-native';
 import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../../../src/api/apiClient';
+import Header from '../components/Header';
+import GlobalStyle from '../../../src/utils/GlobalStyle';
+const {width} = Dimensions.get('window');
+import {BarIndicator} from 'react-native-indicators';
+import Toast from 'react-native-toast-message';
 
 const TambahPa = ({route, navigation}) => {
   const [jenisAlasan, setJenisAlasan] = useState([]);
@@ -19,12 +24,15 @@ const TambahPa = ({route, navigation}) => {
   const [name, setName] = useState('');
   const apiClient = useApiClient();
   const {userId, userName, selectedDate} = route.params || {};
+  const [isLoading, setIsLoading] = useState(true);
+  const [focusState, setFocusState] = useState({});
 
   useEffect(() => {
     fetchJenisAlasan();
-  });
+  }, []);
 
   const fetchJenisAlasan = async () => {
+    setIsLoading(true);
     try {
       const response = await apiClient(`/pemotongan_tidak_hadir/show`);
       const data = response.data || (await response.json());
@@ -37,6 +45,8 @@ const TambahPa = ({route, navigation}) => {
       }
     } catch (error) {
       console.error('Error fetching jenis alasan data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -49,6 +59,7 @@ const TambahPa = ({route, navigation}) => {
     };
 
     console.log('Payload to be sent:', payload);
+    setIsLoading(true);
 
     try {
       const response = await apiClient.post('/admin/absensi/change', payload);
@@ -56,11 +67,19 @@ const TambahPa = ({route, navigation}) => {
       console.log('API Response:', response);
 
       if (response.status === 200 || response.status === 201) {
-        Alert.alert('Sukses', 'Data berhasil disimpan.');
+        Toast.show({
+          type: 'success',
+          text1: 'Sukses',
+          text2: 'Data berhasil disimpan.',
+        });
         navigation.goBack();
       } else {
         console.log('API Response Error:', response.data);
-        Alert.alert('Error', 'Gagal menyimpan data.');
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal',
+          text2: 'Gagal menyimpan data.',
+        });
       }
     } catch (error) {
       if (error.response) {
@@ -76,131 +95,187 @@ const TambahPa = ({route, navigation}) => {
       }
 
       console.error('Error Stack Trace:', error.stack);
-      Alert.alert('Error', 'Terjadi kesalahan saat menyimpan data.');
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal',
+        text2: 'Gagal menyimpan data.',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const handleFocus = inputName => {
+    setFocusState(prevState => ({...prevState, [inputName]: true}));
+  };
+
+  const handleBlur = inputName => {
+    setFocusState(prevState => ({...prevState, [inputName]: false}));
+  };
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.headerTitle}>Ubah Presensi</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.cardContainer}>
-        <View style={styles.nameContainer}>
-          <Text style={styles.userName}>
-            {userName || 'Nama Tidak Ditemukan'}
-          </Text>
+    <View style={styles.rootContainer}>
+      <Header title="Ubah Presensi" />
+      {isLoading ? (
+        // Loading Indicator
+        <View style={styles.loadingContainer}>
+          <BarIndicator color="#D4C6C6" count={5} size={24} />
         </View>
-        <Text style={styles.label}>Jenis Alasan *</Text>
-        <Dropdown
-          style={styles.dropdown}
-          data={jenisAlasan}
-          labelField="label"
-          valueField="value"
-          placeholder="Pilih Alasan"
-          value={jenis}
-          onChange={item => {
-            setJenis(item.value);
-          }}
-        />
+      ) : (
+        <View style={styles.container}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}>
+            <View style={styles.nameContainer}>
+              <Text style={[GlobalStyle.SemiBold, styles.userName]}>
+                {userName || 'Nama Tidak Ditemukan'}
+              </Text>
+            </View>
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>
+              Jenis Alasan
+            </Text>
+            <Dropdown
+              style={[
+                GlobalStyle.SemiBold,
+                styles.input,
+                focusState.jenis && styles.inputFocused,
+                jenis && styles.inputFilled,
+              ]}
+              data={jenisAlasan}
+              labelField="label"
+              valueField="value"
+              placeholder="Pilih Alasan"
+              placeholderStyle={{
+                ...GlobalStyle.SemiBold,
+                color: '#B0B0B0',
+                fontSize: 14,
+              }}
+              selectedTextStyle={[
+                GlobalStyle.SemiBold,
+                {fontSize: 14, color: '#313131'}, // Lebih ringan dari daftar
+              ]}
+              itemTextStyle={{...GlobalStyle.SemiBold, fontSize: 14}}
+              onFocus={() => handleFocus('jabatan')}
+              onBlur={() => handleBlur('jabatan')}
+              value={jenis}
+              onChange={item => {
+                setJenis(item.value);
+              }}
+            />
 
-        <View style={styles.buttons}>
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => navigation.goBack()}>
-            <Text style={styles.buttonText}>Batal</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.buttonText}>Simpan</Text>
-          </TouchableOpacity>
+            <View style={styles.buttons}>
+              <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                <Text style={[GlobalStyle.SemiBold, styles.buttonText]}>
+                  Simpan
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
         </View>
-      </View>
-    </ScrollView>
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  rootContainer: {
+    flex: 1,
+    backgroundColor: '#FFF',
+  },
   container: {
     flex: 1,
-    backgroundColor: '#E7E9F1',
+    backgroundColor: '#FFF',
+    paddingHorizontal: width * 0.05,
+    paddingTop: 10,
   },
-  header: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
-    borderBottomLeftRadius: 15,
-    borderBottomRightRadius: 15,
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
+  nameContainer: {
+    borderRadius: 5,
+    marginBottom: 15,
   },
-  headerTitle: {
-    textAlign: 'center',
-    fontSize: 20,
-    fontWeight: 'bold',
+  userName: {
+    fontSize: 16,
+    color: '#333',
   },
+
   cardContainer: {
     backgroundColor: '#FFFF',
     paddingVertical: 20,
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
     borderRadius: 10,
     elevation: 4,
-    marginVertical: 5,
-    marginHorizontal: 10,
-    marginTop: 60,
+    marginVertical: 20,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    width: '100%',
+
+    marginTop: 37, // Memberikan margin agar konten tidak tumpang tindih dengan header
   },
-  nameContainer: {
-    backgroundColor: '#F0F4F8',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
+  label: {fontSize: 14, color: '#313131'},
+  input: {
+    padding: 10,
+    fontSize: 14,
+    borderRadius: 5, // Default border radius
+    marginBottom: 20,
+    backgroundColor: '#F0ECEC', // Default background color
+    borderWidth: 1,
+    borderColor: 'transparent', // Default border color (tidak terlihat)
+    color: '#313131',
   },
-  userName: {
-    textAlign: 'center',
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+  inputFocused: {
+    borderRadius: 5, // Border radius saat fokus
+    borderColor: '#75BAFF',
+    borderWidth: 1.5,
   },
-  label: {
-    fontSize: 16,
-    marginTop: 10,
+  inputFilled: {
+    backgroundColor: '#F2F8FF', // Background lebih gelap saat terisi
+    borderRadius: 5, // Hilangkan border radius
+    padding: 10,
+  },
+  scrollContent: {
+    paddingBottom: 10, // Tambahkan padding bawah agar tidak terpotong
   },
   dropdown: {
-    borderWidth: 1,
-    borderColor: '#CCC',
-    padding: 10,
+    position: 'absolute',
+    top: 195, // Adjust this value to make sure dropdown is below the input field
+    left: 20,
+    right: 180,
+    backgroundColor: '#fff',
     borderRadius: 5,
-    marginBottom: 5,
-    marginTop: 10,
-    backgroundColor: '#F9F9F9',
+    padding: 10,
+    zIndex: 5,
+    shadowColor: '#000', // Menambahkan bayangan
+    shadowOffset: {width: 0, height: 2}, // Menyesuaikan posisi bayangan
+    shadowOpacity: 0.3, // Menyesuaikan intensitas bayangan
+    shadowRadius: 5, // Menyesuaikan kelembutan bayangan
+    elevation: 5, // Memberikan bayangan di perangkat Android
   },
   buttons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 20,
   },
-  cancelButton: {
-    backgroundColor: '#CCC',
-    padding: 15,
-    borderRadius: 5,
-  },
+  cancelButton: {backgroundColor: '#187DE4', padding: 15, borderRadius: 5},
   saveButton: {
-    backgroundColor: '#007BFF',
-    padding: 15,
+    width: '100%',
+    height: 48,
+    backgroundColor: '#3699FE',
     borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
   },
-  buttonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
+  buttonText: {color: '#fff', fontSize: 14},
+  dropdownItem: {
+    padding: 10,
+    fontSize: 14,
+    color: '#313131',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

@@ -11,12 +11,6 @@ import {Pressable} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../../../../src/api/apiClient';
-import Header from '../../components/Header';
-import GlobalStyle from '../../../../src/utils/GlobalStyle';
-import Toast from 'react-native-toast-message';
-import {BarIndicator} from 'react-native-indicators';
-import {useFocusEffect} from '@react-navigation/native';
-
 
 export default function BelumKontrak() {
   const apiClient = useApiClient();
@@ -28,70 +22,14 @@ export default function BelumKontrak() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDisplay, setSelectedDisplay] = useState(10);
   const [activeButton, setActiveButton] = useState('kontrak');
-  const [selectedYear, setSelectedYear] = useState(null);
-  const [tahunOptions, setTahunOptions] = useState([]);
-
-  useEffect(() => {
-    fetchTahun();
-  }, []);
-  
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchRealisasiData(currentPage, selectedDisplay);
-      fetchKontrakData(currentPage, selectedDisplay);
-    }, [currentPage, selectedDisplay]),
-  );
-  
 
   useEffect(() => {
     if (activeButton === 'kontrak') {
       fetchRealisasiData(1);
     } else {
-      fetchKontrakData(1);
+      fetchRealisasiData(1); // Reset to page 1 when display changes
     }
-    console.log('Data Updated:', data);
-  }, [activeButton, selectedDisplay, selectedYear]);
-
-  const fetchTahun = async () => {
-    try {
-      const response = await apiClient.get('/tahun/show');
-      console.log('API Response:', response.data); // Debugging log
-
-      if (response.data && response.data.data) {
-        // Filter tahun antara 2020-2025
-        const filteredTahun = response.data.data.filter(item => {
-          const tahun = parseInt(item.tahun);
-          return tahun >= 2020 && tahun <= 2025;
-        });
-
-        // Set options hanya untuk tahun yang terfilter
-        setTahunOptions(
-          filteredTahun.map(item => ({label: item.tahun, value: item.tahun})),
-        );
-
-        if (filteredTahun.length === 0) {
-          Toast.show({
-            type: 'error',
-            text1: 'Error',
-            text2: 'Tidak ada data tahun dalam rentang 2020-2025',
-          });
-        }
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Data tahun tidak ditemukan.',
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching tahun:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Gagal memuat data tahun.',
-      });
-    }
-  };
+  }, [activeButton, selectedDisplay]);
 
   const fetchRealisasiData = async page => {
     console.log('Fetching Realisasi Data');
@@ -105,23 +43,11 @@ export default function BelumKontrak() {
 
     try {
       setIsLoading(true);
-      const response = await apiClient.post('/kinerja/user_belum_kirim', {
+      const response = await apiClient.post('/kinerja/user_sudah_kirim', {
+        page,
         per: selectedDisplay,
-        search: searchQuery,
-        tahun: selectedYear,
-        page: page, // Pastikan page dikirimkan!
-
       });
-
-      console.log('Realisasi Response:', {
-        current_page: response.data.current_page,
-        last_page: response.data.last_page,
-        total_items: response.data.total,
-        items_per_page: response.data.per_page,
-        data_sample: response.data.data.slice(0, 1), // Log first item as sample
-        total_data_received: response.data.data.length,
-      });
-
+      console.log('Realisasi Data:', response.data); // Log data yang diterima
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -138,6 +64,7 @@ export default function BelumKontrak() {
       });
     } finally {
       setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -146,15 +73,12 @@ export default function BelumKontrak() {
     setIsLoading(true); // Pastikan loading di-set sebelum request API
 
     try {
-      const response = await apiClient.post('/kinerja/user_sudah_kirim', {
+      setIsLoading(true);
+      const response = await apiClient.post('/kinerja/user_belum_kirim', {
+        page,
         per: selectedDisplay,
-        search: searchQuery,
-        tahun: selectedYear,
-        page: page, // Pastikan page dikirimkan!
-
       });
-
-      console.log('Kontrak Response:', response.data);
+      console.log('Kontrak Data:', response.data); // Log data yang diterima
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
@@ -166,6 +90,7 @@ export default function BelumKontrak() {
         text2: 'Gagal memuat data kontrak.',
       });
     } finally {
+      setIsLoading(false);
       setIsLoading(false);
     }
   };
@@ -182,6 +107,17 @@ export default function BelumKontrak() {
     setExpandedId(expandedId === id ? null : id);
   };
 
+  const getStatusStyle = status => {
+    switch (status?.toUpperCase()) {
+      case 'DIBUKA':
+        return styles.approvedStatus;
+      case 'DITUTUP':
+        return styles.rejectedStatus;
+      default:
+        return styles.defaultStatus;
+    }
+  };
+
   const handlePress = buttonName => {
     setActiveButton(buttonName);
     if (buttonName === 'kontrak') {
@@ -193,9 +129,125 @@ export default function BelumKontrak() {
 
   const TableHeader = () => (
     <View>
-      <View style={styles.filterHeader}>
-        <View style={styles.bottomRow}>
-          <View style={styles.bulanContainer}>
+      <View style={styles.filterContainer}>
+        <View style={styles.displayContainer}>
+          <Text style={styles.displayText}>Display</Text>
+          <Dropdown
+            style={styles.dropdown}
+            data={display}
+            labelField="label"
+            valueField="value"
+            placeholder="10"
+            value={selectedDisplay}
+            onChange={item => {
+              setSelectedDisplay(item.value);
+              fetchRealisasiData(currentPage);
+            }}
+            renderItem={item => (
+              <Text style={[styles.dropdownItem, styles.customFont]}>
+                {item.label}
+              </Text>
+            )}
+            placeholderStyle={styles.customFont}
+          />
+        </View>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchBar}
+            placeholder="Search"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+      </View>
+      <View style={styles.tableHeader}>
+        <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
+        <Text style={[styles.headerCell, styles.nameCell]}>NIP/NRP</Text>
+        <Text style={[styles.headerCell, styles.tableStatusCell]}>Nama</Text>
+        <View style={styles.expandIconCell} />
+      </View>
+    </View>
+  );
+
+  const renderItem = ({item, index}) => {
+    const isExpanded = expandedId === item.id;
+
+    return (
+      <View style={styles.tableRow}>
+        <TouchableOpacity
+          style={styles.rowHeader}
+          onPress={() => toggleExpand(item.id)}>
+          <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
+          <Text
+            style={[styles.tableCell, styles.nameCell]}
+            numberOfLines={1}
+            ellipsizeMode="tail">
+            {item.nip || '-'}
+          </Text>
+          <View style={styles.statusCellContainer}>
+            <Text
+              style={[
+                styles.tableCell,
+                styles.statusCell,
+                getStatusStyle(item.name), // Ganti item.nama menjadi item.name
+              ]}>
+              {item.name || '-'} {/* Ganti item.nama menjadi item.name */}
+            </Text>
+          </View>
+          <View style={styles.expandIconCell}>
+            <Ionicons
+              name={isExpanded ? 'chevron-up' : 'chevron-down'}
+              size={20}
+              color="#333"
+            />
+          </View>
+        </TouchableOpacity>
+        {isExpanded && (
+          <View style={styles.expandedContent}>
+            <Text style={styles.expandedText}>NIP/NRP: {item.nip || '-'}</Text>
+            <Text style={styles.expandedText}>
+              Nama: {item.name || '-'} {/* Ganti item.nama menjadi item.name */}
+            </Text>
+            <View style={styles.actionContainer}>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => handleApprove(item.uuid)}>
+                <FontAwesome name="pencil" size={20} color="white" />
+                <Text style={styles.customFont}>Edit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.declineButton}
+                onPress={() => handleHapus(item.uuid)}>
+                <Ionicons name="trash" size={20} color="white" />
+                <Text style={styles.customFont}>Hapus</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <View>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerRight}>
+            <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
+            <TouchableOpacity style={styles.iconWrapper}>
+              <Ionicons name="person-circle-outline" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      {/* Card untuk Tombol */}
+      <View style={styles.card}>
+        <View style={styles.tambahContainer}>
+          <TouchableOpacity style={styles.y}></TouchableOpacity>
+          <View style={styles.kontrakContainer}>
             <Pressable
               style={({pressed}) => [
                 styles.buttonpress,
@@ -272,94 +324,9 @@ export default function BelumKontrak() {
         </View>
       </View>
 
-      <View style={styles.tableHeader}>
-        <Text
-          style={[GlobalStyle.SemiBold, styles.headerCell, styles.numberCell]}>
-          NO
-        </Text>
-        <Text
-          style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}
-          numberOfLines={2} // Bisa disesuaikan sesuai kebutuhan
-          ellipsizeMode="tail">
-          NIP/NRP
-        </Text>
-        <Text
-          style={[GlobalStyle.SemiBold, styles.headerCell, styles.nameCell]}
-          numberOfLines={2} // Bisa disesuaikan sesuai kebutuhan
-          ellipsizeMode="tail">
-          NAMA
-        </Text>
-        <View style={styles.expandIconCell} />
-      </View>
-      <View style={styles.headerLine} />
-    </View>
-  );
-
-  const renderItem = ({item, index}) => {
-    const isExpanded = expandedId === item.id;
-    const rowBackgroundColor = index % 2 === 0 ? '#F7F8FC' : '#FFFFFF'; // Warna selang-seling
-
-    const nameWithNip = `${item.user_jabatan?.user?.name || ''} ${
-      item.kinerja?.user_jabatan?.user?.nip || ''
-    }`;
-    const nips = `${item.user_jabatan?.user?.nip || ''} ${
-      item.kinerja?.user_jabatan?.user?.nip || ''
-    }`;
-
-    return (
-      <>
-        <View style={styles.tableRow}>
-          <TouchableOpacity
-            style={[styles.rowHeader, {backgroundColor: rowBackgroundColor}]}
-            onPress={() => toggleExpand(item.id)}>
-            <Text
-              style={[
-                GlobalStyle.SemiBold,
-                styles.tableCell,
-                styles.numberCell,
-              ]}>
-              {index + 1}
-            </Text>
-            <Text
-              style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}>
-              {item.nip || '-'}
-            </Text>
-            <Text
-              style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}>
-              {item.name || '-'}
-            </Text>
-            <View style={styles.expandIconCell}>
-              <Ionicons
-                name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                size={20}
-                color="#BEC2D5"
-              />
-            </View>
-          </TouchableOpacity>
-          {isExpanded && (
-            <View style={styles.expandedContent}>
-            <Text style={styles.expandedText}>NIP/NRP: {item.nip || '-'}</Text>
-            <Text style={styles.expandedText}>
-              Nama: {item.name || '-'}  {/* Ganti item.nama menjadi item.name */}
-            </Text>
-            </View>
-          )}
-        </View>
-        {index === data.length - 1 && <View style={styles.verticalLine} />}
-      </>
-    );
-  };
-
-  return (
-    <View style={styles.container}>
-      {/* Header */}
-      <Header title="Kirim Kontrak" />
-        // Loading Indicator
-      {isLoading ? (
-        // Loading Indicator
-        <View style={styles.loadingContainer}>
-          <BarIndicator color="#D4C6C6" count={5} size={24} />
-        </View>
+      {/* Tabel */}
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <FlatList
           ListHeaderComponent={TableHeader}
@@ -751,7 +718,10 @@ const styles = StyleSheet.create({
   textActive: {
     color: '#A463FC',
   },
-  bulanButton: {
+  kontrakContainer: {
+    flexDirection: 'row',
+  },
+  kontrakButton: {
     flexDirection: 'row',
     gap: 5,
   },

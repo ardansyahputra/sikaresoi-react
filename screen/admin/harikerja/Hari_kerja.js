@@ -170,7 +170,7 @@ const CalendarComponent = () => {
     setDisplayedYear(selectedYear);
     fetchWorkDays(selectedMonth, selectedYear);
   };
-  
+
   return (
     <View style={styles.rootContainer}>
       <Header title="Setting Hari Kerja" />
@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     borderColor: '#fff',
     borderRadius: 5,
-    padding: 12,
+    padding: 8,
   },
   dayHeader: {
     width: 45,

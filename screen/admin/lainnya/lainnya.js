@@ -7,10 +7,11 @@ import {
   ScrollView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'; // Import Icon Library
-import { useAuth } from '../../auth/AuthContext'; // Import useAuth from AuthContext
+import {useAuth} from '../../auth/AuthContext'; // Import useAuth from AuthContext
+import Header from '../components/Header';
 
-const Allmenu = ({ navigation }) => {
-  const { hasMenuAccess } = useAuth(); // Get hasMenuAccess function from AuthContext
+const Allmenu = ({navigation}) => {
+  const {hasMenuAccess} = useAuth(); // Get hasMenuAccess function from AuthContext
 
   // Function to render icon only if user has access to the route
   const renderIconWithAccess = (label, iconName, route, onPress) => {
@@ -23,37 +24,47 @@ const Allmenu = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color="#FAFAFA" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Menu Cepat</Text>
-      </View>
-
+      <Header title="Lainnya" />
       {/* Body */}
       <ScrollView>
         {/* LAPORAN */}
         <Text style={styles.sectionTitle}>Laporan</Text>
         <View style={styles.iconGrid}>
-          {renderIconWithAccess('Tugas Tambahan', 'clipboard-outline', 'admin.laporan.tugas_tambahan', () =>
-            navigation.navigate('TugasTambahan')
+          {renderIconWithAccess(
+            'Tugas Tambahan',
+            'clipboard-outline',
+            'admin.laporan.tugas_tambahan',
+            () => navigation.navigate('TugasTambahan'),
           )}
-          {renderIconWithAccess('Kontrak Kerja', 'bag-check-outline', 'admin.laporan.kontrak_kerja', () =>
-            navigation.navigate('KontrakKerja')
+          {renderIconWithAccess(
+            'Kontrak Kerja',
+            'bag-check-outline',
+            'admin.laporan.kontrak_kerja',
+            () => navigation.navigate('KontrakKerja'),
           )}
-          {renderIconWithAccess('Capaian Kinerja', 'stats-chart-outline', 'admin.laporan.capaian_kinerja', () =>
-            navigation.navigate('CapaianKinerja')
+          {renderIconWithAccess(
+            'Capaian Kinerja',
+            'stats-chart-outline',
+            'admin.laporan.capaian_kinerja',
+            () => navigation.navigate('CapaianKinerja'),
           )}
-          {renderIconWithAccess('Rekapitulasi', 'document-text-outline', 'admin.laporan.rekapitulasi', () =>
-            navigation.navigate('Rekapitulasi')
+          {renderIconWithAccess(
+            'Rekapitulasi',
+            'document-text-outline',
+            'admin.laporan.rekapitulasi',
+            () => navigation.navigate('Rekapitulasi'),
           )}
-          {renderIconWithAccess('Remunerasi', 'checkmark-done-circle', 'admin.laporan.remunerasi', () =>
-            navigation.navigate('Remunerasi')
+          {renderIconWithAccess(
+            'Remunerasi',
+            'checkmark-done-circle',
+            'admin.laporan.remunerasi',
+            () => navigation.navigate('Remunerasi'),
           )}
-          {renderIconWithAccess('Tunjangan Tambahan', 'wallet-outline', 'admin.laporan.tunjangan_tambahan', () =>
-            navigation.navigate('TunjanganTambahan')
+          {renderIconWithAccess(
+            'Tunjangan Tambahan',
+            'wallet-outline',
+            'admin.laporan.tunjangan_tambahan',
+            () => navigation.navigate('TunjanganTambahan'),
           )}
         </View>
 
@@ -61,117 +72,213 @@ const Allmenu = ({ navigation }) => {
         <Text style={styles.sectionTitle}>User</Text>
         <View style={styles.iconGrid}>
           {renderIconWithAccess('User', 'person', 'user.master', () =>
-            navigation.navigate('UserScreen')
+            navigation.navigate('UserScreen'),
           )}
-          {renderIconWithAccess('User Group', 'people', 'admin.master.user_group', () =>
-            navigation.navigate('UserGroup')
+          {renderIconWithAccess(
+            'User Group',
+            'people',
+            'admin.master.user_group',
+            () => navigation.navigate('UserGroup'),
           )}
-          {renderIconWithAccess('Persentase Kegiatan', 'pie-chart-outline', 'admin.master.persentase_kegiatan', () =>
-            navigation.navigate('PersentaseKegiatan')
+          {renderIconWithAccess(
+            'Persentase Kegiatan',
+            'pie-chart-outline',
+            'admin.master.persentase_kegiatan',
+            () => navigation.navigate('PersentaseKegiatan'),
           )}
         </View>
 
         {/* MASTER */}
         <Text style={styles.sectionTitle}>Master</Text>
         <View style={styles.iconGrid}>
-          {renderIconWithAccess('Pemotongan', 'cut', 'admin.master.pemotongan', () =>
-            navigation.navigate('Pemotongan')
+          {renderIconWithAccess(
+            'Pemotongan',
+            'cut',
+            'admin.master.pemotongan',
+            () => navigation.navigate('Pemotongan'),
           )}
-          {renderIconWithAccess('Uang Makan', 'restaurant-outline', 'admin.master.uang_makan', () =>
-            navigation.navigate('UangMakan')
+          {renderIconWithAccess(
+            'Uang Makan',
+            'restaurant-outline',
+            'admin.master.uang_makan',
+            () => navigation.navigate('UangMakan'),
           )}
-          {renderIconWithAccess('Jabatan', 'briefcase-outline', 'admin.master.jabatan', () =>
-            navigation.navigate('Jabatan')
+          {renderIconWithAccess(
+            'Jabatan',
+            'briefcase-outline',
+            'admin.master.jabatan',
+            () => navigation.navigate('Jabatan'),
           )}
-          {renderIconWithAccess('Unit Kerja', 'business-outline', 'admin.master.unit_kerja', () =>
-            navigation.navigate('UnitKerja')
+          {renderIconWithAccess(
+            'Unit Kerja',
+            'business-outline',
+            'admin.master.unit_kerja',
+            () => navigation.navigate('UnitKerja'),
           )}
-          {renderIconWithAccess('Pangkat', 'ribbon-outline', 'admin.master.pangkat', () =>
-            navigation.navigate('Pangkat')
+          {renderIconWithAccess(
+            'Pangkat',
+            'ribbon-outline',
+            'admin.master.pangkat',
+            () => navigation.navigate('Pangkat'),
           )}
-          {renderIconWithAccess('Satuan', 'grid-outline', 'admin.master.satuan', () =>
-            navigation.navigate('Satuan')
+          {renderIconWithAccess(
+            'Satuan',
+            'grid-outline',
+            'admin.master.satuan',
+            () => navigation.navigate('Satuan'),
           )}
-          {renderIconWithAccess('Uraian', 'document-text-outline', 'admin.master.uraian', () =>
-            navigation.navigate('Uraian')
+          {renderIconWithAccess(
+            'Uraian',
+            'document-text-outline',
+            'admin.master.uraian',
+            () => navigation.navigate('Uraian'),
           )}
-          {renderIconWithAccess('Bulan & Tahun', 'calendar-outline', 'admin.master.bulan_tahun', () =>
-            navigation.navigate('BulanTahun')
+          {renderIconWithAccess(
+            'Bulan & Tahun',
+            'calendar-outline',
+            'admin.master.bulan_tahun',
+            () => navigation.navigate('BulanTahun'),
           )}
-          {renderIconWithAccess('Dewan Pengawas', 'shield-outline', 'admin.master.dewas', () =>
-            navigation.navigate('DewanPengawas')
+          {renderIconWithAccess(
+            'Dewan Pengawas',
+            'shield-outline',
+            'admin.master.dewas',
+            () => navigation.navigate('DewanPengawas'),
           )}
-          {renderIconWithAccess('PIR', 'git-network-outline', 'admin.master.pir', () =>
-            navigation.navigate('PIR')
+          {renderIconWithAccess(
+            'PIR',
+            'git-network-outline',
+            'admin.master.pir',
+            () => navigation.navigate('PIR'),
           )}
-          {renderIconWithAccess('Kegiatan', 'clipboard-outline', 'admin.master.kegiatan', () =>
-            navigation.navigate('Kegiatan')
+          {renderIconWithAccess(
+            'Kegiatan',
+            'clipboard-outline',
+            'admin.master.kegiatan',
+            () => navigation.navigate('Kegiatan'),
           )}
-          {renderIconWithAccess('Jenis Pegawai', 'person-add-outline', 'admin.master.jenis_pegawai', () =>
-            navigation.navigate('JenisPegawai')
+          {renderIconWithAccess(
+            'Jenis Pegawai',
+            'person-add-outline',
+            'admin.master.jenis_pegawai',
+            () => navigation.navigate('JenisPegawai'),
           )}
-          {renderIconWithAccess('Lokasi Absensi', 'location-outline', 'admin.master.lokasiabsensi', () =>
-            navigation.navigate('LokasiAbsensi')
+          {renderIconWithAccess(
+            'Lokasi Absensi',
+            'location-outline',
+            'admin.master.lokasiabsensi',
+            () => navigation.navigate('LokasiAbsensi'),
           )}
-          {renderIconWithAccess('No WA', 'call-outline', 'admin.master.nowa', () =>
-            navigation.navigate('NoWa')
+          {renderIconWithAccess(
+            'No WA',
+            'call-outline',
+            'admin.master.nowa',
+            () => navigation.navigate('NoWa'),
           )}
-          {renderIconWithAccess('Jenis Absensi', 'finger-print-outline', 'admin.master.jenis_absensi', () =>
-            navigation.navigate('JenisAbsensi')
+          {renderIconWithAccess(
+            'Jenis Absensi',
+            'finger-print-outline',
+            'admin.master.jenis_absensi',
+            () => navigation.navigate('JenisAbsensi'),
           )}
-          {renderIconWithAccess('Reward & Punishment', 'gift-outline', 'admin.master.reward_punishment', () =>
-            navigation.navigate('RewardPunishment')
+          {renderIconWithAccess(
+            'Reward & Punishment',
+            'gift-outline',
+            'admin.master.reward_punishment',
+            () => navigation.navigate('RewardPunishment'),
           )}
-          {renderIconWithAccess('Deadline Kinerja', 'timer-outline', 'admin.master.deadline_kinerja', () =>
-            navigation.navigate('DeadlineKinerja')
+          {renderIconWithAccess(
+            'Deadline Kinerja',
+            'timer-outline',
+            'admin.master.deadline_kinerja',
+            () => navigation.navigate('DeadlineKinerja'),
           )}
-          {renderIconWithAccess('Master PTKP', 'document-attach-outline', 'admin.master.pajak_ptkp', () =>
-            navigation.navigate('MasterPTKP')
+          {renderIconWithAccess(
+            'Master PTKP',
+            'document-attach-outline',
+            'admin.master.pajak_ptkp',
+            () => navigation.navigate('MasterPTKP'),
           )}
-          {renderIconWithAccess('Jam Kerja', 'time-outline', 'admin.master.jamkerja', () =>
-            navigation.navigate('JamKerja')
+          {renderIconWithAccess(
+            'Jam Kerja',
+            'time-outline',
+            'admin.master.jamkerja',
+            () => navigation.navigate('JamKerja'),
           )}
         </View>
 
         {/* FINGERPRINT */}
         <Text style={styles.sectionTitle}>Fingerprint</Text>
         <View style={styles.iconGrid}>
-          {renderIconWithAccess('Jam Finger', 'time-outline', 'admin.master.settingfingerprint', () =>
-            navigation.navigate('JamFingerprint')
+          {renderIconWithAccess(
+            'Jam Finger',
+            'time-outline',
+            'admin.master.settingfingerprint',
+            () => navigation.navigate('JamFingerprint'),
           )}
-          {renderIconWithAccess('Mesin', 'hardware-chip-outline', 'admin.master.mesinfingerprint', () =>
-            navigation.navigate('Mesin')
+          {renderIconWithAccess(
+            'Mesin',
+            'hardware-chip-outline',
+            'admin.master.mesinfingerprint',
+            () => navigation.navigate('Mesin'),
           )}
         </View>
 
         <Text style={styles.sectionTitle}>Pengaturan Tambahan</Text>
         <View style={styles.iconGrid}>
-          {renderIconWithAccess('Potongan Lain', 'cut-outline', 'admin.potongan_lain', () =>
-            navigation.navigate('PotonganLain')
+          {renderIconWithAccess(
+            'Potongan Lain',
+            'cut-outline',
+            'admin.potongan_lain',
+            () => navigation.navigate('PotonganLain'),
           )}
-          {renderIconWithAccess('Tanggung Renteng', 'cube-outline', 'admin.tanggung_renteng', () =>
-            navigation.navigate('TanggungRenteng')
+          {renderIconWithAccess(
+            'Tanggung Renteng',
+            'cube-outline',
+            'admin.tanggung_renteng',
+            () => navigation.navigate('TanggungRenteng'),
           )}
-          {renderIconWithAccess('Setting Hari Kerja', 'calendar-outline', 'admin.harikerja', () =>
-            navigation.navigate('SettingHariKerja')
+          {renderIconWithAccess(
+            'Setting Hari Kerja',
+            'calendar-outline',
+            'admin.harikerja',
+            () => navigation.navigate('SettingHariKerja'),
           )}
-          {renderIconWithAccess('Peta Jabatan', 'map-outline', 'admin.master.jabatan.peta', () =>
-            navigation.navigate('PetaJabatan')
+          {renderIconWithAccess(
+            'Peta Jabatan',
+            'map-outline',
+            'admin.master.jabatan.peta',
+            () => navigation.navigate('PetaJabatan'),
           )}
-          {renderIconWithAccess('Setting', 'settings-outline', 'admin.setting', () =>
-            navigation.navigate('Setting')
+          {renderIconWithAccess(
+            'Setting',
+            'settings-outline',
+            'admin.setting',
+            () => navigation.navigate('Setting'),
           )}
-          {renderIconWithAccess('Surat Tugas', 'document-outline', 'admin.surattugas', () =>
-            navigation.navigate('SuratTugas')
+          {renderIconWithAccess(
+            'Surat Tugas',
+            'document-outline',
+            'admin.surattugas',
+            () => navigation.navigate('SuratTugas'),
           )}
-          {renderIconWithAccess('Verifikasi Surat Tugas', 'checkmark-done-outline', 'surattugas.approval', () =>
-            navigation.navigate('VerifikasiSuratTugas')
+          {renderIconWithAccess(
+            'Verifikasi Surat Tugas',
+            'checkmark-done-outline',
+            'surattugas.approval',
+            () => navigation.navigate('VerifikasiSuratTugas'),
           )}
-          {renderIconWithAccess('Persentase Capaian', 'stats-chart-outline', 'admin.setting_persentase_capaian', () =>
-            navigation.navigate('SettingPersentaseCapaian')
+          {renderIconWithAccess(
+            'Persentase Capaian',
+            'stats-chart-outline',
+            'admin.setting_persentase_capaian',
+            () => navigation.navigate('SettingPersentaseCapaian'),
           )}
-          {renderIconWithAccess('Setting Tugas Tambahan', 'settings-outline', 'admin.setting_tugas_tambahan', () =>
-            navigation.navigate('SettingTugasTambahan')
+          {renderIconWithAccess(
+            'Setting Tugas Tambahan',
+            'settings-outline',
+            'admin.setting_tugas_tambahan',
+            () => navigation.navigate('SettingTugasTambahan'),
           )}
         </View>
       </ScrollView>

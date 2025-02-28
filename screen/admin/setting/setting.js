@@ -291,7 +291,7 @@ const Setting = ({navigation}) => {
           </Text>
 
           <ImageSection
-            title="Logo Luar"
+            title="Logo Dalam"
             imageType="logo_dark"
             imageUrl={settingData.logodarkdir}
           />
@@ -300,7 +300,7 @@ const Setting = ({navigation}) => {
           </Text>
 
           <ImageSection
-            title="Logo Dalam"
+            title="Logo Luar"
             imageType="logo_white"
             imageUrl={settingData.logowhitedir}
           />

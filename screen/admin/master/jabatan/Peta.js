@@ -14,6 +14,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import GlobalStyle from '../../../../src/utils/GlobalStyle';
 import Header from '../../../components/Header';
 import {useNavigation} from '@react-navigation/native';
+import {BarIndicator} from 'react-native-indicators';
 import {Dropdown} from 'react-native-element-dropdown';
 
 const TreeNode = ({node, level = 0, onDelete, selectedTahun}) => {
@@ -162,66 +163,57 @@ const PetaJabatan = () => {
     fetchTahunOptions();
   }, []);
 
-  if (loading) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text style={[GlobalStyle.Regular, styles.loadingText]}>
-          Loading organization structure...
-        </Text>
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.centerContainer}>
-        <Text style={[GlobalStyle.Regular, styles.errorText]}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchTreeData}>
-          <Text style={[GlobalStyle.SemiBold, styles.retryButtonText]}>
-            Retry
-          </Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  if (!treeData) {
-    return (
-      <View style={styles.centerContainer}>
-        <Text style={[GlobalStyle.Regular, styles.errorText]}>
-          No data available
-        </Text>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
       <Header title="Peta Jabatan" />
-      <Dropdown
-        style={styles.dropdown}
-        data={tahunOptions}
-        labelField="label"
-        valueField="value"
-        placeholder="Select Tahun"
-        value={selectedTahun}
-        onChange={item => {
-          setSelectedTahun(item.valueOf);
-        }}
-        renderItem={item => (
-          <Text style={[GlobalStyle.Regular, styles.dropdownItem]}>
-            {item.label}
+      {loading ? (
+        <View style={styles.centerContainer}>
+          <View style={styles.loadingContainer}>
+            <BarIndicator color="#D4C6C6" count={5} size={24} />
+          </View>
+        </View>
+      ) : error ? (
+        <View style={styles.centerContainer}>
+          <Text style={[GlobalStyle.Regular, styles.errorText]}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={fetchTreeData}>
+            <Text style={[GlobalStyle.SemiBold, styles.retryButtonText]}>
+              Retry
+            </Text>
+          </TouchableOpacity>
+        </View>
+      ) : !treeData ? (
+        <View style={styles.centerContainer}>
+          <Text style={[GlobalStyle.Regular, styles.errorText]}>
+            No data available
           </Text>
-        )}
-      />
-      <ScrollView style={styles.treeContainer}>
-        <TreeNode
-          node={treeData}
-          onDelete={fetchTreeData}
-          selectedTahun={selectedTahun}
-        />
-      </ScrollView>
+        </View>
+      ) : (
+        <>
+          <Dropdown
+            style={styles.dropdown}
+            data={tahunOptions}
+            labelField="label"
+            valueField="value"
+            placeholder="Select Tahun"
+            value={selectedTahun}
+            onChange={item => {
+              setSelectedTahun(item.valueOf);
+            }}
+            renderItem={item => (
+              <Text style={[GlobalStyle.Regular, styles.dropdownItem]}>
+                {item.label}
+              </Text>
+            )}
+          />
+          <ScrollView style={styles.treeContainer}>
+            <TreeNode
+              node={treeData}
+              onDelete={fetchTreeData}
+              selectedTahun={selectedTahun}
+            />
+          </ScrollView>
+        </>
+      )}
     </View>
   );
 };

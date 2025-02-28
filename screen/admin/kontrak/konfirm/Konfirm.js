@@ -13,12 +13,14 @@ import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../../../../src/api/apiClient';
 import Header from '../../components/Header';
 import GlobalStyle from '../../../../src/utils/GlobalStyle';
+import Toast from 'react-native-toast-message';
 import {BarIndicator} from 'react-native-indicators';
+import {useFocusEffect} from '@react-navigation/native';
 
 export default function BelumKontrak() {
   const apiClient = useApiClient();
   const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -31,6 +33,13 @@ export default function BelumKontrak() {
   useEffect(() => {
     fetchTahun();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchRealisasiData(currentPage, selectedDisplay);
+      fetchKontrakData(currentPage, selectedDisplay);
+    }, [currentPage, selectedDisplay]),
+  );
 
   useEffect(() => {
     if (activeButton === 'kontrak') {
@@ -83,7 +92,6 @@ export default function BelumKontrak() {
   };
 
   const fetchRealisasiData = async page => {
-    setIsLoading(true);
     console.log('Fetching Realisasi Data');
     console.log('Endpoint:', 'POST /realisasi/belum_setuju');
     console.log('Request Payload:', {
@@ -94,10 +102,12 @@ export default function BelumKontrak() {
     });
 
     try {
-      const response = await apiClient.post('/kinerja/belum_setuju', {
+      setIsLoading(true);
+      const response = await apiClient.post('/kinerja/user_belum_kirim', {
         per: selectedDisplay,
         search: searchQuery,
         tahun: selectedYear,
+        page: page, // Pastikan page dikirimkan!
       });
 
       console.log('Realisasi Response:', {
@@ -129,15 +139,15 @@ export default function BelumKontrak() {
   };
 
   const fetchKontrakData = async page => {
-    setIsLoading(true);
     console.log('Fetching Kontrak Data');
     setIsLoading(true); // Pastikan loading di-set sebelum request API
 
     try {
-      const response = await apiClient.post('/kinerja/sudah_setuju', {
+      const response = await apiClient.post('/kinerja/user_sudah_kirim', {
         per: selectedDisplay,
         search: searchQuery,
         tahun: selectedYear,
+        page: page, // Pastikan page dikirimkan!
       });
 
       console.log('Kontrak Response:', response.data);
@@ -196,7 +206,7 @@ export default function BelumKontrak() {
                     styles.buttonText,
                     activeButton === 'kontrak' && styles.textActive,
                   ]}>
-                  Belum Disetujui
+                  Belum Kirim
                 </Text>
               </View>
             </Pressable>
@@ -215,7 +225,7 @@ export default function BelumKontrak() {
                     styles.buttonText,
                     activeButton === 'realisasi' && styles.textActive,
                   ]}>
-                  Sudah Disetujui
+                  Sudah Kirim
                 </Text>
               </View>
             </Pressable>
@@ -291,18 +301,6 @@ export default function BelumKontrak() {
     const nips = `${item.user_jabatan?.user?.nip || ''} ${
       item.kinerja?.user_jabatan?.user?.nip || ''
     }`;
-    const tahun = `${item.tahun?.tahun || ''} ${
-      item.kinerja?.tahun?.tahuna || ''
-    }`;
-    const nipim = `${item.user_jabatan?.pimpinan?.name || ''} ${
-      item.kinerja?.userjabatan?.pimpinan?.name || ''
-    }`;
-    const nrpim = `${item.user_jabatan?.pimpinan?.nip || ''} ${
-      item.kinerja?.userjabatan?.pimpinan?.name || ''
-    }`;
-    const lasap = `${item.update || ''} ${
-      item.kinerja?.userjabatan?.pimpinan?.name || ''
-    }`;
 
     return (
       <>
@@ -320,11 +318,11 @@ export default function BelumKontrak() {
             </Text>
             <Text
               style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}>
-              {nips || '-'}
+              {item.nip || '-'}
             </Text>
             <Text
               style={[GlobalStyle.SemiBold, styles.tableCell, styles.nameCell]}>
-              {nameWithNip || '-'}
+              {item.name || '-'}
             </Text>
             <View style={styles.expandIconCell}>
               <Ionicons
@@ -336,23 +334,12 @@ export default function BelumKontrak() {
           </TouchableOpacity>
           {isExpanded && (
             <View style={styles.expandedContent}>
-              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
-                NIP/NRP: {nips || '-'}
+              <Text style={styles.expandedText}>
+                NIP/NRP: {item.nip || '-'}
               </Text>
-              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
-                Nama: {nameWithNip || '-'}
-              </Text>
-              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
-                Tahun: {tahun || '-'}
-              </Text>
-              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
-                NIP/NRP Pimpinan: {nrpim || '-'}
-              </Text>
-              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
-                Nama Pimpinan: {nipim || '-'}
-              </Text>
-              <Text style={[GlobalStyle.SemiBold, styles.expandedText]}>
-                Update Terakhir: {lasap || '-'}
+              <Text style={styles.expandedText}>
+                Nama: {item.name || '-'}{' '}
+                {/* Ganti item.nama menjadi item.name */}
               </Text>
             </View>
           )}
@@ -365,7 +352,8 @@ export default function BelumKontrak() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <Header title="Kontrak" />
+      <Header title="Kirim Kontrak" />
+      // Loading Indicator
       {isLoading ? (
         // Loading Indicator
         <View style={styles.loadingContainer}>

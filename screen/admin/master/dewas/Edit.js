@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Dimensions,
   ScrollView,
 } from 'react-native';
@@ -61,7 +60,11 @@ const EditDewas = ({navigation, route}) => {
       );
     } catch (error) {
       console.error('Error fetching data:', error);
-      Alert.alert('Error', 'Gagal memuat data.');
+      Toast.show({
+        type: 'error',
+        text1: 'Gagal',
+        text2: 'Gagal memuat data.',
+      });
     } finally {
       setIsLoading(false); // Pastikan loading dihentikan
     }

@@ -113,14 +113,11 @@ export default function Jabatan() {
       <View style={styles.tableHeader}>
         <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
         <Text style={[styles.headerCell, styles.nameCell]}>User</Text>
-        <Text style={[styles.headerCell, styles.tableStatusCell]}>
-          Dibaca
-        </Text>
+        <Text style={[styles.headerCell, styles.tableStatusCell]}>Dibaca</Text>
         <View style={styles.expandIconCell} />
       </View>
     </View>
   );
-  
 
   const renderItem = ({item, index}) => {
     if (!item) return null;
@@ -146,15 +143,14 @@ export default function Jabatan() {
             ellipsizeMode="tail">
             {userName}
           </Text>
-            <View
-              style={[
-                styles.dibacaValueWrapper,
-                isDibacaEmpty && {backgroundColor: 'red'},
-              ]}>
-              <Text style={styles.DibacaText}>{dibaca}</Text>
-            </View>
-          <View style={[styles.dibacaWrapper, {marginLeft: 20}]}>
+          <View
+            style={[
+              styles.dibacaValueWrapper,
+              isDibacaEmpty && {backgroundColor: 'red'},
+            ]}>
+            <Text style={styles.DibacaText}>{dibaca}</Text>
           </View>
+          <View style={[styles.dibacaWrapper, {marginLeft: 20}]}></View>
           <View style={styles.actionCell}>
             <Ionicons
               name={isExpanded ? 'chevron-up' : 'chevron-down'}
@@ -197,7 +193,6 @@ export default function Jabatan() {
       </View>
     );
   };
-
 
   return (
     <View style={styles.container}>
@@ -313,12 +308,12 @@ const styles = StyleSheet.create({
   numberCell: {
     width: 50,
     marginLeft: 10,
-    },
+  },
   nameCell: {
     flex: 2,
     overflow: 'hidden',
     marginright: 100,
-    },
+  },
   statusCellContainer: {
     width: 100,
   },

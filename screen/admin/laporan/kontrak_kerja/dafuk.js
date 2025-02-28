@@ -5,43 +5,37 @@ import {
   TouchableOpacity,
   StyleSheet,
   Modal,
-  TextInput,
-  Switch,
-  ScrollView,
   Linking,
   ActivityIndicator,
-  KeyboardAvoidingView,
 } from 'react-native';
 import {Dropdown} from 'react-native-element-dropdown';
 import RNFS from 'react-native-fs';
-import useApiClient from '../../../../src/api/apiClient';
 import {APP_URL} from '@env';
-import GlobalStyle from '../../../../src/utils/GlobalStyle';
+import useApiClient from '../../../../src/api/apiClient';
 import Header from '../../components/Header';
+import GlobalStyle from '../../../../src/utils/GlobalStyle';
 
-
-export default function TunjanganTambahan({navigation}) {
+export default function TugasTambahan({navigation}) {
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [selectedYear, setSelectedYear] = useState(null);
   const [taxReduction, setTaxReduction] = useState(null);
-  const [selectedType, setSelectedType] = useState('ALL');
+  const [selectedType, setSelectedType] = useState(null);
   const [leftSignature, setLeftSignature] = useState('');
   const [rightSignature, setRightSignature] = useState('');
-  const [signatures, setSignatures] = useState([]);
+  const [signatures, setSignatures] = useState([]); // State to store the list of signatures
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
-  const [selectedAllowance, setSelectedAllowance] = useState(null);
-  const [isP2Pure, setIsP2Pure] = useState(false);
-  const [percentage, setPercentage] = useState('');
   const [isConfirmationVisible, setIsConfirmationVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const apiClient = useApiClient();
+  const [modalMessage, setModalMessage] = useState('');
+  const apiClient = useApiClient(); // Invoke the hook here
 
   useEffect(() => {
     const fetchSignatures = async () => {
       try {
-        const response = await apiClient(`/user_master/show`);
-        const data = response.data || (await response.json());
+        const response = await apiClient(`/user_master/show`); // Use the environment variable here
+        const data = response.data || (await response.json()); // Try fetching as JSON if necessary
+
+        console.log('Received Data:', data);
 
         if (data && data.res.code === 200) {
           const signatureData = data.data.map(user => ({
@@ -87,12 +81,10 @@ export default function TunjanganTambahan({navigation}) {
     {label: 'Final', value: 'FINAL'},
   ];
 
-  const allowanceData = [
-    {label: '13', value: '13'},
-    {label: '14', value: '14'},
-    {label: '15', value: '15'},
-    {label: '16', value: '16'},
-    {label: 'Insentif', value: 'INSENTIF'},
+  const typeData = [
+    {label: 'P1', value: 'P1'},
+    {label: 'P2', value: 'P2'},
+    {label: 'P1 & P2', value: 'ALL'},
   ];
 
   const showConfirmationDialog = () => {
@@ -116,8 +108,8 @@ export default function TunjanganTambahan({navigation}) {
     setIsConfirmationVisible(false);
     setIsLoading(true);
 
-    const downloadUrl = `${APP_URL}/report/admin/tunjangan_tambahan_gaji/${selectedMonth}/${selectedYear}?p=${taxReduction}&kiri=${leftSignature}&kanan=${rightSignature}&tk=${selectedAllowance}&persentase=${percentage}&p2murni=${isP2Pure}`;
-    const filePath = `/storage/emulated/0/Download/Tunjangan_Tambahan_${selectedMonth}_${selectedYear}.xlsx`;
+    const downloadUrl = `${APP_URL}/report/admin/remunerasi/${selectedMonth}/${selectedYear}?p=${taxReduction}&kiri=${leftSignature}&kanan=${rightSignature}&tipe=${selectedType}`;
+    const filePath = `/storage/emulated/0/Download/Laporan_Remun${selectedMonth}_${selectedYear}.xlsx`;
 
     try {
       console.log('Memulai proses download:', downloadUrl);
@@ -183,116 +175,110 @@ export default function TunjanganTambahan({navigation}) {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <Header title="Tunjangan Tambahan" />
+    <View style={styles.container}>
+      <Header title="Remunerasi" />
 
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.contentContainer}>
-        <View style={styles.cardContainer}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Report Tunjangan Tambahan</Text>
-          </View>
-          <Text style={styles.label}>Tanda Tangan Kiri *</Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={signatures}
-            labelField="label"
-            valueField="value"
-            placeholder="Pilih Tanda Tangan Kiri"
-            value={leftSignature}
-            onChange={item => setLeftSignature(item.value)}
-            search
-            searchPlaceholder="Cari nama..."
-            maxHeight={300}
-            renderItem={item => (
-              <View style={styles.dropdownItem}>
-                <Text style={styles.dropdownText}>{item.label}</Text>
-              </View>
-            )}
-          />
-          <Text style={styles.label}>Tanda Tangan Kanan *</Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={signatures}
-            labelField="label"
-            valueField="value"
-            placeholder="Pilih Tanda Tangan Kanan"
-            value={rightSignature}
-            onChange={item => setRightSignature(item.value)}
-            search
-            searchPlaceholder="Cari nama..."
-            maxHeight={300}
-            renderItem={item => (
-              <View style={styles.dropdownItem}>
-                <Text style={styles.dropdownText}>{item.label}</Text>
-              </View>
-            )}
-          />
-          <Text style={styles.label}>Pilih Bulan *</Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={monthData}
-            labelField="label"
-            valueField="value"
-            placeholder="Pilih Bulan"
-            value={selectedMonth}
-            onChange={item => setSelectedMonth(item.value)}
-          />
-          <Text style={styles.label}>Pilih Tahun *</Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={yearData}
-            labelField="label"
-            valueField="value"
-            placeholder="Pilih Tahun"
-            value={selectedYear}
-            onChange={item => setSelectedYear(item.value)}
-          />
-          <Text style={styles.label}>Potongan Pajak *</Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={taxReductionData}
-            labelField="label"
-            valueField="value"
-            placeholder="Pilih Potongan Pajak"
-            value={taxReduction}
-            onChange={item => setTaxReduction(item.value)}
-          />
-          <Text style={styles.label}>Tunjangan Ke *</Text>
-          <Dropdown
-            style={styles.dropdown}
-            data={allowanceData}
-            labelField="label"
-            valueField="value"
-            placeholder="Pilih Tunjangan Ke"
-            value={selectedAllowance}
-            onChange={item => setSelectedAllowance(item.value)}
-          />
-          <Text style={styles.label}>P2 Murni</Text>
-          <Switch
-            value={isP2Pure}
-            onValueChange={setIsP2Pure}
-            trackColor={{false: '#767577', true: '#28c4ac'}}
-            thumbColor={isP2Pure ? '#f4f3f4' : '#f4f3f4'}
-          />
-          <Text style={styles.label}>Persentase :</Text>
-          <TextInput
-            style={styles.input}
-            value={percentage}
-            onChangeText={setPercentage}
-            keyboardType="numeric"
-            placeholder="Masukkan persentase"
-          />
-          <TouchableOpacity
-            style={styles.downloadButton}
-            onPress={showConfirmationDialog}>
-            <Text style={styles.buttonText}>Download Laporan</Text>
-          </TouchableOpacity>
+      <View style={styles.cardContainer}>
+        <View style={styles.cardHeader}>
+          <Text style={[GlobalStyle.SemiBold, styles.cardTitle]}>
+            Report Remunerasi
+          </Text>
         </View>
-      </ScrollView>
+        <View style={styles.cardDivider}></View>
+        <Text style={[GlobalStyle.SemiBold, styles.label]}>Pilih Bulan *</Text>
+        <Dropdown
+          style={styles.dropdown}
+          data={monthData}
+          labelField="label"
+          valueField="value"
+          placeholder="Pilih Bulan"
+          value={selectedMonth}
+          onChange={item => setSelectedMonth(item.value)}
+        />
+        <Text style={[GlobalStyle.SemiBold, styles.label]}>Pilih Tahun *</Text>
+        <Dropdown
+          style={styles.dropdown}
+          data={yearData}
+          labelField="label"
+          valueField="value"
+          placeholder="Pilih Tahun"
+          value={selectedYear}
+          onChange={item => setSelectedYear(item.value)}
+        />
+        <Text style={[GlobalStyle.SemiBold, styles.label]}>
+          Potongan Pajak *
+        </Text>
+        <Dropdown
+          style={styles.dropdown}
+          data={taxReductionData}
+          labelField="label"
+          valueField="value"
+          placeholder="Pilih Potongan Pajak"
+          value={taxReduction}
+          onChange={item => setTaxReduction(item.value)}
+        />
+        <Text style={[GlobalStyle.SemiBold, styles.label]}>Pilih Tipe *</Text>
+        <Dropdown
+          style={styles.dropdown}
+          data={typeData}
+          labelField="label"
+          valueField="value"
+          placeholder="Pilih Tipe"
+          value={selectedType}
+          onChange={item => setSelectedType(item.value)}
+        />
+        <Text style={[GlobalStyle.SemiBold, styles.label]}>
+          Tanda Tangan Kiri *
+        </Text>
+        <Dropdown
+          style={styles.dropdown}
+          data={signatures}
+          labelField="label"
+          valueField="value"
+          placeholder="Pilih Tanda Tangan Kiri"
+          value={leftSignature}
+          onChange={item => setLeftSignature(item.value)}
+          search
+          searchPlaceholder="Cari nama..."
+          maxHeight={300}
+          renderItem={item => (
+            <View style={styles.dropdownItem}>
+              <Text style={[GlobalStyle.SemiBold, styles.dropdownText]}>
+                {item.label}
+              </Text>
+            </View>
+          )}
+        />
+        <Text style={[GlobalStyle.SemiBold, styles.label]}>
+          Tanda Tangan Kanan *
+        </Text>
+        <Dropdown
+          style={styles.dropdown}
+          data={signatures}
+          labelField="label"
+          valueField="value"
+          placeholder="Pilih Tanda Tangan Kanan"
+          value={rightSignature}
+          onChange={item => setRightSignature(item.value)}
+          search
+          searchPlaceholder="Cari nama..."
+          maxHeight={300}
+          renderItem={item => (
+            <View style={styles.dropdownItem}>
+              <Text style={[GlobalStyle.SemiBold, styles.dropdownText]}>
+                {item.label}
+              </Text>
+            </View>
+          )}
+        />{' '}
+        <TouchableOpacity
+          style={styles.downloadButton}
+          onPress={showConfirmationDialog}>
+          <Text style={[GlobalStyle.SemiBold, styles.buttonText]}>
+            Download Laporan
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Konfirmasi Download Modal */}
       <Modal
@@ -303,24 +289,27 @@ export default function TunjanganTambahan({navigation}) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <Text style={[GlobalStyle.SemiBold, styles.modalText]}>
-              Apakah anda yakin Mendownload Report Berformat Excel?
+              Apakah Anda Yakin?
             </Text>
             <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.button, styles.cancelButton]}
-                onPress={() => setIsConfirmationVisible(false)}>
-                <Text style={[GlobalStyle.SemiBold, styles.cancelText]}>
-                  Batal
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.button, styles.confirmButton]}
-                onPress={handleDownload}>
-                <Text style={[GlobalStyle.SemiBold, styles.confirmText]}>
-                  Download
-                </Text>
-              </TouchableOpacity>
+              <Text style={[GlobalStyle.SemiBold, styles.cancelButton]}>
+                Apakah anda yakin Mendownload Report Berformat Excel?
+              </Text>
             </View>
+            <TouchableOpacity
+              style={[styles.button, styles.cancelButton]}
+              onPress={() => setIsConfirmationVisible(false)}>
+              <Text style={[GlobalStyle.SemiBold, styles.cancelText]}>
+                Batal
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.confirmButton]}
+              onPress={handleDownload}>
+              <Text style={[GlobalStyle.SemiBold, styles.confirmText]}>
+                Download
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -330,7 +319,9 @@ export default function TunjanganTambahan({navigation}) {
         <View style={styles.modalOverlay}>
           <View style={styles.loadingContent}>
             <ActivityIndicator size="large" color="#28c4ac" />
-            <Text style={styles.loadingText}>Mendownload file...</Text>
+            <Text style={[GlobalStyle.SemiBold, styles.loadingText]}>
+              Mendownload file...
+            </Text>
           </View>
         </View>
       </Modal>
@@ -342,16 +333,20 @@ export default function TunjanganTambahan({navigation}) {
         onRequestClose={() => setIsModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalText}>{modalMessage}</Text>
+            <Text style={[GlobalStyle.SemiBold, styles.modalText]}>
+              {modalMessage}
+            </Text>
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setIsModalVisible(false)}>
-              <Text style={styles.buttonText}>Tutup</Text>
+              <Text style={[GlobalStyle.SemiBold, styles.buttonText]}>
+                Tutup
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -378,10 +373,12 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   headerTitle: {
-    fontSize: 16, // Ukuran lebih besar
-    textAlign: 'center', // Pusatkan teks
-    marginLeft: 205,
+    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: 'bold',
   },
+
+  // Card Styles
   cardContainer: {
     backgroundColor: '#FFFF',
     paddingVertical: 20,
@@ -389,7 +386,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     elevation: 4,
     marginHorizontal: 10,
-    marginTop: 20,
+    marginTop: 30,
     width: 387,
   },
   cardHeader: {
@@ -401,7 +398,13 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     marginBottom: -5,
   },
+  cardDivider: {
+    height: 1,
+    backgroundColor: '#ddd',
+    marginVertical: 10,
+  },
 
+  // Form Elements
   label: {
     fontSize: 16,
     marginBottom: 5,
@@ -426,19 +429,13 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontWeight: 'bold',
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 15,
-  },
+
   // Modal Styles
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   modalContainer: {
     width: 300,
@@ -455,7 +452,6 @@ const styles = StyleSheet.create({
     padding: 20,
     elevation: 5,
   },
-
   modalText: {
     fontSize: 14,
     color: '#333',
@@ -467,6 +463,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
   },
+
   modalButton: {
     flex: 1,
     paddingVertical: 12,
@@ -484,20 +481,18 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     borderWidth: 1,
-    borderColor: '#28c4ac',
+    borderColor: '#3498db',
     backgroundColor: '#fff',
   },
   cancelText: {
     color: '#0A3D62',
   },
-
   confirmButton: {
     backgroundColor: '#28c4ac',
   },
   confirmText: {
     color: '#fff',
   },
-
   // Loading Modal
   loadingContent: {
     backgroundColor: '#FFF',

@@ -175,7 +175,7 @@ const Edittegur = ({route, navigation}) => {
 
   return (
     <View style={styles.rootContainer}>
-      <Header title="Tambah Teguran" />
+      <Header title="Edit Teguran" />
       <View style={styles.container}>
         {isLoading ? (
           // Loading Indicator
@@ -186,7 +186,7 @@ const Edittegur = ({route, navigation}) => {
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}>
-            <Text style={[GlobalStyle.SemiBold, styles.label]}>User *</Text>
+            <Text style={[GlobalStyle.SemiBold, styles.label]}>User</Text>
             <Dropdown
               style={[
                 GlobalStyle.SemiBold,
