@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   TextInput,
@@ -11,10 +11,10 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
-import { Dropdown } from 'react-native-element-dropdown';
+import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../src/api/apiClient';
 
-export default function Teguranscreen({ navigation }) {
+export default function Teguranscreen({navigation}) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
@@ -28,7 +28,7 @@ export default function Teguranscreen({ navigation }) {
     fetchData(currentPage);
   }, [currentPage, searchQuery, selectedDisplay]);
 
-  const fetchData = async (page) => {
+  const fetchData = async page => {
     try {
       setLoading(true);
       const response = await apiClient.post('teguran/index_user1', {
@@ -40,21 +40,24 @@ export default function Teguranscreen({ navigation }) {
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
     } catch (error) {
-      console.error('Error fetching data', error.response?.data || error.message);
+      console.error(
+        'Error fetching data',
+        error.response?.data || error.message,
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleExpand = (id) => {
+  const toggleExpand = id => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const handleApprove = (uuid) => {
-    navigation.navigate('Bacascreen', { uuid });
+  const handleApprove = uuid => {
+    navigation.navigate('Bacascreen', {uuid});
   };
 
-  const getStatusStyle = (status) => {
+  const getStatusStyle = status => {
     switch (status?.toUpperCase()) {
       case 'DIBACA':
         return styles.approvedStatus;
@@ -68,11 +71,11 @@ export default function Teguranscreen({ navigation }) {
   };
 
   const display = [
-    { label: '5', value: 5 },
-    { label: '10', value: 10 },
-    { label: '25', value: 25 },
-    { label: '50', value: 50 },
-    { label: '100', value: 100 },
+    {label: '5', value: 5},
+    {label: '10', value: 10},
+    {label: '25', value: 25},
+    {label: '50', value: 50},
+    {label: '100', value: 100},
   ];
 
   const TableHeader = () => (
@@ -87,8 +90,8 @@ export default function Teguranscreen({ navigation }) {
             valueField="value"
             placeholder="10"
             value={selectedDisplay}
-            onChange={(item) => setSelectedDisplay(item.value)}
-            renderItem={(item) => (
+            onChange={item => setSelectedDisplay(item.value)}
+            renderItem={item => (
               <Text style={[styles.dropdownItem, styles.customFont]}>
                 {item.label}
               </Text>
@@ -102,19 +105,24 @@ export default function Teguranscreen({ navigation }) {
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
-          <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+          <Ionicons
+            name="search"
+            size={20}
+            color="#888"
+            style={styles.searchIcon}
+          />
         </View>
       </View>
       <View style={styles.tableHeader}>
         <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
         <Text style={[styles.headerCell, styles.nameCell]}>Name</Text>
-        <Text style={[styles.headerCell, styles.tableStatusCell]}>Status</Text>
+        <Text style={[styles.headerCell, styles.tableStatusCell]}>Dibaca</Text>
         <View style={styles.expandIconCell} />
       </View>
     </View>
   );
 
-  const renderItem = ({ item, index }) => {
+  const renderItem = ({item, index}) => {
     const isExpanded = expandedId === item.id;
 
     return (
@@ -194,7 +202,7 @@ export default function Teguranscreen({ navigation }) {
           ListHeaderComponent={TableHeader}
           data={data}
           renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={item => item.id.toString()}
           contentContainerStyle={styles.card}
           ListFooterComponent={
             <View>
@@ -210,7 +218,7 @@ export default function Teguranscreen({ navigation }) {
                     ]}
                     disabled={currentPage === 1}
                     onPress={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                      setCurrentPage(prev => Math.max(prev - 1, 1))
                     }>
                     <Text style={styles.pageButtonText}>Previous</Text>
                   </TouchableOpacity>
@@ -221,7 +229,7 @@ export default function Teguranscreen({ navigation }) {
                     ]}
                     disabled={currentPage === lastPage}
                     onPress={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, lastPage))
+                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
                     }>
                     <Text style={styles.pageButtonText}>Next</Text>
                   </TouchableOpacity>
@@ -421,6 +429,20 @@ const styles = StyleSheet.create({
   iconWrapper: {
     marginLeft: 12,
   },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+    marginLeft: 20,
+    marginBottom: 4,
+    marginTop: 10,
+  },
+  headerSubtitle: {
+    color: '#000',
+    marginLeft: 20,
+    marginBottom: 4,
+  },
+
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -476,7 +498,7 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     flexDirection: 'column',
-     // Tambahkan marginBottom untuk memberi ruang
+    // Tambahkan marginBottom untuk memberi ruang
   },
 
   filterContainer: {
@@ -503,16 +525,15 @@ const styles = StyleSheet.create({
   },
   searchIcon: {
     position: 'absolute',
-    right: 10, 
+    right: 10,
     top: '50%',
-    transform: [{ translateY: -10 }],
+    transform: [{translateY: -10}],
   },
   displayContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
-    
   },
   displayText: {
     fontFamily: 'Poppins-Regular',
@@ -538,28 +559,28 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Regular',
   },
   headerTextContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginLeft: 15, // Menambahkan jarak ke kiri
-    marginTop: 20, 
+    marginTop: 20,
   },
 
   headerTitle: {
-    fontFamily: "Poppins-SemiBold",
+    fontFamily: 'Poppins-SemiBold',
     fontSize: 17,
-    color: "#000",
+    color: '#000',
   },
 
   separatorText: {
     fontSize: 20,
-    color: "#000",
+    color: '#000',
     marginBottom: 3,
   },
 
   headerSubtitle: {
-    fontFamily: "Poppins-Regular",
+    fontFamily: 'Poppins-Regular',
     fontSize: 14,
-    color: "#000",
+    color: '#000',
     marginLeft: 0,
   },
   loader: {

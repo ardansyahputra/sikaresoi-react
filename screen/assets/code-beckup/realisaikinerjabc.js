@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   TextInput,
   Alert,
+  Modal,
   ScrollView,
   Image,
 } from 'react-native';
@@ -15,52 +16,102 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
-import useApiClient from '../../../src/api/apiClient';
-import GetAktifCard from './GetAktif';
+import useApiClient from '../../../../src/api/apiClient';
+import GetAktifCard from '../../KontrakKinerja/GetAktif';
 
-const KontrakKinerjaScreen = () => {
+// import KirimKontrak from './KirimKontrak';
+
+
+const RealisasiKinerja = () => {
   const navigation = useNavigation();
   const [data, setData] = useState([]);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [selectedYear, setSelectedYear] = useState(null);
-  const [selectedMonth, setSelectedMonth] = useState(null);
   const [yearOptions, setYearOptions] = useState([]);
   const [selectedDisplay, setSelectedDisplay] = useState(null);
   const [userJabatanData, setUserJabatanData] = useState(null);
-
+  const [modalVisible, setModalVisible] = useState(false);
+  const [monthOptions, setMonthOptions] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(null);
+  const [showDetail, setShowDetail] = useState(null);
   const apiClient = useApiClient();
+
+  const [kinerja, setKinerja] = useState({
+    totalak: 0,
+    totalwpt: 0,
+    totalbobot: 0,
+    tahun_id: null,
+    bulan_id: null,
+    user_jabatan_id: null,
+    alert: {
+      show: false,
+    },
+  });
+  const [listKinerja, setListKinerja] = useState([]);
+  const [totalBobot, setTotalBobot] = useState(0);
+  const [totalWpt, setTotalWpt] = useState(0);
 
   useEffect(() => {
     fetchYears();
-    fetchMonths();
+    fetchMonth();
     fetchUserJabatanData();
   }, []);
 
-
   useEffect(() => {
-    if (selectedYear, selectedMonth) {
-      fetchData(currentPage, selectedYear, selectedMonth, selectedDisplay);
+    if (selectedYear && selectedMonth) {
+      fetchKontrak(currentPage, selectedYear, selectedMonth, selectedDisplay);
     }
   }, [currentPage, selectedYear, selectedMonth, selectedDisplay]);
 
   const fetchUserJabatanData = async () => {
     try {
-      const response = await apiClient.post('/user/jabatan/aktif');
+      const response = await apiClient.post('user/jabatan/aktif');
       if (response?.data?.data) {
-        setUserJabatanData(response.data.data);
+        setUserJabatanData(response.data.utama  );
       }
     } catch (error) {
       console.error('Error fetching user jabatan data:', error);
     }
   };
 
+  const fetchMonth = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.get('bulan/show');
+      if (response?.data?.data) {
+        const months = response.data.data.map(month => ({
+          label: month.bulan.toString(),
+          value: month.id,
+        }));
+        setMonthOptions(months);
+
+
+        const currentMonth = new Date().getMonth();
+        const defaultMonth = months.find(
+          month => month.value === currentMonth
+        );
+        setSelectedMonth(defaultMonth ? defaultMonth.value : months[0]?.value);
+      } else {
+        console.error('Failed to load month options:', response);
+        Alert.alert('Error', 'Gagal memuat data bulan.');
+      }
+    } catch (error) {
+      console.error('Error fetching month:', error);
+      Alert.alert('Error', 'Gagal memuat data bulan.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   const fetchYears = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/tahun/show');
+      const response = await apiClient.get('tahun/show');
       if (response?.data?.data) {
         const years = response.data.data.map(year => ({
           label: year.tahun.toString(),
@@ -68,9 +119,11 @@ const KontrakKinerjaScreen = () => {
         }));
         setYearOptions(years);
 
-        // Set default year to the current year
+
         const currentYear = new Date().getFullYear();
-        const defaultYear = years.find(year => year.label === currentYear.toString());
+        const defaultYear = years.find(
+          year => year.label === currentYear.toString(),
+        );
         setSelectedYear(defaultYear ? defaultYear.value : years[0]?.value);
       } else {
         console.error('Failed to load year options:', response);
@@ -84,136 +137,113 @@ const KontrakKinerjaScreen = () => {
     }
   };
 
-  const fetchMonths = async () => {
-    try {
-      setLoading(true);
-      const response = await apiClient.get('/bulan/show');
-      if (response?.data?.data) {
-        const years = response.data.data.map(year => ({
-          label: month.bulan.toString(),
-          value: month.id,
-        }));
-        setYearOptions(years);
-
-        // Set default year to the current year
-        const currentMonth = new Date().getFullMonth();
-        const defaultMonth = months.find(month => month.label === currentMonth.toString());
-        setSelectedYear(defaultMonth ? defaultMonth.value : years[0]?.value);
-      } else {
-        console.error('Failed to load year options:', response);
-        Alert.alert('Error', 'Gagal memuat data tahun.');
-      }
-    } catch (error) {
-      console.error('Error fetching years:', error);
-      Alert.alert('Error', 'Gagal memuat data tahun.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchData = async (page, year, month) => {
-    try {
-      setLoading(true);
-      const response = await apiClient.post('/user/kinerja/list/index', {
-        page,
-        tahun_id: year,
-        bulan_id: month,
-      });
-      if (response?.data?.data) {
-        setData(response.data.data || []);
-        setCurrentPage(response.data.current_page);
-        setLastPage(response.data.last_page);
-        console.log('Data fetched:', response.data);
-      } else {
-        console.error('Invalid data:', response);
-        setData([]);
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      Alert.alert('Error', 'Gagal memuat data.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onSaveKinerja = async (updatedItem) => {
-    console.log('Updated Item:', updatedItem);
-    try {
-        const payload = {
-            kinerja: {
-                // Add the required fields for `kinerja`
-                id: updatedItem.id,
-                user_jabatan_id: updatedItem.user_jabatan_id,
-                tahun_id: updatedItem.tahun_id || 0,
-                tgs_tambahan: updatedItem.tgs_tambahan || 0, // Include `tgs_tambahan` with a default value
+  const fetchKontrak = async (page, year, month) => {
+      try {
+        setLoading(true);
+        const response = await apiClient.post('user/kinerja/list/target/realisasi/index', {
+          page,
+          tahun_id: year,
+          bulan_id: month,
+        });
+        if (response?.data) {
+          setData(response.data.utama);
+          setCurrentPage(response.data.current_page);
+          setLastPage(response.data.last_page);
+  
+          // Update kinerja and listKinerja
+          setKinerja(response.data.kinerja || {
+            totalak: 0,
+            totalwpt: 0,
+            totalbobot: 0,
+            tahun_id: year,
+            bulan_id: month,
+            user_jabatan_id: userJabatanData?.id,
+            alert: {
+              show: false,
             },
-            list: [updatedItem],
-        };
-        console.log('Payload:', payload); // Log the payload
-        const response = await apiClient.post('/user/kinerja/list/save', payload);
-
-        if (response?.data?.data) {
-            Alert.alert('Sukses', 'Data kinerja berhasil diperbarui.');
-            setData((prevData) =>
-                prevData.map((item) =>
-                    item.id === updatedItem.id ? { ...item, ...updatedItem } : item
-                )
-            );
-        } else {
-            Alert.alert('Gagal', 'Terjadi kesalahan saat memperbarui data.');
-        }
-    } catch (error) {
-        console.error('Error updating kinerja:', error);
-        console.error('Response data:', error.response?.data); // Log the response data
-        Alert.alert('Error', 'Gagal menyimpan perubahan.');
-    }
-};
+          });
+          setListKinerja(response.data.data);
   
-  const onDeleteKinerja = async (uuid) => {
-    Alert.alert(
-      'Konfirmasi',
-      'Apakah Anda yakin ingin menghapus data ini?',
-      [
-        {
-          text: 'Batal',
-          style: 'cancel',
-        },
-        {
-          text: 'Hapus',
-          onPress: async () => {
-            try {
-              const response = await apiClient.delete(`/user/kinerja/list/${uuid}/delete`);
-              if (response?.data?.data) {
-                Alert.alert('Sukses', 'Data berhasil dihapus.');
-                setData((prevData) => prevData.filter((item) => item.id !== uuid));
-              } else {
-                Alert.alert('Gagal', 'Gagal menghapus data.');
-              }
-            } catch (error) {
-              console.error('Error deleting kinerja:', error);
-              Alert.alert('Error', 'Terjadi kesalahan saat menghapus data.');
-            }
-          },
-        },
-      ]
-    );
+          
+          console.log('Data fetched:', response.data);
+        } else {
+          console.error('Invalid data:', response);
+          setData([]);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        if (axios.isAxiosError(error)) {
+          console.log(error.toJSON());
+        }
+        Alert.alert('Error', 'Gagal memuat data.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+  const handleTugastambahan = (userJabatanId, tahunId, item) => {
+    navigation.navigate('MasterKinerjaRealisasi', {userJabatanId, tahunId, item});
+  };
+
+  const handleEdit = (item) => {
+    setShowDetail(showDetail === item.id ? null : item.id);
   };
   
 
-  const display = [
-    {label: '5', value: 1},
-    {label: '10', value: 2},
-    {label: '25', value: 3},
-    {label: '50', value: 4},
-    {label: '100', value: 5},
-  ];
+  const onSaveKinerja = async updatedItem => {
+    try {
+      const payload = {
+        kinerja: kinerja,
+        list: {
+          id: updatedItem.id,
+          uraian_id: updatedItem.uraian.id,
+          angka: updatedItem.angka || 0,
+          kuantitas: updatedItem.kuantitas || 0,
+          kualitas: updatedItem.kualitas || 0,
+          waktu: updatedItem.waktu || 0,
+          bobot: updatedItem.bobot || 0,
+          wpt: updatedItem.wpt || 0,
+          tgs_tambahan: updatedItem.tgs_tambahan || 0,
+          uraian_point: updatedItem.uraian_point || 0,
+          target_point: updatedItem.target_point || 0,
+        },
+      };
+      console.log('Payload:', JSON.stringify(payload, null, 2)); // Debugging payload sebelum dikirim
+      const response = await apiClient.post('user/kinerja/list/save', payload);
+      console.log('Response:', response.data);
+      fetchKontrak(currentPage,selectedMonth, selectedYear, selectedDisplay); // Refresh data setelah menyimpan
+    } catch (error) {
+      console.error('Error saving data:', error);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Gagal menyimpan data.',
+      );
+    }
+  };
 
+  const handleDelete = async uuid => {
+    setModalVisible(false);
+    try {
+      await apiClient.delete(`user/kinerja/list/${uuid}/delete`, {});
+      Alert.alert('Sukses', 'Data berhasil dihapus.');
+      fetchKontrak(); // Refresh data setelah penghapusan
+    } catch (error) {
+      console.error(
+        'Error deleting data',
+        error.response?.data || error.message,
+      );
+      Alert.alert('Gagal', 'Terjadi kesalahan saat menghapus data.');
+    }
+  };
 
+ 
+
+  
   const toggleExpand = id => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const TableHeader = () => (
+  const TableHeader = (item,) => (
     <View>
       <View style={styles.filterContainer}>
         {/* Tahun Selector */}
@@ -226,6 +256,9 @@ const KontrakKinerjaScreen = () => {
             value={selectedYear}
             onChange={item => setSelectedYear(item.value)}
           />
+        </View>
+
+        <View style={styles.displayContainer}>
           <Dropdown
             style={styles.dropdown}
             data={monthOptions}
@@ -235,41 +268,50 @@ const KontrakKinerjaScreen = () => {
             onChange={item => setSelectedMonth(item.value)}
           />
         </View>
-
+        </View>
         {/*Button Kinerja */}
         <View style={styles.buttonRightContainer}>
-          <TouchableOpacity style={styles.listkinerjaButton} onPress={() => navigation.navigate(IndikatorKinerja)}>
+          <TouchableOpacity
+            style={styles.listkinerjaButton}
+            onPress={() => handleTugastambahan(item.user_jabatan_id, item.tahun_id)
+            }>
             <FontAwesome name="plus" size={15} color="white" />
-            <Text style={styles.buttonText}>LIST KINERJA</Text>
+            <Text style={styles.buttonText}>TUGAS TAMBAHAN</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.salinkontrakButton}>
+          <TouchableOpacity style={styles.ubahatasanButton}>
             <FontAwesome name="copy" size={15} color="white" />
-            <Text style={styles.buttonText}>SALIN KONTRAK</Text>
+            <Text style={styles.buttonText}>UBAH ATASAN</Text>
           </TouchableOpacity>
         </View>
-
+     
+      <View style={styles.tableHeader}>
+        <Text style={[styles.headerCell, styles.numberCell]} align="center">
+          Nomor
+        </Text>
+        <Text style={[styles.headerCell, styles.nameCell]}>
+          Uraian Kegiatan
+        </Text>
+        <View style={styles.expandIconCell} />
       </View>
-        <View style={styles.tableHeader}>
-          <Text style={[styles.headerCell, styles.numberCell]} align="center">Nomor</Text>
-          <Text style={[styles.headerCell, styles.nameCell]}>Indikator Kinerja</Text>
-          <View style={styles.expandIconCell} />
-        </View>
     </View>
   );
 
-  
-
-  const renderItem = ({ item, index }) => {
+  const renderItem = ({item, index}) => {
     const isExpanded = expandedId === item.id;
   
     return (
       <View>
         {/* Tampilan Ringkas */}
         <View style={styles.tableRow}>
-          <TouchableOpacity style={styles.rowHeader}
+          <TouchableOpacity
+            style={styles.rowHeader}
             onPress={() => toggleExpand(item.id)}>
-            <Text style={[styles.tableCell, styles.numberCell]}>{index + 1}</Text>
-            <Text style={[styles.tableCell, styles.nameCell]}>{item.uraian.nm_uraian || '-'}</Text>
+            <Text style={[styles.tableCell, styles.numberCell]}>
+              {index + 1}
+            </Text>
+            <Text style={[styles.tableCell, styles.nameCell]}>
+              {item.target?.list_kinerja?.uraian.nm_uraian || '-'}
+            </Text>
             <View style={styles.expandIconCell}>
               <Ionicons
                 name={isExpanded ? 'chevron-up' : 'chevron-down'}
@@ -279,7 +321,7 @@ const KontrakKinerjaScreen = () => {
             </View>
           </TouchableOpacity>
         </View>
-
+  
         {/* Tampilan Penuh */}
         {isExpanded && (
           <View style={styles.expandedRow}>
@@ -287,111 +329,92 @@ const KontrakKinerjaScreen = () => {
               {/* Kolom kiri */}
               <View style={styles.leftColumn}>
                 <Text style={styles.expandedText}>Biaya: </Text>
-                <Text style={styles.expandedTextDetail}>Rp {item.uraian.biaya}</Text>
-                
+                <View style={styles.inputWrapper} pointerEvents='none'>
+                  <Text style={styles.inputSuffixBiaya}>Rp.</Text>
+                  <TextInput 
+                    style={styles.input}
+                    value= {item.target?.list_kinerja?.uraian.biaya.toString()}
+                  />  
+                </View>
+  
                 <Text style={styles.expandedText}>AK: </Text>
-                <Text style={styles.expandedTextDetail}>{item.uraian.angka_kredit}</Text>
-
+                <View style={styles.inputWrapper} pointerEvents='none'>
+                  <TextInput 
+                    style={styles.input}
+                    value= {item.target?.list_kinerja?.uraian.angka_kredit.toString()}
+                  />  
+                </View>
+  
                 <Text style={styles.expandedText}>Kuantitas: </Text>
                 <View style={styles.inputWrapper}>
-                  {/* Input Angka */}
                   <TextInput
                     style={styles.input}
-                    value={item.kuantitas?.toString()}
-                    onChangeText={(value) => {
-                      const numericValue = parseInt(value) || 1; // Pastikan minimal 1
-                      const updatedItem = { ...item, kuantitas: numericValue };
+                    value={item.target?.kuantitas.toString()}
+                    onChangeText={value => {
+                      const numericValue = parseInt(value) || 1;
+                      const updatedItem = {...item, kuantitas: numericValue};
                       onSaveKinerja(updatedItem);
                     }}
                     keyboardType="numeric"
                     placeholder="0"
                     placeholderTextColor="#999"
                   />
-                  {/* Tombol Decrement */}
                   <TouchableOpacity
                     style={styles.arrowButton}
                     onPress={() => {
                       if (item.kuantitas > 1) {
-                        const updatedItem = { ...item, kuantitas: item.kuantitas - 1 };
+                        const updatedItem = {...item, kuantitas: item.kuantitas - 1};
                         onSaveKinerja(updatedItem);
                       }
-                    }}
-                  >
+                    }}>
                     <Text style={styles.arrowText}>-</Text>
                   </TouchableOpacity>
-                  {/* Tombol Increment */}
                   <TouchableOpacity
                     style={styles.arrowButton}
                     onPress={() => {
-                      const updatedItem = { ...item, kuantitas: item.kuantitas + 1 };
+                      const updatedItem = {...item, kuantitas: item.kuantitas + 1};
                       onSaveKinerja(updatedItem);
-                    }}
-                  >
+                    }}>
                     <Text style={styles.arrowText}>+</Text>
                   </TouchableOpacity>
-
-                  {/* Satuan */}
-                  <Text style={styles.inputSuffix}>{item.uraian?.satuan}</Text>
+                  <Text style={styles.inputSuffix}>
+                    {item.target?.list_kinerja?.uraian.satuan}
+                  </Text>
                 </View>
                 {item.kuantitas <= 0 && (
                   <Text style={styles.errorText}>Tidak boleh 0</Text>
-                )} 
-
+                )}
+  
                 <Text style={styles.expandedText}>Kualitas: </Text>
                 <View style={styles.inputWrapper}>
-                  {/* Input Angka */}
                   <TextInput
                     style={styles.input}
-                    value={item.kualitas?.toString()}
-                    onChangeText={(value) => {
-                      const numericValue = parseInt(value) || 1; // Pastikan minimal 1
-                      const updatedItem = { ...item, kualitas: numericValue };
+                    value={item?.kualitas.toString()}
+                    onChangeText={value => {
+                      const numericValue = parseInt(value) || 1;
+                      const updatedItem = {...item, kualitas: numericValue};
                       onSaveKinerja(updatedItem);
                     }}
                     keyboardType="numeric"
                     placeholder="0"
                     placeholderTextColor="#999"
                   />
-                  {/* Tombol Decrement */}
-                  <TouchableOpacity
-                    style={styles.arrowButton}
-                    onPress={() => {
-                      if (item.kuantitas > 1) {
-                        const updatedItem = { ...item, kualitas: item.kualitas - 1 };
-                        onSaveKinerja(updatedItem);
-                      }
-                    }}
-                  >
-                    <Text style={styles.arrowText}>-</Text>
-                  </TouchableOpacity>
-                  {/* Tombol Increment */}
-                  <TouchableOpacity
-                    style={styles.arrowButton}
-                    onPress={() => {
-                      const updatedItem = { ...item, kualitas: item.kualitas + 1 };
-                      onSaveKinerja(updatedItem);
-                    }}
-                  >
-                    <Text style={styles.arrowText}>+</Text>
-                  </TouchableOpacity>
-
-                  {/* Satuan */}
-                  <Text style={styles.inputSuffix}>           %</Text>
+                  <Text style={styles.inputSuffix}> %</Text>
                 </View>
                 {item.kualitas <= 0 && (
                   <Text style={styles.errorText}>Tidak boleh 0</Text>
-                )}              
+                )}
               </View>
-
+  
               {/* Kolom kanan */}
               <View style={styles.rightColumn}>
                 <Text style={styles.expandedText}>Waktu: </Text>
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={styles.input}
-                    value={item.waktu?.toString()}
-                    onChangeText={(value) => {
-                      const updatedItem = { ...item, waktu: value };
+                    value={item.target?.list_kinerja?.waktu?.toString()}
+                    onChangeText={value => {
+                      const updatedItem = {...item, waktu: value};
                       onSaveKinerja(updatedItem);
                     }}
                     keyboardType="numeric"
@@ -400,32 +423,14 @@ const KontrakKinerjaScreen = () => {
                   />
                   <Text style={styles.inputSuffix}>BULAN</Text>
                 </View>
-                {item.waktu <= 0 && (
-                  <Text style={styles.errorText}>Tidak boleh 0</Text>
-                )}              
-
-                <Text style={styles.expandedText}>WPT: </Text>
-                <View style={styles.inputWrapper}>
-                  <TextInput
-                    style={styles.input}
-                    value={item.wpt?.toString()}
-                    onChangeText={(value) => {
-                      const updatedItem = { ...item, wpt: value };
-                      onSaveKinerja(updatedItem);
-                    }}
-                    keyboardType="numeric"
-                    placeholder="0"
-                    placeholderTextColor="#999"
-                  />
-                </View>     
-
+  
                 <Text style={styles.expandedText}>Bobot: </Text>
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={styles.input}
-                    value={item.bobot?.toString()}
-                    onChangeText={(value) => {
-                      const updatedItem = { ...item, bobot: value };
+                    value={item.target?.list_kinerja?.bobot?.toString()}
+                    onChangeText={value => {
+                      const updatedItem = {...item, bobot: value};
                       onSaveKinerja(updatedItem);
                     }}
                     keyboardType="numeric"
@@ -433,60 +438,154 @@ const KontrakKinerjaScreen = () => {
                     placeholderTextColor="#999"
                   />
                 </View>
-                {item.bobot <= 0 && (
-                  <Text style={styles.errorText}>Tidak boleh 0</Text>
-                )}              
-
+  
                 <Text style={styles.expandedText}>Status: </Text>
                 <View style={styles.statusSection}>
-                {item.kuantitas <= 0 || item.kualitas <= 0 || item.waktu <= 0 || item.bobot <= 0 || item.wpt <= 0 ? (
-                  <View style={styles.statusBadgeDanger}>
-                    <Ionicons name="alert" size={16} color="white" />
-                    <Text style={styles.statusText}>LENGKAPI DATA</Text>
-                  </View>
-                  ) : item.total_target === null ? (
-                  <View style={styles.statusBadgeWarning}>
-                    <Ionicons name="clock-alert" size={16} color="white" />
-                    <Text style={styles.statusText}>BELUM BREAKDOWN</Text>
-                  </View>
+                  {item.kuantitas <= 0 ||
+                  item.kualitas <= 0 ||
+                  item.waktu <= 0 ||
+                  item.bobot <= 0
+                  ? (
+                    <View style={styles.statusBadgeDanger}>
+                      <Ionicons name="alert-circle" size={16} color="white" />
+                      <Text style={styles.statusText}> LENGKAPI DATA</Text>
+                    </View>
+                  ) : item.target?.list_kinerja?.total_target === null ? (
+                    <View style={styles.statusBadgeWarning}>
+                      <Ionicons name="time" size={16} color="white" />
+                      <Text style={styles.statusText}> BELUM BREAKDOWN</Text>
+                    </View>
                   ) : (
-                  <View style={styles.statusBadgeSuccess}>
-                    <Ionicons name="check-circle" size={16} color="white" />
-                    <Text style={styles.statusText}>LENGKAP</Text>
-                  </View>
+                    <View style={styles.statusBadgeSuccess}>
+                      <Ionicons name="checkmark-circle" size={16} color="white" />
+                      <Text style={styles.statusText}> LENGKAP</Text>
+                    </View>
                   )}
                 </View>
               </View>
             </View>
-
+  
             <View style={styles.actionContainer}>
-              <TouchableOpacity 
-                style={styles.editButton}
-                onPress={() => handleEdit(item)}>
-                <Ionicons name="create" size={20} color="white" />
-              </TouchableOpacity>
               <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => confirmDelete(item)}>
-                <Ionicons name="trash" size={20} color="white" />
-              </TouchableOpacity>              
+                style={[styles.editButton, {
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }]}
+                onPress={() => setShowDetail(showDetail === item.id ? null : item.id)}>
+                <Ionicons name="checkmark-done-sharp" size={20} color="white" />
+                <Text style={{
+                  color: 'white',
+                  marginTop: 2,
+                  fontSize: 12
+                }}>Realisasi</Text>
+              </TouchableOpacity>
             </View>
+            {showDetail === item.id && (
+  <View style={styles.detailContainer}>
+    {/* First Row */}
+    <View style={styles.rowContainer}>
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>
+          USULAN KUANTITAS <Text style={styles.requiredStar}>*</Text>
+        </Text>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.inputs}
+            value={item.usulanKuantitas || '0,00'}
+            onChangeText={(text) => onSaveKinerja({...item, usulanKuantitas: text})}
+            keyboardType="numeric"
+          />
+          <TouchableOpacity>
+            <Text style={styles.laporanLink}>Laporan</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>
+          USULAN KUALITAS <Text style={styles.requiredStar}>*</Text>
+        </Text>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.inputs}
+            value={item.usulanKualitas || '0,00'}
+            onChangeText={(text) => onSaveKinerja({...item, usulanKualitas: text})}
+            keyboardType="numeric"
+          />
+          <Text style={styles.percentageText}>%</Text>
+        </View>
+      </View>
+    </View>
+
+    {/* Second Row */}
+    <View style={styles.rowContainer}>
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>
+          PERSETUJUAN KUANTITAS <Text style={styles.requiredStar}>*</Text>
+        </Text>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.inputs}
+            value={item.persetujuanKuantitas || '0,00'}
+            onChangeText={(text) => onSaveKinerja({...item, persetujuanKuantitas: text})}
+            keyboardType="numeric"
+          />
+          <TouchableOpacity>
+            <Text style={styles.laporanLink}>Laporan</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>
+          PERSETUJUAN KUALITAS <Text style={styles.requiredStar}>*</Text>
+        </Text>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.inputs}
+            value={item.persetujuanKualitas || '0,00'}
+            onChangeText={(text) => onSaveKinerja({...item, persetujuanKualitas: text})}
+            keyboardType="numeric"
+          />
+          <Text style={styles.percentageText}>%</Text>
+        </View>
+      </View>
+    </View>
+
+    {/* Dokumen Link */}
+    <View style={styles.dokumenContainer}>
+      <TouchableOpacity>
+        <Text style={styles.dokumenText}>+ Dokumen</Text>
+      </TouchableOpacity>
+    </View>
+
+    {/* Save Button */}
+    <View style={styles.buttonContainer}>
+      <TouchableOpacity style={styles.saveButton} onPress={() => onSaveKinerja(item)}>
+        <Text style={styles.buttonText}>SIMPAN</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+)}
+
           </View>
         )}
       </View>
     );
   };
- 
-
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
+          <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+            <Ionicons name="close" size={24} color="#000" />
+          </TouchableOpacity>
           <Image
-            source={require('../../assets/sikaresoi.png')}
+            source={require('../../../assets/images/sikaresoi.png')}
             style={styles.logo}
-            />
+          />
         </View>
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
@@ -496,17 +595,45 @@ const KontrakKinerjaScreen = () => {
         </View>
       </View>
       <View>
-        <Text style={styles.headerTitle}>Kontrak Kinerja</Text>
-        <Text style={styles.headerSubtitle}>User • Kontrak Kinerja</Text>
-      </View>
+        <Text style={styles.headerTitle}>Realisasi Kinerja</Text>
+        <Text style={styles.headerSubtitle}>User • Kinerja • Realisasi </Text>
+              
+      </View>
 
       {userJabatanData && <GetAktifCard data={userJabatanData} />}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}> Peringatan </Text>
+            <Text style={styles.modalText}>
+              Apakah Anda yakin ingin menghapus data ini?
+            </Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonCancel]}
+                onPress={() => setModalVisible(false)}>
+                <Text style={styles.modalButtonText}>Batal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonDelete]}
+                onPress={() => handleDelete(selectedItem.uuid)}>
+                <Text style={styles.modalButtonText}>Hapus</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Loading Indicator */}
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <FlatList
+          scrollEnabled={false}
           ListHeaderComponent={TableHeader}
           data={data}
           renderItem={renderItem}
@@ -518,6 +645,7 @@ const KontrakKinerjaScreen = () => {
                 Showing page {currentPage} of {lastPage}
               </Text>
               <View style={styles.paginationContainer}>
+                
                 <View style={styles.paginationButtons}>
                   <TouchableOpacity
                     style={[
@@ -547,12 +675,23 @@ const KontrakKinerjaScreen = () => {
           }
         />
       )}
-      <IndikatorKinerja />
     </ScrollView>
   );
-}
+};
 
 const styles = StyleSheet.create({
+  footer: {
+    padding: 10,
+    backgroundColor: '#f1f1f1',
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
+    marginTop: 10,
+  },
+  footerText: {
+    fontSize: 14,
+    color: '#333',
+    textAlign: 'center',
+  },
   container: {
     flex: 1,
     backgroundColor: '#F7F8FB',
@@ -573,17 +712,17 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#000",
+    fontWeight: 'bold',
+    color: '#000',
     marginLeft: 20,
-    marginBottom: 4, 
+    marginBottom: 4,
     marginTop: 10,
   },
   headerSubtitle: {
-    color: "#000",
+    color: '#000',
     marginLeft: 20,
-    marginBottom: 4,
-  },
+    marginBottom: 4,
+  },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
@@ -600,29 +739,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 10,
   },
-  listkinerjaButton: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
+  listkinerjaButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 8, 
-    backgroundColor: '#1bc5bd', 
+    padding: 8,
+    backgroundColor: '#1bc5bd',
     borderRadius: 5,
     marginRight: 5,
     marginBottom: 5,
   },
-  salinkontrakButton: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
+  ubahatasanButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 8, 
-    backgroundColor: '#3699ff', 
+    padding: 8,
+    backgroundColor: '#3699ff',
     borderRadius: 5,
     marginRight: 5,
   },
-  buttonText: { 
+  buttonText: {
     fontWeight: 'bold',
-    color: 'white', 
-    marginLeft: 8, 
+    color: 'white',
+    marginLeft: 8,
   },
   tableHeader: {
     flexDirection: 'row',
@@ -719,7 +858,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fe',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#718096',
   },
   input: {
     flex: 1,
@@ -733,8 +872,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#718096',
   },
+  inputSuffixBiaya: {
+    marginRight: -15,
+    paddingHorizontal: 10,
+    fontSize: 15,
+    color: '#718096',
+  },
   arrowButton: {
-    backgroundColor: '#e2e8f0',
     paddingHorizontal: 5,
     paddingVertical: 0,
     borderRadius: 3,
@@ -767,7 +911,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   statusBadgeWarning: {
-    backgroundColor: '#D69E2E',
+    backgroundColor: '#ffa800',
     flexDirection: 'row',
     alignItems: 'center',
     padding: 8,
@@ -946,7 +1090,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   filterContainer: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     justifyContent: 'space-between',
     marginBottom: 10,
   },
@@ -1030,7 +1174,7 @@ const styles = StyleSheet.create({
     gap: 5,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#3699FF',
+    backgroundColor: '#1bc5bd',
     paddingVertical: 10,
     paddingHorizontal: 10,
     borderRadius: 10,
@@ -1058,16 +1202,123 @@ const styles = StyleSheet.create({
     color: 'white',
     fontFamily: 'Poppins-Regular',
   },
-  switchContainer: {
-    flexDirection: 'row',
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginVertical: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  switchLabel: {
-    fontSize: 16,
+  modalContent: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textAlign: 'center',
     color: '#333',
+  },
+  modalText: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#555',
+    marginBottom: 20,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  modalButton: {
+    width: 230,
+    paddingVertical: 12,
+    marginBottom: 5, // Beri jarak antar tombol
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalButtonCancel: {
+    backgroundColor: '#3699ff',
+  },
+  modalButtonDelete: {
+    backgroundColor: '#f64e60',
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  detailContainer: {
+    padding: 15,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  detailTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    color: '#333',
+  },
+  rowContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  inputGroup: {
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  label: {
+    fontSize: 14,
+    marginBottom: 5,
+    color: '#666',
+    fontWeight: '500',
+  },
+  inputs: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 9,
+    padding: 10,
+    color: '#333',
+    height: 40,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 15,
+  },
+  saveButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+    marginLeft: 10,
+  },
+  cancelButton: {
+    backgroundColor: '#f44336',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+    marginLeft: 10,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 
-export default KontrakKinerjaScreen;
+
+export default RealisasiKinerja;

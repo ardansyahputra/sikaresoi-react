@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   TextInput,
@@ -11,30 +11,25 @@ import {
   Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import axios from 'axios';
-import { useNavigation } from '@react-navigation/native';
-import { Dropdown } from 'react-native-element-dropdown';
+import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../src/api/apiClient';
 
-export default function Persetujuan({ navigation }) {
+export default function Persetujuan({navigation}) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [selectedItem, setSelectedItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [itemsPerPage, setItemsPerPage] = useState(10); // State untuk jumlah item per halaman
-  const [selectedTahun, setSelectedTahun] = useState(null);
-  const [tahunOptions, setTahunOptions] = useState([]);
-  const [pickUraianOptions, setPickUraianOptions] = useState(null);
-  const apiClient = useApiClient();
   const [selectedDisplay, setSelectedDisplay] = useState(10);
+  const [tahunOptions, setTahunOptions] = useState([]);
+  const [pickUraianOptions, setPickUraianOptions] = useState(6);
+  const apiClient = useApiClient();
 
   useEffect(() => {
-    fetchData(currentPage, itemsPerPage, searchQuery);
+    fetchData(currentPage);
     fetchTahun();
-  }, [currentPage, itemsPerPage, searchQuery]); // Tambahkan itemsPerPage dan searchQuery ke dependency array
+  }, [currentPage]);
 
   const fetchTahun = async () => {
     try {
@@ -47,31 +42,34 @@ export default function Persetujuan({ navigation }) {
             value: item.id ? item.id : 'Unknown',
           })),
         );
-      } else {
-        console.error('Data yang diterima bukan array:', response.data.data);
-        Alert.alert('Error', 'Format data tidak valid.');
       }
     } catch (error) {
       console.error('Error fetching tahun options:', error);
-      Alert.alert('Error', 'Gagal memuat data tahun.');
     }
   };
 
-  const fetchData = async (page, perPage, query) => {
+  const fetchData = async tahun_id => {
     try {
       setLoading(true);
-      const response = await apiClient.post('/user/kinerja/azril', {
-        page: page,
+      console.log('Aku ngirim ini 💕😘👌', {
+        page: currentPage,
+        tahun_id: tahun_id ?? pickUraianOptions,
         per: selectedDisplay,
         search: searchQuery,
-        tahun_id: pickUraianOptions,
       });
+      const response = await apiClient.post('/user/kinerja/azril', {
+        page: currentPage,
+        tahun_id: tahun_id ?? pickUraianOptions,
+        per: selectedDisplay,
+        search: searchQuery,
+      });
+
       console.log(response.data);
       setData(response.data.data);
       setCurrentPage(response.data.current_page);
       setLastPage(response.data.last_page);
     } catch (error) {
-      console.error('Error fetching data', error.response?.data);
+      console.error('Error fetching data', error.response.data);
     } finally {
       setLoading(false);
     }
@@ -81,16 +79,29 @@ export default function Persetujuan({ navigation }) {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const handleApprove = uuid => {
-    navigation.navigate('Bacakontrak', { uuid });
+  const handleApprove = (userJabatanId, tahunId) => {
+    navigation.navigate('Bacakontrak', {userJabatanId, tahunId});
+  };
+
+  const getStatusStyle = status => {
+    // switch (status?.toUpperCase()) {
+    //   case 'DISETUJUI':
+    //     return styles.approvedStatus;
+    //   case 'BELUM DIBACA':
+    //     return styles.rejectedStatus;
+    //   case 'MENUNGGU':
+    //     return styles.pendingStatus;
+    //   default:
+    //     return styles.defaultStatus;
+    // }
   };
 
   const display = [
-    { label: '5', value: 5 },
-    { label: '10', value: 10 },
-    { label: '25', value: 25 },
-    { label: '50', value: 50 },
-    { label: '100', value: 100 },
+    {label: '5', value: 5},
+    {label: '10', value: 10},
+    {label: '25', value: 25},
+    {label: '50', value: 50},
+    {label: '100', value: 100},
   ];
 
   const TableHeader = () => (
@@ -104,15 +115,20 @@ export default function Persetujuan({ navigation }) {
               data={tahunOptions}
               labelField="label"
               valueField="value"
-              placeholder="Pilih Tahun"
-              placeholderStyle={{ color: '#B6B9CA' }}
+              placeholder="2025"
               value={pickUraianOptions}
               onChange={item => {
-                setPickUraianOptions(item.value);
-                fetchData(currentPage, itemsPerPage, searchQuery);
+                console.log('Dropdown 😊👌😁👍🙌❤️', item);
+                setPickUraianOptions(_ => item.value);
+                fetchData(item.value);
               }}
               renderItem={item => (
-                <Text style={[styles.dropdownItem, { color: '#333' }]}>
+                <Text
+                  style={[
+                    styles.dropdownItem,
+                    styles.customFont,
+                    {color: '#333'},
+                  ]}>
                   {item.label}
                 </Text>
               )}
@@ -120,19 +136,19 @@ export default function Persetujuan({ navigation }) {
           </View>
 
           <View style={styles.filterGroup}>
-           <Text style={styles.displayText}>Display</Text>
-                     <Dropdown
-                       style={styles.dropdown}
-                       data={display}
-                       labelField="label"
-                       valueField="value"
-                       placeholder="10"
-                       value={selectedDisplay}
-                       onChange={(item) => setSelectedDisplay(item.value)}
-                       renderItem={(item) => (
-                         <Text style={[styles.dropdownItem, styles.customFont]}>
-                           {item.label}
-                         </Text>
+            <Text style={styles.displayText}>Display</Text>
+            <Dropdown
+              style={styles.dropdown}
+              data={display}
+              labelField="label"
+              valueField="value"
+              placeholder="10"
+              value={selectedDisplay}
+              onChange={item => setSelectedDisplay(item.value)}
+              renderItem={item => (
+                <Text style={[styles.dropdownItem, styles.customFont]}>
+                  {item.label}
+                </Text>
               )}
             />
           </View>
@@ -143,26 +159,30 @@ export default function Persetujuan({ navigation }) {
             style={styles.searchBar}
             placeholder="Search"
             value={searchQuery}
-            onChangeText={text => {
-              setSearchQuery(text); // Update searchQuery
-              setCurrentPage(1); // Reset ke halaman pertama saat melakukan pencarian
-            }}
+            onChangeText={setSearchQuery}
           />
-          <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+          <Ionicons
+            name="search"
+            size={20}
+            color="#888"
+            style={styles.searchIcon}
+          />
         </View>
       </View>
 
       {/* Table Header */}
       <View style={styles.tableHeader}>
         <Text style={[styles.headerCell, styles.numberCell]}>No</Text>
-        <Text style={[styles.headerCell, styles.nameCell]}>Detail Pengirim</Text>
+        <Text style={[styles.headerCell, styles.nameCell]}>
+          Detail Pengirim
+        </Text>
         <Text style={[styles.headerCell, styles.detailCell]}>Status</Text>
         <View style={styles.expandIconCell} />
       </View>
     </View>
   );
 
-  const renderItem = ({ item, index }) => {
+  const renderItem = ({item, index}) => {
     const isExpanded = expandedId === item.id;
 
     return (
@@ -178,7 +198,12 @@ export default function Persetujuan({ navigation }) {
             {item.user_jabatan?.user?.name || '-'}
           </Text>
           <View style={styles.statusCellContainer}>
-            <Text style={[styles.tableCell, styles.statusCell]}>
+            <Text
+              style={[
+                styles.tableCell,
+                styles.statusCell,
+                getStatusStyle(item.status),
+              ]}>
               {item.status_class || '-'}
             </Text>
           </View>
@@ -201,16 +226,20 @@ export default function Persetujuan({ navigation }) {
             <Text style={styles.expandedText}>
               Periode: {item.user_jabatan?.periode || '-'}
             </Text>
-            <Text style={styles.expandedText}>
+            <Text
+              style={[styles.expandedText, item.status_class === 'DISETUJUI']}>
               Status: {item.status_class || '-'}
             </Text>
+
             <Text style={styles.expandedText}>
               Status revisi: {item.revisi_class || '-'}
             </Text>
             <View style={styles.actionContainer}>
               <TouchableOpacity
                 style={styles.approveButton}
-                onPress={() => handleApprove(item.uuid)}>
+                onPress={() =>
+                  handleApprove(item.user_jabatan_id, item.tahun_id)
+                }>
                 <Ionicons name="eye" size={20} color="white" />
               </TouchableOpacity>
             </View>
@@ -232,49 +261,53 @@ return (
     </View>
     </View>
 
-    {/* Loading Indicator atau FlatList */}
-    {loading ? (
-      <ActivityIndicator size="large" color="#0000ff" />
-    ) : (
-      <FlatList
-        ListHeaderComponent={TableHeader}
-        data={data}
-        renderItem={renderItem}
-        keyExtractor={item => item.id.toString()}
-        contentContainerStyle={styles.card}
-        ListFooterComponent={
-          <View>
-            <Text style={styles.pageInfo}>
-              Showing page {currentPage} of {lastPage}
-            </Text>
-            <View style={styles.paginationContainer}>
-              <View style={styles.paginationButtons}>
-                <TouchableOpacity
-                  style={[
-                    styles.pageButton,
-                    currentPage === 1 && styles.disabledButton,
-                  ]}
-                  disabled={currentPage === 1}
-                  onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
-                  <Text style={styles.pageButtonText}>Previous</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.pageButton,
-                    currentPage === lastPage && styles.disabledButton,
-                  ]}
-                  disabled={currentPage === lastPage}
-                  onPress={() => setCurrentPage(prev => Math.min(prev + 1, lastPage))}>
-                  <Text style={styles.pageButtonText}>Next</Text>
-                </TouchableOpacity>
+      {/* Loading Indicator */}
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <FlatList
+          ListHeaderComponent={TableHeader}
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={item => item.id.toString()}
+          contentContainerStyle={styles.card}
+          ListFooterComponent={
+            <View>
+              <Text style={styles.pageInfo}>
+                Showing page {currentPage} of {lastPage}
+              </Text>
+              <View style={styles.paginationContainer}>
+                <View style={styles.paginationButtons}>
+                  <TouchableOpacity
+                    style={[
+                      styles.pageButton,
+                      currentPage === 1 && styles.disabledButton,
+                    ]}
+                    disabled={currentPage === 1}
+                    onPress={() =>
+                      setCurrentPage(prev => Math.max(prev - 1, 1))
+                    }>
+                    <Text style={styles.pageButtonText}>Previous</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.pageButton,
+                      currentPage === lastPage && styles.disabledButton,
+                    ]}
+                    disabled={currentPage === lastPage}
+                    onPress={() =>
+                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
+                    }>
+                    <Text style={styles.pageButtonText}>Next</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
-        }
-      />
-    )}
-  </View> // **Pastikan ini adalah kurung tutup terakhir**
-);
+          }
+        />
+      )}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -284,9 +317,9 @@ const styles = StyleSheet.create({
   },
   
   backButton: {
-    marginTop:7,
-    marginLeft:3,
-    marginRight:1,
+    marginTop: 7,
+    marginLeft: 3,
+    marginRight: 1,
     opacity: 0.4,
   },
   card: {
@@ -337,9 +370,9 @@ const styles = StyleSheet.create({
   },
   searchIcon: {
     position: 'absolute',
-    right: 10, 
+    right: 10,
     top: '50%',
-    transform: [{ translateY: -10 }],
+    transform: [{translateY: -10}],
   },
   displayContainer: {
     flexDirection: 'row',
@@ -370,14 +403,12 @@ const styles = StyleSheet.create({
     width: 50, // Fixed width for alignment
   },
   dropdown: {
+    width: 60,
     height: 40,
     borderColor: '#CCCCCC',
     borderWidth: 1,
     borderRadius: 5,
-    paddingHorizontal: 10,
-    width: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingHorizontal: 8,
   },
   dropdownTahun: {
     width: 85,
@@ -389,7 +420,7 @@ const styles = StyleSheet.create({
   },
   dropdownItem: {
     padding: 10,
-    fontSize: 12,
+    fontSize: 13,
     color: '#333',
   },
   addContainer: {
@@ -611,18 +642,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
   },
-  approved: {
-    backgroundColor: 'green',
-    color: 'white',
-  },
-  notApproved: {
-    backgroundColor: 'red',
-    color: 'white',
-  },
   approveButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#11aff2',
+    backgroundColor: '#3699ff',
     paddingVertical: 10,
     paddingHorizontal: 10,
     borderRadius: 10,

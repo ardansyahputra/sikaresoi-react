@@ -4,17 +4,17 @@ import { View, Text, StyleSheet, Button, Alert, Modal, ActivityIndicator, Scroll
 import { Dropdown } from 'react-native-element-dropdown';
 import AwesomeAlert from 'react-native-awesome-alerts';
 import RNFS from 'react-native-fs';
-import FileViewer from "react-native-file-viewer";
+import FileViewer from 'react-native-file-viewer';
 import Icon from 'react-native-vector-icons/Ionicons'; // Pastikan Anda telah menginstal react-native-vector-icons
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from "@react-navigation/native";
 import useApiClient from '../../../../src/api/apiClient';
 import { toastConfig, Toast } from '../../../../src/utils/CustomToast';
-import {API_URL} from '@env';
+import {APP_URL} from '@env';
 
 
 const KontrakKerja = () => {
-  const [postData, setPostData] = useState({ tahun_id: '' });
+  const [postData, setPostData] = useState({tahun_id: ''});
   const [listTahun, setListTahun] = useState([]);
   const [selectedYear, setSelectedYear] = useState(null);
   const [pdfUrl, setPdfUrl] = useState('');
@@ -83,7 +83,7 @@ const KontrakKerja = () => {
   };
 
   const generatePdfUrl = (value) => {
-    const url = `${API_URL}report/kontrak_kinerja/${userJabatanData.uuid}?type=stream&keuangan=0&tahun_id=${value}`;
+    const url = `${APP_URL}report/kontrak_kinerja/${userJabatanData.uuid}?type=stream&keuangan=0&tahun_id=${value}`;
     setPdfUrl(url);
   };
   
@@ -104,7 +104,7 @@ const KontrakKerja = () => {
       if (!response.ok) {
         showToast('error', 'Gagal', response.status);
       }
-      
+
       const contentType = response.headers.get('content-type');
       if (!contentType.includes('application/pdf')) {
         showToast('info', 'Peringatan', 'Tidak ada file PDF untuk diunduh');
@@ -134,15 +134,15 @@ const KontrakKerja = () => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}>
           <Ionicons name="arrow-back" size={26} color="#000" />
         </TouchableOpacity>
         <View style={styles.titleContainer}>
         <Text style={styles.headerTitle}>Laporan Kontrak Kerja</Text>
       </View>
       </View>
-
-      
 
       <View style={{ flex: 1, padding: 20 }}>
         <View style={styles.card}>
@@ -176,7 +176,11 @@ const KontrakKerja = () => {
             </View>
 
             {loading ? (
-              <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
+              <ActivityIndicator
+                size="large"
+                color="#0000ff"
+                style={styles.loader}
+              />
             ) : pdfUrl ? (
               <TouchableOpacity
                 onPress={downloadAndOpenPdf}
@@ -220,9 +224,9 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   backButton: {
-    marginTop:1,
-    marginLeft:3,
-    marginRight:1,
+    marginTop: 1,
+    marginLeft: 3,
+    marginRight: 1,
     opacity: 0.4,
   },
   card: {
@@ -230,7 +234,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
@@ -246,7 +250,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#4B5563',
     marginBottom: 10,
-    fontFamily: 'Poppins-SemiBold',
   },
   required: {
     color: 'red',
@@ -259,22 +262,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 8,
     backgroundColor: '#FFF',
-    fontFamily: 'Poppins-SemiBold',
-  },
-  dropdownText: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 14,
   },
   loadingText: {
     marginTop: 20,
     color: '#4B5563',
-    fontFamily: 'Poppins-Regular',
+    fontStyle: 'italic',
   },
   noDataText: {
     marginTop: 20,
     color: '#4B5563',
     fontSize: 14,
-    fontFamily: 'Poppins-SemiBold',
   },
   pdfView: {
     marginTop: 20,
@@ -304,7 +301,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: 'white',
-    padding: 80,
+    padding: 20,
     borderRadius: 10,
     alignItems: 'center',
   },
@@ -312,6 +309,7 @@ const styles = StyleSheet.create({
   successText: {
     marginTop: 10,
     fontSize: 18,
+    fontWeight: 'bold',
     color: 'green',
     fontFamily: 'Poppins-SemiBold',
   },
@@ -338,14 +336,14 @@ const styles = StyleSheet.create({
 
   separatorText: {
     fontSize: 20,
-    color: "#000",
+    color: '#000',
     marginBottom: 3,
   },
 
   headerSubtitle: {
-    fontFamily: "Poppins-Regular",
+    fontFamily: 'Poppins-Regular',
     fontSize: 14,
-    color: "#000",
+    color: '#000',
     marginLeft: 0,
   },
   downloadButtonContainer: {
@@ -361,24 +359,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   dropdownItemText: {
-  fontFamily: 'Poppins-Regular', // Poppins untuk teks item
-  fontSize: 14,
-},
-dropdownPlaceholder: {
-  fontFamily: 'Poppins-Regular', // Placeholder font Poppins
-  fontSize: 14,
-},
+    fontFamily: 'Poppins-Regular', // Poppins untuk teks item
+    fontSize: 14,
+  },
+  dropdownPlaceholder: {
+    fontFamily: 'Poppins-Regular', // Placeholder font Poppins
+    fontSize: 14,
+  },
 
-dropdownLabel: {
-  fontFamily: 'Poppins-SemiBold', // Label font Poppins
-  fontSize: 16,
-},
-loader: {
-  flex: 1,
-  justifyContent: 'center',
-  alignItems: 'center',
-  marginTop: 10, // Optional: Adjust positioning
-},
+  dropdownLabel: {
+    fontFamily: 'Poppins-SemiBold', // Label font Poppins
+    fontSize: 16,
+  },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10, // Optional: Adjust positioning
+  },
 });
 
 export default KontrakKerja;

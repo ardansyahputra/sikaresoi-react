@@ -122,16 +122,18 @@ const KontrakKinerjaScreen = () => {
         setCurrentPage(response.data.current_page);
         setLastPage(response.data.last_page);
 
-        setKinerja(response.data.kinerja || {
-          totalak: 0,
-          totalwpt: 0,
-          totalbobot: 0,
-          tahun_id: year,
-          user_jabatan_id: userJabatanData?.id,
-          alert: {
-            show: false,
+        setKinerja(
+          response.data.kinerja || {
+            totalak: 0,
+            totalwpt: 0,
+            totalbobot: 0,
+            tahun_id: year,
+            user_jabatan_id: userJabatanData?.id,
+            alert: {
+              show: false,
+            },
           },
-        });
+        );
         setListKinerja(response.data.data);
 
         // Calculate totalBobot and totalWpt
@@ -267,7 +269,7 @@ const KontrakKinerjaScreen = () => {
             <FontAwesome name="plus" size={15} color="white" />
             <Text style={styles.buttonText}>LIST KINERJA</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.salinkontrakButton}
             onPress={() => navigation.navigate('SalinKontrak')}>
             <FontAwesome name="copy" size={15} color="white" />
@@ -320,20 +322,20 @@ const KontrakKinerjaScreen = () => {
               {/* Kolom kiri */}
               <View style={styles.leftColumn}>
                 <Text style={styles.expandedText}>Biaya: </Text>
-                <View style={styles.inputWrapper} pointerEvents='none'>
+                <View style={styles.inputWrapper} pointerEvents="none">
                   <Text style={styles.inputSuffixBiaya}>Rp.</Text>
-                  <TextInput 
+                  <TextInput
                     style={styles.input}
-                    value= {item.uraian.biaya.toString()}
-                  />  
+                    value={item.uraian.biaya.toString()}
+                  />
                 </View>
 
                 <Text style={styles.expandedText}>AK: </Text>
-                <View style={styles.inputWrapper} pointerEvents='none'>
-                  <TextInput 
+                <View style={styles.inputWrapper} pointerEvents="none">
+                  <TextInput
                     style={styles.input}
-                    value= {item.uraian.angka_kredit.toString()}
-                  />  
+                    value={item.uraian.angka_kredit.toString()}
+                  />
                 </View>
               </View>
               <View style={styles.rightColumn}>
@@ -498,8 +500,7 @@ const KontrakKinerjaScreen = () => {
                   {item.kuantitas <= 0 ||
                   item.kualitas <= 0 ||
                   item.waktu <= 0 ||
-                  item.bobot <= 0
-                  ? (
+                  item.bobot <= 0 ? (
                     <View style={styles.statusBadgeDanger}>
                       <Ionicons name="alert-circle" size={16} color="white" />
                       <Text style={styles.statusText}> LENGKAPI DATA</Text>
@@ -511,7 +512,11 @@ const KontrakKinerjaScreen = () => {
                     </View>
                   ) : (
                     <View style={styles.statusBadgeSuccess}>
-                      <Ionicons name="checkmark-circle" size={16} color="white" />
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={16}
+                        color="white"
+                      />
                       <Text style={styles.statusText}> LENGKAP</Text>
                     </View>
                   )}

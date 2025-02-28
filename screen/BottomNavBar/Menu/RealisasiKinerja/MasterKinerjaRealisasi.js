@@ -16,11 +16,11 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Checkbox} from 'react-native-paper';
 import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
-import useApiClient from '../../../src/api/apiClient';
+import useApiClient from '../../../../src/api/apiClient';
 import axios from 'axios';
-import { toastConfig, Toast } from '../../../src/utils/CustomToast';
+import { months } from 'moment-timezone';
 
-const MasterKinerja = ({navigation}) => {
+const MasterKinerjaRealisasi = ({navigation}) => {
   const [data, setData] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,20 +34,12 @@ const MasterKinerja = ({navigation}) => {
   const [userJabatanId, setUserJabatanId] = useState(null);
   const [kinerjaId, setKinerjaId] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [tgsTambahan, setTgsTambahan] = useState(false);
+  const [tgsTambahan, setTgsTambahan] = useState(true);
   const [checkedItems, setCheckedItems] = useState([]);
   const [disabledItems, setDisabledItems] = useState([]);
   const [selectedYear, setSelectedYear] = useState(null);
-  
+  const [selectedMonth, setSelectedMonth] = useState(null);
   const apiClient = useApiClient();
-  const showToast = (type, text1, text2) => {
-    Toast.show({
-      type,
-      text1,
-      text2,
-    });
-  };
-  
 
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -65,6 +57,7 @@ const MasterKinerja = ({navigation}) => {
     totalwpt: 0,
     totalbobot: 0,
     tahun_id: null,
+    bulan_id: null,
     user_jabatan_id: null,
     alert: {
       show: false,
@@ -72,6 +65,7 @@ const MasterKinerja = ({navigation}) => {
   });
   const [listKinerja, setListKinerja] = useState([]);
   const [totalBobot, setTotalBobot] = useState(0);
+  const [totalWpt, setTotalWpt] = useState(0);
 
  
 
@@ -79,8 +73,9 @@ const MasterKinerja = ({navigation}) => {
     fetchUserJabatanData();
     fetchKinerja();
     fetchYears();
-    fetchListUraian(currentPage, selectedDisplay, selectedYear);
-  }, [currentPage, selectedDisplay, selectedYear]);
+    fetchMonth();
+    fetchListUraian(currentPage, selectedDisplay, selectedYear, selectedMonth);
+  }, [currentPage, selectedDisplay, selectedYear, selectedMonth]);
 
   useEffect(() => {
       const lowerCaseQuery = searchQuery.toLowerCase();
@@ -108,17 +103,21 @@ const MasterKinerja = ({navigation}) => {
   const fetchKinerja = async (page, year) => {
     try {
       setLoading(true);
-      const response = await apiClient.post('user/kinerja/list/index', {
+      const response = await apiClient.post('user/kinerja/list/target/realisasi/index', {
         page,
         tahun_id: year,
+        bulan_id: months,
+        kinerja_id: kinerjaId,
       });
       if (response?.data) {
+        
         setKinerjaId(response.data.data.kinerja)
         setKinerja(response.data.kinerja || {
           totalak: 0,
           totalwpt: 0,
           totalbobot: 0,
           tahun_id: year,
+          bulan_id: months,
           user_jabatan_id: userJabatanData?.id,
           alert: {
             show: false,
@@ -137,11 +136,40 @@ const MasterKinerja = ({navigation}) => {
       if (axios.isAxiosError(error)) {
         console.log(error.toJSON());
       }
-      showToast('error', 'Error', 'Gagal memuat data kinerja');
+      Alert.alert('Error', 'Gagal memuat data.');
     } finally {
       setLoading(false);
     }
   };
+
+  const fetchMonth = async () => {
+      try {
+        setLoading(true);
+        const response = await apiClient.get('bulan/show');
+        if (response?.data?.data) {
+          const months = response.data.data.map(month => ({
+            label: month.bulan.toString(),
+            value: month.id,
+          }));
+          setMonthOptions(months);
+  
+  
+          const currentMonth = new Date().getMonth();
+          const defaultMonth = months.find(
+            month => month.value === currentMonth
+          );
+          setSelectedMonth(defaultMonth ? defaultMonth.value : months[0]?.value);
+        } else {
+          console.error('Failed to load month options:', response);
+          Alert.alert('Error', 'Gagal memuat data bulan.');
+        }
+      } catch (error) {
+        console.error('Error fetching month:', error);
+        Alert.alert('Error', 'Gagal memuat data bulan.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
   const fetchYears = async () => {
         try {
@@ -161,11 +189,11 @@ const MasterKinerja = ({navigation}) => {
             setSelectedYear(defaultYear ? defaultYear.value : years[0]?.value);
           } else {
             console.error('Failed to load year options:', response);
-            showToast('error', 'Error', 'Gagal memuat data tahun');
+            Alert.alert('Error', 'Gagal memuat data tahun.');
           }
         } catch (error) {
           console.error('Error fetching years:', error);
-          showToast('error', 'Error', 'Gagal memuat data tahun');
+          Alert.alert('Error', 'Gagal memuat data tahun.');
         } finally {
           setLoading(false);
         }
@@ -209,59 +237,99 @@ const MasterKinerja = ({navigation}) => {
       }
     } catch (error) {
       console.error('Error fetching data:', error);
-      showToast('error', 'Error', 'Gagal memuat data');
+      Alert.alert('Error', 'Gagal memuat data.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleCheckboxToggle = async (item) => {
-    if (disabledItems.includes(item.checkbox)) {
+    // Check if item is disabled by ID instead of HTML content
+    if (disabledItems.includes(item.id)) {
       return; // Do nothing if the checkbox is disabled
     }
-
-    const isChecked = checkedItems.includes(item.checkbox);
+  
+    // Toggle checked state by ID
+    const isChecked = checkedItems.includes(item.id);
     if (isChecked) {
-      setCheckedItems(checkedItems.filter((id) => id !== item.checkbox));
+      setCheckedItems(checkedItems.filter((id) => id !== item.id));
     } else {
-      setCheckedItems([...checkedItems, item.checkbox]);
+      setCheckedItems([...checkedItems, item.id]);
     }
-    await saveListKinerja(item);
+    
+    // Copy item and explicitly set checked status before saving
+    const itemToSave = {
+      ...item,
+      checked: !isChecked  // Toggle the status for saving
+    };
+    
+    await saveListKinerja(itemToSave);
   };
 
   const saveListKinerja = async (item) => {
     try {
+      // Debug: Log the full item to see what's available
+      console.log('Full item data:', JSON.stringify(item, null, 2));
+      
+      // Get proper kinerja_id value - this might be missing
+      const kinerjaUuid = item.kinerja_id || item.uuid || kinerjaId;
+      
+      // Make sure uraian_id is correctly set
+      const uraianId = item.uraian_id || (item.uraian ? item.uraian.id : null) || item.id;
+      
+      if (!uraianId) {
+        console.error('Missing uraian_id');
+        Alert.alert('Error', 'Missing uraian ID data');
+        return;
+      }
+      
       // Construct the payload
       const payload = {
-        kinerja: { // Use the kinerjaId from state
-          uuid: item.uuid, // Generate or fetch this if needed
-          user_jabatan_id: userJabatanData?.id, // Use the userJabatanData from state
-          tahun_id: selectedYear, // Use the selectedYear from state
-          status: 0, // Default status
+        kinerja: {
+          uuid: item.uuid, // Make sure this is not null
+          user_jabatan_id: userJabatanData?.id,
+          tahun_id: selectedYear,
+          bulan_id: setSelectedMonth,
+          status: 0,
         },
         list: {
-          id: item.id || null, // Use the item's ID if available
-          uraian_id: item.uraian?.id || item.id, // Use uraian.id or fallback to item.id
-          kuantitas: item.kuantitas || 0,
-          kualitas: item.kualitas || 0,
-          waktu: item.waktu || 0,
-          bobot: item.bobot || 0,
-          wpt: item.wpt || 0,
-          tgs_tambahan: item.tgs_tambahan || false,
-          target_point: item.target_point || 0,
-          uraian_point: item.uraian_point || 0,
+          id: item.id || null,
+          uraian_id: uraianId,
+          kuantitas: typeof item.kuantitas === 'number' ? item.kuantitas : 0,
+          kualitas: typeof item.kualitas === 'number' ? item.kualitas : 0,
+          waktu: typeof item.waktu === 'number' ? item.waktu : 0,
+          bobot: typeof item.bobot === 'number' ? item.bobot : 0,
+          wpt: typeof item.wpt === 'number' ? item.wpt : 0,
+          tgs_tambahan: Boolean(item.tgs_tambahan),
+          target_point: typeof item.target_point === 'number' ? item.target_point : 0,
+          uraian_point: typeof item.uraian_point === 'number' ? item.uraian_point : 0,
         },
       };
   
-      console.log('Payload:', JSON.stringify(payload, null, 2)); // Debugging: Log the payload
+      // Ensure no null values in critical fields
+      if (!payload.kinerja.uuid || !payload.kinerja.user_jabatan_id || !payload.kinerja.tahun_id) {
+        console.error('Missing critical data in payload:', payload.kinerja);
+        Alert.alert('Error', 'Data tidak lengkap');
+        return;
+      }
   
-      // Send the payload to the API
+      console.log('Sending payload:', JSON.stringify(payload, null, 2));
       const response = await apiClient.post('user/kinerja/list/save', payload);
       console.log('Response:', response.data);
-      fetchListUraian(selectedYear);
+      fetchListUraian();
     } catch (error) {
       console.error('Error saving data:', error);
-      showToast('error', 'Error', 'Berhasil menambahkan data',  error.response?.data?.message || 'Gagal menyimpan data.');
+      
+      // Enhanced error logging
+      if (error.response) {
+        console.log('Error status:', error.response.status);
+        console.log('Error data:', JSON.stringify(error.response.data, null, 2));
+      }
+      
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Gagal menyimpan data.',
+      );
     }
   };
 
@@ -373,12 +441,12 @@ const MasterKinerja = ({navigation}) => {
                   Jenis Uraian:
                 </Text>
                 <View style={styles.statusSection}>
-                {item.type_tugas = "Mandiri"
+                {item.type_tugas === "Mandiri"
                 ? (
                   <View style={styles.statusBadgeSuccess}>
                     <Text style={styles.statusTextSuccess}>Mandiri </Text>
                   </View>
-                  ) : item.type_tugas = "Tambahan" ?(
+                  ) : item.type_tugas === "Tambahan" ?(
                   <View style={styles.statusBadgeDanger}>
                   <Text style={styles.statusTextDanger}>Tambahan </Text>
                   </View>
@@ -393,8 +461,6 @@ const MasterKinerja = ({navigation}) => {
               />          
             </View>
             </View>
-
-           
           </View>
         )}
         
@@ -405,14 +471,17 @@ const MasterKinerja = ({navigation}) => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate('KontrakKinerja')} style={styles.backButton}>
+        <TouchableOpacity onPress={() => navigation.navigate('RealisasiKinerja')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={26} color="#000" />
         </TouchableOpacity>
-        <View style={styles.titleContainer}>
-          <Text style={[styles.customFont, styles.headerTitle]}>List Indikator</Text>              
-        </View>
+        <Image
+          source={require('../../../assets/sikaresoi.png')}
+          style={styles.headerImage}
+        />
       </View>
-      
+      <View>
+        <Text style={[styles.customFont, styles.headerTitle]}>Tugas Tambahan</Text>      
+      </View>
 
 
         <FlatList
@@ -466,26 +535,35 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F7F8FB',
   },
-  header: {
-    backgroundColor: '#ffffff',
-    paddingRight: 18,
-    paddingLeft: 16,
-    paddingVertical: 12,
+  headerImage: {
+    width: '50%',
+    height: undefined,
+    aspectRatio: 5,
+    marginRight: 190,
+    resizeMode: 'contain',
+    alignSelf: 'center',
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  logo: {
+    width: 140,
+    height: 40,
+    resizeMode: 'contain',
+  },
+  headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    elevation: 4,
-    borderBottomLeftRadius: 5,
-    borderBottomRightRadius: 5,
-  },
-  titleContainer: {
-    flexDirection: 'column',
-    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+    flex: 1,
   },
   headerTitle: {
-    fontFamily: "Poppins-SemiBold",
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: 'bold',
     color: '#000',
+    marginLeft: 20,
+    marginBottom: 4,
+    marginTop: 10,
   },
   headerSubtitle: {
     color: '#000',
@@ -775,6 +853,34 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     marginTop: 10,
   },
+  header: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: 4,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  logo: {
+    width: 140,
+    height: 40,
+    resizeMode: 'contain',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    flex: 1,
+  },
+  iconWrapper: {
+    marginLeft: 12,
+  },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -1004,4 +1110,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MasterKinerja;
+export default MasterKinerjaRealisasi;

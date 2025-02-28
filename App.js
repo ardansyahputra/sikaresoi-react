@@ -32,17 +32,22 @@ import ProfileScreen from './screen/BottomNavBar/Profile/ProfileScreen';
 import ProfileEdit from './screen/BottomNavBar/Profile/ProfileEdit';
 import Password from './screen/BottomNavBar/Profile/Password';
 import PersetujuanRealisasi from './screen/PersetujuanRealisasi';
-import Persetujuan from './screen/Persetujuan.js';
 import Bacascreen from './screen/Bacascreen.js';
 import Bacakontrak from './screen/Bacakontrak.js';
-import KontrakKerja from './screen/BottomNavBar/Menu/Laporan/KontrakKerja.js';
+import KontrakKerja from './screen/BottomNavBar/Menu/Laporan/KontrakKerja';
+import Teguranscreen from './screen/TeguranScreen.js';
+import Persetujuan from './screen/Persetujuan.js';
+import LaporanKontrakKerja from './screen/BottomNavBar/Menu/Laporan/KontrakKerja';
 import RealisasiNext from './screen/RealisasiNext.js';
+import TargetPersetujuan from './screen/TargetPersetujuan.js';
+import MasterKinerjaRealisasi from './screen/BottomNavBar/Menu/RealisasiKinerja/MasterKinerjaRealisasi.js';
 import MasterKinerja from './screen/BottomNavBar/KontrakKinerja/MasterKinerja.js';
 import AddUraian from './screen/BottomNavBar/KontrakKinerja/AddUraian.js';
 import SalinKontrak from './screen/BottomNavBar/KontrakKinerja/SalinKontrak.js';
 import Kumulatif from './screen/BottomNavBar/KontrakKinerja/Kumulatif.js';
 import PerubahanPresensi from './screen/PerubahanPresensi.js';
 import AbsenPresensi from './screen/AbsenPresensi.js';
+import AddUraiankontrak from './screen/BottomNavBar/Menu/RealisasiKinerja/AddUraiankontrak.js';
 
 const Tab = createBottomTabNavigator();
 const styles = StyleSheet.create({
@@ -58,9 +63,9 @@ const Stack = createNativeStackNavigator();
 function RootStack() {
   return (
     <Stack.Navigator screenOptions={{headerShown: false}}>
-    <Stack.Screen name="Login" component={LoginScreen} />
-    <Stack.Screen name="Allmenu" component={Allmenu} />
-    <Stack.Screen name="AppTabs" component={AppTabs} />
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Allmenu" component={Allmenu} />
+      <Stack.Screen name="AppTabs" component={AppTabs} />
     </Stack.Navigator>
   );
 }
@@ -91,11 +96,11 @@ function HomeStack() {
         options={{headerShown: false}}
       />
       <Stack.Screen
-      name="GetAktif"
-      component={GetAktifCard}
-      options={{headerShown: false}}
+        name="GetAktif"
+        component={GetAktifCard}
+        options={{headerShown: false}}
       />
-    
+
       <Stack.Screen
         name="Profile"
         component={ProfileScreen}
@@ -161,7 +166,11 @@ function HomeStack() {
         component={Bacakontrak}
         options={{headerShown: false}}
       />
-
+      <Stack.Screen
+        name="TargetPersetujuan"
+        component={TargetPersetujuan}
+        options={{headerShown: false}}
+      />
       <Stack.Screen
         name="Remunerasi"
         component={Remunerasi}
@@ -183,10 +192,23 @@ function HomeStack() {
         options={{headerShown: false}}
       />
       <Stack.Screen
+        name="MasterKinerja"
+        component={MasterKinerja}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="MasterKinerjaRealisasi"
+        component={MasterKinerjaRealisasi}
+        options={{headerShown: false}}
+      />
+     
+      <Stack.Screen
         name="AbsenPresensi"
         component={AbsenPresensi}
         options={{headerShown: false}}
       />
+
+<Stack.Screen name="AddUraiankontrak" component={AddUraiankontrak} />
     </Stack.Navigator>
   );
 }
@@ -204,13 +226,17 @@ function ProfileStack() {
 function Kontrakstack() {
   return (
     <Stack.Navigator screenOptions={{headerShown: false}}>
-      <Stack.Screen name="KontrakKinerja" component={KontrakKinerjaScreen}/>
-      <Stack.Screen name="MasterKinerja" component={MasterKinerja}/>
-      <Stack.Screen name="AddUraian" component={AddUraian}/>
-      <Stack.Screen name="SalinKontrak" component={SalinKontrak}/>
-      <Stack.Screen name="Kumulatif" component={Kumulatif}/>
+      <Stack.Screen name="KontrakKinerja" component={KontrakKinerjaScreen} />
+      <Stack.Screen name="MasterKinerja" component={MasterKinerja} />
+      <Stack.Screen
+        name="MasterKinerjaRealisasi"
+        component={MasterKinerjaRealisasi}
+      />
+      <Stack.Screen name="AddUraian" component={AddUraian} />
+      
+      <Stack.Screen name="Kumulatif" component={Kumulatif} />
     </Stack.Navigator>
-  )
+  );
 }
 
 function AppTabs() {
