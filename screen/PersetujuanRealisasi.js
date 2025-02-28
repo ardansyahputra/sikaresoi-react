@@ -96,7 +96,15 @@ export default function PersetujuanRealisasi({navigation}) {
         payload,
         {},
       );
-
+  
+      // Normalize headers to handle duplicates
+      const normalizedHeaders = {};
+      for (const [key, value] of Object.entries(response.headers)) {
+        normalizedHeaders[key.toLowerCase()] = value;
+      }
+  
+      console.log('Normalized Headers:', normalizedHeaders);
+  
       if (response.data && response.data.data) {
         setData(response.data.data);
         setCurrentPage(response.data.current_page || 1);
@@ -109,7 +117,7 @@ export default function PersetujuanRealisasi({navigation}) {
       console.error('Error fetching data:', error.message);
       if (error.response) {
         console.error('Response data:', error.response.data);
-        console.error('Response status:', error.response.status);
+        console.error('Response status:', error.response.response.data);
         console.error('Response headers:', error.response.headers);
       } else if (error.request) {
         console.error('Request data:', error.request);
@@ -120,6 +128,7 @@ export default function PersetujuanRealisasi({navigation}) {
       setIsLoading(false);
     }
   };
+
 
   const TableHeader = () => (
     <View>

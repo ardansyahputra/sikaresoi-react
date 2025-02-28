@@ -66,13 +66,12 @@ const AddUraiankontrak = ({ navigation, route }) => {
   const fetchUraian = async () => {
     try {
       const response = await apiClient.post('uraian/indexAndro_user');
-      console.log('tgs tambahan:', response.data.data.tgs_tambahan[0]); // Debugging log
-  
+      console.log('tgs tambahan dari API:', response.data.data.tgs_tambahan); 
+      
       if (response?.data?.data) {
-        // If you need to set tgs_tambahan based on some condition, do it here
         setFormData(prev => ({
           ...prev,
-          tgs_tambahan: response.data.data.tgs_tambahan[4], // Set to false or based on some condition
+          tgs_tambahan: response.data.data.tgs_tambahan === true, // Pastikan hanya true/false
         }));
       }
     } catch (error) {
@@ -80,16 +79,17 @@ const AddUraiankontrak = ({ navigation, route }) => {
       Alert.alert('Error', 'Gagal memuat data Tugas Tambahan.');
     }
   };
-
+  
+  
 
   const fetchDropdownOptions = async () => {
     try {
       setDropdownLoading(true);
       const response = await apiClient.get('satuan/show');
       const satuanOptions = (response.data?.data || []).map(item => ({
-        label: item.nm_satuan || 'Unknown',
-        value: item.satuan, // Ensure this matches the expected value
-      }));
+        label: item.nm_satuan, // Pastikan nm_satuan ditampilkan
+        value: item.nm_satuan, // Gunakan nm_satuan sebagai value jika sesuai
+      }));      
       setDropdownOptions({ satuan: satuanOptions });
     } catch (error) {
       console.error('Error fetching dropdown options:', error.response?.data || error.message);
@@ -104,30 +104,43 @@ const AddUraiankontrak = ({ navigation, route }) => {
   };
 
   const handleSave = async () => {
-  console.log('Form Data Before Validation:', formData); // Log formData before validation
-  if (!formData.nm_uraian || !formData.satuan || !formData.wpt || !formData.jabatan_id) {
-    showToast('info', 'Validasi', 'Harap isi semua field yang diperlukan.');
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const payload = {
-      ...formData,
-      wpt: formData.wpt.toString(), // Ensure wpt is a string
-      tgs_tambahan: formData.tgs_tambahan, // Ensure tgs_tambahan is a boolean
-    };
-    console.log('Payload Being Sent:', payload); // Log the payload before API call
-    await apiClient.post('/uraian/create', payload);
-    showToast('success', 'Sukses', 'Berhasil menambahkan data');
-    navigation.navigate('MasterKinerja');
-  } catch (error) {
-    console.error('Error saving data:', error.response?.data || error.message);
-    showToast('error', 'Error', 'Gagal menambahkan data');
-  } finally {
-    setLoading(false);
-  }
-};
+    console.log('Form Data Before Validation:', formData);
+  
+    if (!formData.nm_uraian || !formData.satuan || !formData.wpt || !formData.jabatan_id) {
+      showToast('info', 'Validasi', 'Harap isi semua field yang diperlukan.');
+      return;
+    }
+  
+    setLoading(true);
+    try {
+      const payload = {
+        nm_uraian: formData.nm_uraian,
+        wpt: Number(formData.wpt),
+        satuan: formData.satuan,
+        jabatan_id: formData.jabatan_id,
+        angka_kredit: 0,
+        biaya: 0,
+        tgs_tambahan: formData.tgs_tambahan !== null ? formData.tgs_tambahan : false, // Pastikan tidak null
+      };
+  
+      console.log('Payload Being Sent:', payload);
+  
+      const response = await apiClient.post('/uraian/create', payload);
+      
+      if (response?.data?.status === 'success') {
+        showToast('success', 'Sukses', 'Berhasil menambahkan data');
+        navigation.navigate('MasterKinerja');
+      } else {
+        showToast('error', 'Gagal', 'Terjadi kesalahan saat menyimpan data');
+      }
+    } catch (error) {
+      console.error('Error saving data:', error.response?.data || error.message);
+      showToast('error', 'Error', 'Gagal menambahkan data');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

@@ -229,28 +229,23 @@ const RealisasiKinerja = () => {
       }
 
       const payload = {
-        kinerja: {
-          ...kinerja,
-          tahun_id: selectedYear,
-          bulan_id: selectedMonth,
-          user_jabatan_id: userJabatanData?.id,
+        kinerja: { // Use the kinerjaId from state
+          uuid: item.uuid, // Generate or fetch this if needed
+          user_jabatan_id: userJabatanData?.id, // Use the userJabatanData from state
+          tahun_id: selectedYear, // Use the selectedYear from state
+          status: 0, // Default status
         },
         list: {
-          id: updatedItem.id,
-          uraian_id: updatedItem.target?.list_kinerja?.uraian.id,
-          angka: updatedItem.angka || 0,
-          kuantitas: updatedItem.kuantitas || 0,
-          kualitas: updatedItem.kualitas || 0,
-          waktu: updatedItem.waktu || 0,
-          bobot: updatedItem.bobot || 0,
-          wpt: updatedItem.wpt || 0,
-          tgs_tambahan: updatedItem.tgs_tambahan || 0,
-          uraian_point: updatedItem.uraian_point || 0,
-          target_point: updatedItem.target_point || 0,
-          usulan_kuantitas: updatedItem.usulanKuantitas || 0,
-          usulan_kualitas: updatedItem.usulanKualitas || 0,
-          persetujuan_kuantitas: updatedItem.persetujuanKuantitas || 0,
-          persetujuan_kualitas: updatedItem.persetujuanKualitas || 0,
+          id: item.id || null, // Use the item's ID if available
+          uraian_id: item.uraian?.id || item.id, // Use uraian.id or fallback to item.id
+          kuantitas: item.kuantitas || 0,
+          kualitas: item.kualitas || 0,
+          waktu: item.waktu || 0,
+          bobot: item.bobot || 0,
+          wpt: item.wpt || 0,
+          tgs_tambahan: item.tgs_tambahan || false,
+          target_point: item.target_point || 0,
+          uraian_point: item.uraian_point || 0,
         },
       };
       

@@ -12,46 +12,34 @@ import {
   Image,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {Checkbox} from 'react-native-paper';
 import {Dropdown} from 'react-native-element-dropdown';
-import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../../src/api/apiClient';
 import axios from 'axios';
-import { months } from 'moment-timezone';
 
 const MasterKinerjaRealisasi = ({navigation}) => {
+  // Core data states
   const [data, setData] = useState([]);
-  const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredData, setFilteredData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const [selectedDisplay, setSelectedDisplay] = useState(null);
+  const [selectedDisplay, setSelectedDisplay] = useState(10); // Default to 10 items per page
   const [userJabatanData, setUserJabatanData] = useState(null);
   const [userJabatanId, setUserJabatanId] = useState(null);
+  const [kinerjaData, setKinerjaData] = useState(null);
   const [kinerjaId, setKinerjaId] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [tgsTambahan, setTgsTambahan] = useState(true);
+  const [tgsTambahan, setTgsTambahan] = useState(true); // Set default to true for Tugas Tambahan
   const [checkedItems, setCheckedItems] = useState([]);
   const [disabledItems, setDisabledItems] = useState([]);
-  const [selectedYear, setSelectedYear] = useState(null);
-  const [selectedMonth, setSelectedMonth] = useState(null);
-  const apiClient = useApiClient();
+  const [selectedYear, setSelectedYear] = useState(6);
+  const [selectedMonth, setSelectedMonth] = useState(2);
+  const [pimpinanId, setPimpinanId] = useState(null);
+  const [bulanId, setBulanId] = useState(null);
 
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-    fetchListUraian(query, currentPage, selectedDisplay);
-  };
-
-  const parseCheckbox = (checkbox) => {
-    const isChecked = checkbox.includes('checked="checked"');
-    const isDisabled = checkbox.includes('disabled="disabled"');
-    return { isChecked, isDisabled };
-  };
-
+  // Kinerja calculation states
   const [kinerja, setKinerja] = useState({
     totalak: 0,
     totalwpt: 0,
@@ -59,151 +47,285 @@ const MasterKinerjaRealisasi = ({navigation}) => {
     tahun_id: null,
     bulan_id: null,
     user_jabatan_id: null,
-    alert: {
-      show: false,
-    },
+    alert: {show: false},
   });
-  const [listKinerja, setListKinerja] = useState([]);
-  const [totalBobot, setTotalBobot] = useState(0);
-  const [totalWpt, setTotalWpt] = useState(0);
+  const [listKinerja, setListKinerja] = useState({utama: [], tambahan: []});
 
- 
+  const apiClient = useApiClient();
 
+  // Initialize data on component mount
   useEffect(() => {
-    fetchUserJabatanData();
-    fetchKinerja();
-    fetchYears();
-    fetchMonth();
-    fetchListUraian(currentPage, selectedDisplay, selectedYear, selectedMonth);
-  }, [currentPage, selectedDisplay, selectedYear, selectedMonth]);
+    const initializeData = async () => {
+      setLoading(true);
+      try {
+        const jabatanData = await fetchUserJabatanData();
+        const yearsData = await fetchYears();
+        const monthsData = await fetchMonth();
 
+        // Log initialization results
+        console.log('Initialization complete:', {
+          jabatanId: userJabatanId,
+          year: selectedYear,
+          month: selectedMonth,
+        });
+      } catch (error) {
+        console.error('Error initializing data:', error);
+        Alert.alert('Error', 'Gagal memuat data awal.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeData();
+  }, []);
+
+  // Fetch data when dependencies change
   useEffect(() => {
+    if (userJabatanId && selectedYear && selectedMonth) {
+      console.log('Fetching data with:', {
+        userJabatanId,
+        selectedYear,
+        selectedMonth,
+      });
+
+      const fetchVS = async () => {
+        await fetchKontrak(currentPage, selectedYear, selectedMonth);
+        await fetchListUraian(currentPage);
+      };
+
+      fetchVS();
+    }
+  }, [
+    currentPage,
+    selectedDisplay,
+    selectedYear,
+    selectedMonth,
+    userJabatanId,
+  ]);
+
+  // Filter data when search query changes
+  useEffect(() => {
+    if (data.length > 0) {
       const lowerCaseQuery = searchQuery.toLowerCase();
       const filtered = data.filter(
-        (item) =>
+        item =>
           item.nm_uraian?.toLowerCase().includes(lowerCaseQuery) ||
-          item.nm_satuan?.toLowerCase().includes(lowerCaseQuery)
+          item.nm_satuan?.toLowerCase().includes(lowerCaseQuery),
       );
       setFilteredData(filtered);
-    }, [searchQuery, data]);
+    }
+  }, [searchQuery, data]);
+
+  const handleSearch = query => {
+    setSearchQuery(query);
+    // Don't fetch here, let the useEffect handle it
+  };
+
+  const parseCheckbox = checkbox => {
+    // Handle case where checkbox might be a string or object
+    if (typeof checkbox === 'string') {
+      const isChecked = checkbox.includes('checked="checked"');
+      const isDisabled = checkbox.includes('disabled="disabled"');
+      return {isChecked, isDisabled};
+    }
+    return {isChecked: false, isDisabled: false};
+  };
 
   const fetchUserJabatanData = async () => {
     try {
       const response = await apiClient.post('user/jabatan/aktif');
-      console.log('Jabatan Id:', response.data.data.jabatan_id);
       if (response?.data?.data) {
-        setUserJabatanData(response.data.data);
-        setUserJabatanId(response.data.data.jabatan_id);
+        const userData = response.data.data;
+        setUserJabatanData(userData);
+        setUserJabatanId(userData.jabatan_id);
+        console.log('User jabatan data fetched:', userData);
+        return userData;
       }
     } catch (error) {
       console.error('Error fetching user jabatan data:', error);
+      throw error;
     }
   };
 
-  const fetchKinerja = async (page, year) => {
+  const fetchKontrak = async (
+    page = 1,
+    year = selectedYear,
+    month = selectedMonth,
+  ) => {
     try {
       setLoading(true);
-      const response = await apiClient.post('user/kinerja/list/target/realisasi/index', {
-        page,
-        tahun_id: year,
-        bulan_id: months,
-        kinerja_id: kinerjaId,
-      });
-      if (response?.data) {
-        
-        setKinerjaId(response.data.data.kinerja)
-        setKinerja(response.data.kinerja || {
-          totalak: 0,
-          totalwpt: 0,
-          totalbobot: 0,
-          tahun_id: year,
-          bulan_id: months,
-          user_jabatan_id: userJabatanData?.id,
-          alert: {
-            show: false,
-          },
-        });
-        setListKinerja(response.data.data);
+      console.log('Fetching kontrak with:', {page, year, month});
 
-        // Calculate totalBobot and totalWpt
-        console.log('Data fetched:', response.data);
+      const response = await apiClient.post(
+        'user/kinerja/list/target/realisasi/index',
+        {
+          page,
+          tahun_id: year,
+          bulan_id: month,
+        },
+      );
+
+      if (response?.data) {
+        console.log('Kontrak response received:', response.data);
+
+        const utamaData = response.data.utama || [];
+        const tambahanData = response.data.tambahan || [];
+
+        // Store the kinerja_id from the response for future use
+        setKinerjaData(response.data.kinerja);
+        if (response.data.kinerja.id) {
+          setKinerjaId(_ => response.data.kinerja.id);
+          console.log(
+            'Kinerja ID set from response:',
+            response.data.kinerja.id,
+          );
+        } else if (utamaData.length > 0 && utamaData[0].kinerja_id) {
+          setKinerjaId(_ => utamaData[0].kinerja_id);
+          console.log(
+            'Kinerja ID set from utamaData:',
+            utamaData[0].kinerja_id,
+          );
+        }
+
+        // Store the pimpinan_id
+        const pimpinanId =
+          utamaData.length > 0 && utamaData[0]?.target?.pimpinan_id
+            ? utamaData[0].target.pimpinan_id
+            : null;
+        setPimpinanId(pimpinanId);
+        console.log('Pimpinan ID set to:', pimpinanId);
+
+        // Make sure to handle tgs_tambahan properly
+        if (response.data.tgs_tambahan !== undefined) {
+          setTgsTambahan(response.data.tgs_tambahan);
+        } else {
+          setTgsTambahan(true); // Default to true for this screen
+        }
+
+        setData(utamaData);
+        setCurrentPage(response.data.current_page || 1);
+        setLastPage(response.data.last_page || 1);
+
+        // Calculate totals from data
+        const totalAk = utamaData.reduce(
+          (sum, item) =>
+            sum + (parseFloat(item.target?.list_kinerja?.angka_kredit) || 0),
+          0,
+        );
+        const totalWpt = utamaData.reduce(
+          (sum, item) =>
+            sum + (parseFloat(item.target?.list_kinerja?.wpt) || 0),
+          0,
+        );
+        const totalBobot = utamaData.reduce(
+          (sum, item) =>
+            sum + (parseFloat(item.target?.list_kinerja?.bobot) || 0),
+          0,
+        );
+
+        setKinerja({
+          totalak: totalAk,
+          totalwpt: totalWpt,
+          totalbobot: totalBobot,
+          tahun_id: year,
+          bulan_id: month,
+          pimpinan_id: pimpinanId,
+          user_jabatan_id: userJabatanData?.id,
+          alert: {show: false},
+        });
+
+        setListKinerja({utama: utamaData, tambahan: tambahanData});
       } else {
-        console.error('Invalid data:', response);
+        console.error('Invalid data structure:', response);
         setData([]);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
-      if (axios.isAxiosError(error)) {
-        console.log(error.toJSON());
-      }
-      Alert.alert('Error', 'Gagal memuat data.');
+      handleApiError('Error fetching kontrak data', error);
     } finally {
       setLoading(false);
     }
   };
 
   const fetchMonth = async () => {
-      try {
-        setLoading(true);
-        const response = await apiClient.get('bulan/show');
-        if (response?.data?.data) {
-          const months = response.data.data.map(month => ({
-            label: month.bulan.toString(),
-            value: month.id,
-          }));
-          setMonthOptions(months);
-  
-  
-          const currentMonth = new Date().getMonth();
-          const defaultMonth = months.find(
-            month => month.value === currentMonth
-          );
-          setSelectedMonth(defaultMonth ? defaultMonth.value : months[0]?.value);
-        } else {
-          console.error('Failed to load month options:', response);
-          Alert.alert('Error', 'Gagal memuat data bulan.');
-        }
-      } catch (error) {
-        console.error('Error fetching month:', error);
-        Alert.alert('Error', 'Gagal memuat data bulan.');
-      } finally {
-        setLoading(false);
+    try {
+      const response = await apiClient.get('bulan/show');
+
+      if (response?.data?.data && Array.isArray(response.data.data)) {
+        const months = response.data.data.map(month => ({
+          label: month.bulan.toString(),
+          value: month.id,
+        }));
+
+        setBulanId(months);
+
+        // Get current month (1-12)
+        const currentMonthIndex = new Date().getMonth() + 1;
+
+        // Find the month object with matching value
+        const defaultMonth = months.find(
+          month => month.value === currentMonthIndex,
+        );
+
+        // Set the selected month
+        const monthValue = defaultMonth
+          ? defaultMonth.value
+          : months[0]?.value || null;
+        setSelectedMonth(monthValue);
+        console.log('Selected month set to:', monthValue);
+
+        return months;
+      } else {
+        throw new Error('Invalid month data format');
       }
-    };
+    } catch (error) {
+      console.error('Error fetching month:', error);
+      Alert.alert('Error', 'Gagal memuat data bulan.');
+      throw error;
+    }
+  };
 
   const fetchYears = async () => {
-        try {
-          setLoading(true);
-          const response = await apiClient.get('tahun/show');
-          if (response?.data?.data) {
-            const years = response.data.data.map(year => ({
-              label: year.tahun.toString(),
-              value: year.id,
-            }));
-    
-            // Set default year to the current year
-            const currentYear = new Date().getFullYear();
-            const defaultYear = years.find(
-              year => year.label === currentYear.toString(),
-            );
-            setSelectedYear(defaultYear ? defaultYear.value : years[0]?.value);
-          } else {
-            console.error('Failed to load year options:', response);
-            Alert.alert('Error', 'Gagal memuat data tahun.');
-          }
-        } catch (error) {
-          console.error('Error fetching years:', error);
-          Alert.alert('Error', 'Gagal memuat data tahun.');
-        } finally {
-          setLoading(false);
-        }
-      };
+    try {
+      const response = await apiClient.get('tahun/show');
+      if (response?.data?.data) {
+        const years = response.data.data.map(year => ({
+          label: year.tahun.toString(),
+          value: year.id,
+        }));
 
-  const fetchListUraian = async (page) => {
+        // Set default year to current year
+        const currentYear = new Date().getFullYear();
+        const defaultYear = years.find(
+          year => year.label === currentYear.toString(),
+        );
+
+        const yearValue = defaultYear ? defaultYear.value : years[0]?.value;
+        setSelectedYear(yearValue);
+        console.log('Selected year set to:', yearValue);
+
+        return years;
+      } else {
+        throw new Error('Failed to load year options');
+      }
+    } catch (error) {
+      console.error('Error fetching years:', error);
+      Alert.alert('Error', 'Gagal memuat data tahun.');
+      throw error;
+    }
+  };
+
+  const fetchListUraian = async (page = currentPage) => {
     try {
       setLoading(true);
+      console.log('Fetching uraian list with:', {
+        per: selectedDisplay,
+        jabatan_id: userJabatanId,
+        kinerja_id: kinerjaId,
+        tgs_tambahan: tgsTambahan,
+        search: searchQuery,
+      });
+
       const response = await apiClient.post('uraian/indexAndro_user', {
-        page,
         per: selectedDisplay,
         jabatan_id: userJabatanId || null,
         kinerja_id: kinerjaId || null,
@@ -212,125 +334,232 @@ const MasterKinerjaRealisasi = ({navigation}) => {
       });
 
       if (response?.data?.data) {
+        console.log('Uraian list fetched successfully:', response.data.data);
         const fetchedData = response.data.data;
         const checkedIds = [];
         const disabledIds = [];
 
-        fetchedData.forEach((item) => {
-          const { isChecked, isDisabled } = parseCheckbox(item.checkbox);
-          if (isChecked) {
-            checkedIds.push(item.id);
-          }
-          if (isDisabled) {
-            disabledIds.push(item.id);
+        fetchedData.forEach(item => {
+          // Check if item.checkbox exists before parsing
+          if (item.checkbox) {
+            const {isChecked, isDisabled} = parseCheckbox(item.checkbox);
+            if (isChecked) {
+              checkedIds.push(item.id);
+            }
+            if (isDisabled) {
+              disabledIds.push(item.id);
+            }
           }
         });
+
+        console.log('Checked items:', checkedIds);
+        console.log('Disabled items:', disabledIds);
 
         setCheckedItems(checkedIds);
         setDisabledItems(disabledIds);
         setData(fetchedData);
-        setCurrentPage(response.data.current_page);
-        setLastPage(response.data.last_page);
+        setCurrentPage(response.data.current_page || 1);
+        setLastPage(response.data.last_page || 1);
       } else {
         console.error('Invalid data:', response);
         setData([]);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
-      Alert.alert('Error', 'Gagal memuat data.');
+      handleApiError('Error fetching uraian list', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCheckboxToggle = async (item) => {
-    // Check if item is disabled by ID instead of HTML content
+  const handleCheckboxToggle = async item => {
+    if (!item || !item.id) {
+      console.error('Missing item or item.id in handleCheckboxToggle');
+      return;
+    }
+
+    // Check if item is disabled
     if (disabledItems.includes(item.id)) {
-      return; // Do nothing if the checkbox is disabled
+      console.log('Item is disabled, ignoring toggle:', item.id);
+      return; // Do nothing if disabled
     }
-  
-    // Toggle checked state by ID
+
+    // Toggle checked state
     const isChecked = checkedItems.includes(item.id);
+    console.log('Toggling checkbox:', {
+      itemId: item.id,
+      currentState: isChecked,
+    });
+
+    let newCheckedItems;
+
     if (isChecked) {
-      setCheckedItems(checkedItems.filter((id) => id !== item.id));
+      newCheckedItems = checkedItems.filter(id => id !== item.id);
     } else {
-      setCheckedItems([...checkedItems, item.id]);
+      newCheckedItems = [...checkedItems, item.id];
     }
-    
-    // Copy item and explicitly set checked status before saving
+
+    // Update state immediately for responsive UI
+    setCheckedItems(newCheckedItems);
+
+    // Prepare the item for saving with toggled state
     const itemToSave = {
       ...item,
-      checked: !isChecked  // Toggle the status for saving
+      checked: !isChecked,
     };
-    
-    await saveListKinerja(itemToSave);
+
+    try {
+      setLoading(true);
+      console.log('Saving item after toggle:', itemToSave);
+
+      // Save the item
+      const saveResult = await saveListKinerja(itemToSave);
+      console.log('Save result:', saveResult);
+
+      // Show success message
+      Alert.alert('Success', 'Perubahan berhasil disimpan');
+
+      // Refresh data after saving - important to see changes
+      if (userJabatanId && selectedYear && selectedMonth) {
+        await fetchKontrak(currentPage, selectedYear, selectedMonth);
+      }
+    } catch (error) {
+      console.error('Error saving after checkbox toggle:', error);
+
+      // If save fails, revert the checkbox state
+      setCheckedItems(
+        isChecked
+          ? [...checkedItems]
+          : checkedItems.filter(id => id !== item.id),
+      );
+      Alert.alert('Error', 'Gagal menyimpan perubahan.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const saveListKinerja = async (item) => {
+  const saveListKinerja = async item => {
     try {
-      // Debug: Log the full item to see what's available
-      console.log('Full item data:', JSON.stringify(item, null, 2));
-      
-      // Get proper kinerja_id value - this might be missing
-      const kinerjaUuid = item.kinerja_id || item.uuid || kinerjaId;
-      
-      // Make sure uraian_id is correctly set
-      const uraianId = item.uraian_id || (item.uraian ? item.uraian.id : null) || item.id;
-      
-      if (!uraianId) {
-        console.error('Missing uraian_id');
-        Alert.alert('Error', 'Missing uraian ID data');
-        return;
+      if (!item || !item.id) {
+        throw new Error('Invalid item data: Missing ID');
       }
-      
+
+      // Debug log
+      console.log('Saving item:', JSON.stringify(item, null, 2));
+
+      // Use existing kinerjaId from state if available
+      const kinerjaUuid = kinerjaId || null;
+
+      // Get the correct uraian_id
+      const uraianId = item.uraian_id || item.id;
+
+      if (!uraianId) {
+        throw new Error('Missing uraian_id');
+      }
+
+      if (!userJabatanData?.id || !selectedYear || !selectedMonth) {
+        throw new Error(
+          `Missing required data: user_jabatan_id=${userJabatanData?.id}, tahun_id=${selectedYear}, or bulan_id=${selectedMonth}`,
+        );
+      }
+
       // Construct the payload
+      console.log('itam', item);
       const payload = {
-        kinerja: {
-          uuid: item.uuid, // Make sure this is not null
-          user_jabatan_id: userJabatanData?.id,
-          tahun_id: selectedYear,
-          bulan_id: setSelectedMonth,
-          status: 0,
-        },
+        kinerja: kinerjaData,
+        // kinerja: {
+        //   id: kinerjaId,
+        //   uuid: item.uuid,
+        //   user_jabatan_id: userJabatanData?.id,
+        //   tahun_id: selectedYear,
+        //   bulan_id: selectedMonth,
+        //   status: 0,
+        // },
+        // list: {
+        //   id: item.id, // Let the backend generate a new ID for this entry
+        //   uraian_id: uraianId,
+        //   kuantitas: item.kuantitas || 0,
+        //   kualitas: item.kualitas || 0,
+        //   waktu: item.waktu || 0,
+        //   bobot: item.bobot || 0,
+        //   wpt: item.wpt || 0,
+        //   tgs_tambahan: true, // This is the tugas tambahan screen
+        //   target_point: item.target_point || 0,
+        //   uraian_point: item.uraian_point || 0,
+        //   // Add a checked property that reflects the current state
+        //   checked: checkedItems.includes(item.id),
+        // },
         list: {
-          id: item.id || null,
+          angka: 0,
           uraian_id: uraianId,
-          kuantitas: typeof item.kuantitas === 'number' ? item.kuantitas : 0,
-          kualitas: typeof item.kualitas === 'number' ? item.kualitas : 0,
-          waktu: typeof item.waktu === 'number' ? item.waktu : 0,
-          bobot: typeof item.bobot === 'number' ? item.bobot : 0,
-          wpt: typeof item.wpt === 'number' ? item.wpt : 0,
-          tgs_tambahan: Boolean(item.tgs_tambahan),
-          target_point: typeof item.target_point === 'number' ? item.target_point : 0,
-          uraian_point: typeof item.uraian_point === 'number' ? item.uraian_point : 0,
+          kuantitas: 0,
+          kualitas: 0,
+          kinerja_id: kinerjaId || null,
+          waktu: 0,
+          tgs_tambahan: true,
+          target_point: 0,
+          uraian_point: 0,
+          uraian: item
+        },
+        keterangan: {
+          bulan_id: selectedMonth,
+          pimpinan_id: pimpinanId || null,
         },
       };
-  
-      // Ensure no null values in critical fields
-      if (!payload.kinerja.uuid || !payload.kinerja.user_jabatan_id || !payload.kinerja.tahun_id) {
-        console.error('Missing critical data in payload:', payload.kinerja);
-        Alert.alert('Error', 'Data tidak lengkap');
-        return;
-      }
-  
-      console.log('Sending payload:', JSON.stringify(payload, null, 2));
+
+      console.log(
+        'Sending payload for save:',
+        JSON.stringify(payload, null, 2),
+      );
+
       const response = await apiClient.post('user/kinerja/list/save', payload);
-      console.log('Response:', response.data);
-      fetchListUraian();
+      console.log('Save response:', response.data);
+
+      // Store the kinerja_id from the response if it exists
+      if (response.data && response.data.kinerja_id) {
+        setKinerjaId(response.data.kinerja_id);
+        console.log(
+          'Updated kinerjaId from response:',
+          response.data.kinerja_id,
+        );
+      }
+
+      return response.data;
     } catch (error) {
-      console.error('Error saving data:', error);
-      
-      // Enhanced error logging
+      handleApiError('Error saving kinerja data', error);
+      throw error;
+    }
+  };
+
+  const handleApiError = (message, error) => {
+    console.error(message, error);
+
+    // Enhanced error logging
+    if (axios.isAxiosError(error)) {
       if (error.response) {
         console.log('Error status:', error.response.status);
-        console.log('Error data:', JSON.stringify(error.response.data, null, 2));
+        console.log(
+          'Error data:',
+          JSON.stringify(error.response.data, null, 2),
+        );
+      } else if (error.request) {
+        console.log('No response received:', error.request);
+      } else {
+        console.log('Error setting up request:', error.message);
       }
-      
-      Alert.alert(
-        'Error',
-        error.response?.data?.message || 'Gagal menyimpan data.',
-      );
+    } else {
+      console.log('Non-Axios error:', error.message);
     }
+
+    Alert.alert(
+      'Error',
+      error.response?.data?.message ||
+        error.message ||
+        'Terjadi kesalahan pada server.',
+    );
+  };
+
+  const toggleExpand = id => {
+    setExpandedId(expandedId === id ? null : id);
   };
 
   const display = [
@@ -341,15 +570,13 @@ const MasterKinerjaRealisasi = ({navigation}) => {
     {label: '100', value: 100},
   ];
 
-  const toggleExpand = id => {
-    setExpandedId(expandedId === id ? null : id);
-  };
-
   const TableHeader = () => (
     <View>
       <View style={styles.filterContainer}>
         <View style={styles.displayContainer}>
-          <Text style={[styles.displayText, styles.customFont]}>Uraian Kegiatan Tidak Ada?</Text>
+          <Text style={[styles.displayText, styles.customFont]}>
+            Uraian Kegiatan Tidak Ada?
+          </Text>
           <Dropdown
             style={styles.dropdown}
             data={display}
@@ -362,15 +589,15 @@ const MasterKinerjaRealisasi = ({navigation}) => {
               <Text style={[styles.dropdownItem, styles.customFont]}>
                 {item.label}
               </Text>
-              )}
-            />                     
+            )}
+          />
         </View>
 
-        {/*Button Kinerja */}
+        {/* Button Kinerja */}
         <View style={styles.buttonRightContainer}>
           <TouchableOpacity
             style={styles.listkinerjaButton}
-            onPress={() => navigation.navigate('AddUraian')}>
+            onPress={() => navigation.navigate('AddUraiankontrak')}>
             <Ionicons name="add" size={15} color="white" />
             <Text style={styles.buttonText}>BUAT KEGIATAN</Text>
           </TouchableOpacity>
@@ -381,8 +608,13 @@ const MasterKinerjaRealisasi = ({navigation}) => {
               value={searchQuery}
               onChangeText={handleSearch}
             />
-            <Ionicons name='search' size={20} color='#888' style={styles.searchIcon} />
-           </View>
+            <Ionicons
+              name="search"
+              size={20}
+              color="#888"
+              style={styles.searchIcon}
+            />
+          </View>
         </View>
       </View>
       <View style={styles.tableHeader}>
@@ -395,17 +627,23 @@ const MasterKinerjaRealisasi = ({navigation}) => {
   );
 
   const renderItem = ({item}) => {
+    if (!item || !item.id) {
+      return null; // Skip rendering invalid items
+    }
+
     const isExpanded = expandedId === item.id;
+    const isChecked = checkedItems.includes(item.id);
+    const isDisabled = disabledItems.includes(item.id);
 
     return (
       <View>
-        {/* Tampilan Ringkas */}
+        {/* Compact View */}
         <View style={styles.tableRow}>
           <TouchableOpacity
             style={styles.rowHeader}
             onPress={() => toggleExpand(item.id)}>
             <Text style={[styles.tableCell, styles.nameCell]}>
-              {item.nm_uraian || "-" }
+              {item.nm_uraian || '-'}
             </Text>
             <View style={styles.expandIconCell}>
               <Ionicons
@@ -417,61 +655,106 @@ const MasterKinerjaRealisasi = ({navigation}) => {
           </TouchableOpacity>
         </View>
 
-        {/* Tampilan Penuh */}
+        {/* Expanded View */}
         {isExpanded && (
           <View style={styles.expandedRow}>
             <View style={styles.splitContainer}>
               <View style={styles.leftColumn}>
                 <Text style={[styles.expandedText, styles.customFont]}>
-                  AK: <Text style={styles.expandedTextDetail}> {item.angka_kredit || '-'}</Text>
+                  AK:{' '}
+                  <Text style={styles.expandedTextDetail}>
+                    {' '}
+                    {item.angka_kredit || '-'}
+                  </Text>
                 </Text>
                 <Text style={styles.expandedText}>
-                  Biaya: <Text style={styles.expandedTextDetail}>{item.biaya || '-'}</Text>
+                  Biaya:{' '}
+                  <Text style={styles.expandedTextDetail}>
+                    {item.biaya || '-'}
+                  </Text>
                 </Text>
                 <Text style={styles.expandedText}>
-                  WPT: <Text style={styles.expandedTextDetail}> {item.wpt || '-'}</Text>
+                  WPT:{' '}
+                  <Text style={styles.expandedTextDetail}>
+                    {' '}
+                    {item.wpt || '-'}
+                  </Text>
                 </Text>
               </View>
 
               <View style={styles.rightColumn}>
                 <Text style={styles.expandedText}>
-                  Satuan: <Text style={styles.expandedTextDetail}>{item.satuan || '-'}</Text>
+                  Satuan:{' '}
+                  <Text style={styles.expandedTextDetail}>
+                    {item.satuan || '-'}
+                  </Text>
                 </Text>
-                <Text style={styles.expandedText}>
-                  Jenis Uraian:
-                </Text>
+                <Text style={styles.expandedText}>Jenis Uraian:</Text>
                 <View style={styles.statusSection}>
-                {item.type_tugas === "Mandiri"
-                ? (
-                  <View style={styles.statusBadgeSuccess}>
-                    <Text style={styles.statusTextSuccess}>Mandiri </Text>
-                  </View>
-                  ) : item.type_tugas === "Tambahan" ?(
-                  <View style={styles.statusBadgeDanger}>
-                  <Text style={styles.statusTextDanger}>Tambahan </Text>
-                  </View>
-                  ): null}
+                  {item.type_tugas === 'Mandiri' ? (
+                    <View style={styles.statusBadgeSuccess}>
+                      <Text style={styles.statusTextSuccess}>Mandiri</Text>
+                    </View>
+                  ) : item.type_tugas === 'Tambahan' ? (
+                    <View style={styles.statusBadgeDanger}>
+                      <Text style={styles.statusTextDanger}>Tambahan</Text>
+                    </View>
+                  ) : null}
                 </View>
               </View>
               <View style={styles.actionContainer}>
-              <Checkbox
-                status={checkedItems.includes(item.checkbox) ? 'checked' : 'unchecked'}
-                onPress={() => handleCheckboxToggle(item)}
-                disabled={disabledItems.includes(item.checkbox)}
-              />          
-            </View>
+                <Checkbox
+                  status={isChecked ? 'checked' : 'unchecked'}
+                  onPress={() => handleCheckboxToggle(item)}
+                  disabled={isDisabled}
+                />
+              </View>
             </View>
           </View>
         )}
-        
       </View>
     );
   };
 
+  const renderPagination = () => (
+    <View>
+      {loading && <ActivityIndicator size="large" color="#0000ff" />}
+      <Text style={styles.pageInfo}>
+        Showing page {currentPage} of {lastPage}
+      </Text>
+      <View style={styles.paginationContainer}>
+        <View style={styles.paginationButtons}>
+          <TouchableOpacity
+            style={[
+              styles.pageButton,
+              currentPage === 1 && styles.disabledButton,
+            ]}
+            disabled={currentPage === 1}
+            onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
+            <Text style={styles.pageButtonText}>Previous</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.pageButton,
+              currentPage === lastPage && styles.disabledButton,
+            ]}
+            disabled={currentPage === lastPage}
+            onPress={() =>
+              setCurrentPage(prev => Math.min(prev + 1, lastPage))
+            }>
+            <Text style={styles.pageButtonText}>Next</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate('RealisasiKinerja')} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('RealisasiKinerja')}
+          style={styles.backButton}>
           <Ionicons name="arrow-back" size={26} color="#000" />
         </TouchableOpacity>
         <Image
@@ -479,53 +762,29 @@ const MasterKinerjaRealisasi = ({navigation}) => {
           style={styles.headerImage}
         />
       </View>
+
       <View>
-        <Text style={[styles.customFont, styles.headerTitle]}>Tugas Tambahan</Text>      
+        <Text style={[styles.customFont, styles.headerTitle]}>
+          Tugas Tambahan
+        </Text>
       </View>
 
-
-        <FlatList
-          scrollEnabled={false}
-          ListHeaderComponent={TableHeader}
-          data={data}
-          renderItem={renderItem}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.card}
-          ListFooterComponent={
-            <View>
-              {loading && <ActivityIndicator size="large" color="#0000ff" />}
-              <Text style={styles.pageInfo}>
-                 Showing page {currentPage} of {lastPage}
-                 </Text>
-               <View style={styles.paginationContainer}>
-                 <View style={styles.paginationButtons}>
-                  <TouchableOpacity
-                    style={[
-                    styles.pageButton,
-                    currentPage === 1 && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === 1}
-                    onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    >
-                    <Text style={styles.pageButtonText}>Previous</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === lastPage && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === lastPage}
-                    onPress={() =>
-                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
-                    }
-                    >
-                    <Text style={styles.pageButtonText}>Next</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          }
-        />
+      <FlatList
+        scrollEnabled={false}
+        ListHeaderComponent={TableHeader}
+        data={searchQuery ? filteredData : data}
+        renderItem={renderItem}
+        keyExtractor={item => item?.id?.toString() || Math.random().toString()}
+        contentContainerStyle={styles.card}
+        ListFooterComponent={renderPagination}
+        ListEmptyComponent={
+          !loading && (
+            <Text style={[styles.customFont, styles.emptyText]}>
+              Tidak ada data yang tersedia
+            </Text>
+          )
+        }
+      />
     </ScrollView>
   );
 };
@@ -598,14 +857,14 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     flex: 1,
-    paddingHorizontal: -10, 
+    paddingHorizontal: -10,
     color: '#000',
   },
   searchIcon: {
     position: 'absolute',
-    left: 120, 
+    left: 120,
     top: '50%',
-    transform: [{ translateY: -10 }],
+    transform: [{translateY: -10}],
   },
   buttonText: {
     fontWeight: 'bold',

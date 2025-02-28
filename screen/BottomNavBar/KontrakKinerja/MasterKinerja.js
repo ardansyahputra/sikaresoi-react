@@ -414,7 +414,7 @@ const MasterKinerja = ({navigation}) => {
         />
       </View>
       <View>
-        <Text style={[styles.customFont, styles.headerTitle]}>List Indikator</Text>              
+        <Text style={[styles.customFont, styles.headerTitle]}>List Indikator</Text>       
       </View>
 
 
