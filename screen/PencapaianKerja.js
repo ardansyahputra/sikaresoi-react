@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Button, Modal, ActivityIndicator,ScrollView,
-  Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Button, Modal, ActivityIndicator, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import AwesomeAlert from 'react-native-awesome-alerts';
 import RNFS from 'react-native-fs';
 import FileViewer from "react-native-file-viewer";
-import Icon from 'react-native-vector-icons/Ionicons'; 
+import Icon from 'react-native-vector-icons/Ionicons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from "@react-navigation/native";
+import { toastConfig, Toast } from '../src/utils/CustomToast';
+import useApiClient from '../src/api/apiClient';
+import { APP_URL } from '@env';
 
 const PencapaianKerja = () => {
   const [postData, setPostData] = useState({ tahun_id: '', bulan_id: '' });
+  const [userJabatanData, setUserJabatanData] = useState(null);
   const [listTahun, setListTahun] = useState([]);
   const [listBulan, setListBulan] = useState([]);
   const [pdfUrl, setPdfUrl] = useState('');
@@ -18,56 +21,94 @@ const PencapaianKerja = () => {
   const [showNotFoundModal, setShowNotFoundModal] = useState(false);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const apiClient = useApiClient();
+  const showToast = (type, text1, text2) => {
+    Toast.show({
+      type,
+      text1,
+      text2,
+    });
+  };
   const navigation = useNavigation();
 
   useEffect(() => {
-    const tahunData = [
-      { id: 1, tahun: '2020' },
-      { id: 2, tahun: '2021' },
-      { id: 3, tahun: '2022' },
-      { id: 4, tahun: '2023' },
-      { id: 5, tahun: '2024' },
-      { id: 6, tahun: '2025' },
-    ];
-
-    const bulanData = [
-      { id: 1, bulan: "Januari" },
-      { id: 2, bulan: "Februari" },
-      { id: 3, bulan: "Maret" },
-      { id: 4, bulan: "April" },
-      { id: 5, bulan: "Mei" },
-      { id: 6, bulan: "Juni" },
-      { id: 7, bulan: "Juli" },
-      { id: 8, bulan: "Agustus" },
-      { id: 9, bulan: "September" },
-      { id: 10, bulan: "Oktober" },
-      { id: 11, bulan: "November" },
-      { id: 12, bulan: "Desember" }
-
-    ];
-
-    setListTahun(tahunData);
-    setListBulan(bulanData);
+    fetchYears();
+    fetchMonths();
+    fetchUserJabatanData();
   }, []);
 
-  const handleSelectTahun = (value) => {
-    setPostData((prevData) => ({ ...prevData, tahun_id: value }));
+  const fetchUserJabatanData = async () => {
+    try {
+      const response = await apiClient.post('user/jabatan/aktif');
+      if (response?.data?.data) {
+        setUserJabatanData(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching user jabatan data:', error);
+    }
   };
 
-  const handleSelectBulan = (value) => {
-    setPostData((prevData) => ({ ...prevData, bulan_id: value }));
+  const fetchYears = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.get('tahun/show');
+      if (response?.data?.data) {
+        const years = response.data.data.map(year => ({
+          label: year.tahun.toString(),
+          value: year.id,
+        }));
+        setListTahun(years);
+      } else {
+        console.error('Failed to load year options:', response);
+        showToast('error', 'Error', 'Gagal memuat data tahun.');
+      }
+    } catch (error) {
+      console.error('Error fetching years:', error);
+      showToast('error', 'Error', 'Gagal memuat data tahun');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMonths = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.get('bulan/show');
+      if (response?.data?.data) {
+        const months = response.data.data.map(month => ({
+          label: month.bulan.toString(),
+          value: month.id,
+        }));
+        setListBulan(months);
+      } else {
+        Alert.alert('Error', 'Gagal memuat data bulan.');
+      }
+    } catch (error) {
+      console.error('Error fetching month:', error);
+      showToast('error','Error', 'Gagal memuat data bulan.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectTahun = (item) => {
+    setPostData((prevData) => ({ ...prevData, tahun_id: item.value }));
+  };
+
+  const handleSelectBulan = (item) => {
+    setPostData((prevData) => ({ ...prevData, bulan_id: item.value }));
   };
 
   const generatePdfUrl = (tahunId, bulanId) => {
-    const url = `http://192.168.60.216:8000/report/capaian_kinerja?type=stream&bulan_id=${bulanId}&tahun_id=${tahunId}&user_jabatan_id=0a4df7b9-7962-457c-bd47-23ce9a50a02d`;
+    const url = `${APP_URL}report/capaian_kinerja?type=stream&bulan_id=${bulanId}&tahun_id=${tahunId}&user_jabatan_id=${userJabatanData.uuid}`;
     setPdfUrl(url);
     return url;
   };
 
   const downloadAndOpenPdf = async () => {
-    const fileUrl = generatePdfUrl(postData.tahun_id, postData.bulan_id)
+    const fileUrl = generatePdfUrl(postData.tahun_id, postData.bulan_id);
     if (!fileUrl) {
-      setErrorMessage('Tidak ada file PDF untuk diunduh.');
+      showToast('info', 'Peringatan', 'Tidak ada file PDF untuk diunduh');
       return;
     }
 
@@ -83,28 +124,28 @@ const PencapaianKerja = () => {
       if (!response.ok) {
         throw new Error(`Gagal mengunduh file. Kode status: ${response.status}`);
       }
-      
+
       const contentType = response.headers.get('content-type');
       if (!contentType.includes('application/pdf')) {
-        setShowNotFoundModal(true);
+        showToast('info', 'Peringatan', 'Tidak ada file PDF untuk diunduh');
         return;
       }
 
-      const blob = await response.blob(); 
+      const blob = await response.blob();
       const reader = new FileReader();
 
       reader.onloadend = async () => {
         const base64data = reader.result.split(',')[1];
         await RNFS.writeFile(filePath, base64data, 'base64');
         console.log("File downloaded:", filePath);
-        setSuccessModalVisible(true);
+        showToast('success', 'Sukses', 'File berhasil diunduh' );
         FileViewer.open(filePath);
       };
 
       reader.readAsDataURL(blob);
     } catch (error) {
       console.error("Error downloading file:", error);
-      setErrorMessage(error.message || 'Terjadi kesalahan saat mengunduh file.');
+      showToast('error', 'Gagal', error.message);
     } finally {
       setLoading(false);
     }
@@ -112,108 +153,62 @@ const PencapaianKerja = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-              <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                  <Ionicons name="arrow-back" size={26} color="#000" />
-                </TouchableOpacity>
-                <Image
-                  source={require('./assets/images/sikaresoi.png')}
-                  style={styles.headerImage}
-                />
-              </View>
-        
-              <View style={styles.headerTextContainer}>
-                <Text style={styles.headerTitle}>Laporan Capaian Kerja</Text>
-                <Text style={styles.separatorText}> • </Text>
-                <Text style={styles.headerSubtitle}>Capaian Kerja</Text>
-              </View>
-    <View style={{ flex: 1, padding: 20 }}>
-      <View style={styles.card}>
-        <View style={styles.cardBody}>
-          <View style={styles.row}>
-            <Text style={styles.label}>
-              Pilih Tahun dan Bulan<Text style={styles.required}>*</Text>:
-            </Text>
-
-            <View style={styles.dropdownRows}>
-  <Dropdown
-    data={listTahun}
-    labelField="tahun"
-    valueField="id"
-    value={postData.tahun_id}
-    onChange={(item) => handleSelectTahun(item.id)}
-    placeholder="-- PILIH TAHUN --"
-    style={styles.dropdown}
-    labelStyle={styles.dropdownLabel} // Label font Poppins
-    selectedTextStyle={styles.dropdownText} // Font Poppins untuk teks yang dipilih
-    placeholderStyle={styles.dropdownPlaceholder} // Placeholder dengan font Poppins
-    itemTextStyle={styles.dropdownItemText} // Font Poppins untuk teks opsi
-  />
-  <Dropdown
-    data={listBulan}
-    labelField="bulan"
-    valueField="id"
-    value={postData.bulan_id}
-    onChange={(item) => handleSelectBulan(item.id)}
-    placeholder="-- PILIH BULAN --"
-    style={styles.dropdown}
-    labelStyle={styles.dropdownLabel}
-    selectedTextStyle={styles.dropdownText}
-    placeholderStyle={styles.dropdownPlaceholder}
-    itemTextStyle={styles.dropdownItemText} // Font Poppins untuk teks opsi
-  />
-</View>
-
-
-          </View>
-
-          {postData.tahun_id && postData.bulan_id ? (
-            <TouchableOpacity style={styles.button} onPress={downloadAndOpenPdf}>
-            <Text style={styles.buttonText}>Unduh PDF</Text>
-          </TouchableOpacity>
-
-          ) : (
-            postData.tahun_id && <Text style={styles.noDataText}>Tidak ada data untuk ditampilkan.</Text>
-          )}
-        </View>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={26} color="#000" />
+        </TouchableOpacity>
+        <View style={styles.titleContainer}>
+        <Text style={styles.headerTitle}>Laporan Capaian Kerja</Text>
+      </View>
       </View>
 
-      <Modal transparent={true} visible={loading} animationType="fade">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <ActivityIndicator size="large" color="#0000ff" />
-            <Text style={styles.loadingText}>Mengunduh file, harap tunggu...</Text>
-          </View>
-        </View>
-      </Modal>
+      <View style={{ flex: 1, padding: 20 }}>
+        <View style={styles.card}>
+          <View style={styles.cardBody}>
+            <View style={styles.row}>
+              <Text style={styles.label}>
+                Pilih Tahun dan Bulan<Text style={styles.required}>*</Text>:
+              </Text>
 
-      <Modal transparent={true} visible={showNotFoundModal} animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Icon name="close-circle-sharp" size={90} color="red" />
-            <Text style={styles.succesText}>File tidak ditemukan</Text>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setShowNotFoundModal(false)}>
-              <Text style={styles.closeButtonText}>Tutup</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+              <View style={styles.dropdownRows}>
+                <Dropdown
+                  data={listTahun}
+                  labelField="label"
+                  valueField="value"
+                  value={postData.tahun_id}
+                  onChange={handleSelectTahun}
+                  placeholder="-- PILIH TAHUN --"
+                  style={styles.dropdown}
+                  labelStyle={styles.dropdownLabel}
+                  selectedTextStyle={styles.dropdownText}
+                  placeholderStyle={styles.dropdownPlaceholder}
+                  itemTextStyle={styles.dropdownItemText}
+                />
+                <Dropdown
+                  data={listBulan}
+                  labelField="label"
+                  valueField="value"
+                  value={postData.bulan_id}
+                  onChange={handleSelectBulan}
+                  placeholder="-- PILIH BULAN --"
+                  style={styles.dropdown}
+                  labelStyle={styles.dropdownLabel}
+                  selectedTextStyle={styles.dropdownText}
+                  placeholderStyle={styles.dropdownPlaceholder}
+                  itemTextStyle={styles.dropdownItemText}
+                />
+              </View>
+            </View>
 
-      <Modal transparent={true} visible={successModalVisible} animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Icon name="checkmark-circle-sharp" size={64} color="green" />
-            <Text style={styles.successText}>Unduhan Selesai!</Text>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setSuccessModalVisible(false)}>
-              <Text style={styles.closeButtonText}>Tutup</Text>
-            </TouchableOpacity>
+            {postData.tahun_id && postData.bulan_id ? (
+              <TouchableOpacity style={styles.button} onPress={downloadAndOpenPdf}>
+                <Text style={styles.buttonText}>Unduh PDF</Text>
+              </TouchableOpacity>
+            ) : (
+              postData.tahun_id && <Text style={styles.noDataText}>Tidak ada data untuk ditampilkan.</Text>
+            )}
           </View>
         </View>
-      </Modal>
     </View>
     </ScrollView>
   );
@@ -225,24 +220,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7F8FB',
   },
   header: {
+    backgroundColor: '#ffffff',
+    paddingRight: 18,
+    paddingLeft: 16,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 18,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    elevation: 5,
+    justifyContent: 'space-between',
+    elevation: 4,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
   },
-  headerImage: {
-    width: '50%',
-    height: undefined,
-    aspectRatio: 5,
-    marginRight: 190,
-    resizeMode: 'contain',
-    alignSelf: 'center',
+  titleContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+  },
+  headerTitle: {
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 16,
+    color: '#000',
   },
   backButton: {
     marginTop:1,

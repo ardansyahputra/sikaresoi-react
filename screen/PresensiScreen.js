@@ -212,13 +212,11 @@ const PresensiScreen = ({ navigation }) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={26} color="#000" />
         </TouchableOpacity>
-        <Image source={require('./assets/images/sikaresoi.png')} style={styles.headerImage} />
-      </View>
-      <View style={styles.headerTextContainer}>
+        <View style={styles.headerTextContainer}>
         <Text style={styles.headerTitle}>Presensi</Text>
-        <Text style={styles.separatorText}> • </Text>
-        <Text style={styles.headerSubtitle}>Data Presensi</Text>
       </View>
+      </View>
+      
 
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />

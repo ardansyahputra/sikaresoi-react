@@ -295,15 +295,12 @@ const handleNextPage = () => {
               <TouchableOpacity onPress={() => navigation.navigate('KontrakKinerja')} style={styles.backButton}>
                 <Ionicons name="arrow-back" size={20} color="#000" />
               </TouchableOpacity>
-              <Image
-                source={require('../../assets/sikaresoi.png')}
-                style={styles.headerImage}
-              />
-            </View>
-      <View>
-        <Text style={[styles.customFont, styles.headerTitle]}>Salin Kontrak Sebelumnya</Text>              
-      </View>
+              <View style={styles.titleCont}>
+                <Text style={[styles.customFont, styles.headerTitle]}>Salin Kontrak Sebelumnya</Text>              
+              </View>
 
+            </View>
+      
 
       <Modal
               animationType="slide"
@@ -377,30 +374,24 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#ffffff',
-    paddingHorizontal: 16,
+    paddingRight: 18,
+    paddingLeft: 16,
     paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     elevation: 4,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
   },
-  headerImage: {
-    width: '50%',
-    height: undefined,
-    aspectRatio: 5,
-    marginRight: 190,
-    resizeMode: 'contain',
-    alignSelf: 'center',
+  titleContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 16,
     color: '#000',
-    marginLeft: 20,
-    marginBottom: 4,
-    marginTop: 10,
   },
   headerSubtitle: {
     color: '#000',

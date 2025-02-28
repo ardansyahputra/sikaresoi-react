@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { View, Text, StyleSheet, Button, Alert, Modal, ActivityIndicator, ScrollView,
   Image, TouchableOpacity } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
@@ -8,82 +8,124 @@ import FileViewer from "react-native-file-viewer";
 import Icon from 'react-native-vector-icons/Ionicons'; // Pastikan Anda telah menginstal react-native-vector-icons
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from "@react-navigation/native";
+import useApiClient from '../../../../src/api/apiClient';
+import { toastConfig, Toast } from '../../../../src/utils/CustomToast';
+import {API_URL} from '@env';
+
 
 const KontrakKerja = () => {
   const [postData, setPostData] = useState({ tahun_id: '' });
   const [listTahun, setListTahun] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(null);
   const [pdfUrl, setPdfUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showNotFoundModal, setShowNotFoundModal] = useState(false);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
+  const [userJabatanData, setUserJabatanData] = useState(null);
   const navigation = useNavigation();
+  const apiClient = useApiClient();
+  const showToast = (type, text1, text2) => {
+        Toast.show({
+          type,
+          text1,
+          text2,
+        });
+      };
 
   useEffect(() => {
-    const tahunData = [
-      { id: 1, tahun: '2020' },
-      { id: 2, tahun: '2021' },
-      { id: 3, tahun: '2022' },
-      { id: 4, tahun: '2023' },
-      { id: 5, tahun: '2024' },
-      { id: 6, tahun: '2025' },
-    ];
-    setListTahun(tahunData);
-  }, []);
+      fetchYears();
+      fetchUserJabatanData();
+    }, []);
+
+  const fetchUserJabatanData = async () => {
+    try {
+      const response = await apiClient.post('user/jabatan/aktif');
+      if (response?.data?.data) {
+        setUserJabatanData(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching user jabatan data:', error);
+    }
+  };
+
+  const fetchYears = async () => {
+        try {
+          setLoading(true);
+          const response = await apiClient.get('tahun/show');
+          if (response?.data?.data) {
+            const years = response.data.data.map(year => ({
+              label: year.tahun.toString(),
+              value: year.id,
+            }));
+            setListTahun(years);
+            setSelectedYear(null);
+            setPdfUrl('');
+          } else {
+            console.error('Failed to load year options:', response);
+            showToast('erro','Error', 'Gagal memuat data tahun.');
+          }
+        } catch (error) {
+          console.error('Error fetching years:', error);
+          showToast('error', 'Error',  'Gagal memuat data tahun')
+        } finally {
+          setLoading(false);
+        }
+      };
 
   const handleSelectTahun = (value) => {
-    setPostData((prevData) => ({ ...prevData, tahun_id: value }));
+    setSelectedYear(value); // Update selectedYear with the selected year ID
     setPdfUrl('');
     if (value) {
       generatePdfUrl(value);
     }
   };
 
-  const generatePdfUrl = (tahunId) => {
-    const url = `http://192.168.60.216:8000/report/kontrak_kinerja/0a4df7b9-7962-457c-bd47-23ce9a50a02d?type=stream&keuangan=0&tahun_id=${tahunId}`;
+  const generatePdfUrl = (value) => {
+    const url = `${API_URL}report/kontrak_kinerja/${userJabatanData.uuid}?type=stream&keuangan=0&tahun_id=${value}`;
     setPdfUrl(url);
   };
-
+  
   const downloadAndOpenPdf = async () => {
     if (!pdfUrl) {
-      Alert.alert('Error', 'Tidak ada file PDF untuk diunduh.');
+      showToast('error', 'Error', 'Tidak ada file PDF untuk diunduh.');
       return;
     }
-
-    const fileName = `kontrak_kinerja_${postData.tahun_id}.pdf`;
+  
+    const fileName = `kontrak_kinerja_${selectedYear}.pdf`; // Use selectedYear instead of postData.tahun_id
     const filePath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
-
+  
     try {
       setLoading(true);
-
+  
       const response = await fetch(pdfUrl, { method: 'GET' });
-
+  
       if (!response.ok) {
-        throw new Error(`Gagal mengunduh file. Kode status: ${response.status}`);
+        showToast('error', 'Gagal', response.status);
       }
       
       const contentType = response.headers.get('content-type');
       if (!contentType.includes('application/pdf')) {
-        setShowNotFoundModal(true);
+        showToast('info', 'Peringatan', 'Tidak ada file PDF untuk diunduh');
         return;
       }
-
+  
       const blob = await response.blob();
       const reader = new FileReader();
-
+  
       reader.onloadend = async () => {
         const base64data = reader.result.split(',')[1];
         await RNFS.writeFile(filePath, base64data, 'base64');
         console.log("File downloaded:", filePath);
-        setSuccessModalVisible(true);
+        showToast('succes', 'Sukses', response.data.message);
         FileViewer.open(filePath);
       };
-
+  
       reader.readAsDataURL(blob);
     } catch (error) {
       console.error("Error downloading file:", error);
-      setErrorMessage(error.message || 'Terjadi kesalahan saat mengunduh file.');
+      showToast('error', 'Error', error.message);
     } finally {
       setLoading(false);
     }
@@ -95,17 +137,12 @@ const KontrakKerja = () => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={26} color="#000" />
         </TouchableOpacity>
-        <Image
-          source={require('../../../assets/images/sikaresoi.png')}
-          style={styles.headerImage}
-        />
+        <View style={styles.titleContainer}>
+        <Text style={styles.headerTitle}>Laporan Kontrak Kerja</Text>
+      </View>
       </View>
 
-      <View style={styles.headerTextContainer}>
-        <Text style={styles.headerTitle}>Laporan Kontrak Kerja</Text>
-        <Text style={styles.separatorText}> • </Text>
-        <Text style={styles.headerSubtitle}>Kontrak Kerja</Text>
-      </View>
+      
 
       <View style={{ flex: 1, padding: 20 }}>
         <View style={styles.card}>
@@ -114,19 +151,27 @@ const KontrakKerja = () => {
               <Text style={styles.label}>
                 Pilih Tahun <Text style={styles.required}>*</Text>:
               </Text>
+              {/* <Dropdown
+                          style={styles.dropdown}
+                          data={yearOptions}
+                          labelField="label"
+                          valueField="value"
+                          value={selectedYear}
+                          onChange={item => setSelectedYear(item.value)}
+                        /> */}
               <Dropdown
                 data={listTahun}
-                labelField="tahun"
-                valueField="id"
-                value={postData.tahun_id}
-                onChange={(item) => handleSelectTahun(item.id)}
+                labelField="label"
+                valueField="value"
+                value={selectedYear}
+                onChange={(item) => handleSelectTahun(item.value)}
                 placeholder="-- PILIH TAHUN --"
                 style={styles.dropdown}
-                labelStyle={styles.dropdownLabel} // Label font Poppins
-                selectedTextStyle={styles.dropdownText} // Font Poppins untuk teks yang dipilih
-                placeholderStyle={styles.dropdownPlaceholder} // Placeholder dengan font Poppins
-                itemTextStyle={styles.dropdownItemText} // Font Poppins untuk teks opsi
-                itemStyle={styles.dropdownItemText} // Gaya untuk item dalam dropdown
+                labelStyle={styles.dropdownLabel}
+                selectedTextStyle={styles.dropdownText}
+                placeholderStyle={styles.dropdownPlaceholder}
+                itemTextStyle={styles.dropdownItemText}
+                itemStyle={styles.dropdownItemText}
               />
             </View>
 
@@ -139,50 +184,10 @@ const KontrakKerja = () => {
                 <Text style={styles.downloadButtonText}>Unduh PDF</Text>
               </TouchableOpacity>
             ) : (
-              postData.tahun_id && <Text style={styles.noDataText}>Tidak ada data untuk ditampilkan.</Text>
+             selectedYear && <Text style={styles.noDataText}>Tidak ada data untuk ditampilkan.</Text>
             )}
           </View>
         </View>
-
-        {/* Modal Loading */}
-        <Modal transparent={true} visible={loading}>
-          <View style={styles.modalBackground}>
-            <View style={styles.activityIndicatorWrapper}>
-              <ActivityIndicator size="large" color="#0000ff" />
-              <Text style={{ marginTop: 10, fontFamily: 'Poppins-Regular' }}>Sedang Memuat...</Text>
-            </View>
-          </View>
-        </Modal>
-
-        {/* Modal File Not Found */}
-        <Modal transparent={true} visible={showNotFoundModal} animationType="slide">
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Icon name="close-circle-sharp" size={90} color="red" />
-              <Text style={styles.succesText}>File tidak ditemukan</Text>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setShowNotFoundModal(false)}>
-                <Text style={styles.closeButtonText}>Tutup</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-
-        {/* Modal Success */}
-        <Modal transparent={true} visible={successModalVisible} animationType="slide">
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Icon name="checkmark-circle-sharp" size={90} color="green" />
-              <Text style={styles.successText}>Unduhan Selesai!</Text>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setSuccessModalVisible(false)}>
-                <Text style={styles.closeButtonText}>Tutup</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
       </View>
     </ScrollView>
   );
@@ -194,24 +199,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7F8FB',
   },
   header: {
+    backgroundColor: '#ffffff',
+    paddingRight: 18,
+    paddingLeft: 16,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 18,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    elevation: 5,
+    justifyContent: 'space-between',
+    elevation: 4,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
   },
-  headerImage: {
-    width: '50%',
-    height: undefined,
-    aspectRatio: 5,
-    marginRight: 190,
-    resizeMode: 'contain',
-    alignSelf: 'center',
+  titleContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+  },
+  headerTitle: {
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 16,
+    color: '#000',
   },
   backButton: {
     marginTop:1,
@@ -328,20 +334,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontFamily: 'Poppins-SemiBold',
-  },
-
-  headerTextContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginLeft: 25, // Menambahkan jarak ke kiri
-    marginTop: 20, 
-    marginBottom: -8,
-  },
-
-  headerTitle: {
-    fontFamily: "Poppins-SemiBold",
-    fontSize: 17,
-    color: "#000",
   },
 
   separatorText: {

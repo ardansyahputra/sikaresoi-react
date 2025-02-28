@@ -18,7 +18,7 @@ import { Toast, toastConfig} from '../../../src/utils/CustomToast';
 const AddUraian = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
   const [dropdownLoading, setDropdownLoading] = useState(true);
-  const [tgsTambahan, setTgsTambahan] = useState(false); // Track toast visibility
+  const [tgsTambahan, setTgsTambahan] = useState(null); // Track toast visibility
   const showToast = (type, text1, text2) => {
     Toast.show({
       type,
@@ -66,13 +66,12 @@ const AddUraian = ({ navigation, route }) => {
   const fetchUraian = async () => {
     try {
       const response = await apiClient.post('uraian/indexAndro_user');
-      console.log('tgs tambahan:', response.data.data.tgs_tambahan); // Debugging log
-  
-      if (response?.data?.data) {
+      console.log('tgs tambahan:', response.data.tgs_tambahan);  
+      if (response?.data) {
         // If you need to set tgs_tambahan based on some condition, do it here
         setFormData(prev => ({
           ...prev,
-          tgs_tambahan: false, // Set to false or based on some condition
+          tgs_tambahan: tgsTambahan, // Set to false or based on some condition
         }));
       }
     } catch (error) {
@@ -319,7 +318,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   saveButton: {
-    backgroundColor: '#d1f3f1',
+    backgroundColor: '#3699ff',
     padding: 15,
     borderRadius: 5,
     flex: 1,
@@ -327,12 +326,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveButtonText: {
-    color: '#1bc5bd',
+    color: '#ffff',
     fontWeight: 'bold',
     fontSize: 16,
   },
   cancelButton: {
-    backgroundColor: '#fad1df',
+    backgroundColor: '#ff0004',
     padding: 15,
     borderRadius: 5,
     flex: 1,
@@ -340,7 +339,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButtonText: {
-    color: '#ff0004',
+    color: '#ffff',
     fontWeight: 'bold',
     fontSize: 16,
   },

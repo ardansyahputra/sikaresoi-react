@@ -410,14 +410,11 @@ const MasterKinerja = ({navigation}) => {
         <TouchableOpacity onPress={() => navigation.navigate('KontrakKinerja')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={26} color="#000" />
         </TouchableOpacity>
-        <Image
-          source={require('../../assets/sikaresoi.png')}
-          style={styles.headerImage}
-        />
+        <View style={styles.titleContainer}>
+          <Text style={[styles.customFont, styles.headerTitle]}>List Indikator</Text>              
+        </View>
       </View>
-      <View>
-        <Text style={[styles.customFont, styles.headerTitle]}>List Indikator</Text>              
-      </View>
+      
 
 
         <FlatList
@@ -471,35 +468,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F7F8FB',
   },
-  headerImage: {
-    width: '50%',
-    height: undefined,
-    aspectRatio: 5,
-    marginRight: 190,
-    resizeMode: 'contain',
-    alignSelf: 'center',
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  logo: {
-    width: 140,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  headerRight: {
+  header: {
+    backgroundColor: '#ffffff',
+    paddingRight: 18,
+    paddingLeft: 16,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    flex: 1,
+    justifyContent: 'space-between',
+    elevation: 4,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
+  },
+  titleContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 16,
     color: '#000',
-    marginLeft: 20,
-    marginBottom: 4,
-    marginTop: 10,
   },
   headerSubtitle: {
     color: '#000',
@@ -788,34 +776,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     marginTop: 10,
-  },
-  header: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    elevation: 4,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  logo: {
-    width: 140,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    flex: 1,
-  },
-  iconWrapper: {
-    marginLeft: 12,
   },
   modalContainer: {
     flex: 1,

@@ -53,14 +53,15 @@ const GetAktifCard = ({ data }) => {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 10,
+    marginTop: 0,
     padding: 15,
-    margin: 12,
+    marginBottom: 0,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.2,
     shadowRadius: 4,
+    borderBottomWidth: 2,
   },
   userJabatanRow: {
     flexDirection: 'row',

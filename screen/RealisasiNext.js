@@ -15,6 +15,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import useApiClient from '../src/api/apiClient';
 import DocumentPicker from 'react-native-document-picker';
+import { toastConfig, Toast } from '../src/utils/CustomToast';
 
 export default function RealisasiNext({ navigation, route }) {
   const [data, setData] = useState([]);
@@ -33,6 +34,13 @@ export default function RealisasiNext({ navigation, route }) {
   const [catatanRevisi, setCatatanRevisi] = useState('');
   const [pemberiRevisi, setPemberiRevisi] = useState('');
   const [namaPengguna, setNamaPengguna] = useState(name || "Nama Tidak Diketahui");
+  const showToast = (type, text1, text2) => {
+      Toast.show({
+        type,
+        text1,
+        text2,
+      });
+    };
 
   useEffect(() => {
     console.log("✅ Params diterima di RealisasiNext:", {
@@ -57,7 +65,7 @@ export default function RealisasiNext({ navigation, route }) {
 
   const handleKonfirmasi = async () => {
     if (!uuid) {
-      Alert.alert('Error', 'UUID tidak ditemukan.');
+      showToast('error', 'Error', 'UUID tidak ditemukan.');
       return;
     }
   
@@ -78,15 +86,15 @@ export default function RealisasiNext({ navigation, route }) {
       );
   
       if (response.data?.status) {
-        Alert.alert('Sukses', 'Data berhasil dikonfirmasi');
+        showToast('success','Sukses', 'Data berhasil dikonfirmasi');
         setIsRevisiVisible(false);
         setRevisiText('');
       } else {
-        Alert.alert('Gagal', 'Konfirmasi gagal, coba lagi.');
+        showToast('error', 'Gagal', 'Konfirmasi gagal, coba lagi.');
       }
     } catch (error) {
       console.error('Error:', error.response?.data || error.message);
-      Alert.alert('Gagal', 'Terjadi kesalahan saat mengonfirmasi data.');
+      showToast('error', 'Gagal', 'Terjadi kesalahan saat mengonfirmasi data.');
     }
   };
   
@@ -98,7 +106,7 @@ export default function RealisasiNext({ navigation, route }) {
     console.log("User Jabatan ID:", userJabatanId);
   
     if (!selectedBulanId || !tahunId || !userJabatanId) {
-      Alert.alert("Error", "Data tidak lengkap. Mohon pilih bulan dan tahun.");
+      showToast('error', "Error", "Data tidak lengkap. Mohon pilih bulan dan tahun.");
       return;
     }
   
@@ -131,7 +139,7 @@ export default function RealisasiNext({ navigation, route }) {
           console.log("⚠️ Nama tidak ditemukan dalam API, menggunakan nama dari navigasi.");
         }
       } else {
-        Alert.alert("Error", "Data tidak valid dari server.");
+        showToast('error', "Error", "Data tidak valid dari server.");
       }
     } catch (error) {
       console.error("⛔ ERROR:", error.response?.data || error.message);
@@ -274,13 +282,13 @@ export default function RealisasiNext({ navigation, route }) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate('PersetujuanRealisasi')} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={26} color="#000" />
-        </TouchableOpacity>
-        <Image
-          source={require('./assets/images/sikaresoi.png')}
-          style={styles.headerImage}
-        />
+              <TouchableOpacity onPress={() => navigation.navigate('PersetujuanRealisasi')} style={styles.backButton}>
+                <Ionicons name="arrow-back" size={26} color="#000" />
+              </TouchableOpacity>
+              <View style={styles.titleContainer}>
+                <Text style={styles.headerTitle}>Persetujuan Realisasi</Text>
+              </View>
+
       </View>
 
       {loading ? (
@@ -838,60 +846,25 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   header: {
+    backgroundColor: '#ffffff',
+    paddingRight: 18,
+    paddingLeft: 16,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 18,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    elevation: 5,
+    justifyContent: 'space-between',
+    elevation: 4,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
   },
-  headerImage: {
-    width: '50%',
-    height: undefined,
-    aspectRatio: 5,
-    marginRight: 190,
-    resizeMode: 'contain',
-    alignSelf: 'center',
-  },
-  backButton: {
-    marginTop: 1,
-    marginLeft: 3,
-    marginRight: 1,
-    opacity: 0.4,
+  titleContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 16,
     color: '#000',
-    marginLeft: 20,
-    marginBottom: 4,
-    marginTop: 10,
-  },
-  headerSubtitle: {
-    color: '#000',
-    marginLeft: 20,
-    marginBottom: 4,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  logo: {
-    width: 140,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    flex: 1,
-  },
-  iconWrapper: {
-    marginLeft: 12,
   },
   searchContainer: {
     flex: 1,

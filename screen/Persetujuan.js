@@ -224,24 +224,12 @@ return (
   <View style={styles.container}>
     {/* Header */}
     <View style={styles.header}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+      <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.backButton}>
         <Ionicons name="arrow-back" size={26} color="#000" />
       </TouchableOpacity>
-      <Image source={require('./assets/images/sikaresoi.png')} style={styles.headerImage} />
-
-      <View style={styles.headerRight}>
-        <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
-        <TouchableOpacity style={styles.iconWrapper}>
-          <Ionicons name="person-circle-outline" size={24} color="#333" />
-        </TouchableOpacity>
-      </View>
-    </View>
-
-    {/* Header Text */}
-    <View style={styles.headerTextContainer}>
+      <View style={styles.titleContainer}>
       <Text style={styles.headerTitle}>Persetujuan Kontrak Kinerja</Text>
-      <Text style={styles.separatorText}> • </Text>
-      <Text style={styles.headerSubtitle}>Persetujuan</Text>
+    </View>
     </View>
 
     {/* Loading Indicator atau FlatList */}
@@ -294,26 +282,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F7F8FB', // Tetap sesuai dengan warna default Anda
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 18,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    elevation: 5,
-  },
-  headerImage: {
-    width: '50%',
-    height: undefined,
-    aspectRatio: 5,
-    marginRight: 190,
-    resizeMode: 'contain',
-    alignSelf: 'center',
-  },
+  
   backButton: {
     marginTop:7,
     marginLeft:3,
@@ -346,29 +315,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
-  header: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    elevation: 2,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  logo: {
-    width: 140,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    flex: 1,
-  },
+  
   searchContainer: {
     width: 150,
     height: 40,
@@ -684,30 +631,5 @@ const styles = StyleSheet.create({
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.2,
     shadowRadius: 2,
-  },
-  headerTextContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginLeft: 15, // Menambahkan jarak ke kiri
-    marginTop: 20, 
-  },
-
-  headerTitle: {
-    fontFamily: "Poppins-SemiBold",
-    fontSize: 17,
-    color: "#000",
-  },
-
-  separatorText: {
-    fontSize: 20,
-    color: "#000",
-    marginBottom: 3,
-  },
-
-  headerSubtitle: {
-    fontFamily: "Poppins-Regular",
-    fontSize: 14,
-    color: "#000",
-    marginLeft: 0,
   },
 });

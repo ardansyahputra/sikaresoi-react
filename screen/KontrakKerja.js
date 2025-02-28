@@ -4,6 +4,8 @@ import axios from 'axios';
 import { Dropdown } from 'react-native-element-dropdown';
 import AwesomeAlert from 'react-native-awesome-alerts';
 import { WebView } from 'react-native-webview';
+import useApiClient from '../src/api/apiClient';
+
 
 const KontrakKerja = () => {
   const [postData, setPostData] = useState({ tahun_id: '' });
@@ -12,9 +14,7 @@ const KontrakKerja = () => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [alertVisible, setAlertVisible] = useState(false);
-
-  // Bearer token
-  const token = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC8xOTIuMTY4LjYwLjIxNjo4MDAwXC9hcGlcL3YxXC9hdXRoXC9yZWZyZXNoIiwiaWF0IjoxNzM3NTk1Mjc1LCJleHAiOjE3Mzc2MDEzNzEsIm5iZiI6MTczNzU5Nzc3MSwianRpIjoidFZJcWVaemNPU3poQzhWOSIsInN1YiI6MjAsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.5OWVhHXNu5_Gl47GhFzADVl2YKeeoDei1uNlGQm1LVA'; // Ganti dengan token yang sesuai
+  const apiClient = useApiClient();
 
   useEffect(() => {
     // Data tahun sebagai contoh
@@ -40,13 +40,10 @@ const KontrakKerja = () => {
   const getDataKontrakKerja = async (tahunId) => {
     setLoading(true);
     try {
-      const response = await axios.get(
-        'http://192.168.60.216:8000/user/laporan/kontrak_kerja', // Ganti URL jika perlu
+      const response = await apiClient.get(
+        'user/laporan/kontrak_kerja', // Ganti URL jika perlu
         {
-          params: { tahun: tahunId },
-          headers: {
-            Authorization: token,
-          },
+          tahun: tahunId
         }
       );
 

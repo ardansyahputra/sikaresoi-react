@@ -13,6 +13,8 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from "@react-navigation/native";
 import useApiClient from "../src/api/apiClient";
+import { toastConfig, Toast } from '../src/utils/CustomToast';
+
 
 const Remunerasi = () => {
   const [postData, setPostData] = useState({ bulan_id: new Date().getMonth() + 1, tahun_id: 2025 });
@@ -22,32 +24,65 @@ const Remunerasi = () => {
   const navigation = useNavigation();
   const apiClient = useApiClient();
   const [loading, setLoading] = useState(false);
+  const showToast = (type, text1, text2) => {
+      Toast.show({
+        type,
+        text1,
+        text2,
+      });
+  };
 
   
 
-  // Fetch Bulan data
   useEffect(() => {
-    apiClient.get('/bulan/show', {
-    })
-    .then(response => {
-      console.log("Data Bulan:", response.data);
-      setListBulan(response.data.data);
-    })
-    .catch(error => {
-      console.error("Error fetching months:", error.response?.data || error.message);
-    }); 
-
-    // Hardcode Tahun dari 2020 hingga 2025
-    const tahunData = [
-      { id: 2020, tahun: '2020' },
-      { id: 2021, tahun: '2021' },
-      { id: 2022, tahun: '2022' },
-      { id: 2023, tahun: '2023' },
-      { id: 2024, tahun: '2024' },
-      { id: 2025, tahun: '2025' }
-    ];
-    setListTahun(tahunData);
-  }, []);
+      fetchYears();
+      fetchMonths();
+    }, []);
+  
+    
+  
+    const fetchYears = async () => {
+      try {
+        setLoading(true);
+        const response = await apiClient.get('tahun/show');
+        if (response?.data?.data) {
+          const years = response.data.data.map(year => ({
+            label: year.tahun.toString(),
+            value: year.id,
+          }));
+          setListTahun(years);
+        } else {
+          console.error('Failed to load year options:', response);
+          showToast('error', 'Error', 'Gagal memuat data tahun.');
+        }
+      } catch (error) {
+        console.error('Error fetching years:', error);
+        showToast('error', 'Error', 'Gagal memuat data tahun');
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    const fetchMonths = async () => {
+      try {
+        setLoading(true);
+        const response = await apiClient.get('bulan/show');
+        if (response?.data?.data) {
+          const months = response.data.data.map(month => ({
+            label: month.bulan.toString(),
+            value: month.id,
+          }));
+          setListBulan(months);
+        } else {
+          Alert.alert('Error', 'Gagal memuat data bulan.');
+        }
+      } catch (error) {
+        console.error('Error fetching month:', error);
+        showToast('error','Error', 'Gagal memuat data bulan.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
   // Fetch Data Remunerasi
   useEffect(() => {
@@ -61,15 +96,17 @@ const Remunerasi = () => {
   
     const formRequest = {
       bulan: postData.bulan_id,
-      tahun: postData.tahun_id.toString(),
+      tahun: postData.tahun_id,
     };
   
     apiClient.post('/laporan/remunerasi', formRequest)
       .then(response => {
         setData(response.data.data);
+        showToast('success', 'Sukses', 'Berhasil mengambil data remunerasi');
       })
       .catch(error => {
         console.error("Error fetching remuneration data:", error.response?.data || error.message);
+        showToast('error', 'Error', 'Gagal mengambil data remunerasi');
       })
       .finally(() => {
         setLoading(false); // Selesai loading
@@ -106,17 +143,12 @@ const Remunerasi = () => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={26} color="#000" />
         </TouchableOpacity>
-        <Image
-          source={require('./assets/images/sikaresoi.png')}
-          style={styles.headerImage}
-        />
+        <View style={styles.titleContainer}>
+        <Text style={styles.headerTitle}>Laporan Remunerasi</Text>
+      </View>
       </View>
 
-      <View style={styles.headerTextContainer}>
-        <Text style={styles.headerTitle}>Laporan Remunerasi</Text>
-        <Text style={styles.separatorText}> • </Text>
-        <Text style={styles.headerSubtitle}>Remunerasi</Text>
-      </View>
+      
 
       {/* Card for Month and Year Selector */}
       <View style={styles.card2}>
@@ -126,12 +158,12 @@ const Remunerasi = () => {
             <Text style={styles.date}>Pilih Bulan <Text style={styles.required}>*</Text> :</Text>
             <Dropdown
               style={styles.dropdown}
-              data={listBulan.map(bulan => ({ label: bulan.bulan, value: bulan.id }))} // Update data
+              data={listBulan} // Update data
               labelField="label"
               valueField="value"
               placeholder="Pilih Bulan" // Placeholder text
               value={postData.bulan_id}
-              onChange={(item) => handleSelectMonth(item.value)}
+              onChange={(item) => getSelectedBulan(item.value)}
               renderItem={(item) => (
                 <View style={styles.dropdownItem}>
                   <Text style={styles.dropdownText}>{item.label}</Text>
@@ -148,12 +180,12 @@ const Remunerasi = () => {
             <Text style={styles.date}>Pilih Tahun <Text style={styles.required}>*</Text> :</Text>
             <Dropdown
               style={styles.dropdown}
-              data={listTahun.map(tahun => ({ label: tahun.tahun, value: tahun.id }))} // Update data
+              data={listTahun} // Update data
               labelField="label"
               valueField="value"
               placeholder="Pilih Tahun" // Placeholder text
               value={postData.tahun_id}
-              onChange={(item) => handleSelectYear(item.value)}
+              onChange={(item) => getSelectedTahun(item.value)}
               renderItem={(item) => (
                 <View style={styles.dropdownItem}>
                   <Text style={styles.dropdownText}>{item.label}</Text>
@@ -249,24 +281,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7F8FB',
   },
   header: {
+    backgroundColor: '#ffffff',
+    paddingRight: 18,
+    paddingLeft: 16,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 18,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    elevation: 5,
+    justifyContent: 'space-between',
+    elevation: 4,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
   },
-  headerImage: {
-    width: '50%',
-    height: undefined,
-    aspectRatio: 5,
-    marginRight: 190,
-    resizeMode: 'contain',
-    alignSelf: 'center',
+  titleContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+  },
+  headerTitle: {
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 16,
+    color: '#000',
   },
   backButton: {
     marginTop:1,
@@ -449,18 +482,7 @@ cardLeft: {
   maxWidth: 200, // Membatasi lebar maksimal
   minWidth: 100, // Membatasi lebar minimal
 },
-headerTextContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginLeft: 25, // Menambahkan jarak ke kiri
-    marginTop: 20, 
-  },
 
-  headerTitle: {
-    fontFamily: "Poppins-SemiBold",
-    fontSize: 17,
-    color: "#000",
-  },
 
   separatorText: {
     fontSize: 20,
