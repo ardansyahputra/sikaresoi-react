@@ -48,7 +48,7 @@ import Kumulatif from './screen/BottomNavBar/KontrakKinerja/Kumulatif.js';
 import PerubahanPresensi from './screen/PerubahanPresensi.js';
 import AbsenPresensi from './screen/AbsenPresensi.js';
 import AddUraiankontrak from './screen/BottomNavBar/Menu/RealisasiKinerja/AddUraiankontrak.js';
-
+  
 
 const Tab = createBottomTabNavigator();
 const styles = StyleSheet.create({

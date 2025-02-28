@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -10,15 +10,14 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native';
-import { Dropdown } from 'react-native-element-dropdown';
+import {Dropdown} from 'react-native-element-dropdown';
 import useApiClient from '../../../../src/api/apiClient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Toast, toastConfig} from '../../../../src/utils/CustomToast';
+import {Toast, toastConfig} from '../../../../src/utils/CustomToast';
 
-const AddUraiankontrak = ({ navigation, route }) => {
+const AddUraiankontrak = ({navigation, route}) => {
   const [loading, setLoading] = useState(false);
   const [dropdownLoading, setDropdownLoading] = useState(true);
-  const [tgsTambahan, setTgsTambahan] = useState(null); // Track toast visibility
   const showToast = (type, text1, text2) => {
     Toast.show({
       type,
@@ -32,7 +31,7 @@ const AddUraiankontrak = ({ navigation, route }) => {
     satuan: '',
     wpt: 0,
     jabatan_id: 0,
-    tgs_tambahan: tgsTambahan,
+    tgs_tambahan: true,
   });
 
   const [dropdownOptions, setDropdownOptions] = useState({
@@ -66,12 +65,18 @@ const AddUraiankontrak = ({ navigation, route }) => {
   const fetchUraian = async () => {
     try {
       const response = await apiClient.post('uraian/indexAndro_user');
-      console.log('tgs tambahan dari API:', response.data.data.tgs_tambahan); 
-      
-      if (response?.data?.data) {
+      console.log('Full API Response:', response.data);
+
+      if (response?.data?.data.length > 0) {
+        // Pastikan ada data
+        console.log(
+          'tgs tambahan dari API:',
+          response.data.data[0]?.tgs_tambahan,
+        );
+
         setFormData(prev => ({
           ...prev,
-          tgs_tambahan: response.data.data.tgs_tambahan === true, // Pastikan hanya true/false
+          tgs_tambahan: response.data.data[0]?.tgs_tambahan ?? true, // Tetap true jika tidak ada nilai dari API
         }));
       }
     } catch (error) {
@@ -79,8 +84,6 @@ const AddUraiankontrak = ({ navigation, route }) => {
       Alert.alert('Error', 'Gagal memuat data Tugas Tambahan.');
     }
   };
-  
-  
 
   const fetchDropdownOptions = async () => {
     try {
@@ -89,10 +92,13 @@ const AddUraiankontrak = ({ navigation, route }) => {
       const satuanOptions = (response.data?.data || []).map(item => ({
         label: item.nm_satuan, // Pastikan nm_satuan ditampilkan
         value: item.nm_satuan, // Gunakan nm_satuan sebagai value jika sesuai
-      }));      
-      setDropdownOptions({ satuan: satuanOptions });
+      }));
+      setDropdownOptions({satuan: satuanOptions});
     } catch (error) {
-      console.error('Error fetching dropdown options:', error.response?.data || error.message);
+      console.error(
+        'Error fetching dropdown options:',
+        error.response?.data || error.message,
+      );
       showToast('error', 'Error', 'Gagal memuat data dropdown');
     } finally {
       setDropdownLoading(false);
@@ -100,17 +106,22 @@ const AddUraiankontrak = ({ navigation, route }) => {
   };
 
   const setField = (fieldName, value) => {
-    setFormData(prev => ({ ...prev, [fieldName]: value }));
+    setFormData(prev => ({...prev, [fieldName]: value}));
   };
 
   const handleSave = async () => {
     console.log('Form Data Before Validation:', formData);
-  
-    if (!formData.nm_uraian || !formData.satuan || !formData.wpt || !formData.jabatan_id) {
+
+    if (
+      !formData.nm_uraian ||
+      !formData.satuan ||
+      !formData.wpt ||
+      !formData.jabatan_id
+    ) {
       showToast('info', 'Validasi', 'Harap isi semua field yang diperlukan.');
       return;
     }
-  
+
     setLoading(true);
     try {
       const payload = {
@@ -120,41 +131,44 @@ const AddUraiankontrak = ({ navigation, route }) => {
         jabatan_id: formData.jabatan_id,
         angka_kredit: 0,
         biaya: 0,
-        tgs_tambahan: formData.tgs_tambahan !== null ? formData.tgs_tambahan : false, // Pastikan tidak null
+        tgs_tambahan: true,
       };
-  
+
       console.log('Payload Being Sent:', payload);
-  
+
       const response = await apiClient.post('/uraian/create', payload);
-      
-      if (response?.data?.status === 'success') {
+      console.log('Create response:', response);
+
+      if (response?.data?.status === true) {
         showToast('success', 'Sukses', 'Berhasil menambahkan data');
-        navigation.navigate('MasterKinerja');
+        fetchUraian(); // Ambil data terbaru setelah create berhasil
+        navigation.navigate('MasterKinerjaRealisasi');
       } else {
         showToast('error', 'Gagal', 'Terjadi kesalahan saat menyimpan data');
       }
     } catch (error) {
-      console.error('Error saving data:', error.response?.data || error.message);
+      console.error(
+        'Error saving data:',
+        error.response?.data || error.message,
+      );
       showToast('error', 'Error', 'Gagal menambahkan data');
     } finally {
       setLoading(false);
     }
   };
-  
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.formContainer}>
-
         <View style={styles.backButtonContainer}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}>
             <Ionicons name="arrow-back" size={26} color="#000" />
           </TouchableOpacity>
         </View>
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>
-            Tambah Indikator
-          </Text>
+          <Text style={styles.title}>Tambah Indikator</Text>
         </View>
 
         <Text style={styles.label}>
@@ -180,9 +194,8 @@ const AddUraiankontrak = ({ navigation, route }) => {
           labelField="label"
           valueField="value"
           placeholder="Pilih Satuan"
-          value={formData.satuan} 
-          onChange={item => setField('satuan', item.value) }
-          
+          value={formData.satuan}
+          onChange={item => setField('satuan', item.value)}
         />
 
         <Text style={styles.label}>
@@ -249,13 +262,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
-  titleContainer:{
+  titleContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
   },
   title: {
     fontSize: 18,
-    fontFamily: "Poppins-Bold",
+    fontFamily: 'Poppins-Bold',
     marginBottom: 20,
     textAlign: 'center',
     color: '#333',
@@ -265,7 +278,7 @@ const styles = StyleSheet.create({
   },
   backButtonContainer: {
     marginTop: -8,
-    marginLeft:-8,
+    marginLeft: -8,
   },
   label: {
     fontFamily: 'Poppins-SemiBold',

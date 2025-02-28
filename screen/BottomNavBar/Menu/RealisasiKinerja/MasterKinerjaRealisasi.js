@@ -202,7 +202,6 @@ const MasterKinerjaRealisasi = ({navigation}) => {
           setTgsTambahan(true); // Default to true for this screen
         }
 
-        setData(utamaData);
         setCurrentPage(response.data.current_page || 1);
         setLastPage(response.data.last_page || 1);
 
@@ -420,7 +419,7 @@ const MasterKinerjaRealisasi = ({navigation}) => {
 
       // Refresh data after saving - important to see changes
       if (userJabatanId && selectedYear && selectedMonth) {
-        await fetchKontrak(currentPage, selectedYear, selectedMonth);
+        await fetchListUraian(currentPage);
       }
     } catch (error) {
       console.error('Error saving after checkbox toggle:', error);
@@ -498,7 +497,7 @@ const MasterKinerjaRealisasi = ({navigation}) => {
           tgs_tambahan: true,
           target_point: 0,
           uraian_point: 0,
-          uraian: item
+          uraian: item,
         },
         keterangan: {
           bulan_id: selectedMonth,

@@ -19,6 +19,10 @@ import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../../src/api/apiClient';
 import axios from 'axios'; // Added missing import
 import GetAktifCard from '../../KontrakKinerja/GetAktif';
+import DocumentPicker from 'react-native-document-picker';
+import {Pressable} from 'react-native';
+import GlobalStyle from '../../../GlobalStyle';
+
 
 const RealisasiKinerja = () => {
   const navigation = useNavigation();
@@ -43,6 +47,12 @@ const RealisasiKinerja = () => {
   const [listKinerja, setListKinerja] = useState({ utama: [], tambahan: [] });
   const [totalBobot, setTotalBobot] = useState(0);
   const [totalWpt, setTotalWpt] = useState(0);
+  const [documents, setDocuments] = useState([]);
+  const [documentToDelete, setDocumentToDelete] = useState(null);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [activeButton, setActiveButton] = useState('utama'); // Default: Tugas Utama
+  const [filteredData, setFilteredData] = useState([]); // Data yang akan dirender di FlatList
+  
 
   const apiClient = useApiClient();
 
@@ -71,6 +81,25 @@ const RealisasiKinerja = () => {
       fetchKontrak(currentPage, selectedYear, selectedMonth);
     }
   }, [currentPage, selectedYear, selectedMonth]);
+
+  useEffect(() => {
+    setFilteredData(activeButton === 'utama' ? listKinerja.utama : listKinerja.tambahan);
+  }, [listKinerja, activeButton]); // Update saat data utama/tambahan atau tombol berubah
+  
+
+
+
+  const addDocument = () => {
+    const nextFileNumber = documents.length + 1;
+    setDocuments([...documents, { name: `File ${nextFileNumber}` }]);
+  };
+
+
+  const handleDeleteDocument = () => {
+    const newDocuments = documents.filter((_, i) => i !== documentToDelete);
+    setDocuments(newDocuments);
+    setIsDeleteModalVisible(false);
+  };
 
   const fetchUserJabatanData = async () => {
     try {
@@ -220,6 +249,12 @@ const RealisasiKinerja = () => {
     setShowDetail(showDetail === item.id ? null : item.id);
   };
 
+  const handlePress = buttonName => {
+    setActiveButton(buttonName);
+    setFilteredData(buttonName === 'utama' ? listKinerja.utama : listKinerja.tambahan);
+    setCurrentPage(1);
+  };
+
   const onSaveKinerja = async (updatedItem) => {
     try {
       // Validate required fields
@@ -229,23 +264,28 @@ const RealisasiKinerja = () => {
       }
 
       const payload = {
-        kinerja: { // Use the kinerjaId from state
-          uuid: item.uuid, // Generate or fetch this if needed
-          user_jabatan_id: userJabatanData?.id, // Use the userJabatanData from state
-          tahun_id: selectedYear, // Use the selectedYear from state
-          status: 0, // Default status
+        kinerja: {
+          ...kinerja,
+          tahun_id: selectedYear,
+          bulan_id: selectedMonth,
+          user_jabatan_id: userJabatanData?.id,
         },
         list: {
-          id: item.id || null, // Use the item's ID if available
-          uraian_id: item.uraian?.id || item.id, // Use uraian.id or fallback to item.id
-          kuantitas: item.kuantitas || 0,
-          kualitas: item.kualitas || 0,
-          waktu: item.waktu || 0,
-          bobot: item.bobot || 0,
-          wpt: item.wpt || 0,
-          tgs_tambahan: item.tgs_tambahan || false,
-          target_point: item.target_point || 0,
-          uraian_point: item.uraian_point || 0,
+          id: updatedItem.id,
+          uraian_id: updatedItem.target?.list_kinerja?.uraian.id,
+          angka: updatedItem.angka || 0,
+          kuantitas: updatedItem.kuantitas || 0,
+          kualitas: updatedItem.kualitas || 0,
+          waktu: updatedItem.waktu || 0,
+          bobot: updatedItem.bobot || 0,
+          wpt: updatedItem.wpt || 0,
+          tgs_tambahan: updatedItem.tgs_tambahan || 0,
+          uraian_point: updatedItem.uraian_point || 0,
+          target_point: updatedItem.target_point || 0,
+          usulan_kuantitas: updatedItem.usulanKuantitas || 0,
+          usulan_kualitas: updatedItem.usulanKualitas || 0,
+          persetujuan_kuantitas: updatedItem.persetujuanKuantitas || 0,
+          persetujuan_kualitas: updatedItem.persetujuanKualitas || 0,
         },
       };
       
@@ -297,8 +337,51 @@ const RealisasiKinerja = () => {
     setExpandedId(expandedId === id ? null : id);
   };
 
+
   const TableHeader = () => (
     <View>
+      <View style={styles.bulanContainer}>
+        <Pressable
+          style={({pressed}) => [
+            styles.button,
+            pressed && styles.buttonPressed,
+            activeButton === 'utama' && styles.buttonActive,
+          ]}
+          onPress={() => handlePress('utama')}>
+          <View style={styles.bulanButton}>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.buttonTexts,
+                activeButton === 'utama' && styles.textActive,
+              ]}>
+              TUGAS UTAMA
+            </Text>
+          </View>
+        </Pressable>
+
+        <Pressable
+          style={({pressed}) => [
+            styles.button,
+            pressed && styles.buttonPressed,
+            activeButton === 'tambahan' && styles.buttonActive,
+          ]}
+          onPress={() => handlePress('tambahan')}>
+          <View style={styles.bulanButton}>
+            <Text
+              style={[
+                GlobalStyle.SemiBold,
+                styles.buttonTexts,
+                activeButton === 'tambahan' && styles.textActive,
+              ]}>
+              TUGAS TAMBAHAN
+            </Text>
+          </View>
+        </Pressable>
+      </View>
+
+
+
       <View style={styles.filterContainer}>
         {/* Tahun & Bulan Selectors */}
         <View style={styles.displayContainer}>
@@ -322,7 +405,7 @@ const RealisasiKinerja = () => {
             placeholder="Bulan"
           />
         </View>
-        
+
         <View style={styles.buttonRightContainer}>
           <TouchableOpacity
             style={styles.listkinerjaButton}
@@ -347,6 +430,7 @@ const RealisasiKinerja = () => {
   );
 
   const renderItem = ({item, index}) => {
+
     const isExpanded = expandedId === item.id;
   
     return (
@@ -614,13 +698,58 @@ const RealisasiKinerja = () => {
                     </View>
                   </View>
                 </View>
+              
+                <TouchableOpacity style={styles.addDocumentButton} onPress={addDocument}>
+                <Text style={styles.addDocumentButtonText}>+ Dokumen</Text>
+              </TouchableOpacity>
 
-                {/* Dokumen Link */}
-                <View style={styles.dokumenContainer}>
-                  <TouchableOpacity>
-                    <Text style={styles.dokumenText}>+ Dokumen</Text>
-                  </TouchableOpacity>
+              
+              {documents.length > 0 && (
+                <View style={styles.documentList}>
+                  {documents.map((doc, index) => (
+                    <View key={index} style={styles.documentItem}>
+                      <Text style={styles.documentText}>{doc.name}</Text>
+                      <TouchableOpacity
+                        style={[styles.chooseFileButton, { opacity: 0.5 }]}
+                        disabled={true}
+                      >
+                        <Text style={styles.chooseFileText}>Choose File</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.deleteButton}
+                        onPress={() => {
+                          setDocumentToDelete(index);
+                          setIsDeleteModalVisible(true);
+                        }}>
+                        <Ionicons name="trash-outline" size={20} color="#fff" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
                 </View>
+              )}
+              <Modal
+                transparent={true}
+                visible={isDeleteModalVisible}
+                animationType="fade"
+                onRequestClose={() => setIsDeleteModalVisible(false)}>
+                <View style={styles.modalContainer}>
+                  <View style={styles.modalContent}>
+                    <Text style={styles.modalText}>Apakah Anda yakin ingin menghapus dokumen ini?</Text>
+                    <View style={styles.modalButtons}>
+                      <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={() => setIsDeleteModalVisible(false)}>
+                        <Text style={styles.cancelButtonText}>Batal</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.hapusButton}
+                        onPress={handleDeleteDocument}>
+                        <Text style={styles.hapusButtonText}>Hapus</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              </Modal>
 
                 {/* Save Button */}
                 <View style={styles.buttonContainer}>
@@ -699,17 +828,17 @@ const RealisasiKinerja = () => {
         </View>
       ) : (
         <FlatList
-          scrollEnabled={false}
-          ListHeaderComponent={TableHeader}
-          data={data}
-          renderItem={renderItem}
-          keyExtractor={item => item.id.toString()}
-          contentContainerStyle={styles.card}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Tidak ada data</Text>
-            </View>
-          }
+        scrollEnabled={false}
+        ListHeaderComponent={TableHeader}
+        data={filteredData} // Pakai filteredData yang selalu diperbarui
+        renderItem={renderItem}
+        keyExtractor={item => item.id.toString()}
+        contentContainerStyle={styles.card}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>Tidak ada data</Text>
+          </View>
+        }      
           ListFooterComponent={
             <View>
               {data.length > 0 && (
@@ -750,6 +879,173 @@ const RealisasiKinerja = () => {
 };
 
 const styles = StyleSheet.create({
+  bulanContainer: {
+    flexDirection: 'row', // Susun secara horizontal
+    alignItems: 'center', // Pusatkan secara vertikal
+    justifyContent: 'center', // Pusatkan secara horizontal
+    gap: 15, // Tambah jarak antar tombol
+    marginBottom: 20,
+    flexWrap: 'nowrap', // Mencegah tombol turun ke baris baru
+  },
+  
+  button: {
+    height: 50, // Lebih tinggi agar proporsional
+    width: 140, // Lebih lebar agar lebih panjang
+    backgroundColor: '#fff',
+    borderRadius: 8, // Tambah radius agar lebih smooth
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000', // Tambah bayangan agar lebih elegan
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3, // Efek shadow untuk Android
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  
+  buttonPressed: {
+    backgroundColor: '#fff',
+    color: '#000'
+  },
+  buttonActive: {
+    borderBottomWidth: 3,
+    borderBottomColor: '#A463FC', // Warna sesuai desain
+  },
+  buttonTexts: {
+    fontSize: 16,
+    color: 'black',
+  },
+  textActive: {
+    color: '#A463FC',
+  },
+  bulanButton: {
+    flexDirection: 'row',
+    gap: 5,
+  },
+
+  documentList: {
+    marginTop: 10,
+    color: '#000',
+  },
+  documentItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    marginBottom: 5,
+  },
+  documentText: {
+    fontSize: 14,
+    color: '#000',
+    flex: 1,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  chooseFileButton: {
+    backgroundColor: '#007bff',
+    padding: 5,
+    borderRadius: 5,
+    marginHorizontal: 10,
+  },
+  chooseFileText: {
+    color: '#fff',
+    fontSize: 12,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  deleteButton: {
+    backgroundColor: '#dc3545',
+    padding: 5,
+    borderRadius: 5,
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    textAlign: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 25,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#555',
+    marginBottom: 20,
+    lineHeight: 24,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  hapusButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: '#04d60b',
+    borderRadius: 8,
+    alignItems: 'center',
+    width: '48%',
+  },
+  hapusButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  cancelButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: '#d60404',
+    borderRadius: 8,
+    alignItems: 'center',
+    width: '48%',
+  },
+  cancelButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  confirmButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: '#3498db',
+    borderRadius: 8,
+    alignItems: 'center',
+    width: '48%',
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  addDocumentButton: {
+    marginTop: 10,
+    backgroundColor: '#28a745',
+    padding: 10,
+    alignItems: 'center',
+  },
+  addDocumentButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
+  },
   footer: {
     padding: 10,
     backgroundColor: '#f1f1f1',
