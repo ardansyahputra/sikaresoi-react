@@ -249,27 +249,17 @@ export default function Persetujuan({navigation}) {
     );
   };
 
-  return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Image
-            source={require('./assets/images/sikaresoi.png')}
-            style={styles.logo}
-          />
-        </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
-          <TouchableOpacity style={styles.iconWrapper}>
-            <Ionicons name="person-circle-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
-      </View>
-      <View>
-        <Text style={styles.headerTitle}>Persetujuan</Text>
-        <Text style={styles.headerSubtitle}>User • Persetujuan</Text>
-      </View>
+return (
+  <View style={styles.container}>
+    {/* Header */}
+    <View style={styles.header}>
+      <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.backButton}>
+        <Ionicons name="arrow-back" size={26} color="#000" />
+      </TouchableOpacity>
+      <View style={styles.titleContainer}>
+      <Text style={styles.headerTitle}>Persetujuan Kontrak Kinerja</Text>
+    </View>
+    </View>
 
       {/* Loading Indicator */}
       {loading ? (
@@ -325,26 +315,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F7F8FB', // Tetap sesuai dengan warna default Anda
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 18,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    elevation: 5,
-  },
-  headerImage: {
-    width: '50%',
-    height: undefined,
-    aspectRatio: 5,
-    marginRight: 190,
-    resizeMode: 'contain',
-    alignSelf: 'center',
-  },
+  
   backButton: {
     marginTop: 7,
     marginLeft: 3,
@@ -377,42 +348,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
-  header: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    elevation: 2,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  logo: {
-    width: 140,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
-    marginLeft: 20,
-    marginBottom: 4,
-    marginTop: 10,
-  },
-  headerSubtitle: {
-    color: '#000',
-    marginLeft: 20,
-    marginBottom: 4,
-  },
+  
   searchContainer: {
     width: 150,
     height: 40,

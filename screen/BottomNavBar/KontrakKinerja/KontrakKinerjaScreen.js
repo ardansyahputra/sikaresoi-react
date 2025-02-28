@@ -20,9 +20,8 @@ import useApiClient from '../../../src/api/apiClient';
 import GetAktifCard from './GetAktif';
 import KirimKontrak from './KirimKontrak';
 import axios from 'axios';
-import HomeScreen from '../Home/HomeScreen';
 import { toastConfig, Toast } from '../../../src/utils/CustomToast';
-import Overlay from '../../../src/utils/Overlay';
+import SkpStatus from './SkpStatus';
 
 const KontrakKinerjaScreen = () => {
   const navigation = useNavigation();
@@ -37,7 +36,7 @@ const KontrakKinerjaScreen = () => {
   const [selectedDisplay, setSelectedDisplay] = useState(null);
   const [userJabatanData, setUserJabatanData] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [toastVisible, setToastVisible] = useState(false); // Track toast visibility
+  const [skpStatus, setSkpStatus] = useState(null);
   const showToast = (type, text1, text2) => {
       Toast.show({
         type,
@@ -561,17 +560,12 @@ const KontrakKinerjaScreen = () => {
         <TouchableOpacity onPress={() => navigation.navigate('DASHBOARD')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={26} color="#000" />
         </TouchableOpacity>
-        <Image
-          source={require('../../assets/sikaresoi.png')}
-          style={styles.headerImage}
-        />
+        <View style={styles.titleContainer}>
+          <Text style={styles.headerTitle}>Kontrak Kinerja</Text>
+        </View>
       </View>
-      <View>
-        <Text style={styles.headerTitle}>Kontrak Kinerja</Text>
-        <Text style={styles.headerSubtitle}>User • Kontrak Kinerja</Text>
-              
-      </View>
-
+      
+      <SkpStatus alert={kinerja.alert} />
       {userJabatanData && <GetAktifCard data={userJabatanData} />}
       <Modal
         animationType="slide"
@@ -652,7 +646,6 @@ const KontrakKinerjaScreen = () => {
 const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
-
     padding: 10,
     backgroundColor: '#f1f1f1',
     borderTopWidth: 1,
@@ -673,34 +666,39 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F7F8FB',
+    padding: 0,
   },
-  headerImage: {
-    width: '50%',
-    height: undefined,
-    aspectRatio: 5,
-    marginRight: 190,
-    resizeMode: 'contain',
-    alignSelf: 'center',
+  header: {
+    backgroundColor: '#ffffff',
+    paddingRight: 18,
+    paddingLeft: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: 4,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
+  },
+  titleContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
   },
   headerTitle: {
     fontFamily: "Poppins-SemiBold",
-    fontSize: 18,
+    fontSize: 16,
     color: '#000',
-    marginLeft: 20,
-    marginBottom: 4,
-    marginTop: 10,
   },
   headerSubtitle: {
     fontFamily: "Poppins-Regular",
+    fontSize: 12,
     color: '#000',
-    marginLeft: 20,
-    marginBottom: 4,
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 10,
+    borderRadius: 5,
     padding: 15,
-    margin: 12,
+    margin: 0,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
@@ -711,6 +709,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'center',
     marginBottom: 10,
+    padding: 10,
   },
   listkinerjaButton: {
     fontFamily: 'Poppins-Regular',
@@ -743,8 +742,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#E0E0E0',
     paddingVertical: 10,
     paddingHorizontal: 15,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
   },
   headerCell: {
     fontFamily: 'Poppins-SemiBold',
@@ -753,9 +750,8 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   tableRow: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#ffffff',
     overflow: 'hidden',
-    elevation: 0,
   },
   rowHeader: {
     flexDirection: 'row',
@@ -984,34 +980,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     marginTop: 10,
-  },
-  header: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    elevation: 4,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  logo: {
-    width: 140,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    flex: 1,
-  },
-  iconWrapper: {
-    marginLeft: 12,
   },
   modalContainer: {
     flex: 1,

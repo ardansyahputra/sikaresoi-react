@@ -186,25 +186,14 @@ export default function Teguranscreen({navigation}) {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Image
-            source={require('./assets/images/sikaresoi.png')}
-            style={styles.logo}
-          />
-        </View>
-
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconWrapper}></TouchableOpacity>
-          <TouchableOpacity style={styles.iconWrapper}>
-            <Ionicons name="person-circle-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
-      </View>
-      <View>
-        <Text style={styles.headerTitle}>Teguran</Text>
-        <Text style={styles.headerSubtitle}>User • Teguran</Text>
-      </View>
-
+              <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.backButton}>
+                <Ionicons name="arrow-back" size={26} color="#000" />
+              </TouchableOpacity>
+              <View style={styles.titleContainer}>
+              <Text style={styles.headerTitle}>Teguran</Text>
+            </View>
+            </View>
+            
       {/* Loading Indicator */}
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
@@ -258,6 +247,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F7F8FB',
+  },
+  header: {
+    backgroundColor: '#ffffff',
+    paddingRight: 18,
+    paddingLeft: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: 4,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
+  },
+  titleContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+  },
+  headerTitle: {
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 16,
+    color: '#000',
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -415,31 +425,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     marginTop: 10,
-  },
-  header: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    elevation: 4,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  logo: {
-    width: 150,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    flex: 1,
   },
   iconWrapper: {
     marginLeft: 12,

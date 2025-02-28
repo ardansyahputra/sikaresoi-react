@@ -311,14 +311,15 @@ export default function PersetujuanRealisasi({navigation}) {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={26} color="#000" />
+            </TouchableOpacity>
+            <View style={styles.titleContainer}>
+            <Text style={styles.headerTitle}>Persetujuan Realisasi</Text>
+          </View>
+          </View>
       {/* Header */}
-      <Header title="Persetujuan Realisasi" />
-      {/* <View style={styles.headerTextContainer}>
-        <Text style={styles.headerTitle}>Persetujuan Realisasi</Text>
-        <Text style={styles.separatorText}> • </Text>
-        <Text style={styles.headerSubtitle}>Realisasi</Text>
-      </View> */}
-      {/* Loading Indicator */}
       {isLoading ? (
         // Loading Indicator
         <View style={styles.loadingContainer}>
@@ -391,18 +392,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 6,
     borderTopRightRadius: 6,
   },
-  // header: {
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  //   backgroundColor: '#fff',
-  //   paddingHorizontal: 16,
-  //   paddingVertical: 18,
-  //   borderBottomLeftRadius: 20,
-  //   borderBottomRightRadius: 20,
-  //   shadowColor: '#000',
-  //   shadowOpacity: 0.1,
-  //   elevation: 5,
-  // },
 
   yearMonthContainer: {
     flexDirection: 'row',
@@ -554,13 +543,26 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
+  header: {
+    backgroundColor: '#ffffff',
+    paddingRight: 18,
+    paddingLeft: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: 4,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
+  },
+  titleContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+  },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 16,
     color: '#000',
-    marginLeft: 20,
-    marginBottom: 4,
-    marginTop: 10,
   },
 
   headerSubtitle: {
@@ -706,12 +708,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 20,
     marginTop: 20,
-  },
-
-  headerTitle: {
-    fontFamily: 'Poppins-SemiBold',
-    fontSize: 17,
-    color: '#000',
   },
 
   separatorText: {

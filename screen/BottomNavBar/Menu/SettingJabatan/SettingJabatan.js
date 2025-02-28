@@ -122,13 +122,13 @@ const SettingJabatan = ({ navigation }) => {
   const handleDelete = async (id) => {
     setModalVisible(false);
     try {
-      await apiClient.delete(`/user/jabatan/${id}/delete`, {
+      await apiClient.delete(`user/jabatan/${id}/delete`, {
       });
-      Alert.alert('Sukses', 'Data berhasil dihapus.');
+      showToast('success', 'Sukses', 'Data berhasil dihapus.');
       fetchData(); // Refresh data setelah penghapusan
     } catch (error) {
       console.error('Error deleting data', error.response?.data || error.message);
-      Alert.alert('Gagal', 'Terjadi kesalahan saat menghapus data.');
+      showToast('error', 'Gagal', error.message);
     }
   };
 
@@ -257,20 +257,15 @@ const SettingJabatan = ({ navigation }) => {
   
   return (
     <View style={styles.container}>
-      <View style={styles.header1}>
+      <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={26} color="#000" />
         </TouchableOpacity>
-        <Image
-            source={require('../../../assets/images/sikaresoi.png')}
-            style={styles.headerImage}
-        />
-      </View>
-        <View style={styles.headerTextContainer1}>
-          <Text style={styles.headerTitle1}>Setting Jabatan</Text>
-          <Text style={styles.separatorText1}> • </Text>
-          <Text style={styles.headerSubtitle1}>Jabatan</Text>
+        <View style={styles.headerTextContainer}>
+          <Text style={styles.headerTitle}>Setting Jabatan</Text>
         </View>
+      </View>
+        
       <Modal
         animationType="slide"
         transparent={true}
@@ -384,24 +379,33 @@ const styles = StyleSheet.create({
     marginTop: 20, 
   },
 
-  headerTitle1: {
+  header: {
+    backgroundColor: '#ffffff',
+    paddingRight: 18,
+    paddingLeft: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: 4,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
+  },
+  titleContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+  },
+  headerTitle: {
     fontFamily: "Poppins-SemiBold",
-    fontSize: 17,
-    color: "#000",
+    fontSize: 16,
+    color: '#000',
   },
-
-  separatorText1: {
-    fontSize: 20,
+  headerSubtitle: {
     color: "#000",
-    marginBottom: 3,
-  },
-
-  headerSubtitle1: {
-    fontFamily: "Poppins-Regular",
-    fontSize: 14,
-    color: "#000",
-    marginLeft: 0,
-  },
+    marginLeft: 20,
+    marginBottom: 4,
+    fontFamily: "Poppins-SemiBold",
+  },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
@@ -419,46 +423,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
-  header: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    elevation: 2,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-  headerLeft: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  logo: {
-    width: 140,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontFamily: "Poppins-SemiBold",
-    color: "#000",
-    marginLeft: 20,
-    marginBottom: 4, 
-    marginTop: 10,
-  },
-  headerSubtitle: {
-    color: "#000",
-    marginLeft: 20,
-    marginBottom: 4,
-    fontFamily: "Poppins-SemiBold",
-  },
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',

@@ -53,7 +53,7 @@ const KirimKontrak = ({ kinerja, user }) => {
     setModalVisible(false)
     try {
       const response = await apiClient.get(`/user/kinerja/${kinerja.uuid}/send`);
-      showToast('sukses', 'Sukses', response.data.data);
+      showToast('success', 'Sukses', response.data.message);
 
       // Emit event or trigger a callback if needed
     } catch (error) {

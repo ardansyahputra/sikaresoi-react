@@ -18,7 +18,7 @@ import {Dropdown} from 'react-native-element-dropdown';
 import {useNavigation} from '@react-navigation/native';
 import useApiClient from '../../../src/api/apiClient';
 import axios from 'axios';
-import { toastConfig, Toast } from '../../../src/utils/CustomToast';
+import {toastConfig, Toast} from '../../../src/utils/CustomToast';
 
 const MasterKinerja = ({navigation}) => {
   const [data, setData] = useState([]);
@@ -38,7 +38,7 @@ const MasterKinerja = ({navigation}) => {
   const [checkedItems, setCheckedItems] = useState([]);
   const [disabledItems, setDisabledItems] = useState([]);
   const [selectedYear, setSelectedYear] = useState(null);
-  
+
   const apiClient = useApiClient();
   const showToast = (type, text1, text2) => {
     Toast.show({
@@ -47,17 +47,16 @@ const MasterKinerja = ({navigation}) => {
       text2,
     });
   };
-  
 
-  const handleSearch = (query) => {
+  const handleSearch = query => {
     setSearchQuery(query);
     fetchListUraian(query, currentPage, selectedDisplay);
   };
 
-  const parseCheckbox = (checkbox) => {
+  const parseCheckbox = checkbox => {
     const isChecked = checkbox.includes('checked="checked"');
     const isDisabled = checkbox.includes('disabled="disabled"');
-    return { isChecked, isDisabled };
+    return {isChecked, isDisabled};
   };
 
   const [kinerja, setKinerja] = useState({
@@ -73,8 +72,6 @@ const MasterKinerja = ({navigation}) => {
   const [listKinerja, setListKinerja] = useState([]);
   const [totalBobot, setTotalBobot] = useState(0);
 
- 
-
   useEffect(() => {
     fetchUserJabatanData();
     fetchKinerja();
@@ -83,14 +80,14 @@ const MasterKinerja = ({navigation}) => {
   }, [currentPage, selectedDisplay, selectedYear]);
 
   useEffect(() => {
-      const lowerCaseQuery = searchQuery.toLowerCase();
-      const filtered = data.filter(
-        (item) =>
-          item.nm_uraian?.toLowerCase().includes(lowerCaseQuery) ||
-          item.nm_satuan?.toLowerCase().includes(lowerCaseQuery)
-      );
-      setFilteredData(filtered);
-    }, [searchQuery, data]);
+    const lowerCaseQuery = searchQuery.toLowerCase();
+    const filtered = data.filter(
+      item =>
+        item.nm_uraian?.toLowerCase().includes(lowerCaseQuery) ||
+        item.nm_satuan?.toLowerCase().includes(lowerCaseQuery),
+    );
+    setFilteredData(filtered);
+  }, [searchQuery, data]);
 
   const fetchUserJabatanData = async () => {
     try {
@@ -113,17 +110,19 @@ const MasterKinerja = ({navigation}) => {
         tahun_id: year,
       });
       if (response?.data) {
-        setKinerjaId(response.data.data.kinerja)
-        setKinerja(response.data.kinerja || {
-          totalak: 0,
-          totalwpt: 0,
-          totalbobot: 0,
-          tahun_id: year,
-          user_jabatan_id: userJabatanData?.id,
-          alert: {
-            show: false,
+        setKinerjaId(response.data.data.kinerja);
+        setKinerja(
+          response.data.kinerja || {
+            totalak: 0,
+            totalwpt: 0,
+            totalbobot: 0,
+            tahun_id: year,
+            user_jabatan_id: userJabatanData?.id,
+            alert: {
+              show: false,
+            },
           },
-        });
+        );
         setListKinerja(response.data.data);
 
         // Calculate totalBobot and totalWpt
@@ -144,34 +143,34 @@ const MasterKinerja = ({navigation}) => {
   };
 
   const fetchYears = async () => {
-        try {
-          setLoading(true);
-          const response = await apiClient.get('tahun/show');
-          if (response?.data?.data) {
-            const years = response.data.data.map(year => ({
-              label: year.tahun.toString(),
-              value: year.id,
-            }));
-    
-            // Set default year to the current year
-            const currentYear = new Date().getFullYear();
-            const defaultYear = years.find(
-              year => year.label === currentYear.toString(),
-            );
-            setSelectedYear(defaultYear ? defaultYear.value : years[0]?.value);
-          } else {
-            console.error('Failed to load year options:', response);
-            showToast('error', 'Error', 'Gagal memuat data tahun');
-          }
-        } catch (error) {
-          console.error('Error fetching years:', error);
-          showToast('error', 'Error', 'Gagal memuat data tahun');
-        } finally {
-          setLoading(false);
-        }
-      };
+    try {
+      setLoading(true);
+      const response = await apiClient.get('tahun/show');
+      if (response?.data?.data) {
+        const years = response.data.data.map(year => ({
+          label: year.tahun.toString(),
+          value: year.id,
+        }));
 
-  const fetchListUraian = async (page) => {
+        // Set default year to the current year
+        const currentYear = new Date().getFullYear();
+        const defaultYear = years.find(
+          year => year.label === currentYear.toString(),
+        );
+        setSelectedYear(defaultYear ? defaultYear.value : years[0]?.value);
+      } else {
+        console.error('Failed to load year options:', response);
+        showToast('error', 'Error', 'Gagal memuat data tahun');
+      }
+    } catch (error) {
+      console.error('Error fetching years:', error);
+      showToast('error', 'Error', 'Gagal memuat data tahun');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchListUraian = async page => {
     try {
       setLoading(true);
       const response = await apiClient.post('uraian/indexAndro_user', {
@@ -188,8 +187,8 @@ const MasterKinerja = ({navigation}) => {
         const checkedIds = [];
         const disabledIds = [];
 
-        fetchedData.forEach((item) => {
-          const { isChecked, isDisabled } = parseCheckbox(item.checkbox);
+        fetchedData.forEach(item => {
+          const {isChecked, isDisabled} = parseCheckbox(item.checkbox);
           if (isChecked) {
             checkedIds.push(item.id);
           }
@@ -215,25 +214,26 @@ const MasterKinerja = ({navigation}) => {
     }
   };
 
-  const handleCheckboxToggle = async (item) => {
+  const handleCheckboxToggle = async item => {
     if (disabledItems.includes(item.checkbox)) {
       return; // Do nothing if the checkbox is disabled
     }
 
     const isChecked = checkedItems.includes(item.checkbox);
     if (isChecked) {
-      setCheckedItems(checkedItems.filter((id) => id !== item.checkbox));
+      setCheckedItems(checkedItems.filter(id => id !== item.checkbox));
     } else {
       setCheckedItems([...checkedItems, item.checkbox]);
     }
     await saveListKinerja(item);
   };
 
-  const saveListKinerja = async (item) => {
+  const saveListKinerja = async item => {
     try {
       // Construct the payload
       const payload = {
-        kinerja: { // Use the kinerjaId from state
+        kinerja: {
+          // Use the kinerjaId from state
           uuid: item.uuid, // Generate or fetch this if needed
           user_jabatan_id: userJabatanData?.id, // Use the userJabatanData from state
           tahun_id: selectedYear, // Use the selectedYear from state
@@ -252,16 +252,21 @@ const MasterKinerja = ({navigation}) => {
           uraian_point: item.uraian_point || 0,
         },
       };
-  
+
       console.log('Payload:', JSON.stringify(payload, null, 2)); // Debugging: Log the payload
-  
+
       // Send the payload to the API
       const response = await apiClient.post('user/kinerja/list/save', payload);
       console.log('Response:', response.data);
       fetchListUraian(selectedYear);
     } catch (error) {
       console.error('Error saving data:', error);
-      showToast('error', 'Error', 'Berhasil menambahkan data',  error.response?.data?.message || 'Gagal menyimpan data.');
+      showToast(
+        'error',
+        'Error',
+        'Berhasil menambahkan data',
+        error.response?.data?.message || 'Gagal menyimpan data.',
+      );
     }
   };
 
@@ -281,7 +286,9 @@ const MasterKinerja = ({navigation}) => {
     <View>
       <View style={styles.filterContainer}>
         <View style={styles.displayContainer}>
-          <Text style={[styles.displayText, styles.customFont]}>Uraian Kegiatan Tidak Ada?</Text>
+          <Text style={[styles.displayText, styles.customFont]}>
+            Uraian Kegiatan Tidak Ada?
+          </Text>
           <Dropdown
             style={styles.dropdown}
             data={display}
@@ -294,8 +301,8 @@ const MasterKinerja = ({navigation}) => {
               <Text style={[styles.dropdownItem, styles.customFont]}>
                 {item.label}
               </Text>
-              )}
-            />                     
+            )}
+          />
         </View>
 
         {/*Button Kinerja */}
@@ -313,8 +320,13 @@ const MasterKinerja = ({navigation}) => {
               value={searchQuery}
               onChangeText={handleSearch}
             />
-            <Ionicons name='search' size={20} color='#888' style={styles.searchIcon} />
-           </View>
+            <Ionicons
+              name="search"
+              size={20}
+              color="#888"
+              style={styles.searchIcon}
+            />
+          </View>
         </View>
       </View>
       <View style={styles.tableHeader}>
@@ -337,7 +349,7 @@ const MasterKinerja = ({navigation}) => {
             style={styles.rowHeader}
             onPress={() => toggleExpand(item.id)}>
             <Text style={[styles.tableCell, styles.nameCell]}>
-              {item.nm_uraian || "-" }
+              {item.nm_uraian || '-'}
             </Text>
             <View style={styles.expandIconCell}>
               <Ionicons
@@ -355,49 +367,65 @@ const MasterKinerja = ({navigation}) => {
             <View style={styles.splitContainer}>
               <View style={styles.leftColumn}>
                 <Text style={[styles.expandedText, styles.customFont]}>
-                  AK: <Text style={styles.expandedTextDetail}> {item.angka_kredit || '-'}</Text>
+                  AK:{' '}
+                  <Text style={styles.expandedTextDetail}>
+                    {' '}
+                    {item.angka_kredit || '-'}
+                  </Text>
                 </Text>
                 <Text style={styles.expandedText}>
-                  Biaya: <Text style={styles.expandedTextDetail}>{item.biaya || '-'}</Text>
+                  Biaya:{' '}
+                  <Text style={styles.expandedTextDetail}>
+                    {item.biaya || '-'}
+                  </Text>
                 </Text>
                 <Text style={styles.expandedText}>
-                  WPT: <Text style={styles.expandedTextDetail}> {item.wpt || '-'}</Text>
+                  WPT:{' '}
+                  <Text style={styles.expandedTextDetail}>
+                    {' '}
+                    {item.wpt || '-'}
+                  </Text>
                 </Text>
               </View>
 
               <View style={styles.rightColumn}>
                 <Text style={styles.expandedText}>
-                  Satuan: <Text style={styles.expandedTextDetail}>{item.satuan || '-'}</Text>
+                  Satuan:{' '}
+                  <Text style={styles.expandedTextDetail}>
+                    {item.satuan || '-'}
+                  </Text>
                 </Text>
-                <Text style={styles.expandedText}>
-                  Jenis Uraian:
-                </Text>
+                <Text style={styles.expandedText}>Jenis Uraian:</Text>
                 <View style={styles.statusSection}>
-                {item.type_tugas = "Mandiri"
-                ? (
-                  <View style={styles.statusBadgeSuccess}>
-                    <Text style={styles.statusTextSuccess}>Mandiri </Text>
-                  </View>
-                  ) : item.type_tugas = "Tambahan" ?(
-                  <View style={styles.statusBadgeDanger}>
-                  <Text style={styles.statusTextDanger}>Tambahan </Text>
-                  </View>
-                  ): null}
+                  {
+                    (item.type_tugas = 'Mandiri' ? (
+                      <View style={styles.statusBadgeSuccess}>
+                        <Text style={styles.statusTextSuccess}>Mandiri </Text>
+                      </View>
+                    ) : (
+                      (item.type_tugas = 'Tambahan' ? (
+                        <View style={styles.statusBadgeDanger}>
+                          <Text style={styles.statusTextDanger}>Tambahan </Text>
+                        </View>
+                      ) : null)
+                    ))
+                  }
                 </View>
               </View>
               <View style={styles.actionContainer}>
-              <Checkbox
-                status={checkedItems.includes(item.checkbox) ? 'checked' : 'unchecked'}
-                onPress={() => handleCheckboxToggle(item)}
-                disabled={disabledItems.includes(item.checkbox)}
-              />          
+                <Checkbox
+                  status={
+                    checkedItems.includes(item.checkbox)
+                      ? 'checked'
+                      : 'unchecked'
+                  }
+                  onPress={() => handleCheckboxToggle(item)}
+                  disabled={disabledItems.includes(item.checkbox)}
+                />
+              </View>
             </View>
-            </View>
-
-           
           </View>
         )}
-        
       </View>
     );
   };
@@ -405,7 +433,9 @@ const MasterKinerja = ({navigation}) => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate('KontrakKinerja')} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('KontrakKinerja')}
+          style={styles.backButton}>
           <Ionicons name="arrow-back" size={26} color="#000" />
         </TouchableOpacity>
         <Image
@@ -414,52 +444,51 @@ const MasterKinerja = ({navigation}) => {
         />
       </View>
       <View>
-        <Text style={[styles.customFont, styles.headerTitle]}>List Indikator</Text>       
+        <Text style={[styles.customFont, styles.headerTitle]}>
+          List Indikator
+        </Text>
       </View>
 
-
-        <FlatList
-          scrollEnabled={false}
-          ListHeaderComponent={TableHeader}
-          data={data}
-          renderItem={renderItem}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.card}
-          ListFooterComponent={
-            <View>
-              {loading && <ActivityIndicator size="large" color="#0000ff" />}
-              <Text style={styles.pageInfo}>
-                 Showing page {currentPage} of {lastPage}
-                 </Text>
-               <View style={styles.paginationContainer}>
-                 <View style={styles.paginationButtons}>
-                  <TouchableOpacity
-                    style={[
+      <FlatList
+        scrollEnabled={false}
+        ListHeaderComponent={TableHeader}
+        data={data}
+        renderItem={renderItem}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.card}
+        ListFooterComponent={
+          <View>
+            {loading && <ActivityIndicator size="large" color="#0000ff" />}
+            <Text style={styles.pageInfo}>
+              Showing page {currentPage} of {lastPage}
+            </Text>
+            <View style={styles.paginationContainer}>
+              <View style={styles.paginationButtons}>
+                <TouchableOpacity
+                  style={[
                     styles.pageButton,
                     currentPage === 1 && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === 1}
-                    onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    >
-                    <Text style={styles.pageButtonText}>Previous</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.pageButton,
-                      currentPage === lastPage && styles.disabledButton,
-                    ]}
-                    disabled={currentPage === lastPage}
-                    onPress={() =>
-                      setCurrentPage(prev => Math.min(prev + 1, lastPage))
-                    }
-                    >
-                    <Text style={styles.pageButtonText}>Next</Text>
-                  </TouchableOpacity>
-                </View>
+                  ]}
+                  disabled={currentPage === 1}
+                  onPress={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
+                  <Text style={styles.pageButtonText}>Previous</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.pageButton,
+                    currentPage === lastPage && styles.disabledButton,
+                  ]}
+                  disabled={currentPage === lastPage}
+                  onPress={() =>
+                    setCurrentPage(prev => Math.min(prev + 1, lastPage))
+                  }>
+                  <Text style={styles.pageButtonText}>Next</Text>
+                </TouchableOpacity>
               </View>
             </View>
-          }
-        />
+          </View>
+        }
+      />
     </ScrollView>
   );
 };
@@ -469,35 +498,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F7F8FB',
   },
-  headerImage: {
-    width: '50%',
-    height: undefined,
-    aspectRatio: 5,
-    marginRight: 190,
-    resizeMode: 'contain',
-    alignSelf: 'center',
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  logo: {
-    width: 140,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  headerRight: {
+  header: {
+    backgroundColor: '#ffffff',
+    paddingRight: 18,
+    paddingLeft: 16,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    flex: 1,
+    justifyContent: 'space-between',
+    elevation: 4,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
+  },
+  titleContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 16,
     color: '#000',
-    marginLeft: 20,
-    marginBottom: 4,
-    marginTop: 10,
   },
   headerSubtitle: {
     color: '#000',
@@ -532,14 +552,14 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     flex: 1,
-    paddingHorizontal: -10, 
+    paddingHorizontal: -10,
     color: '#000',
   },
   searchIcon: {
     position: 'absolute',
-    left: 120, 
+    left: 120,
     top: '50%',
-    transform: [{ translateY: -10 }],
+    transform: [{translateY: -10}],
   },
   buttonText: {
     fontWeight: 'bold',
@@ -786,34 +806,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     marginTop: 10,
-  },
-  header: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    elevation: 4,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  logo: {
-    width: 140,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    flex: 1,
-  },
-  iconWrapper: {
-    marginLeft: 12,
   },
   modalContainer: {
     flex: 1,
